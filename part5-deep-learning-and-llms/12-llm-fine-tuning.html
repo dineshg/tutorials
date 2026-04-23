@@ -113,16 +113,7 @@
       if (typeof renderMathInElement !== 'function') return;
       renderMath();
     });
-  </script>
-
-  <!-- highlight.js (syntax highlighting, light theme) -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github.min.css">
-  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/languages/python.min.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/languages/bash.min.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/languages/json.min.js"></script>
-
-<link rel="stylesheet" href="../assets/css/book.css">
+  </script><link rel="stylesheet" href="../assets/css/book.css">
 </head>
 
 <body>
@@ -1226,9 +1217,7 @@ print(stats)</code></pre>
   <script>
     // highlight.js
     document.addEventListener("DOMContentLoaded", () => {
-      if (window.hljs) hljs.highlightAll();
-
-      // Add copy buttons to all PRE blocks
+      if (window.hljs)// Add copy buttons to all PRE blocks
       document.querySelectorAll("pre").forEach((pre) => {
         const btn = document.createElement("button");
         btn.className = "copy-btn";

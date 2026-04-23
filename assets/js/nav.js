@@ -13,9 +13,18 @@
 
   // ---------- 1b. Load highlight.js so every code block on every page gets
   //               uniform, VS-Code-style colourful syntax highlighting.
-  //               The GitHub light + dark theme stylesheets are loaded from
-  //               CDN; the dark sheet is gated by prefers-color-scheme so the
-  //               page automatically switches with the rest of the theme. ---
+  //               GitHub light/dark themes auto-switch with prefers-color-scheme.
+  //               Any pre-loaded Prism or stale hljs stylesheet is neutralised
+  //               so there is exactly ONE highlighter active at all times. ---
+
+  // Kill any Prism stylesheets already in <head> (pages that had inline Prism refs).
+  document.querySelectorAll('link[rel="stylesheet"]').forEach(function (l) {
+    if (/prism/i.test(l.href) || /atom-one/i.test(l.href) || /vs2015/i.test(l.href)) {
+      l.disabled = true;
+      l.parentNode && l.parentNode.removeChild(l);
+    }
+  });
+
   function addHljsStylesheet(href, media) {
     var link = document.createElement("link");
     link.rel = "stylesheet";
@@ -27,22 +36,69 @@
                     "(prefers-color-scheme: light)");
   addHljsStylesheet("https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css",
                     "(prefers-color-scheme: dark)");
+
   var hljsScript = document.createElement("script");
   hljsScript.src = "https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/common.min.js";
   hljsScript.defer = true;
   hljsScript.onload = function () {
     if (!window.hljs) return;
-    // Highlight every <pre><code> block. Pages that already wrap tokens in
-    // <span class="keyword">, <span class="tok-kw">, etc. are skipped so we
-    // don't double-tokenize manually-coloured snippets.
+
+    // Silence Prism if it loaded anyway
+    if (window.Prism) { window.Prism.highlightAll = function(){}; }
+
     document.querySelectorAll("pre code").forEach(function (block) {
-      if (block.querySelector(
-        "span.keyword, span.string, span.comment, span.function, span.number, span.tok-kw, span.tok-str, span.tok-com, span.tok-fn, span.tok-num, span.tok-typ, span.kw, span.str, span.com, span.fn, span.num, span.typ"
-      )) {
+      // Skip blocks that already have manually-inserted colour tokens
+      var hasManualTokens = block.querySelector(
+        "span.keyword,span.string,span.comment,span.function,span.tok-kw,span.tok-str,span.tok-com,span.tok-fn,span.tok-num,span.tok-typ,span.kw,span.str,span.com,span.fn,span.typ"
+      );
+      if (hasManualTokens) {
         block.classList.add("hljs");
-        return;
+      } else {
+        try { window.hljs.highlightElement(block); } catch (e) { /* ignore */ }
       }
-      try { window.hljs.highlightElement(block); } catch (e) { /* ignore */ }
+
+      // ------ Add language label + copy button header above each <pre> ------
+      var pre = block.parentElement;
+      if (!pre || pre.tagName !== "PRE" || pre.dataset.hljsDecorated) return;
+      pre.dataset.hljsDecorated = "1";
+
+      // Detect language
+      var lang = "";
+      block.classList.forEach(function (c) {
+        if (c.startsWith("language-")) lang = c.replace("language-", "").toUpperCase();
+        if (c.startsWith("hljs-")) return; // skip hljs internal classes
+      });
+      if (!lang && block.result) lang = (block.result.language || "").toUpperCase();
+      if (!lang) lang = "CODE";
+
+      // Friendly label map
+      var labels = {
+        "PYTHON":"Python","JS":"JavaScript","JAVASCRIPT":"JavaScript",
+        "TYPESCRIPT":"TypeScript","TS":"TypeScript","BASH":"Shell","SH":"Shell",
+        "JSON":"JSON","YAML":"YAML","HTTP":"HTTP","SQL":"SQL",
+        "CSS":"CSS","HTML":"HTML","TEXT":"Plain text","PLAINTEXT":"Plain text","CODE":"Code"
+      };
+      var displayLang = labels[lang] || lang;
+
+      // Build header bar
+      var bar = document.createElement("div");
+      bar.className = "tr-code-bar";
+      bar.innerHTML =
+        '<span class="tr-code-lang">' + displayLang + '</span>' +
+        '<button class="tr-copy-btn" aria-label="Copy code">Copy</button>';
+
+      pre.parentNode.insertBefore(bar, pre);
+
+      bar.querySelector(".tr-copy-btn").addEventListener("click", function () {
+        var btn = this;
+        var text = block.innerText || block.textContent;
+        navigator.clipboard.writeText(text).then(function () {
+          btn.textContent = "Copied!";
+          setTimeout(function () { btn.textContent = "Copy"; }, 1200);
+        }).catch(function () {
+          btn.textContent = "Copy";
+        });
+      });
     });
   };
   document.head.appendChild(hljsScript);

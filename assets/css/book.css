@@ -836,10 +836,10 @@ img, svg, video, canvas { max-width: 100%; height: auto; }
 .tr-content .divider { border-top: 1px solid var(--color-border-muted); margin: 20px 0; }
 .tr-content .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--color-accent); margin-right: 6px; }
 .tr-content .dots { color: var(--color-fg-muted); }
-.tr-content .step-number,
-.tr-content .step,
-.tr-content .num,
-.tr-content .number {
+/* Step-number badge — scoped tightly so it never collides with Prism/hljs
+   token classes (.token.number, .hljs-number, .num, .number). Only the
+   explicit .step-number class triggers the circular badge. */
+.tr-content .step-number {
   display: inline-block;
   min-width: 1.6em;
   height: 1.6em;
@@ -875,6 +875,52 @@ img, svg, video, canvas { max-width: 100%; height: auto; }
 }
 .tr-content .copybtn,
 .tr-content .lang { display: none; } /* suppress non-functional UI bits */
+
+/* ---- Centrally-injected code bar (language label + copy button) ---- */
+.tr-code-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--color-bg-inset);
+  border: 1px solid var(--color-codeborder);
+  border-bottom: 0;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  padding: 5px 12px 5px 14px;
+  margin-top: 12px;
+  font-family: var(--font-mono);
+  font-size: .78rem;
+  color: var(--color-fg-muted);
+  line-height: 1;
+}
+.tr-code-bar + pre {
+  margin-top: 0 !important;
+  border-top-left-radius: 0 !important;
+  border-top-right-radius: 0 !important;
+}
+.tr-code-lang {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--color-fg-subtle);
+}
+.tr-copy-btn {
+  background: transparent;
+  border: 1px solid var(--color-border-muted);
+  border-radius: var(--radius-sm);
+  color: var(--color-fg-muted);
+  font-family: var(--font-sans);
+  font-size: .75rem;
+  padding: 2px 9px;
+  cursor: pointer;
+  transition: background .15s, color .15s;
+}
+.tr-copy-btn:hover {
+  background: var(--color-accent);
+  color: #fff;
+  border-color: var(--color-accent);
+}
+
+
 
 /* HTTP method badges (used in Part II) */
 .tr-content .get,
