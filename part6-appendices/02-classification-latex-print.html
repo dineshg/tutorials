@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Appendix B — Classification (LaTeX Print Edition)</title>
+  <link rel="stylesheet" href="../assets/css/book.css" />
+  <style>
+    .ch { font-size: 16px; line-height: 1.65; }
+    .ch h1 { font-size: 2em; border-bottom: 3px solid #0969da; padding-bottom: .4em; }
+    .ch h2 { font-size: 1.4em; margin-top: 1.8em; border-left: 4px solid #0969da; padding-left: .6em; }
+    .ch pre { background: #0d1117; color: #e6edf3; padding: 14px 16px; border-radius: 8px; overflow-x: auto; max-height: 480px; }
+    .ch code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.85em; }
+    .ch table { border-collapse: collapse; margin: 12px 0; }
+    .ch th, .ch td { border: 1px solid #d0d7de; padding: 8px 10px; text-align: left; vertical-align: top; }
+    .ch th { background: #f6f8fa; }
+  </style>
+</head>
+<body>
+
+<div class="ch">
+
+<h1>Appendix B — Classification (LaTeX Print Edition)</h1>
+
+<p>This appendix is the <strong>book‑typeset (LaTeX) edition</strong> of the
+classification chapter. The web edition lives in the main book at
+<a href="../part4-ml-foundations/04-linear-classification.html">Part IV, Chapter 4 — Linear classification</a>.
+The two cover the same material; this <code>.tex</code> file is preserved
+because it is the canonical print/PDF form.</p>
+
+<div class="tr-tip">
+  <strong>How to use this appendix</strong>
+  <ul style="margin: 6px 0 0 18px">
+    <li><strong>Read on the web:</strong> use the
+        <a href="../part4-ml-foundations/04-linear-classification.html">web edition</a>.</li>
+    <li><strong>Want a PDF:</strong> compile the source below with any LaTeX
+        toolchain (TeX Live, MiKTeX, Overleaf). The minimum command is:
+        <pre><code>pdflatex 02-classification-latex-print.tex</code></pre></li>
+    <li><strong>Quick look:</strong> the rendered source is shown below.
+        Open the raw file at
+        <a href="02-classification-latex-print.tex"><code>02-classification-latex-print.tex</code></a>.</li>
+  </ul>
+</div>
+
+<h2>Source (read‑only preview)</h2>
+<pre><code id="tex-src">Loading source…</code></pre>
+
+</div>
+
+<script>
+  // Fetch and show the LaTeX source as a read-only preview.
+  fetch('02-classification-latex-print.tex')
+    .then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.text();
+    })
+    .then(function (text) {
+      var el = document.getElementById('tex-src');
+      el.textContent = text;
+    })
+    .catch(function (err) {
+      document.getElementById('tex-src').textContent =
+        'Could not load the .tex source (' + err.message + '). ' +
+        'Open the file directly: 02-classification-latex-print.tex';
+    });
+</script>
+
+<script src="../assets/js/nav.js"></script>
+</body>
+</html>

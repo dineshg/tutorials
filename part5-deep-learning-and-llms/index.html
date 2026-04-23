@@ -10,24 +10,41 @@
 
 <h1>Part V — Deep Learning &amp; LLMs</h1>
 <p>From the single neuron all the way to modern LLM alignment. Feed‑forward
-networks (concepts, then training/debugging, then a canonical merged
-release), CNNs (theory then PyTorch), forecasting and RNNs, then two new
-chapters: <strong>Transformers &amp; attention</strong> (the architectural bridge
-to LLMs) and <strong>modern LLM alignment</strong> beyond DPO.</p>
+networks (concepts, then training/debugging), CNNs (theory then PyTorch),
+forecasting and RNNs, then two new chapters: <strong>Transformers &amp; attention</strong>
+(the architectural bridge to LLMs) and <strong>modern LLM alignment</strong> beyond DPO.</p>
 
 <div class="tr-note">
-  <strong>About chapter 3</strong>
-  Chapter 3 (“FFN canonical merged”) is the publication‑style merger of
-  Chapters 1 and 2 — kept verbatim from the original repo so no information
-  is lost. If you only want the standalone reading edition, jump to it
-  directly; otherwise read 1 → 2 → 3 → 4 …
+  <strong>Prerequisites</strong>
+  <a href="../part4-ml-foundations/index.html">Part IV</a> end‑to‑end. You
+  should be comfortable with the PyTorch training loop, autograd, loss
+  functions, and the geometric view of a linear model before starting here.
+</div>
+
+<div class="tr-tip">
+  <strong>How the chapters cluster</strong>
+  <ul style="margin: 6px 0 0 18px">
+    <li><strong>FFN track</strong> — Chapters 1, 2 (then optional Chapter 3, see below).</li>
+    <li><strong>CNN track</strong> — Chapters 4, 5, 6, 7.</li>
+    <li><strong>Sequence track</strong> — Chapters 8, 9, 10.</li>
+    <li><strong>LLM track</strong> — Chapters 11, 12, 13.</li>
+  </ul>
+</div>
+
+<div class="tr-warn">
+  <strong>About chapter 3 (optional / reference edition)</strong>
+  Chapter 3 (“FFN canonical merged”) is a publication‑style merger of
+  Chapters 1 and 2, kept verbatim from the original repo. <strong>If you
+  read 1 and 2 in order, skip Chapter 3</strong> — it repeats the same
+  material. Use it as a single‑document reference if you ever want one
+  long FFN article instead of the split lecture form.
 </div>
 
 <h2>Chapters in order</h2>
 <ol>
   <li><a href="01-ffn-concepts.html">Feed‑forward neural networks: concepts</a></li>
   <li><a href="02-ffn-training-debugging.html">Feed‑forward neural networks: training &amp; debugging</a></li>
-  <li><a href="03-ffn-canonical-merged.html">Feed‑forward neural networks: canonical merged release</a></li>
+  <li><a href="03-ffn-canonical-merged.html"><em>(Optional reference)</em> FFN canonical merged release</a></li>
   <li><a href="04-cnn-convolution.html">CNN — convolution</a></li>
   <li><a href="05-cnn-architecture.html">CNN — architecture</a></li>
   <li><a href="06-cnn-pytorch-implementation.html">CNN — PyTorch implementation</a></li>
@@ -36,9 +53,20 @@ to LLMs) and <strong>modern LLM alignment</strong> beyond DPO.</p>
   <li><a href="09-autoregressive-linear-model.html">Autoregressive linear model</a></li>
   <li><a href="10-recurrent-neural-networks.html">Recurrent neural networks</a></li>
   <li><a href="11-transformers-and-attention.html">Transformers &amp; attention <em>(NEW)</em></a></li>
-  <li><a href="12-llm-fine-tuning.html">LLM fine‑tuning &amp; optimization</a></li>
-  <li><a href="13-modern-llm-alignment-orpo-grpo.html">Modern LLM alignment: ORPO, GRPO, KTO <em>(NEW)</em></a></li>
+  <li><a href="12-llm-fine-tuning.html">LLM fine‑tuning &amp; optimization (covers SFT, PEFT/LoRA/QLoRA, DPO, classic RLHF)</a></li>
+  <li><a href="13-modern-llm-alignment-orpo-grpo.html">Modern LLM alignment: ORPO, GRPO, KTO, RLAIF <em>(NEW)</em></a></li>
 </ol>
+
+<div class="tr-note">
+  <strong>About the LLM track (Ch. 11–13)</strong>
+  Chapter 11 explains the Transformer architecture itself. Chapter 12 covers
+  how to <em>adapt</em> a pretrained Transformer to your domain (SFT, LoRA,
+  QLoRA) and the classical preference‑tuning step (DPO, RLHF) — this is
+  the carried‑over reference text. Chapter 13 then picks up where Chapter 12
+  ends and walks through the post‑DPO landscape (ORPO, GRPO, KTO, RLAIF)
+  with a decision matrix. There is intentional overlap on DPO between
+  Ch. 12 and Ch. 13: Ch. 12 introduces it, Ch. 13 contrasts it.
+</div>
 
 <script src="../assets/js/nav.js"></script>
 </body>

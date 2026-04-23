@@ -92,9 +92,9 @@
     { id: "part6", title: "Part VI — Appendices",
       tag: "reference", folder: "part6-appendices",
       chapters: [
-        ["index.html",                              "Part overview"],
-        ["01-lead-ds-interview-talk-track.md",      "1. Lead DS interview talk track"],
-        ["02-classification-latex-print.tex",       "2. Classification (LaTeX print)"]
+        ["index.html",                                  "Part overview"],
+        ["01-lead-ds-interview-talk-track.html",        "A. Lead DS interview talk track"],
+        ["02-classification-latex-print.html",          "B. Classification (LaTeX print)"]
       ]}
   ];
 
