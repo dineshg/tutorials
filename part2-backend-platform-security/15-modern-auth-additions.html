@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Modern Auth Additions — Passkeys, DPoP, mTLS, Token Exchange</title>
+  <link rel="stylesheet" href="../assets/css/book.css" />
+  <style>
+    .ch h1 { font-size: 2em; border-bottom: 3px solid #0969da; padding-bottom: .4em; }
+    .ch h2 { font-size: 1.4em; margin-top: 2em; border-left: 4px solid #0969da; padding-left: .6em; }
+    .ch h3 { font-size: 1.15em; margin-top: 1.4em; color: #24292f; }
+    .ch pre { background: #0d1117; color: #e6edf3; padding: 14px 16px; border-radius: 8px; overflow-x: auto; }
+    .ch code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.9em; }
+    .ch p, .ch li { line-height: 1.65; }
+    .ch table { border-collapse: collapse; margin: 12px 0; width: 100%; }
+    .ch th, .ch td { border: 1px solid #d0d7de; padding: 8px 10px; text-align: left; vertical-align: top; }
+    .ch th { background: #f6f8fa; }
+  </style>
+</head>
+<body>
+<div class="ch">
+
+<h1>Modern Auth Additions: Passkeys, DPoP, mTLS, Token Exchange</h1>
+
+<div class="tr-update">
+  <strong>Why this chapter exists</strong>
+  Chapters 6–9 in this Part cover the bedrock — bearer tokens, OAuth2, OIDC,
+  PKCE, JWT vs opaque, JWKS. Since 2023–2025 four additions have moved from
+  “nice to have” to “expected on enterprise reviews.” This chapter is a
+  focused supplement, not a replacement.
+</div>
+
+<h2>1) Passkeys / WebAuthn — replacing passwords for human login</h2>
+
+<p>A <strong>passkey</strong> is a WebAuthn credential bound to the user's device
+(or a synced keychain like iCloud Keychain / Google Password Manager / 1Password).
+Instead of typing a password, the browser uses public‑key cryptography over
+a challenge issued by your server. The private key never leaves the
+authenticator; only a signed assertion comes back.</p>
+
+<h3>Why prefer passkeys over passwords (and even over TOTP)</h3>
+<ul>
+  <li><strong>Phishing‑resistant:</strong> the credential is bound to your
+      origin (<code>rp.id</code>), so a fake site cannot trigger a usable signature.</li>
+  <li><strong>No shared secret on the server:</strong> you store only a public key.
+      A database breach exposes nothing reusable.</li>
+  <li><strong>No "forgotten password" flow:</strong> account recovery is delegated
+      to the platform's synced credential store.</li>
+</ul>
+
+<h3>Where it sits relative to OIDC</h3>
+<p>You typically still use OIDC for SSO across apps; passkeys replace the
+<em>password</em> step at the Identity Provider. For example, Google, GitHub,
+Microsoft Entra, Okta, and Auth0 all let you enable passkeys as the
+primary or sole authentication factor on the IdP, and the downstream
+OAuth2/OIDC flow is unchanged from Chapter 7.</p>
+
+<h3>Minimal server skeleton (FastAPI + py_webauthn)</h3>
+<pre><code># pip install webauthn fastapi
+from fastapi import FastAPI, HTTPException
+from webauthn import (
+    generate_registration_options, verify_registration_response,
+    generate_authentication_options, verify_authentication_response,
+)
+from webauthn.helpers.structs import (
+    PublicKeyCredentialDescriptor, AuthenticatorSelectionCriteria,
+    UserVerificationRequirement,
+)
+
+app = FastAPI()
+RP_ID   = "example.com"
+RP_NAME = "Example Corp"
+ORIGIN  = "https://example.com"
+
+USERS = {}        # user_id -&gt; {"name": ..., "credentials": [...]}
+CHALLENGES = {}   # user_id -&gt; current challenge bytes
+
+@app.post("/webauthn/register/options")
+def reg_options(user_id: str, username: str):
+    opts = generate_registration_options(
+        rp_id=RP_ID, rp_name=RP_NAME,
+        user_id=user_id.encode(), user_name=username,
+        authenticator_selection=AuthenticatorSelectionCriteria(
+            user_verification=UserVerificationRequirement.PREFERRED,
+            resident_key="required",   # creates a discoverable passkey
+        ),
+    )
+    CHALLENGES[user_id] = opts.challenge
+    USERS.setdefault(user_id, {"name": username, "credentials": []})
+    return opts            # browser calls navigator.credentials.create() with this
+
+@app.post("/webauthn/register/verify")
+def reg_verify(user_id: str, attestation: dict):
+    verification = verify_registration_response(
+        credential=attestation,
+        expected_challenge=CHALLENGES[user_id],
+        expected_origin=ORIGIN,
+        expected_rp_id=RP_ID,
+    )
+    USERS[user_id]["credentials"].append({
+        "id":         verification.credential_id,
+        "public_key": verification.credential_public_key,
+        "sign_count": verification.sign_count,
+    })
+    return {"ok": True}
+</code></pre>
+
+<p>The login side is symmetric: you call
+<code>generate_authentication_options(...)</code>, send the resulting challenge to
+the browser, and verify the assertion with the public key you stored at
+registration.</p>
+
+<div class="tr-tip">
+  <strong>Production reality</strong>
+  Almost no one writes the server primitives by hand anymore. In an
+  enterprise stack you turn passkeys on at the IdP (Entra / Okta / Auth0 /
+  Keycloak) and your FastAPI app keeps using OIDC unchanged. The snippet
+  above is for understanding what the IdP does.
+</div>
+
+<h2>2) DPoP — sender‑constrained access tokens (RFC 9449)</h2>
+
+<p>A plain bearer token (Chapter 9) is like cash: whoever holds it can spend it.
+If a token leaks via logs, a misconfigured proxy, or an XSS bug, the attacker
+gets full access until expiry. <strong>DPoP (Demonstrating Proof‑of‑Possession)</strong>
+binds the token to a key pair the client holds, so a stolen token is useless
+without the private key.</p>
+
+<h3>How a DPoP request looks</h3>
+<pre><code>POST /api/v1/orders HTTP/1.1
+Host: api.example.com
+Authorization: DPoP eyJhbGciOiJSUzI1NiIs...&lt;access_token&gt;
+DPoP: eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2In0.&lt;proof_jwt&gt;
+</code></pre>
+
+<p>Two headers are sent:</p>
+<ul>
+  <li><strong>Authorization:</strong> the access token, prefixed with
+      <code>DPoP</code> instead of <code>Bearer</code>.</li>
+  <li><strong>DPoP:</strong> a short‑lived JWT, signed with the client's
+      private key, whose payload includes the HTTP method (<code>htm</code>),
+      the request URL (<code>htu</code>), a nonce, the time (<code>iat</code>),
+      and a hash of the access token (<code>ath</code>).</li>
+</ul>
+
+<p>At token issuance, the AS records the <em>JWK thumbprint</em> of the client's
+public key inside the access token's <code>cnf.jkt</code> claim. The resource server
+verifies that the DPoP proof was signed by that exact key, that the
+<code>htm</code>/<code>htu</code> match this request, and that the proof is fresh.</p>
+
+<h3>Validating DPoP in FastAPI (sketch)</h3>
+<pre><code>import hashlib, base64, time, jwt   # PyJWT
+from fastapi import Header, HTTPException, Request
+
+def b64url(b: bytes) -&gt; str:
+    return base64.urlsafe_b64encode(b).rstrip(b"=").decode()
+
+async def require_dpop(
+    request: Request,
+    authorization: str = Header(...),
+    dpop: str = Header(...),
+):
+    if not authorization.startswith("DPoP "):
+        raise HTTPException(401, "Expected DPoP scheme")
+    access_token = authorization.removeprefix("DPoP ")
+
+    # 1) Decode the DPoP proof header to get the public key (jwk)
+    proof_header = jwt.get_unverified_header(dpop)
+    public_jwk   = proof_header["jwk"]
+
+    # 2) Verify the proof signature with the embedded public key
+    proof = jwt.decode(dpop, public_jwk, algorithms=[proof_header["alg"]])
+
+    # 3) Bind to this exact request
+    if proof["htm"].upper() != request.method:        raise HTTPException(401, "htm mismatch")
+    if proof["htu"] != str(request.url):              raise HTTPException(401, "htu mismatch")
+    if abs(time.time() - proof["iat"]) &gt; 60:          raise HTTPException(401, "stale proof")
+
+    # 4) Bind proof to this access token (ath = base64url(SHA-256(access_token)))
+    ath_expected = b64url(hashlib.sha256(access_token.encode()).digest())
+    if proof.get("ath") != ath_expected:              raise HTTPException(401, "ath mismatch")
+
+    # 5) Verify access_token (JWKS as in Chapter 9) and check cnf.jkt
+    claims = verify_access_token(access_token)        # your JWKS validator
+    jkt    = jwk_thumbprint(public_jwk)               # RFC 7638
+    if claims.get("cnf", {}).get("jkt") != jkt:       raise HTTPException(401, "token not bound to this key")
+
+    return claims
+</code></pre>
+
+<h3>When to adopt DPoP</h3>
+<ul>
+  <li>Public clients (SPAs, mobile apps) that cannot be issued mTLS certs.</li>
+  <li>High‑sensitivity APIs (payments, admin) where bearer leakage is unacceptable.</li>
+  <li>MCP servers that accept tokens forwarded from a host — see Part III.</li>
+</ul>
+
+<h2>3) mTLS — sender‑constrained tokens for service‑to‑service (RFC 8705)</h2>
+
+<p>For workload‑to‑workload calls inside your platform (Chapter 10 / 11), the
+equivalent of DPoP is <strong>mutual TLS</strong>. The calling service presents an X.509
+client certificate during the TLS handshake, and the AS binds the issued
+access token to the certificate's hash via the same <code>cnf</code> mechanism
+(<code>cnf.x5t#S256</code>).</p>
+
+<h3>The flow</h3>
+<ol>
+  <li>Workload requests a token from the AS over mTLS.</li>
+  <li>AS records the SHA‑256 thumbprint of the client cert in <code>cnf.x5t#S256</code>.</li>
+  <li>Workload calls the resource server <em>also over mTLS</em> with the same cert.</li>
+  <li>Resource server verifies that the cert hash from the TLS layer
+      matches the <code>cnf.x5t#S256</code> claim in the token.</li>
+</ol>
+
+<h3>Where it fits in your reference architecture</h3>
+<p>This is the strongest match for the “workload identity” boundary already
+covered in Chapter 10 (end‑user vs workload identity) and Chapter 11 (GCP
+workload identity). On GKE, SPIFFE/SPIRE or Istio's PeerAuthentication issue
+the SVIDs (X.509) automatically.</p>
+
+<h2>4) OAuth 2.0 Token Exchange (RFC 8693) — propagating the user downstream</h2>
+
+<p>The classic question from Chapter 10: <em>"My user calls FastAPI with their
+OIDC token. FastAPI then calls a downstream API that needs the user's
+identity, not FastAPI's. How do I forward identity safely?"</em></p>
+
+<p>The 2025 answer is <strong>token exchange</strong>. FastAPI exchanges the inbound
+user token at the AS for a new, downstream‑audience token that still carries
+the user's identity but is scoped narrowly:</p>
+
+<pre><code>POST /oauth/token HTTP/1.1
+Host: idp.example.com
+Authorization: Basic &lt;FastAPI client credentials&gt;
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=urn:ietf:params:oauth:grant-type:token-exchange
+&amp;subject_token=&lt;the inbound user access token&gt;
+&amp;subject_token_type=urn:ietf:params:oauth:token-type:access_token
+&amp;audience=https://crm.example.com
+&amp;scope=crm.read
+</code></pre>
+
+<p>The IdP returns a new access token whose:</p>
+<ul>
+  <li><code>sub</code> is still the original user,</li>
+  <li><code>aud</code> is the downstream API,</li>
+  <li><code>act</code> (the actor claim, RFC 8693 §4.1) records that FastAPI was the
+      acting service — so the downstream API can audit “user X via service Y.”</li>
+</ul>
+
+<div class="tr-warn">
+  <strong>Anti‑pattern alert</strong>
+  Forwarding the inbound user token verbatim to a downstream API is the
+  most common mistake. It works, but the downstream API now sees a token
+  whose <code>aud</code> claim is <em>your</em> service, which a good resource
+  server will reject. Token exchange (RFC 8693) is the correct fix. The
+  on‑behalf‑of (OBO) flow in Microsoft Entra is the same pattern with
+  vendor‑specific naming.
+</div>
+
+<h2>5) Quick decision matrix</h2>
+<table>
+  <tr>
+    <th>Boundary</th><th>Use</th><th>Why</th>
+  </tr>
+  <tr>
+    <td>Human → Browser → Your app</td>
+    <td>OIDC + Passkeys at the IdP, PKCE for the app</td>
+    <td>Phishing‑resistant, no passwords stored.</td>
+  </tr>
+  <tr>
+    <td>Browser/SPA/mobile → Your API</td>
+    <td>OIDC + DPoP access tokens</td>
+    <td>Stolen tokens are unusable without the client's private key.</td>
+  </tr>
+  <tr>
+    <td>Workload → Workload (inside platform)</td>
+    <td>mTLS + cert‑bound tokens (cnf.x5t#S256)</td>
+    <td>Strongest service‑identity binding; SPIFFE/Istio handle issuance.</td>
+  </tr>
+  <tr>
+    <td>Workload → Workload (across orgs)</td>
+    <td>Workload Identity Federation (Chapter 11) + signed JWT assertion</td>
+    <td>No long‑lived secrets to rotate.</td>
+  </tr>
+  <tr>
+    <td>Your API → Downstream API on user's behalf</td>
+    <td>Token exchange (RFC 8693) / OBO</td>
+    <td>Preserves user identity, narrows audience, records the actor.</td>
+  </tr>
+</table>
+
+<h2>6) Reading list (specs)</h2>
+<ul>
+  <li>WebAuthn Level 3 — <code>w3.org/TR/webauthn-3/</code></li>
+  <li>RFC 9449 — OAuth 2.0 Demonstrating Proof of Possession (DPoP)</li>
+  <li>RFC 8705 — OAuth 2.0 Mutual‑TLS Client Authentication and Cert‑Bound Access Tokens</li>
+  <li>RFC 8693 — OAuth 2.0 Token Exchange</li>
+  <li>OAuth 2.1 (draft, consolidates PKCE‑mandatory + best practices)</li>
+</ul>
+
+</div>
+<script src="../assets/js/nav.js"></script>
+</body>
+</html>

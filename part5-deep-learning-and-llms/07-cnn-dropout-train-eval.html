@@ -1,0 +1,615 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>CNNs Coding Tutorial (PyTorch) — Conv2d, Custom nn.Module, Flattening, Dropout (How it REALLY works)</title>
+
+  <!-- Light theme -->
+  <style>
+    :root{
+      --bg:#ffffff;
+      --panel:#f6f8fa;
+      --text:#111827;
+      --muted:#4b5563;
+      --border:#e5e7eb;
+      --accent:#2563eb;
+      --shadow: 0 10px 30px rgba(0,0,0,.06);
+      --radius: 14px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+
+      --code-bg: #f8fafc;
+      --code-border: #e2e8f0;
+      --code-text: #0f172a;
+      --code-muted: #475569;
+
+      --btn-bg: #ffffff;
+      --btn-border: #cbd5e1;
+      --btn-text: #0f172a;
+
+      --ok:#065f46;
+      --warn:#92400e;
+      --bad:#991b1b;
+    }
+
+    html,body{background:var(--bg); color:var(--text); font-family:var(--sans); margin:0;}
+    a{color:var(--accent); text-decoration:none;}
+    a:hover{text-decoration:underline;}
+
+    .wrap{max-width:1100px; margin:0 auto; padding:28px 18px 80px;}
+    header{
+      border:1px solid var(--border);
+      background: linear-gradient(180deg, #ffffff, #fbfdff);
+      box-shadow: var(--shadow);
+      border-radius: var(--radius);
+      padding: 22px 22px 16px;
+    }
+    header h1{margin:0 0 6px; font-size: 28px; letter-spacing:-0.02em;}
+    header p{margin:0; color:var(--muted); line-height:1.55;}
+
+    .chips{margin-top:14px; display:flex; flex-wrap:wrap; gap:8px;}
+    .chip{
+      font-size:13px; color:#0f172a;
+      border:1px solid var(--border);
+      background: #fff;
+      padding:6px 10px;
+      border-radius: 999px;
+    }
+
+    nav{
+      margin-top:18px;
+      padding-top:14px;
+      border-top:1px solid var(--border);
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px 14px;
+      font-size:14px;
+    }
+    nav a{color:#0f172a;}
+
+    section{
+      margin-top:18px;
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      background:#fff;
+      box-shadow: var(--shadow);
+      padding: 18px 18px 10px;
+    }
+    section h2{margin:0 0 10px; font-size:20px; letter-spacing:-0.01em;}
+    section h3{margin:16px 0 8px; font-size:16px;}
+    p,li{line-height:1.7; color:#111827;}
+    .muted{color:var(--muted);}
+
+    .callout{
+      background: var(--panel);
+      border:1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 12px;
+      margin: 12px 0;
+    }
+
+    .grid{display:grid; grid-template-columns: 1fr; gap: 12px;}
+    @media(min-width: 980px){
+      .grid.two{grid-template-columns: 1fr 1fr;}
+      .grid.three{grid-template-columns: 1fr 1fr 1fr;}
+    }
+
+    figure{
+      margin: 12px 0;
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius: 14px;
+      overflow:hidden;
+    }
+    figure img{width:100%; height:auto; display:block; background:#fff;}
+    figcaption{
+      padding: 10px 12px;
+      font-size: 13px;
+      color: var(--muted);
+      border-top:1px solid var(--border);
+    }
+
+    :not(pre) > code{
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      padding: 2px 6px;
+      border-radius: 8px;
+      font-family: var(--mono);
+      font-size: 0.95em;
+      color: #0f172a;
+      white-space: nowrap;
+    }
+
+    .codewrap{
+      border: 1px solid var(--code-border);
+      border-radius: 14px;
+      overflow: hidden;
+      background: var(--code-bg);
+      margin: 12px 0;
+    }
+    .codebar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--code-border);
+      background: #ffffff;
+    }
+    .codebar .label{
+      font-size: 12px;
+      color: var(--code-muted);
+      font-family: var(--mono);
+    }
+    .codebar button{
+      font-size:12px;
+      border: 1px solid var(--btn-border);
+      background: var(--btn-bg);
+      color: var(--btn-text);
+      padding: 6px 10px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    .codebar button:hover{border-color:#94a3b8;}
+
+    pre[class*="language-"]{
+      margin:0;
+      background: var(--code-bg) !important;
+      color: var(--code-text) !important;
+      padding: 14px 14px;
+      overflow:auto;
+      line-height: 1.65;
+      font-size: 13px;
+    }
+    code[class*="language-"]{
+      font-family: var(--mono);
+      color: var(--code-text) !important;
+      text-shadow: none !important;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      margin:10px 0 14px;
+      font-size:14px;
+    }
+    th,td{
+      border:1px solid var(--border);
+      padding:8px 10px;
+      text-align:left;
+      vertical-align:top;
+    }
+    th{background:#f8fafc;}
+
+    .hr{height:1px; background:var(--border); margin:12px 0;}
+    .small{font-size:13px;}
+    .pill{
+      display:inline-block;
+      background:#eef2ff;
+      color:#1e3a8a;
+      border:1px solid #e0e7ff;
+      padding:2px 8px;
+      border-radius:999px;
+      font-size:12px;
+      vertical-align:middle;
+    }
+
+    /* Dropout demo */
+    .demo{
+      border:1px solid var(--border);
+      border-radius: 14px;
+      background: #fff;
+      padding: 12px;
+      margin: 12px 0;
+    }
+    .demo .row{display:flex; flex-wrap:wrap; gap:10px; align-items:center;}
+    .demo label{font-size:13px; color:var(--muted);}
+    .demo input[type="range"]{width:220px;}
+    .demo button{
+      border:1px solid var(--btn-border);
+      background: var(--btn-bg);
+      color: var(--btn-text);
+      padding: 8px 12px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .demo button:hover{border-color:#94a3b8;}
+    .kv{
+      display:grid;
+      grid-template-columns: 120px 1fr;
+      gap:6px 12px;
+      margin-top:10px;
+      font-family: var(--mono);
+      font-size: 12px;
+      color:#0f172a;
+    }
+    .kv .k{color:var(--code-muted); font-family: var(--sans); font-size: 12px;}
+    .mono{font-family: var(--mono);}
+    .tag{
+      display:inline-block;
+      font-size:12px;
+      padding:2px 8px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:#fff;
+      margin-left:6px;
+      vertical-align:middle;
+    }
+    .tag.ok{color:var(--ok); border-color:#a7f3d0; background:#ecfdf5;}
+    .tag.warn{color:var(--warn); border-color:#fde68a; background:#fffbeb;}
+    .tag.bad{color:var(--bad); border-color:#fecaca; background:#fef2f2;}
+  </style>
+
+  <!-- Prism syntax highlighting (light) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-python.min.js"></script>
+
+  <!-- MathJax for equations -->
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['\\(','\\)'], ['$', '$']],
+        displayMath: [['\\[','\\]']]
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+  <!-- Copy buttons -->
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      document.querySelectorAll(".codewrap").forEach(wrap => {
+        const btn = wrap.querySelector("button[data-copy]");
+        const pre = wrap.querySelector("pre");
+        if (!btn || !pre) return;
+        btn.addEventListener("click", async () => {
+          try{
+            await navigator.clipboard.writeText(pre.innerText);
+            const old = btn.textContent;
+            btn.textContent = "Copied!";
+            setTimeout(()=>btn.textContent = old, 900);
+          }catch(e){
+            btn.textContent = "Copy failed";
+            setTimeout(()=>btn.textContent = "Copy", 900);
+          }
+        });
+      });
+
+      // Dropout demo widget
+      const pSlider = document.getElementById("pSlider");
+      const pVal = document.getElementById("pVal");
+      const runBtn = document.getElementById("runDropout");
+      const modeBtn = document.getElementById("toggleMode");
+
+      const xOut = document.getElementById("xOut");
+      const mOut = document.getElementById("mOut");
+      const yOut = document.getElementById("yOut");
+      const scaleOut = document.getElementById("scaleOut");
+      const modeOut = document.getElementById("modeOut");
+
+      let mode = "train"; // train or eval
+      const x = Array.from({length:12}, (_,i)=>i+1);
+
+      function fmt(arr){
+        return "[" + arr.map(v => (typeof v === "number" ? (Math.abs(v) >= 10 ? v.toFixed(1) : v.toFixed(1)) : v)).join(", ") + "]";
+      }
+
+      function step(){
+        const p = parseFloat(pSlider.value);
+        const q = 1 - p;
+        pVal.textContent = p.toFixed(2);
+
+        if (mode === "eval"){
+          modeOut.textContent = "eval (dropout OFF)";
+          modeOut.className = "tag ok";
+          xOut.textContent = fmt(x);
+          mOut.textContent = "[all ones]";
+          scaleOut.textContent = "scale = 1 (no scaling needed)";
+          yOut.textContent = fmt(x);
+          return;
+        }
+
+        // train mode
+        modeOut.textContent = "train (random mask each forward pass)";
+        modeOut.className = "tag warn";
+
+        const m = x.map(()=> (Math.random() < q ? 1 : 0));
+        const scale = 1 / q;
+        const y = x.map((xi,idx)=> (m[idx] * xi * scale));
+
+        xOut.textContent = fmt(x);
+        mOut.textContent = fmt(m);
+        scaleOut.textContent = `scale = 1/(1-p) = 1/${q.toFixed(2)} = ${scale.toFixed(2)}`;
+        yOut.textContent = fmt(y);
+      }
+
+      function toggleMode(){
+        mode = (mode === "train") ? "eval" : "train";
+        step();
+      }
+
+      pSlider.addEventListener("input", step);
+      runBtn.addEventListener("click", step);
+      modeBtn.addEventListener("click", toggleMode);
+
+      // init
+      step();
+    });
+  </script>
+  <link rel="stylesheet" href="../assets/css/book.css">
+</head>
+
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>CNN Coding in PyTorch: Conv2d, Custom Models, Flattening, and Dropout (How it REALLY works)</h1>
+    <p>
+      Updated tutorial with a clearer Dropout explanation: what gets masked, how often masks change, why scaling exists,
+      how gradients behave, and why <code>train()</code>/<code>eval()</code> matters.
+    </p>
+
+    <div class="chips">
+      <span class="chip">Conv2d arguments & shapes</span>
+      <span class="chip">nn.Module & inheritance</span>
+      <span class="chip">Sequential vs custom nn.Module</span>
+      <span class="chip">Flatten/view boundary</span>
+      <span class="chip">Dropout: masks, scaling, gradients</span>
+      <span class="chip">train() vs eval()</span>
+    </div>
+
+    <nav>
+      <a href="#dropout">Dropout (updated)</a>
+      <a href="#train-eval">train() vs eval()</a>
+      <a href="#dropout-faq">Dropout FAQ</a>
+    </nav>
+  </header>
+
+  <!-- (To keep this response focused on your request, only the updated Dropout-related parts are shown below.) -->
+
+  <section id="dropout">
+    <h2>Dropout: what it actually does (and what it does NOT do)</h2>
+
+    <div class="callout">
+      <p style="margin:0;">
+        <b>Correct mental model:</b> Dropout applies a <b>new random mask every forward pass</b> (typically every mini-batch).
+        It does <b>not</b> permanently “turn off” a neuron, and it does <b>not</b> remove it for the whole training run.
+      </p>
+    </div>
+
+    <h3>What gets dropped?</h3>
+    <p>
+      In standard dropout, we drop <b>activations</b> (the outputs of a layer), not the parameter tensors directly.
+      Think: “for this forward pass, some activation values become zero.”
+    </p>
+
+    <h3>Training mode math (inverted dropout)</h3>
+    <p>
+      Let a layer output be \(h\). Dropout samples a mask \(m\) where:
+      \[
+        m_i \sim \mathrm{Bernoulli}(q), \quad q = 1-p
+      \]
+      Then it computes:
+      \[
+        \tilde{h} = \frac{m \odot h}{q}
+      \]
+    </p>
+    <ul>
+      <li>If \(m_i = 0\): that activation is <b>zeroed</b> for this pass.</li>
+      <li>If \(m_i = 1\): it’s kept, and scaled by \(1/q\).</li>
+      <li>The scaling keeps the <b>expected activation magnitude</b> consistent between training and inference.</li>
+    </ul>
+
+    <h3>Inference mode math</h3>
+    <p>
+      In eval mode, dropout is disabled:
+      \[
+        \tilde{h} = h
+      \]
+      No randomness, no masking.
+    </p>
+
+    <h3>What happens to gradients when an activation is dropped?</h3>
+    <p>
+      When an activation is dropped (\(m_i=0\)), it contributes nothing to the output, so the gradient through that activation is zero for that sample:
+      \[
+        \frac{\partial \tilde{h}_i}{\partial h_i} = \frac{m_i}{q}
+      \]
+      If \(m_i=0\), then \(\partial \tilde{h}_i / \partial h_i = 0\). Practically:
+    </p>
+    <ul>
+      <li>Weights feeding into that activation receive <b>no update from that sample</b>.</li>
+      <li>But next iteration, the mask changes, so the same unit may be active and updated then.</li>
+    </ul>
+
+    <figure>
+      <img alt="Dropout illustration" src="https://upload.wikimedia.org/wikipedia/commons/a/a8/Dropout_en.svg">
+      <figcaption>
+        Dropout diagram (Wikimedia Commons):
+        <a href="https://commons.wikimedia.org/wiki/File:Dropout_en.svg" target="_blank" rel="noopener">Dropout_en.svg</a>
+      </figcaption>
+    </figure>
+
+    <h3>Interactive mini-demo (mask changes every “forward pass”)</h3>
+    <p class="muted">
+      This toy demo uses a vector <span class="mono">[1..12]</span> as “activations”.
+      Click “Run one forward pass” multiple times in train mode and watch the mask change.
+    </p>
+
+    <div class="demo" aria-label="Dropout demo widget">
+      <div class="row">
+        <label>Drop probability p: <b id="pVal">0.50</b></label>
+        <input id="pSlider" type="range" min="0" max="0.9" step="0.05" value="0.5" />
+        <button id="toggleMode" type="button">Toggle train/eval</button>
+        <span id="modeOut" class="tag warn">train (random mask each forward pass)</span>
+      </div>
+
+      <div class="row" style="margin-top:10px;">
+        <button id="runDropout" type="button">Run one forward pass</button>
+        <span class="muted small">Train mode: new random mask each click.</span>
+      </div>
+
+      <div class="kv">
+        <div class="k">h (input)</div> <div class="mono" id="xOut"></div>
+        <div class="k">m (mask)</div>  <div class="mono" id="mOut"></div>
+        <div class="k">scaling</div>   <div class="mono" id="scaleOut"></div>
+        <div class="k">h̃ (output)</div> <div class="mono" id="yOut"></div>
+      </div>
+    </div>
+
+    <h3>PyTorch: the exact behavior you should remember</h3>
+    <ul>
+      <li><code>nn.Dropout(p)</code> applies random masking only when the module is in <code>train()</code> mode.</li>
+      <li>In <code>eval()</code> mode, it becomes an identity function (no change).</li>
+      <li>Masks are typically sampled per forward call (practically per mini-batch).</li>
+    </ul>
+
+    <div class="codewrap">
+      <div class="codebar">
+        <span class="label">python • verify mask randomness in train vs determinism in eval</span>
+        <button data-copy type="button">Copy</button>
+      </div>
+<pre class="language-python"><code>import torch
+import torch.nn as nn
+
+drop = nn.Dropout(p=0.5)
+x = torch.ones(1, 10)
+
+drop.train()
+y1 = drop(x)
+y2 = drop(x)  # different mask, usually different output
+
+drop.eval()
+y3 = drop(x)
+y4 = drop(x)  # same output, dropout disabled
+
+print("train different:", not torch.allclose(y1, y2))
+print("eval same:", torch.allclose(y3, y4))</code></pre>
+    </div>
+
+    <h3>Where to put dropout (practical default)</h3>
+    <p>
+      Most commonly: between dense layers. For conv feature maps, many projects skip it or use specialized variants.
+    </p>
+
+    <div class="codewrap">
+      <div class="codebar">
+        <span class="label">python • common pattern: Dense → ReLU → Dropout → Dense</span>
+        <button data-copy type="button">Copy</button>
+      </div>
+<pre class="language-python"><code>import torch.nn as nn
+
+head = nn.Sequential(
+    nn.Linear(512, 256),
+    nn.ReLU(),
+    nn.Dropout(p=0.5),
+    nn.Linear(256, 10)  # logits
+)</code></pre>
+    </div>
+
+    <p class="muted">
+      For conv nets, you may also see <code>nn.Dropout2d</code> / <code>nn.Dropout3d</code>:
+      these drop entire channels (feature maps), not individual pixels.
+    </p>
+  </section>
+
+  <section id="train-eval">
+    <h2>train() vs eval(): why dropout “turns off” for predictions</h2>
+
+    <p>
+      PyTorch modules can have different behavior depending on whether you’re training or evaluating.
+      Dropout is the classic example:
+    </p>
+
+    <ul>
+      <li><code>model.train()</code> → dropout ON (random masking), batchnorm uses batch stats</li>
+      <li><code>model.eval()</code> → dropout OFF (no masking), batchnorm uses running stats</li>
+    </ul>
+
+    <div class="callout">
+      <p style="margin:0;">
+        <b>Standard pattern:</b> call <code>model.train()</code> before the training loop,
+        and <code>model.eval()</code> during validation/testing (usually with <code>torch.no_grad()</code>).
+      </p>
+    </div>
+
+    <div class="codewrap">
+      <div class="codebar">
+        <span class="label">python • training/evaluation skeleton (dropout-safe)</span>
+        <button data-copy type="button">Copy</button>
+      </div>
+<pre class="language-python"><code>model.train()
+for xb, yb in train_loader:
+    optimizer.zero_grad()
+    logits = model(xb)        # dropout active here
+    loss = loss_fn(logits, yb)
+    loss.backward()
+    optimizer.step()
+
+model.eval()
+correct = 0
+total = 0
+with torch.no_grad():
+    for xb, yb in val_loader:
+        logits = model(xb)    # dropout disabled here
+        preds = logits.argmax(dim=1)
+        correct += (preds == yb).sum().item()
+        total += yb.size(0)
+print("val acc:", correct / total)</code></pre>
+    </div>
+  </section>
+
+  <section id="dropout-faq">
+    <h2>Dropout FAQ (common confusions)</h2>
+
+    <h3>“Does dropout stop training a random node each iteration?”</h3>
+    <p>
+      It temporarily <b>zeros a random subset of activations</b> each forward pass.
+      Those dropped activations have <b>zero gradient for that sample</b>, so their incoming weights don’t update from that sample.
+      Next iteration, the mask changes, so they can update again.
+      <span class="tag warn">Not permanent</span>
+    </p>
+
+    <h3>“Is the same set of nodes masked all the time?”</h3>
+    <p>
+      No—standard dropout resamples a new mask per forward pass.
+      Some specialized variants (e.g., “locked/variational dropout” in some sequence models) reuse a mask across time steps,
+      but that’s not the default behavior of <code>nn.Dropout</code>.
+    </p>
+
+    <h3>“Does dropout remove weights?”</h3>
+    <p>
+      No. The parameters are still there. Dropout modifies the activations during training. At inference, nothing is removed.
+    </p>
+
+    <h3>“Why is there scaling by 1/(1-p)?”</h3>
+    <p>
+      Without scaling, the average activation magnitude would shrink during training.
+      Inverted dropout keeps the expected activation scale similar between train and eval.
+    </p>
+
+    <h3>“Should I use dropout in conv layers?”</h3>
+    <p>
+      Often not necessary. If you do, consider channel-wise dropout (<code>Dropout2d</code>) rather than pixel-wise dropout,
+      and verify by experiment—sometimes it helps, sometimes it’s neutral.
+    </p>
+  </section>
+
+  <section id="sources">
+    <h2>Online visuals used</h2>
+    <ul class="small">
+      <li>Dropout diagram: <a href="https://commons.wikimedia.org/wiki/File:Dropout_en.svg" target="_blank" rel="noopener">Wikimedia Commons</a></li>
+    </ul>
+    <p class="muted small">
+      This page is self-contained: MathJax renders equations, Prism highlights code, and visuals are embedded inline from Wikimedia Commons.
+    </p>
+  </section>
+
+</div>
+  <script src="../assets/js/nav.js"></script>
+</body>
+</html>

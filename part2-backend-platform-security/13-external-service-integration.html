@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connecting an External Service</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 { color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        h2 { color: #34495e; margin-top: 30px; }
+        h3 { color: #455a64; }
+        ul, ol { margin-bottom: 20px; }
+        li { margin-bottom: 5px; }
+        code {
+            background-color: #f4f4f4;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-family: Consolas, Monaco, 'Andale Mono', monospace;
+            font-size: 0.9em;
+        }
+        pre {
+            background-color: #282c34;
+            color: #abb2bf;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-family: Consolas, Monaco, 'Andale Mono', monospace;
+        }
+        /* Simple syntax highlighting simulation */
+        .keyword { color: #c678dd; }
+        .string { color: #98c379; }
+        .function { color: #61afef; }
+        .comment { color: #5c6370; font-style: italic; }
+        .number { color: #d19a66; }
+        
+        .section-divider {
+            border-top: 1px solid #ddd;
+            margin: 40px 0;
+        }
+    </style>
+  <link rel="stylesheet" href="../assets/css/book.css">
+</head>
+<body>
+
+    <h1>Connecting an External Service</h1>
+
+    <p>To call an external service like an Azure OpenAI (GPT) endpoint from your backend, you use the same “workload identity” idea, but the target is not GCP—so you need some credential that Azure accepts, and you must store and use it safely.</p>
+
+    <p>There are two industrial patterns (pick one):</p>
+
+    <div class="section-divider"></div>
+
+    <h2>Option A (simpler): API key stored in GCP Secret Manager</h2>
+
+    <h3>Flow</h3>
+    <ol>
+        <li>Your backend (running on GKE) authenticates to GCP Secret Manager using its GCP service account (Workload Identity).</li>
+        <li>It reads the Azure OpenAI API key from Secret Manager.</li>
+        <li>It calls Azure OpenAI with:
+            <ul>
+                <li><code>api-key: &lt;key&gt;</code> header (typical for Azure OpenAI)</li>
+            </ul>
+        </li>
+    </ol>
+
+    <h3>Why choose this</h3>
+    <ul>
+        <li>Easiest to implement</li>
+        <li>No Azure identity federation complexity</li>
+        <li>Common and reliable</li>
+    </ul>
+
+    <h3>What you “associate”</h3>
+
+    <h4>1) Store the secret</h4>
+    <ul>
+        <li>Secret: <code>azure-openai-api-key</code></li>
+    </ul>
+
+    <h4>2) Grant your backend service account access to read it</h4>
+    <ul>
+        <li>IAM: give <code>backend-sa@...</code> role <code>roles/secretmanager.secretAccessor</code> on that secret.</li>
+    </ul>
+
+    <h4>3) In code: read secret + call Azure</h4>
+
+    <pre><code><span class="keyword">import</span> os
+<span class="keyword">import</span> httpx
+<span class="keyword">from</span> google.cloud <span class="keyword">import</span> secretmanager
+
+<span class="keyword">def</span> <span class="function">read_secret</span>(secret_id: <span class="keyword">str</span>) -> <span class="keyword">str</span>:
+    client = secretmanager.SecretManagerServiceClient()
+    name = <span class="string">f"projects/{os.environ['GCP_PROJECT']}/secrets/{secret_id}/versions/latest"</span>
+    resp = client.access_secret_version(request={<span class="string">"name"</span>: name})
+    <span class="keyword">return</span> resp.payload.data.decode(<span class="string">"utf-8"</span>)
+
+<span class="keyword">async def</span> <span class="function">call_azure_openai</span>(prompt: <span class="keyword">str</span>) -> <span class="keyword">dict</span>:
+    api_key = read_secret(<span class="string">"azure-openai-api-key"</span>)
+
+    endpoint = os.environ[<span class="string">"AZURE_OPENAI_ENDPOINT"</span>]  <span class="comment"># e.g. https://xxx.openai.azure.com</span>
+    deployment = os.environ[<span class="string">"AZURE_OPENAI_DEPLOYMENT"</span>]
+    api_version = os.environ.get(<span class="string">"AZURE_OPENAI_API_VERSION"</span>, <span class="string">"2024-xx-xx"</span>)
+
+    url = <span class="string">f"{endpoint}/openai/deployments/{deployment}/chat/completions?api-version={api_version}"</span>
+
+    <span class="keyword">async with</span> httpx.AsyncClient(timeout=<span class="number">30</span>) <span class="keyword">as</span> client:
+        r = <span class="keyword">await</span> client.post(
+            url,
+            headers={<span class="string">"api-key"</span>: api_key, <span class="string">"Content-Type"</span>: <span class="string">"application/json"</span>},
+            json={
+                <span class="string">"messages"</span>: [{<span class="string">"role"</span>: <span class="string">"user"</span>, <span class="string">"content"</span>: prompt}],
+                <span class="string">"temperature"</span>: <span class="number">0.2</span>,
+            },
+        )
+        r.raise_for_status()
+        <span class="keyword">return</span> r.json()</code></pre>
+
+    <div class="section-divider"></div>
+
+    <h2>Option B (more “enterprise”): Azure Entra workload identity federation (no long-lived keys)</h2>
+
+    <h3>Flow</h3>
+    <ol>
+        <li>Your backend still runs on GKE with a GCP service account.</li>
+        <li>Instead of storing an API key, the backend obtains a short-lived Azure token from Entra ID using federation.</li>
+        <li>It calls Azure OpenAI using that token.</li>
+    </ol>
+
+    <h3>Why choose this</h3>
+    <ul>
+        <li>No long-lived API keys</li>
+        <li>Short-lived tokens, easier to rotate</li>
+        <li>Stronger enterprise security posture</li>
+    </ul>
+
+    <h3>Tradeoffs</h3>
+    <ul>
+        <li>More setup (Azure app registration, federated identity config, token exchange logic)</li>
+        <li>Slightly more moving parts than API keys</li>
+    </ul>
+
+    <div class="section-divider"></div>
+
+    <h2>How this relates to “service accounts”</h2>
+
+    <p><strong>Important:</strong></p>
+    <ul>
+        <li>Your GCP service account gives you permission to read GCP secrets/logs/etc.</li>
+        <li>Azure doesn’t care about GCP service accounts. Azure cares about Azure identity (or API keys).</li>
+        <li>So you either:
+            <ul>
+                <li>use GCP SA → read API key → call Azure (Option A), or</li>
+                <li>configure federation so your workload can mint Azure tokens (Option B)</li>
+            </ul>
+        </li>
+    </ul>
+
+    <div class="section-divider"></div>
+
+    <h2>Best practice summary</h2>
+    <ul>
+        <li>If you want the fastest correct setup: <strong>Option A (Secret Manager + API key)</strong></li>
+        <li>If you want “industrial enterprise” with least secrets: <strong>Option B (Entra federation)</strong></li>
+    </ul>
+
+    <p>If you tell me which one you want (A or B), I’ll write the concrete step-by-step “who trusts who” chain for that option and the exact headers your backend sends to Azure OpenAI.</p>
+
+  <script src="../assets/js/nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,886 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>CNNs Tutorial — Part 2: Multi-Channel Convs, Feature Maps, Pooling, Strides, Global Pooling, CNN Architecture</title>
+
+  <!-- Light theme + high-contrast code blocks (same style as before) -->
+  <style>
+    :root{
+      --bg:#ffffff;
+      --panel:#f6f8fa;
+      --text:#111827;
+      --muted:#4b5563;
+      --border:#e5e7eb;
+      --accent:#2563eb;
+      --shadow: 0 10px 30px rgba(0,0,0,.06);
+      --radius: 14px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+
+      --code-bg: #f8fafc;
+      --code-border: #e2e8f0;
+      --code-text: #0f172a;
+      --code-muted: #475569;
+
+      --btn-bg: #ffffff;
+      --btn-border: #cbd5e1;
+      --btn-text: #0f172a;
+    }
+
+    html,body{background:var(--bg); color:var(--text); font-family:var(--sans); margin:0;}
+    a{color:var(--accent); text-decoration:none;}
+    a:hover{text-decoration:underline;}
+
+    .wrap{max-width:1100px; margin:0 auto; padding:28px 18px 80px;}
+    header{
+      border:1px solid var(--border);
+      background: linear-gradient(180deg, #ffffff, #fbfdff);
+      box-shadow: var(--shadow);
+      border-radius: var(--radius);
+      padding: 22px 22px 16px;
+    }
+    header h1{margin:0 0 6px; font-size: 28px; letter-spacing:-0.02em;}
+    header p{margin:0; color:var(--muted); line-height:1.55;}
+
+    .chips{margin-top:14px; display:flex; flex-wrap:wrap; gap:8px;}
+    .chip{
+      font-size:13px; color:#0f172a;
+      border:1px solid var(--border);
+      background: #fff;
+      padding:6px 10px;
+      border-radius: 999px;
+    }
+
+    nav{
+      margin-top:18px;
+      padding-top:14px;
+      border-top:1px solid var(--border);
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px 14px;
+      font-size:14px;
+    }
+    nav a{color:#0f172a;}
+
+    section{
+      margin-top:18px;
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      background:#fff;
+      box-shadow: var(--shadow);
+      padding: 18px 18px 10px;
+    }
+    section h2{margin:0 0 10px; font-size:20px; letter-spacing:-0.01em;}
+    section h3{margin:16px 0 8px; font-size:16px;}
+    p,li{line-height:1.7; color:#111827;}
+    .muted{color:var(--muted);}
+
+    .callout{
+      background: var(--panel);
+      border:1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 12px;
+      margin: 12px 0;
+    }
+
+    .grid{display:grid; grid-template-columns: 1fr; gap: 12px;}
+    @media(min-width: 980px){
+      .grid.two{grid-template-columns: 1fr 1fr;}
+      .grid.three{grid-template-columns: 1fr 1fr 1fr;}
+    }
+
+    figure{
+      margin: 12px 0;
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius: 14px;
+      overflow:hidden;
+    }
+    figure img{width:100%; height:auto; display:block; background:#fff;}
+    figcaption{
+      padding: 10px 12px;
+      font-size: 13px;
+      color: var(--muted);
+      border-top:1px solid var(--border);
+    }
+
+    .pill{
+      display:inline-block;
+      background:#eef2ff;
+      color:#1e3a8a;
+      border:1px solid #e0e7ff;
+      padding:2px 8px;
+      border-radius:999px;
+      font-size:12px;
+      vertical-align:middle;
+    }
+    .hr{height:1px; background:var(--border); margin:12px 0;}
+    .small{font-size:13px;}
+
+    :not(pre) > code{
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      padding: 2px 6px;
+      border-radius: 8px;
+      font-family: var(--mono);
+      font-size: 0.95em;
+      color: #0f172a;
+      white-space: nowrap;
+    }
+
+    .codewrap{
+      border: 1px solid var(--code-border);
+      border-radius: 14px;
+      overflow: hidden;
+      background: var(--code-bg);
+      margin: 12px 0;
+    }
+    .codebar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--code-border);
+      background: #ffffff;
+    }
+    .codebar .label{
+      font-size: 12px;
+      color: var(--code-muted);
+      font-family: var(--mono);
+    }
+    .codebar button{
+      font-size:12px;
+      border: 1px solid var(--btn-border);
+      background: var(--btn-bg);
+      color: var(--btn-text);
+      padding: 6px 10px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    .codebar button:hover{border-color:#94a3b8;}
+
+    pre[class*="language-"]{
+      margin:0;
+      background: var(--code-bg) !important;
+      color: var(--code-text) !important;
+      padding: 14px 14px;
+      overflow:auto;
+      line-height: 1.65;
+      font-size: 13px;
+    }
+    code[class*="language-"]{
+      font-family: var(--mono);
+      color: var(--code-text) !important;
+      text-shadow: none !important;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      margin:10px 0 14px;
+      font-size:14px;
+    }
+    th,td{
+      border:1px solid var(--border);
+      padding:8px 10px;
+      text-align:center;
+    }
+    th{background:#f8fafc;}
+  </style>
+
+  <!-- Prism syntax highlighting (light) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-python.min.js"></script>
+
+  <!-- MathJax for equations -->
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['\\(','\\)'], ['$', '$']],
+        displayMath: [['\\[','\\]']]
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+  <!-- Copy buttons -->
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      document.querySelectorAll(".codewrap").forEach(wrap => {
+        const btn = wrap.querySelector("button[data-copy]");
+        const pre = wrap.querySelector("pre");
+        if (!btn || !pre) return;
+        btn.addEventListener("click", async () => {
+          try{
+            await navigator.clipboard.writeText(pre.innerText);
+            const old = btn.textContent;
+            btn.textContent = "Copied!";
+            setTimeout(()=>btn.textContent = old, 900);
+          }catch(e){
+            btn.textContent = "Copy failed";
+            setTimeout(()=>btn.textContent = "Copy", 900);
+          }
+        });
+      });
+    });
+  </script>
+  <link rel="stylesheet" href="../assets/css/book.css">
+</head>
+
+<body>
+  <div class="wrap">
+    <header>
+      <h1>CNNs — Part 2: From Color Images to Feature Maps, Pooling, and Full CNN Architecture</h1>
+      <p>
+        This tutorial continues convolution in the way it’s actually used inside CNNs:
+        <span class="pill">multi-channel</span> inputs,
+        <span class="pill">multiple filters → feature maps</span>,
+        <span class="pill">bias + activation</span>,
+        <span class="pill">pooling / strided conv</span>,
+        and the <span class="pill">two-stage CNN</span> (conv feature extractor → dense predictor).
+      </p>
+
+      <div class="chips">
+        <span class="chip">Input: H×W×C</span>
+        <span class="chip">Weights: C_in×K×K×C_out</span>
+        <span class="chip">Output: H×W×C_out</span>
+        <span class="chip">Feature maps (channels)</span>
+        <span class="chip">Pooling + translation invariance</span>
+        <span class="chip">Strided convolution</span>
+        <span class="chip">Global max pooling</span>
+      </div>
+
+      <nav>
+        <a href="#color">Color images & 3D kernels</a>
+        <a href="#featuremaps">Multiple filters → feature maps</a>
+        <a href="#fullconv">Full conv formula + shapes</a>
+        <a href="#layer">Conv layer = conv + bias + activation</a>
+        <a href="#params">Parameter savings vs dense</a>
+        <a href="#cnnarch">Two-stage CNN architecture</a>
+        <a href="#pool">Pooling (max/avg) mechanics</a>
+        <a href="#invariance">Why pooling works: translation invariance</a>
+        <a href="#hierarchy">Conv+pool → hierarchical features</a>
+        <a href="#stride">Strided conv as pooling alternative</a>
+        <a href="#global">Flatten vs global max pooling</a>
+        <a href="#end">Putting it all together</a>
+        <a href="#credits">Online visuals used</a>
+      </nav>
+    </header>
+
+    <section id="color">
+      <h2>1) Convolution with color images: add the channel dimension</h2>
+
+      <p>
+        Real CNNs usually take <b>color images</b>. A color image is a 3D object:
+        \[
+          X \in \mathbb{R}^{H \times W \times C_{\text{in}}}
+        \]
+        where \(C_{\text{in}}=3\) for RGB.
+      </p>
+
+      <p>
+        To convolve a color image, you use a <b>3D kernel</b> (a “small box”) that spans all input channels:
+        \[
+          W \in \mathbb{R}^{K \times K \times C_{\text{in}}}
+        \]
+      </p>
+
+      <p>
+        Mechanically, it’s the same “multiply + add” you already know—just with an extra sum over channels:
+        you sum over <b>height</b>, <b>width</b>, and <b>channels</b>.
+      </p>
+
+      <div class="callout">
+        <p style="margin:0;">
+          <b>Color pattern-finder intuition:</b> a 3D filter can match “red circles” differently from “blue circles”
+          because it has separate weights for each channel.
+        </p>
+      </div>
+
+      <figure>
+        <img alt="RGB channels split (conceptual)" src="https://upload.wikimedia.org/wikipedia/commons/2/2b/Rgb_channels_separate.png">
+        <figcaption>
+          RGB channels separated (Wikimedia Commons):
+          <a href="https://commons.wikimedia.org/wiki/File:Rgb_channels_separate.png" target="_blank" rel="noopener">Rgb_channels_separate.png</a>
+        </figcaption>
+      </figure>
+
+      <p class="muted">
+        If you convolve a 3D image with a single 3D kernel and sum across channels, the output is 2D
+        (the channel dimension “dots out”). That’s fine for one filter—but it breaks the “stack layers” uniformity.
+      </p>
+    </section>
+
+    <section id="featuremaps">
+      <h2>2) Multiple filters solve the uniformity problem</h2>
+
+      <p>
+        A single filter finds a single feature. But images contain many features—edges, corners, textures, eyes, noses, etc.
+        So CNNs use <b>many filters</b>.
+      </p>
+
+      <p>
+        If you apply two different filters \(W^{(1)}\) and \(W^{(2)}\) to the same input \(X\), you get two 2D outputs:
+        \[
+          B^{(1)} = X \star W^{(1)}, \quad B^{(2)} = X \star W^{(2)}
+        \]
+        Stack them and you get a 3D output again:
+        \[
+          B = \text{stack}\left(B^{(1)}, B^{(2)}, \ldots\right) \in \mathbb{R}^{H \times W \times C_{\text{out}}}
+        \]
+      </p>
+
+      <div class="callout">
+        <p style="margin:0;">
+          <b>Terminology shift:</b> after the first layer, the last dimension is no longer “color”.
+          It’s the number of <b>channels</b> or <b>feature maps</b> (one map per learned feature).
+        </p>
+      </div>
+
+      <figure>
+        <img alt="Feature map visualization from a CNN layer (conceptual)" src="https://upload.wikimedia.org/wikipedia/commons/6/63/Typical_cnn.png">
+        <figcaption>
+          CNN concept diagram showing stacks of feature maps (Wikimedia Commons):
+          <a href="https://commons.wikimedia.org/wikipedia/commons/6/63/Typical_cnn.png" target="_blank" rel="noopener">Typical_cnn.png</a>
+        </figcaption>
+      </figure>
+    </section>
+
+    <section id="fullconv">
+      <h2>3) Full convolution in CNN form: shapes + equation</h2>
+
+      <h3>Shapes used in this lecture</h3>
+      <ul>
+        <li>Input: \(X \in \mathbb{R}^{H \times W \times C_1}\)</li>
+        <li>Weights: \(W \in \mathbb{R}^{C_1 \times K \times K \times C_2}\)</li>
+        <li>Output (same mode): \(Y \in \mathbb{R}^{H \times W \times C_2}\)</li>
+      </ul>
+
+      <p class="muted">
+        Many frameworks store weights as \((C_2, C_1, K, K)\). The transcript’s shape is equivalent—just a different axis order.
+      </p>
+
+      <h3>Index form (same-mode, stride 1; “deep learning style” correlation)</h3>
+      <p>
+        Let \(Y_{i,j,c}\) be the output at spatial position \((i,j)\) and output channel \(c\) (a feature map).
+        Then:
+      </p>
+
+      <p>
+        \[
+          Y_{i,j,c} = \sum_{c'=1}^{C_1}\sum_{u=0}^{K-1}\sum_{v=0}^{K-1}
+          X_{i+u-\Delta,\;j+v-\Delta,\;c'} \; W_{c',u,v,c}
+        \]
+      </p>
+
+      <p class="muted">
+        Here \(\Delta=\lfloor K/2 \rfloor\) corresponds to “same” padding for odd \(K\) (conceptually: zeros around the image).
+      </p>
+
+      <div class="callout">
+        <p style="margin:0;">
+          <b>Concept:</b> each output channel \(c\) corresponds to one filter (one learned feature).
+          The output tensor is a stack of feature maps.
+        </p>
+      </div>
+
+      <figure>
+        <img alt="Convolution arithmetic illustration showing shapes" src="https://upload.wikimedia.org/wikipedia/commons/3/3b/Convolution_arithmetic_padding_strides.png">
+        <figcaption>
+          Convolution arithmetic (padding/stride) (Wikimedia Commons):
+          <a href="https://commons.wikimedia.org/wiki/File:Convolution_arithmetic_padding_strides.png" target="_blank" rel="noopener">Convolution_arithmetic_padding_strides.png</a>
+        </figcaption>
+      </figure>
+    </section>
+
+    <section id="layer">
+      <h2>4) A convolution layer = convolution + bias + activation</h2>
+
+      <p>
+        A CNN layer mirrors a dense layer idea:
+      </p>
+      <p>
+        \[
+          \text{Dense: } z = Wx + b,\quad a = \sigma(z)
+        \]
+      </p>
+      <p>
+        For convolution:
+      </p>
+      <p>
+        \[
+          Z = X \star W + b,\quad A = \sigma(Z)
+        \]
+      </p>
+
+      <h3>Bias shape and broadcasting</h3>
+      <p>
+        The convolution output has shape \(H \times W \times C_2\).
+        The bias term is a <b>vector</b> \(b \in \mathbb{R}^{C_2}\): one scalar per feature map.
+        In code, broadcasting adds \(b_c\) to every spatial location \((i,j)\) in that feature map.
+      </p>
+
+      <div class="callout">
+        <p style="margin:0;">
+          <b>Broadcasting intuition:</b> bias is “per-channel”, not “per-pixel”.
+          It’s the same idea as dense layers (one bias per output unit), just expanded across the grid.
+        </p>
+      </div>
+
+      <div class="codewrap">
+        <div class="codebar">
+          <span class="label">python • conv layer with bias + activation (PyTorch)</span>
+          <button data-copy type="button">Copy</button>
+        </div>
+<pre class="language-python"><code>import torch
+import torch.nn as nn
+
+# Example: Cin=3 (RGB), Cout=16 feature maps, 3x3 kernels
+layer = nn.Sequential(
+    nn.Conv2d(in_channels=3, out_channels=16, kernel_size=3, padding=1, bias=True),  # "same" for 3x3
+    nn.ReLU()
+)
+
+x = torch.randn(8, 3, 32, 32)   # NCHW: batch=8, channels=3, H=W=32
+y = layer(x)
+print(y.shape)  # (8, 16, 32, 32)</code></pre>
+      </div>
+
+      <p class="muted">
+        Notice PyTorch uses NCHW ordering: \((N, C, H, W)\).
+        The “channels” here are feature maps after the first layer.
+      </p>
+    </section>
+
+    <section id="params">
+      <h2>5) Why CNNs are efficient: parameter sharing vs dense explosion</h2>
+
+      <p>
+        Parameter sharing means one small kernel is reused across the entire image.
+        That dramatically reduces parameter count compared to flattening and using a dense layer.
+      </p>
+
+      <h3>Worked parameter comparison (from the transcript)</h3>
+      <p>
+        Input image: \(32 \times 32 \times 3\). Kernel: \(3 \times 5 \times 5 \times 64\) (64 output feature maps).
+        Using valid convolution, output spatial size is \((32-5+1)\times(32-5+1)=28\times 28\).
+        So output is \(28\times 28\times 64\).
+      </p>
+
+      <div class="grid two">
+        <div class="callout">
+          <p style="margin:0;">
+            <b>Convolution parameters</b><br/>
+            \(3 \cdot 5 \cdot 5 \cdot 64 = 4800\)
+          </p>
+        </div>
+        <div class="callout">
+          <p style="margin:0;">
+            <b>Dense parameters (flattened)</b><br/>
+            input: \(32\cdot 32\cdot 3 = 3072\)<br/>
+            output: \(28\cdot 28\cdot 64 = 50176\)<br/>
+            weights: \(3072 \times 50176 \approx 154\) million
+          </p>
+        </div>
+      </div>
+
+      <p class="muted">
+        Dense would have ~32,000× more parameters in this example. This increases memory and compute and can hurt generalization,
+        because dense must learn separate weights for the “same pattern” at every location.
+      </p>
+
+      <figure>
+        <img alt="Illustration of local receptive fields and weight sharing in CNNs" src="https://upload.wikimedia.org/wikipedia/commons/9/9a/Conv_layer.png">
+        <figcaption>
+          Local receptive fields / convolution layer concept (Wikimedia Commons):
+          <a href="https://commons.wikimedia.org/wiki/File:Conv_layer.png" target="_blank" rel="noopener">Conv_layer.png</a>
+        </figcaption>
+      </figure>
+    </section>
+
+    <section id="cnnarch">
+      <h2>6) A typical CNN has two stages</h2>
+
+      <p>
+        CNNs are commonly organized as:
+      </p>
+      <ol>
+        <li>
+          <b>Convolutional stage</b>: repeated blocks that extract image features
+          (often <code>Conv → (Pooling or Stride)</code>).
+        </li>
+        <li>
+          <b>Dense stage</b>: a standard feed-forward network that performs classification/regression on extracted features.
+        </li>
+      </ol>
+
+      <figure>
+        <img alt="LeNet-5 architecture diagram (classic CNN archetype)" src="https://upload.wikimedia.org/wikipedia/commons/6/60/LeNet5.png">
+        <figcaption>
+          LeNet-5 style architecture diagram (Wikimedia Commons):
+          <a href="https://commons.wikimedia.org/wiki/File:LeNet5.png" target="_blank" rel="noopener">LeNet5.png</a>
+        </figcaption>
+      </figure>
+
+      <div class="callout">
+        <p style="margin:0;">
+          <b>Mental model:</b> the conv stage is a feature transformer designed for images.
+          Once features are extracted, the dense stage handles non-linear prediction (classification/regression).
+        </p>
+      </div>
+    </section>
+
+    <section id="pool">
+      <h2>7) Pooling: downsampling by summarizing local neighborhoods</h2>
+
+      <p>
+        Pooling reduces spatial size (e.g., 100×100 → 50×50 with 2×2 pooling, stride 2).
+        Two common types:
+      </p>
+      <ul>
+        <li><b>Max pooling</b>: take the maximum value in each pooling window</li>
+        <li><b>Average pooling</b>: take the average in each pooling window</li>
+      </ul>
+
+      <h3>Mechanics with the transcript’s 4×4 example (pool=2, stride=2)</h3>
+
+      <div class="grid two">
+        <div>
+          <p><b>Input</b></p>
+          <table aria-label="Pooling input 4x4">
+            <tr><td>1</td><td>2</td><td>3</td><td>4</td></tr>
+            <tr><td>5</td><td>6</td><td>7</td><td>8</td></tr>
+            <tr><td>16</td><td>15</td><td>14</td><td>13</td></tr>
+            <tr><td>12</td><td>11</td><td>10</td><td>9</td></tr>
+          </table>
+        </div>
+        <div>
+          <p><b>MaxPool2d(2)</b> output</p>
+          <table aria-label="Max pooling output 2x2">
+            <tr><td>6</td><td>8</td></tr>
+            <tr><td>16</td><td>14</td></tr>
+          </table>
+
+          <p><b>AvgPool2d(2)</b> output</p>
+          <table aria-label="Average pooling output 2x2">
+            <tr><td>3.5</td><td>5.5</td></tr>
+            <tr><td>13.5</td><td>11.5</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="codewrap">
+        <div class="codebar">
+          <span class="label">python • max pooling and average pooling (PyTorch)</span>
+          <button data-copy type="button">Copy</button>
+        </div>
+<pre class="language-python"><code>import torch
+import torch.nn as nn
+
+x = torch.tensor([[[[ 1.,  2.,  3.,  4.],
+                    [ 5.,  6.,  7.,  8.],
+                    [16., 15., 14., 13.],
+                    [12., 11., 10.,  9.]]]])  # shape (N=1, C=1, H=4, W=4)
+
+maxpool = nn.MaxPool2d(kernel_size=2, stride=2)
+avgpool = nn.AvgPool2d(kernel_size=2, stride=2)
+
+print("max:\n", maxpool(x)[0,0])
+print("avg:\n", avgpool(x)[0,0])</code></pre>
+      </div>
+
+      <figure>
+        <img alt="Max pooling visualization" src="https://upload.wikimedia.org/wikipedia/commons/e/e9/Max_pooling.png">
+        <figcaption>
+          Max pooling visualization (Wikimedia Commons):
+          <a href="https://commons.wikimedia.org/wiki/File:Max_pooling.png" target="_blank" rel="noopener">Max_pooling.png</a>
+        </figcaption>
+      </figure>
+    </section>
+
+    <section id="invariance">
+      <h2>8) Why pooling helps: translation invariance</h2>
+
+      <p>
+        Pooling supports the idea of <b>translation invariance</b>:
+        we often care that a feature exists somewhere, not exactly where it is.
+      </p>
+
+      <p>
+        In a small 2×2 region, a feature detector output might look like “high, low, low, low”.
+        Max pooling returns the high value, preserving “feature found” while discarding precise location.
+      </p>
+
+      <div class="callout">
+        <p style="margin:0;">
+          <b>Max pooling intuition:</b> “if the pattern appears anywhere in this window, keep it.”
+          This often matches what you want for recognition tasks.
+        </p>
+      </div>
+
+      <p class="muted">
+        Pooling layers also have hyperparameters:
+        pool size (e.g., 2×2) and stride (often 2).
+        Overlapping pooling (stride 1) exists but is less common in typical modern setups.
+      </p>
+    </section>
+
+    <section id="hierarchy">
+      <h2>9) Conv + pooling creates hierarchical feature learning</h2>
+
+      <p>
+        CNNs often repeat the pattern: <b>convolution → pooling → convolution → pooling</b>.
+        Spatial size decreases, while filters remain small (commonly 3×3, 5×5, 7×7).
+      </p>
+
+      <h3>Why small filters start as “tiny pattern” detectors</h3>
+      <p>
+        A 3×3 filter covers a tiny fraction of a 32×32 image.
+        After downsampling to 16×16, the same 3×3 covers a larger fraction of the image;
+        later it can cover a very large portion (e.g., on 4×4).
+      </p>
+
+      <p>
+        This is one reason CNNs learn features hierarchically:
+        early layers tend to pick up small patterns (edges/strokes),
+        later layers pick up larger patterns (parts, then whole objects).
+      </p>
+
+      <div class="callout">
+        <p style="margin:0;">
+          <b>Two linked effects:</b><br/>
+          1) spatial dimensions shrink<br/>
+          2) fixed-size filters “see” relatively larger areas → bigger patterns
+        </p>
+      </div>
+
+      <p class="muted">
+        Yes, shrinking loses spatial detail (“where”). But CNNs often compensate by increasing
+        the number of feature maps (“what”) as depth increases.
+      </p>
+    </section>
+
+    <section id="stride">
+      <h2>10) Strided convolution as an alternative to pooling</h2>
+
+      <p>
+        Pooling isn’t the only downsampling option. Convolution itself can downsample using a <b>stride</b>:
+        stride tells you how far the sliding window jumps each step.
+      </p>
+
+      <p>
+        With stride 2, output spatial dimensions are roughly halved—similar to pooling with 2×2, stride 2.
+      </p>
+
+      <div class="callout">
+        <p style="margin:0;">
+          <b>Why skipping pixels can be okay:</b> nearby pixels are often highly correlated in natural images.
+          Skipping every other pixel still preserves much of the structure while reducing computation.
+        </p>
+      </div>
+
+      <figure>
+        <img alt="Convolution with stride illustration" src="https://upload.wikimedia.org/wikipedia/commons/7/7d/Conv_arithmetic_strides.png">
+        <figcaption>
+          Convolution arithmetic showing stride behavior (Wikimedia Commons):
+          <a href="https://commons.wikimedia.org/wiki/File:Conv_arithmetic_strides.png" target="_blank" rel="noopener">Conv_arithmetic_strides.png</a>
+        </figcaption>
+      </figure>
+
+      <div class="codewrap">
+        <div class="codebar">
+          <span class="label">python • strided conv vs conv+pool (shape comparison)</span>
+          <button data-copy type="button">Copy</button>
+        </div>
+<pre class="language-python"><code>import torch
+import torch.nn as nn
+
+x = torch.randn(1, 3, 32, 32)
+
+# Option A: conv then pool
+conv = nn.Conv2d(3, 16, kernel_size=3, padding=1)     # keep 32x32
+pool = nn.MaxPool2d(2, stride=2)                      # downsample to 16x16
+y_a = pool(torch.relu(conv(x)))
+
+# Option B: strided conv (downsample directly)
+conv_s2 = nn.Conv2d(3, 16, kernel_size=3, padding=1, stride=2)
+y_b = torch.relu(conv_s2(x))
+
+print("conv+pool:", y_a.shape)  # (1, 16, 16, 16)
+print("stride=2:", y_b.shape)   # (1, 16, 16, 16)</code></pre>
+      </div>
+
+      <p class="muted">
+        Both produce the same spatial size here; the difference is where downsampling happens and how parameters are used.
+      </p>
+    </section>
+
+    <section id="global">
+      <h2>11) Flatten vs global max pooling (handling variable image sizes)</h2>
+
+      <p>
+        The dense stage expects a 1D feature vector. A convolutional output is 3D:
+        \[
+          X \in \mathbb{R}^{H \times W \times C}
+        \]
+        so a common step is to <b>flatten</b> to a vector of size \(H\cdot W\cdot C\).
+      </p>
+
+      <h3>Why flattening fails for variable image sizes</h3>
+      <p>
+        If the network outputs 2×2×100 for a 32×32 input, flatten gives 400 features.
+        For a larger 64×64 input that becomes 4×4×100, flatten gives 1600 features.
+        A fixed dense layer can’t accept both sizes.
+      </p>
+
+      <h3>Global max pooling: size-independent output</h3>
+      <p>
+        Global max pooling collapses the entire spatial grid:
+        \[
+          \text{GMP}(X)_c = \max_{i,j} X_{i,j,c}
+        \]
+        producing a vector of size \(C\), regardless of \(H\) and \(W\).
+      </p>
+
+      <div class="callout">
+        <p style="margin:0;">
+          <b>Interpretation:</b> “I don’t care where the feature appears in the image—if it appears anywhere, keep the strongest evidence.”
+        </p>
+      </div>
+
+      <figure>
+        <img alt="Global average pooling diagram (conceptual; same idea applies to global max pooling)" src="https://upload.wikimedia.org/wikipedia/commons/1/1b/GlobalAveragePooling.png">
+        <figcaption>
+          Global pooling concept (shown as global average pooling; global max is analogous) (Wikimedia Commons):
+          <a href="https://commons.wikimedia.org/wiki/File:GlobalAveragePooling.png" target="_blank" rel="noopener">GlobalAveragePooling.png</a>
+        </figcaption>
+      </figure>
+
+      <div class="codewrap">
+        <div class="codebar">
+          <span class="label">python • global max pooling in PyTorch (works for any H×W)</span>
+          <button data-copy type="button">Copy</button>
+        </div>
+<pre class="language-python"><code>import torch
+import torch.nn as nn
+
+gmp = nn.AdaptiveMaxPool2d((1, 1))  # global max pooling to 1x1
+
+x1 = torch.randn(8, 100, 2, 2)     # e.g., from 32x32 after downsampling
+x2 = torch.randn(8, 100, 4, 4)     # e.g., from 64x64 after downsampling
+
+y1 = gmp(x1).squeeze(-1).squeeze(-1)  # shape: (8, 100)
+y2 = gmp(x2).squeeze(-1).squeeze(-1)  # shape: (8, 100)
+
+print(y1.shape, y2.shape)</code></pre>
+      </div>
+
+      <p class="muted">
+        <b>Note:</b> images can’t be downsampled indefinitely. If the spatial size becomes too small (e.g., 2×2),
+        additional stride-2 operations will fail.
+      </p>
+    </section>
+
+    <section id="end">
+      <h2>12) A modern CNN blueprint (as summarized in the transcript)</h2>
+
+      <p>
+        A practical CNN often follows:
+      </p>
+
+      <ol>
+        <li>
+          <b>Convolutional stage</b>:
+          repeated blocks that downsample while increasing channels
+          <ul>
+            <li>Option A: <code>Conv → Pool</code> (repeat)</li>
+            <li>Option B: <code>Strided Conv</code> (repeat)</li>
+            <li>Keep filter sizes small (commonly 3×3, 5×5, 7×7)</li>
+            <li>Increase feature maps with depth (e.g., 32 → 64 → 128 → ...)</li>
+          </ul>
+        </li>
+        <li>
+          <b>Bridge</b>:
+          convert 3D feature maps to 1D features
+          <ul>
+            <li>Flatten (<code>view</code>) for fixed-size inputs</li>
+            <li>or Global pooling for variable-size inputs</li>
+          </ul>
+        </li>
+        <li>
+          <b>Dense stage</b>:
+          standard feed-forward layers ending with task-appropriate output
+          <ul>
+            <li>Regression: 1 output, identity (no activation)</li>
+            <li>Binary classification: 1 output, sigmoid</li>
+            <li>Multi-class (K≥2): K outputs, softmax (often combined with cross-entropy loss)</li>
+          </ul>
+        </li>
+      </ol>
+
+      <div class="codewrap">
+        <div class="codebar">
+          <span class="label">python • reference CNN skeleton (conv stage → global max pool → dense)</span>
+          <button data-copy type="button">Copy</button>
+        </div>
+<pre class="language-python"><code>import torch.nn as nn
+
+class SimpleCNN(nn.Module):
+    def __init__(self, num_classes=10):
+        super().__init__()
+        self.features = nn.Sequential(
+            nn.Conv2d(3, 32, 3, padding=1), nn.ReLU(),
+            nn.Conv2d(32, 64, 3, padding=1, stride=2), nn.ReLU(),   # stride downsample
+            nn.Conv2d(64, 128, 3, padding=1, stride=2), nn.ReLU(),
+        )
+        self.gmp = nn.AdaptiveMaxPool2d((1, 1))  # global max pool
+        self.classifier = nn.Sequential(
+            nn.Linear(128, 128), nn.ReLU(),
+            nn.Linear(128, num_classes)
+        )
+
+    def forward(self, x):
+        x = self.features(x)               # (N, 128, H', W')
+        x = self.gmp(x).squeeze(-1).squeeze(-1)  # (N, 128)
+        return self.classifier(x)          # logits
+
+# Use with nn.CrossEntropyLoss() for multi-class classification</code></pre>
+      </div>
+
+      <div class="callout">
+        <p style="margin:0;">
+          <b>Big picture:</b> convolution learns feature transformers automatically during training (weights + biases),
+          just like dense layers—only the tensor shapes and parameter sharing differ.
+        </p>
+      </div>
+    </section>
+
+    <section id="credits">
+      <h2>Online visuals used (inline, reputable)</h2>
+      <ul class="small">
+        <li>RGB channels separated: <a href="https://commons.wikimedia.org/wiki/File:Rgb_channels_separate.png" target="_blank" rel="noopener">Wikimedia Commons</a></li>
+        <li>CNN feature map stack diagram: <a href="https://commons.wikimedia.org/wiki/File:Typical_cnn.png" target="_blank" rel="noopener">Wikimedia Commons</a></li>
+        <li>Convolution arithmetic (padding/stride): <a href="https://commons.wikimedia.org/wiki/File:Convolution_arithmetic_padding_strides.png" target="_blank" rel="noopener">Wikimedia Commons</a></li>
+        <li>Local receptive fields / conv layer concept: <a href="https://commons.wikimedia.org/wiki/File:Conv_layer.png" target="_blank" rel="noopener">Wikimedia Commons</a></li>
+        <li>LeNet-5 architecture diagram: <a href="https://commons.wikimedia.org/wiki/File:LeNet5.png" target="_blank" rel="noopener">Wikimedia Commons</a></li>
+        <li>Max pooling visualization: <a href="https://commons.wikimedia.org/wiki/File:Max_pooling.png" target="_blank" rel="noopener">Wikimedia Commons</a></li>
+        <li>Stride arithmetic illustration: <a href="https://commons.wikimedia.org/wiki/File:Conv_arithmetic_strides.png" target="_blank" rel="noopener">Wikimedia Commons</a></li>
+        <li>Global pooling diagram (average; max is analogous): <a href="https://commons.wikimedia.org/wiki/File:GlobalAveragePooling.png" target="_blank" rel="noopener">Wikimedia Commons</a></li>
+      </ul>
+
+      <div class="hr"></div>
+      <p class="muted small">
+        This HTML is self-contained in structure: equations render via MathJax CDN, code blocks are readable with copy buttons,
+        and all visuals are embedded inline from Wikimedia Commons (stable, reputable sources).
+      </p>
+    </section>
+
+  </div>
+  <script src="../assets/js/nav.js"></script>
+</body>
+</html>

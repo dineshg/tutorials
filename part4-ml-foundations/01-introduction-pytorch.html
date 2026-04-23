@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Introduction • Deep Learning with PyTorch</title>
+		<style>
+			:root {
+				--bg: #f6f8fc;
+				--panel: #ffffff;
+				--border: rgba(15, 23, 42, 0.10);
+				--text: #0f172a;
+				--muted: rgba(15, 23, 42, 0.70);
+				--accent: #2563eb;
+				--accent-2: #7c3aed;
+				--code-bg: #0b1020;
+				--code-text: rgba(255, 255, 255, 0.92);
+				--code-muted: rgba(255, 255, 255, 0.70);
+				--highlight-bg: rgba(250, 204, 21, 0.35);
+				--shadow: 0 18px 48px rgba(2, 6, 23, 0.10);
+			}
+
+			* {
+				box-sizing: border-box;
+			}
+
+			html,
+			body {
+				height: 100%;
+			}
+
+			body {
+				margin: 0;
+				color: var(--text);
+				background: radial-gradient(900px 500px at 18% -10%, rgba(37, 99, 235, 0.14), transparent 60%),
+					radial-gradient(800px 450px at 90% 8%, rgba(124, 58, 237, 0.12), transparent 55%),
+					linear-gradient(180deg, #ffffff, var(--bg));
+				font: 16px/1.65 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial,
+					"Apple Color Emoji", "Segoe UI Emoji";
+			}
+
+			a {
+				color: var(--accent);
+				text-decoration: none;
+			}
+			a:hover {
+				text-decoration: underline;
+			}
+
+			.wrap {
+				max-width: 980px;
+				margin: 0 auto;
+				padding: 56px 18px;
+			}
+
+			.card {
+				background: var(--panel);
+				border: 1px solid var(--border);
+				border-radius: 16px;
+				box-shadow: var(--shadow);
+				overflow: hidden;
+			}
+
+			.card__topbar {
+				height: 6px;
+				background: linear-gradient(90deg, var(--accent), var(--accent-2));
+			}
+
+			header {
+				padding: 28px 28px 0 28px;
+			}
+
+			.kicker {
+				display: inline-flex;
+				gap: 10px;
+				align-items: center;
+				padding: 6px 10px;
+				border: 1px solid var(--border);
+				border-radius: 999px;
+				color: rgba(15, 23, 42, 0.70);
+				background: rgba(15, 23, 42, 0.03);
+				font-size: 13px;
+			}
+
+			h1 {
+				margin: 14px 0 8px 0;
+				font-size: clamp(28px, 4vw, 40px);
+				line-height: 1.15;
+				letter-spacing: -0.02em;
+				background: linear-gradient(90deg, var(--text), rgba(37, 99, 235, 0.95));
+				-webkit-background-clip: text;
+				background-clip: text;
+				color: transparent;
+			}
+
+			.subtitle {
+				margin: 0 0 22px 0;
+				color: var(--muted);
+				max-width: 70ch;
+			}
+
+			main {
+				padding: 0 28px 28px 28px;
+			}
+
+			p {
+				margin: 14px 0;
+				max-width: 78ch;
+			}
+
+			.section {
+				margin-top: 18px;
+				padding-top: 18px;
+				border-top: 1px solid rgba(15, 23, 42, 0.08);
+			}
+
+			.section h2 {
+				margin: 0 0 8px 0;
+				font-size: 18px;
+				letter-spacing: -0.01em;
+				color: rgba(15, 23, 42, 0.92);
+			}
+
+			ul {
+				margin: 10px 0 0 0;
+				padding-left: 18px;
+			}
+
+			li {
+				margin: 10px 0;
+			}
+
+			li strong {
+				color: rgba(15, 23, 42, 0.95);
+			}
+
+			.callout {
+				margin: 18px 0 0 0;
+				padding: 14px 14px;
+				border-radius: 12px;
+				border: 1px solid rgba(37, 99, 235, 0.22);
+				background: rgba(37, 99, 235, 0.06);
+				color: rgba(15, 23, 42, 0.86);
+			}
+
+			.callout strong {
+				color: rgba(15, 23, 42, 0.95);
+			}
+
+			/* Code blocks + inline code (for later chapters) */
+			code,
+			pre {
+				font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+					monospace;
+			}
+
+			:not(pre) > code {
+				padding: 0.15em 0.35em;
+				border-radius: 8px;
+				border: 1px solid rgba(15, 23, 42, 0.12);
+				background: rgba(15, 23, 42, 0.04);
+				color: rgba(15, 23, 42, 0.92);
+				font-size: 0.95em;
+			}
+
+			pre {
+				margin: 14px 0;
+				padding: 14px 14px;
+				border-radius: 14px;
+				background: linear-gradient(180deg, rgba(11, 16, 32, 0.98), rgba(11, 16, 32, 0.92));
+				color: var(--code-text);
+				border: 1px solid rgba(2, 6, 23, 0.18);
+				overflow: auto;
+				box-shadow: 0 10px 26px rgba(2, 6, 23, 0.14);
+			}
+
+			pre code {
+				display: block;
+				padding: 0;
+				border: 0;
+				background: transparent;
+				color: inherit;
+				font-size: 0.95em;
+				line-height: 1.6;
+			}
+
+			/* Highlights and callouts */
+			mark {
+				padding: 0.05em 0.2em;
+				border-radius: 8px;
+				background: var(--highlight-bg);
+				color: inherit;
+			}
+
+			blockquote {
+				margin: 14px 0;
+				padding: 10px 14px;
+				border-left: 4px solid rgba(37, 99, 235, 0.35);
+				background: rgba(37, 99, 235, 0.04);
+				border-radius: 12px;
+				color: rgba(15, 23, 42, 0.82);
+			}
+
+			/* Tables (for future chapters) */
+			table {
+				width: 100%;
+				border-collapse: collapse;
+				margin: 14px 0;
+				border: 1px solid var(--border);
+				border-radius: 12px;
+				overflow: hidden;
+			}
+
+			th,
+			td {
+				padding: 10px 12px;
+				border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+				text-align: left;
+				vertical-align: top;
+			}
+
+			th {
+				background: rgba(15, 23, 42, 0.03);
+				color: rgba(15, 23, 42, 0.86);
+				font-weight: 600;
+			}
+
+			.footer {
+				padding: 14px 28px 26px 28px;
+				color: rgba(15, 23, 42, 0.55);
+				font-size: 13px;
+				border-top: 1px solid rgba(15, 23, 42, 0.08);
+			}
+
+			@media (prefers-reduced-motion: reduce) {
+				* {
+					scroll-behavior: auto !important;
+				}
+			}
+		</style>
+	  <link rel="stylesheet" href="../assets/css/book.css">
+</head>
+
+	<body>
+		<div class="wrap">
+			<article class="card">
+				<div class="card__topbar" aria-hidden="true"></div>
+
+				<header>
+					<div class="kicker">Chapter 1 • Deep Learning with PyTorch</div>
+					<h1>Introduction</h1>
+					<p class="subtitle">
+						A practical journey through modern deep learning with PyTorch—from first principles to
+						real applications.
+					</p>
+				</header>
+
+				<main>
+					<p>
+						Deep learning has transformed how we work with data, from recognizing images and
+						understanding language to powering recommendation engines and game-playing agents. This
+						book is a practical journey through modern deep learning with PyTorch, designed to take
+						you from beginner to advanced without requiring a heavy math background (though pointers
+						to deeper theory are provided if you want them).
+					</p>
+
+					<section class="section" aria-labelledby="start-from-basics">
+						<h2 id="start-from-basics">We start from the very beginning</h2>
+						<p>
+							We start from the very beginning: linear regression and the idea of a neuron as a
+							simple nonlinear transformation of a linear model. From there, we build up to deep
+							neural networks, then explore specialized architectures:
+						</p>
+						<ul>
+							<li><strong>Convolutional Neural Networks (CNNs)</strong> for images and signals</li>
+							<li>
+								<strong>Recurrent Neural Networks (RNNs)</strong> and LSTMs for sequences and time
+								series
+							</li>
+							<li>
+								<strong>Best practices</strong> for time series forecasting, including what commonly
+								goes wrong in stock prediction tutorials
+							</li>
+						</ul>
+					</section>
+
+					<section class="section" aria-labelledby="why-pytorch">
+						<h2 id="why-pytorch">Why PyTorch</h2>
+						<p>
+							Along the way, you’ll see how PyTorch’s automatic differentiation and rich set of
+							prebuilt layers let you focus on ideas and experiments instead of manually deriving and
+							coding gradients. Compared to earlier libraries like Theano and TensorFlow, PyTorch
+							emphasizes flexibility, clarity, and ease of debugging, making it a favorite for both
+							research and real-world applications.
+						</p>
+					</section>
+
+					<section class="section" aria-labelledby="practical-apps">
+						<h2 id="practical-apps">Practical applications</h2>
+						<p>The second half of the book focuses on applications that matter in practice:</p>
+						<ul>
+							<li><strong>Natural Language Processing (NLP)</strong> and text classification</li>
+							<li><strong>Embeddings</strong> for words and other categorical data</li>
+							<li>
+								<strong>Recommender systems</strong> as used by companies like Amazon, Facebook, and
+								Google
+							</li>
+							<li>
+								<strong>Transfer learning</strong> with pretrained models, allowing you to leverage
+								massive datasets like ImageNet
+							</li>
+							<li>
+								<strong>Generative Adversarial Networks (GANs)</strong> for realistic image generation
+							</li>
+							<li>
+								<strong>Reinforcement Learning (RL)</strong> for sequential decision-making and
+								control
+							</li>
+						</ul>
+					</section>
+
+					<section class="section" aria-labelledby="how-to-use">
+						<h2 id="how-to-use">How we’ll work</h2>
+						<p>
+							Throughout, we will rely on PyTorch and GPU-backed environments (such as Google Colab),
+							so you can train powerful models even if you don’t have specialized hardware. The goal
+							is not just to show you which buttons to press, but to help you understand why the
+							architectures work, where they fail, and how to adapt them to your own projects.
+						</p>
+
+						<div class="callout" role="note">
+							<strong>Bottom line:</strong> If you want to learn how to use one of the world’s
+							fastest-growing deep learning libraries to build real, modern AI systems, this book is
+							for you.
+						</div>
+					</section>
+				</main>
+
+				<div class="footer">Deep Learning with PyTorch • Chapter 1</div>
+			</article>
+		</div>
+	  <script src="../assets/js/nav.js"></script>
+</body>
+</html>

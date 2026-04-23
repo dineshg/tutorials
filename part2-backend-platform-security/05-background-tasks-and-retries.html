@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Background Tasks & Retries in FastAPI</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.7;
+            color: #2c3e50;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+            background: linear-gradient(to bottom, #f8f9fa 0%, #ffffff 100%);
+        }
+        h1, h2, h3 {
+            color: #1a202c;
+            line-height: 1.3;
+            font-weight: 600;
+        }
+        h1 {
+            font-size: 2.5rem;
+            border-bottom: 3px solid #3b82f6;
+            padding-bottom: 0.75rem;
+            margin-bottom: 1.5rem;
+            color: #1e40af;
+        }
+        h2 {
+            font-size: 1.75rem;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 0.5rem;
+            margin-top: 3rem;
+            margin-bottom: 1.5rem;
+            color: #3b82f6;
+        }
+        h3 {
+            font-size: 1.35rem;
+            color: #059669;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+        hr {
+            border: none;
+            border-top: 2px solid #e5e7eb;
+            margin: 3rem 0;
+        }
+        .note {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border-left: 5px solid #f59e0b;
+            padding: 1.25rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .note::before {
+            content: "💡 ";
+            font-size: 1.2rem;
+        }
+        code {
+            font-family: "Fira Code", "Cascadia Code", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+            background-color: #e0e7ff;
+            color: #3730a3;
+            padding: 0.2em 0.5em;
+            border-radius: 4px;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+        pre {
+            background-color: #f5f5f5;
+            color: #000;
+            padding: 1.5rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border: 1px solid #ddd;
+            margin: 1.5rem 0;
+        }
+        pre code {
+            background-color: transparent;
+            color: #000;
+            padding: 0;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            display: block;
+        }
+        ol, ul {
+            padding-left: 2rem;
+        }
+        li {
+            margin-bottom: 1rem;
+        }
+        li p {
+            margin: 0.5rem 0;
+        }
+        strong {
+            color: #1e40af;
+            font-weight: 600;
+        }
+        em {
+            color: #059669;
+            font-style: normal;
+            font-weight: 500;
+        }
+        ul li::marker {
+            color: #3b82f6;
+        }
+        p {
+            margin: 1rem 0;
+        }
+        .highlight-box {
+            background-color: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+        .part-header {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            border-left: 5px solid #3b82f6;
+            padding: 1rem 1.25rem;
+            margin: 2rem 0 1.5rem 0;
+            border-radius: 4px;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1e40af;
+        }
+        .summary-box {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            border-left: 5px solid #059669;
+            padding: 1.25rem;
+            margin: 2rem 0;
+            border-radius: 4px;
+        }
+        .summary-box h3 {
+            margin-top: 0;
+            color: #065f46;
+        }
+    </style>
+  <link rel="stylesheet" href="../assets/css/book.css">
+</head>
+<body>
+
+    <h1>Background Tasks & Retries in FastAPI</h1>
+    
+    <div class="note">
+        Next step tutorial: Background tasks + retries in FastAPI (with your multi-tenant "ingest" example)
+    </div>
+
+    <h2>What You're Trying to Achieve</h2>
+    
+    <p>In your app, some operations (like document ingestion) take time. You don't want the user to wait for extraction/embedding/indexing inside the HTTP request. So you:</p>
+    
+    <ol>
+        <li>Accept a request quickly (<code>POST /ingest</code>)</li>
+        <li>Return immediately with a <code>job_id</code></li>
+        <li>Run the heavy work in a background task</li>
+        <li>Make it safe if the client retries (using <code>Idempotency-Key</code>)</li>
+        <li>Add server-side retries for flaky dependencies inside the job</li>
+    </ol>
+
+    <hr>
+
+    <div class="part-header">Part A — Background tasks: do work after the response</div>
+
+    <h3>1) The endpoint returns immediately</h3>
+
+    <pre><code><span style="color: #0000ff;">from</span> fastapi <span style="color: #0000ff;">import</span> FastAPI, BackgroundTasks, Depends, Header, HTTPException
+<span style="color: #0000ff;">from</span> pydantic <span style="color: #0000ff;">import</span> BaseModel
+<span style="color: #0000ff;">import</span> uuid
+<span style="color: #0000ff;">import</span> time
+
+app = FastAPI()
+
+<span style="color: #008000;"># --- pretend identity (normally from JWT/Bearer dependency) ---</span>
+<span style="color: #0000ff;">class</span> <span style="color: #2b91af;">Identity</span>(BaseModel):
+    tenant_id: str
+    user_id: str
+
+<span style="color: #0000ff;">def</span> <span style="color: #795e26;">get_identity</span>() -&gt; Identity:
+    <span style="color: #008000;"># placeholder: in real life, derive from Bearer token</span>
+    <span style="color: #0000ff;">return</span> Identity(tenant_id=<span style="color: #a31515;">"tenant-acme"</span>, user_id=<span style="color: #a31515;">"user-123"</span>)
+
+<span style="color: #008000;"># --- pretend DB tables ---</span>
+JOBS: dict[str, dict] = {}               <span style="color: #008000;"># job_id -> {tenant_id,user_id,status}</span>
+IDEMPOTENCY: dict[str, dict] = {}        <span style="color: #008000;"># (tenant_id, idem_key) -> response</span>
+
+<span style="color: #0000ff;">class</span> <span style="color: #2b91af;">IngestResponse</span>(BaseModel):
+    job_id: str
+    status: str
+
+<span style="color: #0000ff;">def</span> <span style="color: #795e26;">ingest_job</span>(job_id: str):
+    <span style="color: #008000;"># runs after response</span>
+    JOBS[job_id][<span style="color: #a31515;">"status"</span>] = <span style="color: #a31515;">"running"</span>
+    time.sleep(<span style="color: #098658;">2</span>)  <span style="color: #008000;"># pretend long work</span>
+    JOBS[job_id][<span style="color: #a31515;">"status"</span>] = <span style="color: #a31515;">"done"</span>
+
+@app.post(<span style="color: #a31515;">"/ingest"</span>, response_model=IngestResponse)
+<span style="color: #0000ff;">def</span> <span style="color: #795e26;">ingest</span>(
+    background: BackgroundTasks,
+    ident: Identity = Depends(get_identity),
+    idempotency_key: str | <span style="color: #0000ff;">None</span> = Header(<span style="color: #0000ff;">None</span>, alias=<span style="color: #a31515;">"Idempotency-Key"</span>),
+):
+    <span style="color: #0000ff;">if</span> <span style="color: #0000ff;">not</span> idempotency_key:
+        <span style="color: #0000ff;">raise</span> HTTPException(status_code=<span style="color: #098658;">400</span>, detail=<span style="color: #a31515;">"Missing Idempotency-Key"</span>)
+
+    idem_store_key = <span style="color: #a31515;">f"<span style="color: #000;">{ident.tenant_id}</span>:<span style="color: #000;">{idempotency_key}</span>"</span>
+
+    <span style="color: #008000;"># if client retries, return the original response</span>
+    <span style="color: #0000ff;">if</span> idem_store_key <span style="color: #0000ff;">in</span> IDEMPOTENCY:
+        <span style="color: #0000ff;">return</span> IDEMPOTENCY[idem_store_key]
+
+    job_id = str(uuid.uuid4())
+    JOBS[job_id] = {<span style="color: #a31515;">"tenant_id"</span>: ident.tenant_id, <span style="color: #a31515;">"user_id"</span>: ident.user_id, <span style="color: #a31515;">"status"</span>: <span style="color: #a31515;">"queued"</span>}
+
+    response = {<span style="color: #a31515;">"job_id"</span>: job_id, <span style="color: #a31515;">"status"</span>: <span style="color: #a31515;">"queued"</span>}
+    IDEMPOTENCY[idem_store_key] = response
+
+    <span style="color: #008000;"># schedule work after response</span>
+    background.add_task(ingest_job, job_id)
+
+    <span style="color: #0000ff;">return</span> response</code></pre>
+
+    <h3>How the client calls it (retry-safe)</h3>
+
+    <pre><code>POST /ingest HTTP/1.1
+Authorization: Bearer &lt;token&gt;
+Idempotency-Key: 9c2f9f2f-9bd8-4d1e-8b45-4a338f89f9a0
+Content-Type: application/json
+
+{}</code></pre>
+
+    <div class="highlight-box">
+        <strong>Key point:</strong> If the request times out and the client retries with the same <code>Idempotency-Key</code>, it gets the same <code>job_id</code>, not a duplicate job.
+    </div>
+
+    <hr>
+
+    <div class="part-header">Part B — Retries: handle flaky downstream calls</div>
+
+    <p>In ingestion you'll call services that may transiently fail (network hiccups, 429, 503). You add retries inside the background job, not by rerunning the whole HTTP request.</p>
+
+    <h3>2) Add a small retry helper (with backoff)</h3>
+
+    <pre><code><span style="color: #0000ff;">import</span> time
+<span style="color: #0000ff;">import</span> random
+
+<span style="color: #0000ff;">class</span> <span style="color: #2b91af;">TransientError</span>(Exception):
+    <span style="color: #0000ff;">pass</span>
+
+<span style="color: #0000ff;">def</span> <span style="color: #795e26;">retry</span>(fn, attempts: int = <span style="color: #098658;">3</span>, base_delay: float = <span style="color: #098658;">0.25</span>):
+    last = <span style="color: #0000ff;">None</span>
+    <span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span> range(attempts):
+        <span style="color: #0000ff;">try</span>:
+            <span style="color: #0000ff;">return</span> fn()
+        <span style="color: #0000ff;">except</span> TransientError <span style="color: #0000ff;">as</span> e:
+            last = e
+            time.sleep(base_delay * (<span style="color: #098658;">2</span> ** i))  <span style="color: #008000;"># 0.25, 0.5, 1.0...</span>
+    <span style="color: #0000ff;">raise</span> last</code></pre>
+
+    <h3>3) Use retries in the background ingestion job</h3>
+
+    <pre><code><span style="color: #0000ff;">def</span> <span style="color: #795e26;">call_elasticsearch_index</span>():
+    <span style="color: #008000;"># pretend random transient failure</span>
+    <span style="color: #0000ff;">if</span> random.random() &lt; <span style="color: #098658;">0.4</span>:
+        <span style="color: #0000ff;">raise</span> TransientError(<span style="color: #a31515;">"ES 503"</span>)
+    <span style="color: #0000ff;">return</span> <span style="color: #0000ff;">True</span>
+
+<span style="color: #0000ff;">def</span> <span style="color: #795e26;">call_embedding_service</span>():
+    <span style="color: #0000ff;">if</span> random.random() &lt; <span style="color: #098658;">0.4</span>:
+        <span style="color: #0000ff;">raise</span> TransientError(<span style="color: #a31515;">"Embedding timeout"</span>)
+    <span style="color: #0000ff;">return</span> <span style="color: #0000ff;">True</span>
+
+<span style="color: #0000ff;">def</span> <span style="color: #795e26;">ingest_job</span>(job_id: str):
+    JOBS[job_id][<span style="color: #a31515;">"status"</span>] = <span style="color: #a31515;">"running"</span>
+
+    <span style="color: #008000;"># retry flaky steps</span>
+    retry(call_elasticsearch_index, attempts=<span style="color: #098658;">3</span>)
+    retry(call_embedding_service, attempts=<span style="color: #098658;">3</span>)
+
+    JOBS[job_id][<span style="color: #a31515;">"status"</span>] = <span style="color: #a31515;">"done"</span></code></pre>
+
+    <hr>
+
+    <div class="part-header">Part C — Multi-tenant isolation (what to remember)</div>
+
+    <p>Notice we stored tenant/user on the job:</p>
+
+    <pre><code>JOBS[job_id] = {<span style="color: #a31515;">"tenant_id"</span>: ident.tenant_id, <span style="color: #a31515;">"user_id"</span>: ident.user_id, ...}</code></pre>
+
+    <div class="highlight-box">
+        <strong>The rule:</strong> Every job and every downstream action must carry the tenant scope. Even in background work, you never run a job "without tenant context".
+    </div>
+
+    <hr>
+
+    <div class="summary-box">
+        <h3>📚 Summary (what you learned)</h3>
+        <ul>
+            <li><code>BackgroundTasks</code> let you respond fast and do best-effort work after the response.</li>
+            <li>Retries belong inside your outbound calls (ES/LLM/etc.), not by re-running unsafe POSTs.</li>
+            <li><code>Idempotency-Key</code> makes POST safe to retry from the client.</li>
+            <li>Tenant/user identity should be attached to jobs and used everywhere.</li>
+        </ul>
+        <p style="margin-bottom: 0;"><em>Next step:</em> Add a <code>GET /jobs/{job_id}</code> endpoint that only lets the same <code>tenant_id</code> read the job status (multi-tenant-safe job polling).</p>
+    </div>
+
+  <script src="../assets/js/nav.js"></script>
+</body>
+</html>

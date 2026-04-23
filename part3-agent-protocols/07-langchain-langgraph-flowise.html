@@ -1,0 +1,868 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>LangChain → LangGraph → Flowise: A practical tutorial (dicts, nodes, state)</title>
+  <style>
+    :root{
+      --bg:#ffffff; --fg:#111827; --muted:#6b7280; --card:#f9fafb; --line:#e5e7eb;
+      --codebg:#0b1020; --codefg:#e5e7eb; --accent:#2563eb; --accent2:#16a34a;
+    }
+    html,body{background:var(--bg); color:var(--fg); font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif; margin:0;}
+    a{color:var(--accent); text-decoration:none;} a:hover{text-decoration:underline;}
+    header{border-bottom:1px solid var(--line); background:linear-gradient(180deg,#ffffff,#fbfdff);}
+    .wrap{max-width:1000px; margin:0 auto; padding:28px 20px;}
+    h1{font-size:30px; margin:0 0 6px;}
+    h2{font-size:22px; margin:26px 0 10px;}
+    h3{font-size:18px; margin:18px 0 8px;}
+    p{margin:10px 0;}
+    .muted{color:var(--muted);}
+    .toc{background:var(--card); border:1px solid var(--line); padding:14px 16px; border-radius:12px;}
+    .toc ul{margin:10px 0 0 20px;}
+    .card{background:var(--card); border:1px solid var(--line); padding:14px 16px; border-radius:12px; margin:12px 0;}
+    .callout{border-left:4px solid var(--accent); background:#eff6ff; padding:12px 14px; border-radius:10px;}
+    .good{border-left-color:var(--accent2); background:#f0fdf4;}
+    code.inline{background:#f3f4f6; padding:2px 6px; border-radius:6px; border:1px solid var(--line);}
+    pre{background:var(--codebg); color:var(--codefg); padding:14px 16px; border-radius:12px; overflow:auto; border:1px solid #0f172a;}
+    pre code{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,Liberation Mono,monospace; font-size:13px;}
+    /* Make code blocks colorful (lightweight in-page highlighting) */
+    pre code.hl{display:block;}
+    pre code.hl .tok-kw{color:var(--accent); font-weight:650;}
+    pre code.hl .tok-str{color:var(--accent2);}
+    pre code.hl .tok-num{color:var(--accent2);}
+    pre code.hl .tok-com{color:var(--muted); font-style:italic;}
+    pre code.hl .tok-id{color:var(--codefg);}
+    pre code.hl .tok-op{color:var(--codefg); opacity:.85;}
+    pre code.hl .tok-bool{color:var(--accent); font-weight:650;}
+    pre code.hl .tok-null{color:var(--muted); font-weight:650;}
+    .grid{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+    @media (max-width: 860px){ .grid{grid-template-columns:1fr;} }
+    table{width:100%; border-collapse:collapse; margin:10px 0; font-size:14px;}
+    th,td{border:1px solid var(--line); padding:10px; text-align:left; vertical-align:top;}
+    th{background:#f3f4f6;}
+    .badge{display:inline-block; font-size:12px; padding:2px 8px; border-radius:999px; border:1px solid var(--line); background:#fff;}
+    .diagram{font-family:ui-monospace,Menlo,Consolas,monospace; background:#fff; border:1px dashed var(--line); padding:10px 12px; border-radius:12px; color:#111827;}
+    .hr{height:1px; background:var(--line); margin:18px 0;}
+    /* Inline visuals */
+    .viz{width:100%; height:auto; display:block;}
+    .viz text{font-family:ui-monospace,Menlo,Consolas,monospace;}
+    .viz .box{fill:#ffffff; stroke:var(--line); stroke-width:1.2;}
+    .viz .box2{fill:var(--card); stroke:var(--line); stroke-width:1.2;}
+    .viz .title{fill:var(--fg); font-weight:700;}
+    .viz .label{fill:var(--fg); opacity:.92;}
+    .viz .muted{fill:var(--muted);}
+    .viz .accent{stroke:var(--accent);}
+    .viz .accentFill{fill:var(--accent);}
+    .viz .accent2{stroke:var(--accent2);}
+    .viz .accent2Fill{fill:var(--accent2);}
+  </style>
+  <link rel="stylesheet" href="../assets/css/book.css">
+</head>
+
+<body>
+<header>
+  <div class="wrap">
+    <h1>LangChain → LangGraph → Flowise</h1>
+    <p class="muted">How to think in “passing dictionaries”, building nodes, composing runnables, managing state, and then turning it into a UI flow.</p>
+
+    <div class="toc">
+      <strong>Table of contents</strong>
+      <ul>
+        <li><a href="#bridge">Bridge from HTTP → “dict pipelines”</a></li>
+        <li><a href="#langchain">LangChain: everything is a runnable that transforms inputs → outputs</a>
+          <ul>
+            <li><a href="#dicts">The “passing dictionaries” mental model</a></li>
+            <li><a href="#runnables">Runnables: invoke/batch/stream + composition</a></li>
+            <li><a href="#passthrough">RunnablePassthrough + assign</a></li>
+            <li><a href="#custom-node">Custom node creation (custom runnable)</a></li>
+            <li><a href="#mini-chain">Mini end-to-end chain example</a></li>
+          </ul>
+        </li>
+        <li><a href="#langgraph">LangGraph: stateful graphs (State → partial State)</a>
+          <ul>
+            <li><a href="#state">State passing and reducers</a></li>
+            <li><a href="#graph-example">Example: “purchase request” graph (inventory + approval)</a></li>
+          </ul>
+        </li>
+        <li><a href="#flowise">Flowise: LangChain concepts as a UI</a></li>
+      </ul>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section id="bridge">
+    <h2>Bridge from HTTP → “dict pipelines”</h2>
+    <p>
+      You already learned HTTP methods (GET/POST/PUT/PATCH/DELETE). When you build LLM apps, you’ll usually expose them as HTTP endpoints too.
+      The key connection:
+    </p>
+
+    <div class="callout">
+      <strong>HTTP request body is typically JSON → in Python it becomes a <code class="inline">dict</code>.</strong><br/>
+      LangChain/LangGraph pipelines are easiest to understand as “functions that transform dictionaries”.
+    </div>
+
+    <div class="card">
+      <div class="diagram">
+        Client JSON<br/>
+        └─&gt; Python dict<br/>
+            └─&gt; LangChain runnable pipeline (dict -&gt; dict/string)<br/>
+                └─&gt; HTTP JSON response
+      </div>
+    </div>
+
+    <div class="card">
+      <strong>Visual: request → dict → runnable pipeline</strong>
+      <svg class="viz" viewBox="0 0 980 220" role="img" aria-label="HTTP request to dict to runnable pipeline to response">
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" class="accentFill" />
+          </marker>
+        </defs>
+
+        <rect x="18" y="48" width="200" height="120" rx="14" class="box" />
+        <text x="118" y="86" text-anchor="middle" class="title">Client</text>
+        <text x="118" y="112" text-anchor="middle" class="label">JSON body</text>
+        <text x="118" y="136" text-anchor="middle" class="muted">{...}</text>
+
+        <rect x="260" y="48" width="200" height="120" rx="14" class="box2" />
+        <text x="360" y="86" text-anchor="middle" class="title">Python</text>
+        <text x="360" y="112" text-anchor="middle" class="label">dict</text>
+        <text x="360" y="136" text-anchor="middle" class="muted">{"question": ...}</text>
+
+        <rect x="502" y="48" width="260" height="120" rx="14" class="box" />
+        <text x="632" y="78" text-anchor="middle" class="title">LangChain</text>
+        <text x="632" y="105" text-anchor="middle" class="label">Runnable pipeline</text>
+        <text x="632" y="132" text-anchor="middle" class="muted">prompt | llm | parser</text>
+
+        <rect x="804" y="48" width="160" height="120" rx="14" class="box2" />
+        <text x="884" y="86" text-anchor="middle" class="title">Response</text>
+        <text x="884" y="112" text-anchor="middle" class="label">JSON / text</text>
+        <text x="884" y="136" text-anchor="middle" class="muted">"..."</text>
+
+        <line x1="218" y1="108" x2="260" y2="108" class="accent" stroke-width="2" marker-end="url(#arrow)" />
+        <line x1="460" y1="108" x2="502" y2="108" class="accent" stroke-width="2" marker-end="url(#arrow)" />
+        <line x1="762" y1="108" x2="804" y2="108" class="accent" stroke-width="2" marker-end="url(#arrow)" />
+
+        <text x="240" y="95" text-anchor="middle" class="muted">parse</text>
+        <text x="481" y="95" text-anchor="middle" class="muted">invoke</text>
+        <text x="783" y="95" text-anchor="middle" class="muted">return</text>
+      </svg>
+      <p class="muted">This is the “dict pipeline” mental model: you’re always passing one structured object through transforms.</p>
+    </div>
+  </section>
+
+  <section id="langchain">
+    <h2>LangChain: everything is a runnable that transforms inputs → outputs</h2>
+
+    <section id="dicts">
+      <h3>1) The “passing dictionaries” mental model</h3>
+      <p>
+        Think of a chain as a pipeline that receives a dictionary, adds/changes keys, and eventually returns a final output.
+      </p>
+
+      <div class="grid">
+        <div class="card">
+          <strong>Input dict</strong>
+          <pre><code class="language-json">{
+  "user_id": "u_123",
+  "question": "What is my total spend last month?"
+}</code></pre>
+        </div>
+        <div class="card">
+          <strong>Output</strong>
+          <pre><code class="language-json">"Your total spend last month was $1,245.40"</code></pre>
+        </div>
+      </div>
+
+      <p class="muted">
+        Internally, intermediate steps might create keys like <code class="inline">sql</code>, <code class="inline">rows</code>, <code class="inline">summary</code>.
+      </p>
+    </section>
+
+    <section id="runnables">
+      <h3>2) Runnables: one interface + composition</h3>
+      <p>
+        A <span class="badge">Runnable</span> is “anything” you can call in a consistent way:
+        one input → one output.
+      </p>
+
+      <table>
+        <thead>
+          <tr><th>Concept</th><th>What it means</th><th>Why you care</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code class="inline">invoke(input)</code></td>
+            <td>Run once, return output</td>
+            <td>Simple request/response</td>
+          </tr>
+          <tr>
+            <td><code class="inline">batch([inputs])</code></td>
+            <td>Run many inputs efficiently</td>
+            <td>Lower cost + faster throughput</td>
+          </tr>
+          <tr>
+            <td><code class="inline">stream(input)</code></td>
+            <td>Yield partial outputs as they’re produced</td>
+            <td>Great UX for chat/long responses</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="card">
+        <strong>Composition rule (LCEL):</strong> pipe output of one runnable into the next
+        <div class="diagram" style="margin-top:10px;">
+          prompt_template | llm | output_parser
+        </div>
+        <p class="muted">
+          Mentally: <code class="inline">output = parser(llm(prompt(input)))</code>
+        </p>
+      </div>
+
+      <div class="callout good">
+        <strong>Why this “uniform runnable” idea is powerful:</strong><br/>
+        Once everything speaks the same interface, you can mix-and-match prompts, models, retrievers, parsers, and custom logic like LEGO.
+      </div>
+
+      <div class="card">
+        <strong>Visual: one interface, different runtimes</strong>
+        <svg class="viz" viewBox="0 0 980 220" role="img" aria-label="Runnable invoke batch stream visual">
+          <defs>
+            <marker id="arrow2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" class="accent2Fill" />
+            </marker>
+          </defs>
+
+          <rect x="30" y="64" width="240" height="120" rx="14" class="box2" />
+          <text x="150" y="98" text-anchor="middle" class="title">Runnable</text>
+          <text x="150" y="126" text-anchor="middle" class="label">one input → one output</text>
+          <text x="150" y="154" text-anchor="middle" class="muted">uniform interface</text>
+
+          <rect x="320" y="30" width="200" height="60" rx="12" class="box" />
+          <text x="420" y="66" text-anchor="middle" class="title">invoke</text>
+
+          <rect x="320" y="98" width="200" height="60" rx="12" class="box" />
+          <text x="420" y="134" text-anchor="middle" class="title">batch</text>
+
+          <rect x="320" y="166" width="200" height="60" rx="12" class="box" />
+          <text x="420" y="202" text-anchor="middle" class="title">stream</text>
+
+          <rect x="580" y="30" width="370" height="196" rx="14" class="box2" />
+          <text x="765" y="66" text-anchor="middle" class="title">Composition</text>
+          <text x="765" y="102" text-anchor="middle" class="label">prompt | llm | parser</text>
+          <text x="765" y="134" text-anchor="middle" class="muted">mix-and-match components</text>
+          <text x="765" y="170" text-anchor="middle" class="muted">same call shape everywhere</text>
+
+          <line x1="270" y1="124" x2="320" y2="60" class="accent2" stroke-width="2" marker-end="url(#arrow2)" />
+          <line x1="270" y1="124" x2="320" y2="128" class="accent2" stroke-width="2" marker-end="url(#arrow2)" />
+          <line x1="270" y1="124" x2="320" y2="196" class="accent2" stroke-width="2" marker-end="url(#arrow2)" />
+          <line x1="520" y1="128" x2="580" y2="128" class="accent2" stroke-width="2" marker-end="url(#arrow2)" />
+        </svg>
+      </div>
+    </section>
+
+    <section id="passthrough">
+      <h3>3) RunnablePassthrough (and “keeping keys alive”)</h3>
+      <p>
+        In real pipelines you often need to compute something new <em>without losing the original input</em>.
+        That’s where “passthrough” patterns help.
+      </p>
+
+      <div class="card">
+        <strong>Typical RAG shape (conceptual)</strong>
+        <pre><code class="language-json">{
+  "question": "...",
+  "context": "&lt;retrieved docs text&gt;"
+}  --&gt; prompt --&gt; llm --&gt; answer</code></pre>
+      </div>
+
+      <p>
+        <code class="inline">RunnablePassthrough</code> behaves like identity, and can also be used with an “assign” pattern to add keys.
+      </p>
+
+      <pre><code class="language-python"># Conceptual example (LangChain LCEL style)
+from operator import itemgetter
+from langchain_core.runnables import RunnablePassthrough
+
+# Suppose you already have: retriever, format_docs, prompt, llm, parser
+setup = RunnablePassthrough.assign(
+    context=itemgetter("question") | retriever | format_docs
+)
+
+chain = setup | prompt | llm | parser
+
+result = chain.invoke({"question": "What are the top 3 products by revenue?"})
+print(result)</code></pre>
+
+      <div class="callout">
+        <strong>Key mental model:</strong> Passthrough keeps your dict intact, while letting you attach extra computed fields.
+      </div>
+    </section>
+
+    <section id="custom-node">
+      <h3>4) Custom node creation in LangChain (custom runnable)</h3>
+      <p>
+        “Node” isn’t an official LangChain term the way it is in graph frameworks, but developers often call each pipeline step a “node”.
+        The simplest way to create a custom node is to wrap a Python function as a runnable.
+      </p>
+
+      <pre><code class="language-python">from langchain_core.runnables import RunnableLambda
+
+def normalize_question(inputs: dict) -&gt; dict:
+    q = inputs["question"].strip()
+    return {**inputs, "question": q}
+
+normalize_node = RunnableLambda(normalize_question)
+
+# Now it composes like any other runnable:
+# normalize_node | prompt | llm | parser</code></pre>
+
+      <div class="card">
+        <strong>Rule of thumb</strong>
+        <ul>
+          <li>Input and output can be strings, lists, or dicts… but dicts give you the most flexibility.</li>
+          <li>Prefer “pure transforms” (no side effects) for easy debugging.</li>
+          <li>If you need side effects (DB writes, HTTP calls), isolate them in a clearly-named node.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="mini-chain">
+      <h3>5) Mini end-to-end LangChain example (SQL helper, dict-first)</h3>
+      <p>
+        Here’s a tiny pipeline that:
+        1) builds SQL from a question, 2) executes it, 3) summarizes rows.
+        This is intentionally small so you can “see the dictionaries move”.
+      </p>
+
+      <pre><code class="language-python">from langchain_core.runnables import RunnableLambda, RunnablePassthrough
+from operator import itemgetter
+
+# --- pretend implementations ---
+def llm_write_sql(inputs: dict) -&gt; dict:
+    # In practice: prompt | llm | parser
+    q = inputs["question"]
+    sql = f"SELECT SUM(amount) AS total FROM orders WHERE month = 'last' -- for: {q}"
+    return {**inputs, "sql": sql}
+
+def run_sql(inputs: dict) -&gt; dict:
+    # In practice: call your DB driver here
+    rows = [{"total": 1245.40}]
+    return {**inputs, "rows": rows}
+
+def summarize(inputs: dict) -&gt; str:
+    total = inputs["rows"][0]["total"]
+    return f"Your total spend last month was ${total:,.2f}"
+
+# --- wrap as nodes ---
+write_sql = RunnableLambda(llm_write_sql)
+execute = RunnableLambda(run_sql)
+summarize_node = RunnableLambda(summarize)
+
+# --- keep dict, add keys, finish with a string ---
+chain = (
+    RunnablePassthrough()   # starts as identity (keeps original dict)
+    | write_sql             # adds sql
+    | execute               # adds rows
+    | summarize_node        # returns final string
+)
+
+print(chain.invoke({"user_id": "u_123", "question": "What is my total spend last month?"}))</code></pre>
+
+      <div class="callout good">
+        <strong>What you should notice:</strong><br/>
+        Each step either (a) returns a new dict with extra keys, or (b) returns the final answer.
+        That’s the “passing dictionaries” idea in one page.
+      </div>
+    </section>
+  </section>
+
+  <div class="hr"></div>
+
+  <section id="langgraph">
+    <h2>LangGraph: stateful graphs (State → partial State)</h2>
+
+    <section id="state">
+      <h3>1) State passing</h3>
+      <p>
+        LangGraph is what you use when a simple linear chain becomes a workflow:
+        branching, loops, retries, tool-calling cycles, or multi-step “agent” behavior.
+      </p>
+
+      <div class="card">
+        <strong>Core rule:</strong>
+        <div class="diagram" style="margin-top:10px;">
+          Each node reads State and returns a partial update to State
+        </div>
+      </div>
+
+      <div class="card">
+        <strong>Visual: State → partial State updates</strong>
+        <svg class="viz" viewBox="0 0 980 240" role="img" aria-label="State passing visual">
+          <defs>
+            <marker id="arrow3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" class="accentFill" />
+            </marker>
+          </defs>
+
+          <rect x="30" y="60" width="260" height="140" rx="14" class="box2" />
+          <text x="160" y="96" text-anchor="middle" class="title">State (shared)</text>
+          <text x="160" y="128" text-anchor="middle" class="muted">{"sku", "qty", "amount", ...}</text>
+          <text x="160" y="156" text-anchor="middle" class="muted">+ intermediate keys</text>
+
+          <rect x="360" y="24" width="260" height="76" rx="14" class="box" />
+          <text x="490" y="58" text-anchor="middle" class="title">node A</text>
+          <text x="490" y="84" text-anchor="middle" class="muted">returns {"in_stock": true}</text>
+
+          <rect x="360" y="126" width="260" height="76" rx="14" class="box" />
+          <text x="490" y="160" text-anchor="middle" class="title">node B</text>
+          <text x="490" y="186" text-anchor="middle" class="muted">returns {"approval": "approved"}</text>
+
+          <rect x="690" y="60" width="260" height="140" rx="14" class="box2" />
+          <text x="820" y="96" text-anchor="middle" class="title">Merged State</text>
+          <text x="820" y="128" text-anchor="middle" class="muted">State + updates</text>
+          <text x="820" y="156" text-anchor="middle" class="muted">(reducers define merging)</text>
+
+          <line x1="290" y1="130" x2="360" y2="62" class="accent" stroke-width="2" marker-end="url(#arrow3)" />
+          <line x1="290" y1="130" x2="360" y2="164" class="accent" stroke-width="2" marker-end="url(#arrow3)" />
+          <line x1="620" y1="62" x2="690" y2="130" class="accent" stroke-width="2" marker-end="url(#arrow3)" />
+          <line x1="620" y1="164" x2="690" y2="130" class="accent" stroke-width="2" marker-end="url(#arrow3)" />
+        </svg>
+      </div>
+
+      <p>
+        You usually define a typed state (e.g., <code class="inline">TypedDict</code>) and each node returns only the keys it changed.
+      </p>
+
+      <div class="callout">
+        <strong>Reducers (why they exist):</strong><br/>
+        If multiple nodes update the same key (e.g., message history), reducers define how those updates are merged (append, overwrite, etc.).
+      </div>
+    </section>
+
+    <section id="graph-example">
+      <h3>2) Example: “purchase request” graph (inventory + approval)</h3>
+      <p>
+        This mirrors the A2A story you built earlier (concierge → inventory + approval),
+        but inside a single LangGraph workflow with shared state.
+      </p>
+
+      <div class="card">
+        <strong>Graph shape</strong>
+        <div class="diagram">
+          START
+            |
+         parse_request
+            |
+        check_inventory ----(out_of_stock)----&gt; finalize
+            |
+        request_approval ----(rejected)-------&gt; finalize
+            |
+          finalize
+            |
+           END
+        </div>
+      </div>
+
+      <div class="card">
+        <strong>Visual: branching workflow</strong>
+        <svg class="viz" viewBox="0 0 980 260" role="img" aria-label="Purchase request graph visual">
+          <defs>
+            <marker id="arrow4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" class="accent2Fill" />
+            </marker>
+          </defs>
+
+          <rect x="410" y="20" width="160" height="44" rx="12" class="box2" />
+          <text x="490" y="48" text-anchor="middle" class="title">START</text>
+
+          <rect x="370" y="84" width="240" height="50" rx="12" class="box" />
+          <text x="490" y="114" text-anchor="middle" class="title">parse_request</text>
+
+          <rect x="350" y="154" width="280" height="52" rx="12" class="box" />
+          <text x="490" y="186" text-anchor="middle" class="title">check_inventory</text>
+
+          <rect x="100" y="214" width="260" height="46" rx="12" class="box2" />
+          <text x="230" y="242" text-anchor="middle" class="title">finalize</text>
+          <text x="230" y="262" text-anchor="middle" class="muted">(out_of_stock)</text>
+
+          <rect x="620" y="214" width="260" height="46" rx="12" class="box" />
+          <text x="750" y="242" text-anchor="middle" class="title">request_approval</text>
+
+          <rect x="410" y="214" width="160" height="46" rx="12" class="box2" />
+          <text x="490" y="242" text-anchor="middle" class="title">finalize</text>
+          <text x="490" y="262" text-anchor="middle" class="muted">(then END)</text>
+
+          <line x1="490" y1="64" x2="490" y2="84" class="accent2" stroke-width="2" marker-end="url(#arrow4)" />
+          <line x1="490" y1="134" x2="490" y2="154" class="accent2" stroke-width="2" marker-end="url(#arrow4)" />
+
+          <line x1="390" y1="206" x2="280" y2="214" class="accent2" stroke-width="2" marker-end="url(#arrow4)" />
+          <text x="335" y="216" text-anchor="middle" class="muted">no stock</text>
+
+          <line x1="590" y1="206" x2="700" y2="214" class="accent2" stroke-width="2" marker-end="url(#arrow4)" />
+          <text x="645" y="216" text-anchor="middle" class="muted">in stock</text>
+
+          <line x1="750" y1="260" x2="570" y2="260" class="accent2" stroke-width="2" marker-end="url(#arrow4)" />
+          <text x="655" y="252" text-anchor="middle" class="muted">approved/rejected → finalize</text>
+        </svg>
+      </div>
+
+      <pre><code class="language-python">from typing import TypedDict, Literal, Optional
+from langgraph.graph import StateGraph, END
+
+class PurchaseState(TypedDict, total=False):
+    # input
+    sku: str
+    qty: int
+    amount: float
+    po_id: str
+
+    # derived/intermediate
+    in_stock: bool
+    reserved: bool
+    approval: Literal["approved", "rejected", "skipped"]
+    reason: Optional[str]
+
+    # final
+    result: str
+
+# --- nodes ---
+def parse_request(state: PurchaseState) -&gt; PurchaseState:
+    # In real life, parse from user text. Here we assume state already has fields.
+    return {}
+
+def check_inventory(state: PurchaseState) -&gt; PurchaseState:
+    # pretend inventory lookup
+    stock_map = {"SKU-APPLE": 12, "SKU-CHAIR": 0}
+    available = stock_map.get(state["sku"], 0)
+    if available &lt; state["qty"]:
+        return {"in_stock": False, "reserved": False, "reason": f"Only {available} left"}
+    return {"in_stock": True, "reserved": True}
+
+def request_approval(state: PurchaseState) -&gt; PurchaseState:
+    # pretend policy: auto-approve up to 1000
+    if state["amount"] &lt;= 1000:
+        return {"approval": "approved"}
+    return {"approval": "rejected", "reason": "Over auto-approval limit"}
+
+def finalize(state: PurchaseState) -&gt; PurchaseState:
+    if not state.get("in_stock", True):
+        return {"result": f"FAILED: out of stock ({state.get('reason')})"}
+    if state.get("approval") == "rejected":
+        return {"result": f"FAILED: approval rejected ({state.get('reason')})"}
+    return {"result": "SUCCESS: reserved and approved"}
+
+# --- build graph ---
+g = StateGraph(PurchaseState)
+g.add_node("parse_request", parse_request)
+g.add_node("check_inventory", check_inventory)
+g.add_node("request_approval", request_approval)
+g.add_node("finalize", finalize)
+
+g.set_entry_point("parse_request")
+g.add_edge("parse_request", "check_inventory")
+
+# conditional branching after inventory
+def inventory_router(state: PurchaseState):
+    return "finalize" if not state.get("in_stock", True) else "request_approval"
+
+g.add_conditional_edges("check_inventory", inventory_router, {
+    "finalize": "finalize",
+    "request_approval": "request_approval",
+})
+
+# conditional branching after approval
+def approval_router(state: PurchaseState):
+    return "finalize"
+
+g.add_conditional_edges("request_approval", approval_router, {
+    "finalize": "finalize",
+})
+
+g.add_edge("finalize", END)
+
+app = g.compile()
+
+print(app.invoke({"sku": "SKU-APPLE", "qty": 2, "amount": 4.50, "po_id": "PO-1001"})["result"])
+print(app.invoke({"sku": "SKU-CHAIR", "qty": 1, "amount": 150.0, "po_id": "PO-2002"})["result"])
+print(app.invoke({"sku": "SKU-APPLE", "qty": 1, "amount": 2500.0, "po_id": "PO-3003"})["result"])</code></pre>
+
+      <div class="callout good">
+        <strong>Key difference vs LangChain chain:</strong><br/>
+        LangChain pipelines are typically linear transforms; LangGraph makes the “workflow control” (branching/loops) explicit and stateful.
+      </div>
+    </section>
+  </section>
+
+  <div class="hr"></div>
+
+  <section id="flowise">
+    <h2>Flowise: LangChain concepts as a UI</h2>
+
+    <p>
+      Flowise takes the same building blocks you used in LangChain (LLM, prompt, retriever, memory, tools, custom code)
+      and represents them as <strong>drag-and-drop nodes</strong>.
+    </p>
+
+    <div class="grid">
+      <div class="card">
+        <strong>In code (LangChain)</strong>
+        <div class="diagram" style="margin-top:10px;">
+          input dict<br/>
+          └─&gt; prompt | llm | parser<br/>
+          └─&gt; output
+        </div>
+      </div>
+      <div class="card">
+        <strong>In UI (Flowise)</strong>
+        <div class="diagram" style="margin-top:10px;">
+          [Prompt Node] → [LLM Node] → [Output Parser Node]<br/>
+          (+ optional Retriever/Memory/Tools nodes)
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <strong>Visual: code pipeline ↔ UI nodes</strong>
+      <svg class="viz" viewBox="0 0 980 240" role="img" aria-label="Flowise mapping visual">
+        <defs>
+          <marker id="arrow5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" class="accentFill" />
+          </marker>
+        </defs>
+
+        <text x="240" y="34" text-anchor="middle" class="title">LangChain (code)</text>
+        <text x="740" y="34" text-anchor="middle" class="title">Flowise (UI)</text>
+
+        <rect x="70" y="70" width="340" height="140" rx="14" class="box2" />
+        <rect x="520" y="70" width="390" height="140" rx="14" class="box2" />
+
+        <rect x="95" y="104" width="110" height="44" rx="12" class="box" />
+        <text x="150" y="132" text-anchor="middle" class="title">prompt</text>
+        <rect x="220" y="104" width="90" height="44" rx="12" class="box" />
+        <text x="265" y="132" text-anchor="middle" class="title">llm</text>
+        <rect x="320" y="104" width="90" height="44" rx="12" class="box" />
+        <text x="365" y="132" text-anchor="middle" class="title">parser</text>
+
+        <line x1="205" y1="126" x2="220" y2="126" class="accent" stroke-width="2" marker-end="url(#arrow5)" />
+        <line x1="310" y1="126" x2="320" y2="126" class="accent" stroke-width="2" marker-end="url(#arrow5)" />
+
+        <rect x="555" y="94" width="140" height="46" rx="12" class="box" />
+        <text x="625" y="123" text-anchor="middle" class="title">Prompt Node</text>
+        <rect x="705" y="94" width="120" height="46" rx="12" class="box" />
+        <text x="765" y="123" text-anchor="middle" class="title">LLM Node</text>
+        <rect x="835" y="94" width="150" height="46" rx="12" class="box" />
+        <text x="910" y="123" text-anchor="middle" class="title">Parser Node</text>
+
+        <line x1="695" y1="117" x2="705" y2="117" class="accent" stroke-width="2" marker-end="url(#arrow5)" />
+        <line x1="825" y1="117" x2="835" y2="117" class="accent" stroke-width="2" marker-end="url(#arrow5)" />
+
+        <text x="240" y="188" text-anchor="middle" class="muted">source controlled</text>
+        <text x="740" y="188" text-anchor="middle" class="muted">fast prototyping</text>
+      </svg>
+      <p class="muted">Same building blocks — Flowise just makes the wiring visual.</p>
+    </div>
+
+    <h3>How Flowise maps to the “passing dictionaries” idea</h3>
+    <ul>
+      <li>Each UI node corresponds to a component (often a LangChain runnable under the hood).</li>
+      <li>Edges are “data flow”: output of one node becomes input to the next.</li>
+      <li>Node settings in the UI become the parameters you’d pass in code (model name, temperature, prompt template, etc.).</li>
+    </ul>
+
+    <div class="callout">
+      <strong>Practical workflow:</strong><br/>
+      Prototype in Flowise (fast), then replicate the same structure in LangChain/LangGraph code when you need version control, tests, and CI/CD.
+    </div>
+
+    <h3>Where LangGraph shows up in UI tools</h3>
+    <p>
+      Flowise can represent more complex workflows too, but graph-style systems (branching, loops, “agent cycles”, state management)
+      are where LangGraph shines in code.
+      In UIs, you’ll often see those features as conditional nodes, routers, or “agent” templates.
+    </p>
+
+    <div class="card">
+      <strong>Rule of thumb</strong>
+      <ul>
+        <li><strong>LangChain</strong>: compose steps; treat it like a pipeline of transforms.</li>
+        <li><strong>LangGraph</strong>: when you need workflow logic + durable shared state.</li>
+        <li><strong>Flowise</strong>: visual builder that mirrors these components as draggable nodes.</li>
+      </ul>
+    </div>
+  </section>
+
+  <div class="hr"></div>
+  <section>
+    <h2>Next steps (if you want)</h2>
+    <div class="card">
+      <ol>
+        <li>Turn the LangChain mini SQL chain into a real HTTP endpoint (POST /ask) that accepts JSON dict input.</li>
+        <li>Replace the fake DB function with a real SQL driver call.</li>
+        <li>Add auth: JWT / API key / OAuth, just like we discussed earlier.</li>
+        <li>Promote to LangGraph when you need branching (e.g., approval required only over $1000).</li>
+      </ol>
+    </div>
+  </section>
+
+</main>
+
+<script>
+  // Lightweight, no-dependency syntax highlighting.
+  // Goal: make code blocks colorful while keeping this HTML fully self-contained.
+  (function () {
+    function escapeMinimal(s) {
+      return s
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }
+
+    function wrap(cls, text) {
+      return '<span class="' + cls + '">' + escapeMinimal(text) + '</span>';
+    }
+
+    function highlightPython(src) {
+      var keywords = new Set([
+        'from','import','as','def','class','return','if','elif','else','for','while','in','not','and','or',
+        'True','False','None','pass','raise','try','except','finally','with','lambda','yield','break','continue'
+      ]);
+      var builtins = new Set(['print','dict','str','int','float','list','set','tuple','len','range','type']);
+
+      var out = '';
+      var i = 0;
+      while (i < src.length) {
+        var ch = src[i];
+
+        // Comment
+        if (ch === '#') {
+          var j = i;
+          while (j < src.length && src[j] !== '\n') j++;
+          out += wrap('tok-com', src.slice(i, j));
+          i = j;
+          continue;
+        }
+
+        // Strings (single/double + triple)
+        if (ch === '"' || ch === "'") {
+          var quote = ch;
+          var triple = (src.slice(i, i + 3) === quote + quote + quote);
+          var j2 = i + (triple ? 3 : 1);
+          while (j2 < src.length) {
+            if (!triple && src[j2] === '\\') { j2 += 2; continue; }
+            if (triple) {
+              if (src.slice(j2, j2 + 3) === quote + quote + quote) { j2 += 3; break; }
+              j2++;
+            } else {
+              if (src[j2] === quote) { j2++; break; }
+              j2++;
+            }
+          }
+          out += wrap('tok-str', src.slice(i, j2));
+          i = j2;
+          continue;
+        }
+
+        // Numbers
+        if ((ch >= '0' && ch <= '9') || (ch === '.' && i + 1 < src.length && src[i + 1] >= '0' && src[i + 1] <= '9')) {
+          var j3 = i;
+          while (j3 < src.length && /[0-9_\.]/.test(src[j3])) j3++;
+          out += wrap('tok-num', src.slice(i, j3));
+          i = j3;
+          continue;
+        }
+
+        // Identifiers / keywords
+        if ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || ch === '_') {
+          var j4 = i;
+          while (j4 < src.length && /[A-Za-z0-9_]/.test(src[j4])) j4++;
+          var word = src.slice(i, j4);
+          if (keywords.has(word) || builtins.has(word)) out += wrap('tok-kw', word);
+          else out += wrap('tok-id', word);
+          i = j4;
+          continue;
+        }
+
+        // Operators / punctuation
+        if (/[^\s]/.test(ch) && !(/[A-Za-z0-9_]/.test(ch))) {
+          out += wrap('tok-op', ch);
+          i++;
+          continue;
+        }
+
+        // Whitespace
+        out += escapeMinimal(ch);
+        i++;
+      }
+      return out;
+    }
+
+    function highlightJson(src) {
+      var out = '';
+      var i = 0;
+      function isWS(c) { return c === ' ' || c === '\n' || c === '\t' || c === '\r'; }
+
+      while (i < src.length) {
+        var ch = src[i];
+
+        if (ch === '"') {
+          var j = i + 1;
+          while (j < src.length) {
+            if (src[j] === '\\') { j += 2; continue; }
+            if (src[j] === '"') { j++; break; }
+            j++;
+          }
+          var strTok = src.slice(i, j);
+          var k = j;
+          while (k < src.length && isWS(src[k])) k++;
+          if (k < src.length && src[k] === ':') out += wrap('tok-kw', strTok);
+          else out += wrap('tok-str', strTok);
+          i = j;
+          continue;
+        }
+
+        if ((ch >= '0' && ch <= '9') || ch === '-') {
+          var j2 = i;
+          while (j2 < src.length && /[0-9eE\+\-\.]/.test(src[j2])) j2++;
+          out += wrap('tok-num', src.slice(i, j2));
+          i = j2;
+          continue;
+        }
+
+        if (src.slice(i, i + 4) === 'true') { out += wrap('tok-bool', 'true'); i += 4; continue; }
+        if (src.slice(i, i + 5) === 'false') { out += wrap('tok-bool', 'false'); i += 5; continue; }
+        if (src.slice(i, i + 4) === 'null') { out += wrap('tok-null', 'null'); i += 4; continue; }
+
+        if (/[^\s]/.test(ch) && !(/[A-Za-z0-9_]/.test(ch))) {
+          out += wrap('tok-op', ch);
+          i++;
+          continue;
+        }
+
+        out += escapeMinimal(ch);
+        i++;
+      }
+      return out;
+    }
+
+    var blocks = document.querySelectorAll('pre > code');
+    blocks.forEach(function (code) {
+      var raw = code.textContent || '';
+      var cls = code.className || '';
+      var lang = (cls.match(/language-([a-zA-Z0-9_\-]+)/) || [])[1] || '';
+      var html;
+      if (lang === 'python') html = highlightPython(raw);
+      else if (lang === 'json') html = highlightJson(raw);
+      else html = escapeMinimal(raw);
+      code.innerHTML = html;
+      code.classList.add('hl');
+    });
+  })();
+</script>
+  <script src="../assets/js/nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GCP Project Setup and Workload Identity Tutorial</title>
+    <!-- Import Highlight.js for syntax highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 20px; color: #333; }
+        h1 { color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        h2 { color: #2980b9; margin-top: 30px; }
+        h3 { color: #34495e; margin-top: 20px; }
+        /* Remove default pre styling that conflicts with highlight.js */
+        pre { margin-bottom: 15px; border-radius: 5px; overflow: hidden; border: 1px solid #ddd; }
+        /* Ensure code block has padding and proper font */
+        code { font-family: Consolas, Monaco, 'Andale Mono', monospace; font-size: 0.9em; }
+        /* Highlight.js adds .hljs class to code tag */
+        pre code.hljs { padding: 15px; display: block; overflow-x: auto; }
+        p { margin-bottom: 15px; }
+        ul { margin-bottom: 15px; }
+        li { margin-bottom: 5px; }
+        .note { background-color: #e7f3fe; border-left: 6px solid #2196F3; padding: 10px; margin-bottom: 15px; }
+    </style>
+  <link rel="stylesheet" href="../assets/css/book.css">
+</head>
+<body>
+
+<h1>GCP Project Setup and Workload Identity Tutorial</h1>
+
+<h2>Project Setup</h2>
+<p>Begin by organizing your Google Cloud resources under a single Organization (especially if you have Google Workspace). Under the organization, use Folders and Projects to separate concerns. A common approach is one project per environment (e.g. myapp-dev, myapp-prod). This isolates IAM boundaries and billing by environment. For example:</p>
+
+<ul>
+    <li>Create a project for production and one for development:
+<pre><code class="language-bash">gcloud projects create myapp-prod --name="MyApp Production" --organization=ORG_ID 
+gcloud projects create myapp-dev  --name="MyApp Development" --organization=ORG_ID</code></pre>
+    </li>
+    <li>Link each project to a billing account:
+<pre><code class="language-bash">gcloud billing projects link myapp-prod --billing-account=BILLING_ACCOUNT_ID  
+gcloud billing projects link myapp-dev  --billing-account=BILLING_ACCOUNT_ID</code></pre>
+    (You can list billing accounts via <code>gcloud billing accounts list</code>.)
+    </li>
+    <li>Optionally, use Folders to group projects (e.g. Network, Platform, Services folders). Folders allow applying policies to multiple projects, and projects segregate environments and teams.</li>
+</ul>
+
+<p>Each project gets its own VPC network. You can use separate VPCs per project or a Shared VPC host project. For example, create a VPC in the prod project:</p>
+
+<pre><code class="language-bash">gcloud compute networks create my-vpc --project=myapp-prod --subnet-mode=custom
+gcloud compute networks subnets create subnet-us --project=myapp-prod \
+    --network=my-vpc --region=us-central1 --range=10.10.0.0/16</code></pre>
+
+<p>If using Shared VPC, set up one “host” project containing the VPC, and attach service projects (e.g. myapp-prod) to it. Configure firewall rules to allow only necessary traffic (e.g. allow HTTPS (443) from 0.0.0.0/0 to the load balancer, allow health checks, etc.). Use Private Google Access and Private IP for Cloud SQL if you want internal-only DB access.</p>
+
+<p>Finally, tag and label your projects and resources for clarity (e.g. env=prod). At the org level, enforce policies (such as disabling default-credential grants) so that service accounts must have only the permissions you grant.</p>
+
+<h2>IAM and Service Accounts</h2>
+<p>Use IAM roles and service accounts with least privilege. For each project, create Google service accounts (GSAs) for the workloads and grant them only needed roles. For example:</p>
+
+<ul>
+    <li><strong>Cloud Run frontend:</strong> Create a service account (e.g. frontend-sa@myapp-prod.iam.gserviceaccount.com) and give it only the roles needed (e.g. roles/storage.objectViewer if it reads from Cloud Storage, or other roles for backend calls). Assign this SA to the Cloud Run service with <code>--service-account=frontend-sa@...</code>. Avoid using the default Compute Engine SA broadly; instead use user-managed SAs with minimal permissions.</li>
+    
+    <li><strong>GKE backend:</strong> Create a Google SA (e.g. backend-sa@myapp-prod.iam.gserviceaccount.com) for the FastAPI pods. Grant it roles like roles/cloudsql.client (to access Cloud SQL) and roles/logging.logWriter. For example:
+<pre><code class="language-bash">gcloud iam service-accounts create backend-sa --display-name="Backend Service Account"
+gcloud projects add-iam-policy-binding myapp-prod \
+    --member="serviceAccount:backend-sa@myapp-prod.iam.gserviceaccount.com" \
+    --role="roles/cloudsql.client"  \
+    --role="roles/logging.logWriter"</code></pre>
+    </li>
+
+    <li><strong>Workload Identity:</strong> Enable Workload Identity Federation for GKE to let pods use these Google SAs without keys. When creating the GKE cluster, use <code>--workload-pool=PROJECT_ID.svc.id.goog</code>. GKE will then create a workload identity pool <code>PROJECT_ID.svc.id.goog</code> for you. In your Kubernetes manifests, create a Kubernetes ServiceAccount (KSA) and annotate it to the GCP SA. For example:
+<pre><code class="language-yaml">apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: backend-ksa
+  namespace: default
+  annotations:
+    iam.gke.io/gcp-service-account: backend-sa@myapp-prod.iam.gserviceaccount.com</code></pre>
+    Then deploy this KSA into the cluster (e.g. <code>kubectl apply -f ...</code>). This binds the KSA to backend-sa via Workload Identity. Now pods using backend-ksa will automatically present the Google SA identity when calling GCP APIs.
+    </li>
+
+    <li><strong>Cloud Run authentication to GCP:</strong> Cloud Run uses its service identity (the Google SA you assign) to call other Google Cloud services. By default Cloud Run will fetch tokens from its metadata server and use ADC. Ensure the Cloud Run SA has the right roles (e.g. roles/storage.admin to write to buckets, roles/iam.serviceAccountTokenCreator if you need to generate ID tokens). As above, use a user-managed SA and avoid giving it broad Editor rights.</li>
+</ul>
+
+<p>Remember to use Google Groups to manage user access to projects. Assign IAM roles to groups (e.g. “NetworkAdmin”, “DevOps”, “AppDeveloper”) rather than individual users.</p>
+
+<h2>Authentication with Google Identity (OIDC)</h2>
+<p>To authenticate end-users, use Google’s OAuth2/OpenID Connect. First, create OAuth 2.0 credentials in your project: in the Cloud Console go to APIs & Services > Credentials > Create > OAuth Client ID. Choose “Web application” and set your React app’s origin and redirect URI (e.g. https://myapp.example.com and https://myapp.example.com/oauth2callback). This gives you a Client ID.</p>
+
+<p>In your React frontend, use Google’s Identity JavaScript libraries (e.g. Google Identity Services or an OAuth library) to implement the authorization code flow with PKCE. The app should redirect the user to Google’s consent page and obtain an ID token (JWT). For example, include <code>scope=openid email profile</code> in the request so that Google returns an ID token identifying the user. Upon successful login, your React app will receive an ID token from Google.</p>
+
+<p>On the FastAPI backend, validate this token on each request. For instance, use Google’s Python library to verify the JWT’s signature and claims:</p>
+
+<pre><code class="language-python">from google.oauth2 import id_token
+from google.auth.transport import requests
+
+try:
+    # TOKEN is the ID token string from the client, and CLIENT_ID is your OAuth 2.0 client ID
+    id_info = id_token.verify_oauth2_token(TOKEN, requests.Request(), CLIENT_ID)
+    # The token is valid. You can trust id_info['sub'], id_info['email'], etc.
+except ValueError:
+    # Invalid token
+    raise Unauthorized()</code></pre>
+
+<p>The <code>verify_oauth2_token</code> call checks the token’s signature, issuer (https://accounts.google.com), and audience (your Client ID). If valid, id_info contains the user’s Google identity (sub, email, name). Use those claims for your user session or authorization. In this way, your backend never handles passwords – it trusts Google’s OIDC tokens.</p>
+
+<p><strong>Key points:</strong> Enable the Google+ API / Google Identity API in your project so that token verification works. Configure your React app’s OAuth client in the same project as your backend so that CLIENT_ID matches. Use libraries (Google Identity Services, OAuth2 libraries) rather than writing OAuth by hand.</p>
+
+<h2>Data Storage Design</h2>
+<p>For application data, choose managed GCP services:</p>
+
+<ul>
+    <li><strong>Relational data (Cloud SQL for PostgreSQL):</strong> Cloud SQL is a fully managed PostgreSQL database (with high availability, automated backups, patching). Create a Cloud SQL instance in your project:
+<pre><code class="language-bash">gcloud sql instances create my-postgres --database-version=POSTGRES_15 \
+    --tier=db-f1-micro --region=us-central1 --network=my-vpc
+gcloud sql databases create mydb --instance=my-postgres</code></pre>
+    Grant your GKE backend service account the Cloud SQL Client role so it can connect. On GKE, you can connect via Private IP (in which case ensure your VPC has a private service connection) or using the Cloud SQL Auth proxy/connector. In Python, you can use the Cloud SQL Python Connector or simply connect via SQLAlchemy to <code>postgresql://USER:PASS@/mydb?host=/cloudsql/INSTANCE_CONNECTION_NAME</code>. Workload Identity will supply the necessary credentials to authenticate.
+    <br><em>Why not alternatives?</em> We prefer Cloud SQL over a self-hosted database because it offloads operations to Google (automated failover, backups, scaling). Compared to NoSQL options like Firestore or Firebase RTDB, Postgres offers strong consistency and complex relational queries. BigQuery is purely analytic (not suited for OLTP). (If you needed wide-column or global scale, Cloud Spanner could be considered, but it’s more complex and costly.)
+    </li>
+
+    <li><strong>File/object storage (Cloud Storage):</strong> For any user-uploaded files, static assets or backups, use Cloud Storage buckets. It is a durable, globally-replicated object store: “store any amount of data and retrieve it as often as you like”. Example:
+<pre><code class="language-bash">gsutil mb -p myapp-prod gs://myapp-prod-files</code></pre>
+    Then grant your backend SA a Storage role (e.g. roles/storage.objectAdmin) on that bucket. In code you can use the Cloud Storage client, which under the hood uses Workload Identity for auth:
+<pre><code class="language-python">from google.cloud import storage
+client = storage.Client()
+bucket = client.bucket('myapp-prod-files')
+blob = bucket.blob('somefile.png')
+blob.upload_from_filename('localfile.png')</code></pre>
+    <em>Why not alternatives?</em> Cloud Storage is simpler and cheaper for large blobs than, say, storing files in a SQL database. It replaces running a custom file server. We don’t use Firestore or Firebase for file storage. (You could store small JSON data in Firestore, but it is not transactional SQL.) Cloud Storage integrates with other GCP tools (logging, CDN, etc.) and automatically handles encryption and scaling.
+    </li>
+</ul>
+
+<p>Using Workload Identity, both Cloud SQL and Cloud Storage access are secured without embedding keys. The KSA mapping ensures the Pod’s Google SA (with its IAM roles) is used by the Google client libraries.</p>
+
+<h2>Deployment Architecture</h2>
+<p>Our frontend is a React Single-Page App; our backend is a FastAPI microservice.</p>
+
+<h3>Frontend on Cloud Run</h3>
+<p>Containerize the React app (e.g. with a Node build stage and Nginx serving the build). Example Dockerfile:</p>
+<pre><code class="language-dockerfile"># Build stage
+FROM node:18 AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN npm run build
+
+# Serve with nginx
+FROM nginx:alpine
+COPY --from=builder /app/build /usr/share/nginx/html</code></pre>
+
+<p>Build and push the container image (replace gcr.io/myapp-prod with your container registry):</p>
+<pre><code class="language-bash">docker build -t gcr.io/myapp-prod/react-frontend:latest .
+docker push gcr.io/myapp-prod/react-frontend:latest</code></pre>
+
+<p>Deploy it to Cloud Run:</p>
+<pre><code class="language-bash">gcloud run deploy react-frontend \
+    --image gcr.io/myapp-prod/react-frontend:latest \
+    --region us-central1 \
+    --platform managed \
+    --allow-unauthenticated \
+    --service-account=frontend-sa@myapp-prod.iam.gserviceaccount.com</code></pre>
+
+<p>Cloud Run automatically provisions an HTTPS endpoint for you (for example https://react-frontend-abcd1234-uc.a.run.app). It only serves over HTTPS – HTTP is redirected to HTTPS by default. If you want a custom domain (e.g. www.myapp.com), you can map it in Cloud Run settings.</p>
+
+<p>Set environment variables on the Cloud Run service for any configuration (e.g. the backend API URL or OAuth client ID). Cloud Run containers use the assigned service account (frontend-sa@…) as their identity when calling other GCP services.</p>
+
+<h3>Backend on GKE</h3>
+<p>Create a GKE cluster for the FastAPI service. For example, a Standard cluster with Workload Identity and alias IPs:</p>
+<pre><code class="language-bash">gcloud container clusters create my-cluster \
+    --region us-central1 \
+    --workload-pool=myapp-prod.svc.id.goog \
+    --num-nodes=3 \
+    --machine-type=e2-standard-4 \
+    --enable-ip-alias</code></pre>
+
+<p>This sets up my-cluster with a default node pool of 3 VMs. The <code>--workload-pool</code> flag enables Workload Identity Federation. You could also use a GKE Autopilot cluster (which has WI on by default) to avoid managing nodes at all.</p>
+
+<p>You can add more node pools if desired. For example, to separate workloads:</p>
+<pre><code class="language-bash">gcloud container node-pools create backend-pool \
+    --cluster=my-cluster \
+    --num-nodes=2 \
+    --machine-type=e2-medium \
+    --node-labels=role=backend</code></pre>
+
+<p>Use node pools to apply different machine types or taints. Always enable IP alias (<code>--enable-ip-alias</code>) to allow private pod ranges.</p>
+
+<p>Deploy your FastAPI app as a Kubernetes Deployment + Service. For example:</p>
+<pre><code class="language-yaml">apiVersion: apps/v1
+kind: Deployment
+metadata: { name: fastapi-deployment }
+spec:
+  replicas: 2
+  selector: { matchLabels: { app: fastapi } }
+  template:
+    metadata: { labels: { app: fastapi } }
+    spec:
+      serviceAccountName: backend-ksa
+      containers:
+      - name: fastapi
+        image: gcr.io/myapp-prod/fastapi-backend:latest
+        ports: [ { containerPort: 80 } ]
+
+apiVersion: v1
+kind: Service
+metadata: { name: fastapi-service }
+spec:
+  selector: { app: fastapi }
+  ports: [ { port: 80, targetPort: 80 } ]</code></pre>
+
+<p>These expose the app on port 80 internally. Note the <code>serviceAccountName: backend-ksa</code> (the K8s SA we annotated earlier); this ensures the pod assumes the Google service account identity.</p>
+
+<h3>Ingress and Load Balancing</h3>
+<p>To expose the backend publicly, create a Kubernetes Ingress (which uses an external HTTP(S) Load Balancer):</p>
+<pre><code class="language-yaml">apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: fastapi-ingress
+  annotations:
+    kubernetes.io/ingress.class: "gce"
+spec:
+  rules:
+  - host: api.myapp.com
+    http:
+      paths:
+      - path: /*
+        backend:
+          service:
+            name: fastapi-service
+            port: { number: 80 }</code></pre>
+
+<p>When applied, GKE will provision a Global External HTTP(S) Load Balancer with a public IP and a certificate for api.myapp.com. Configure DNS so api.myapp.com points to that IP. The load balancer handles SSL (HTTPS) for you. Make sure to allow health check IPs in your VPC firewall rules. If you use a Shared VPC, apply relevant firewall policies at the folder level.</p>
+
+<p>Cloud Run and the GKE Ingress can communicate over the public Internet (HTTPS). For tighter security, you could use a Serverless VPC Connector or internal load balancer, but a public HTTPS API is simpler for most SaaS frontends to consume.</p>
+
+<h3>Observability and Scaling</h3>
+<p>Enable Cloud Logging and Monitoring on the cluster (this is on by default in GKE). Export logs via the Kubernetes Logging agent or use aggregated sinks. Define uptime checks and alerts in Cloud Monitoring (for example, an alert if the health endpoint of your service fails). Use horizontal pod autoscaling on the FastAPI Deployment if needed (<code>kubectl autoscale deploy fastapi-deployment --cpu-percent=70 --min=1 --max=5</code>).</p>
+
+<h2>Networking and Resource Governance</h2>
+<ul>
+    <li><strong>VPC and Subnets:</strong> Use a custom VPC (or Shared VPC host) with appropriately sized subnets. Enable Private Google Access in subnets that host GKE nodes so pods can reach Cloud SQL private IPs and Metadata. Use Hierarchical Firewall Policies (at Org/Folder) to enforce secure defaults. For example, only allow egress HTTPS and needed ports on ingress (443, 80). If using Shared VPC, the host project contains the VPC and each service project attaches to it.</li>
+    <li><strong>Project-level Security:</strong> Disable overly broad Org policies like automatic Editor grants for default SAs. Regularly audit IAM policies (Cloud IAM Recommender can surface over-privileged identities). Use Google Groups for role assignments (e.g. “DevOps” group with Compute Admin on dev, but Cloud SQL Client on prod).</li>
+    <li><strong>Networking Security:</strong> Consider enabling VPC Service Controls if you need to protect against data exfiltration from managed services. At a minimum, configure Kubernetes Network Policies to restrict traffic between pods if you run multiple services.</li>
+    <li><strong>Cost and Billing:</strong> Since billing is at the project level, use separate projects (or folders) per environment to track costs. Use billing reports or Cloud Billing budget alerts to monitor spend. Tag resources (with labels like env=prod) and set up budgets per tag. Regularly clean up unused resources (old node pools, images, volumes) to control costs. Consider using Cloud Budgets with alerts on 50%/75%/90% spend thresholds.</li>
+    <li><strong>VPC Quotas and Limits:</strong> Use VPC native clusters (alias IP) to avoid exhaustion of IPs. Plan subnet sizes for pods and services, anticipating scale. For example, if you expect 100 Pods per node pool, allocate a /14 for pod range. Use Cloud NAT if your nodes need to access the Internet without external IPs.</li>
+    <li><strong>DNS and SSL:</strong> Use Cloud DNS (or your provider) for domain names. For Cloud Run and Ingress, set up managed SSL certificates or use ACM (Automatic Certificate Management).</li>
+</ul>
+
+<p>By following these steps and best practices, you’ll have a robust GCP foundation: isolated projects and IAM, secure service identities (Workload Identity) for accessing Cloud SQL and Storage, user login via Google OIDC in the React app, and autoscaled deployments of your frontend and backend on Cloud Run and GKE. All communication is over HTTPS, and data access from code is locked down to specific service accounts with minimal privileges. This architecture is production-ready and scalable for an enterprise SaaS with Google Workspace authentication.</p>
+
+<p><strong>Sources:</strong> Google Cloud official documentation and blog posts were used extensively in this tutorial, among others.</p>
+
+  <script src="../assets/js/nav.js"></script>
+</body>
+</html>

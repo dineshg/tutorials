@@ -1,0 +1,853 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>PyTorch CNN Coding Prep Tutorial — Conv2d, nn.Module, Dropout, and Convolution Arithmetic</title>
+
+  <!-- Light theme -->
+  <style>
+    :root{
+      --bg:#ffffff;
+      --panel:#f6f8fa;
+      --text:#111827;
+      --muted:#4b5563;
+      --border:#e5e7eb;
+      --accent:#2563eb;
+      --shadow: 0 10px 30px rgba(0,0,0,.06);
+      --radius: 14px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+
+      --code-bg: #f8fafc;
+      --code-border: #e2e8f0;
+      --code-text: #0f172a;
+      --code-muted: #475569;
+
+      --btn-bg: #ffffff;
+      --btn-border: #cbd5e1;
+      --btn-text: #0f172a;
+
+      --ok:#065f46;
+      --warn:#92400e;
+      --bad:#991b1b;
+    }
+    html,body{background:var(--bg); color:var(--text); font-family:var(--sans); margin:0;}
+    a{color:var(--accent); text-decoration:none;}
+    a:hover{text-decoration:underline;}
+    .wrap{max-width:1100px; margin:0 auto; padding:28px 18px 80px;}
+    header{
+      border:1px solid var(--border);
+      background: linear-gradient(180deg, #ffffff, #fbfdff);
+      box-shadow: var(--shadow);
+      border-radius: var(--radius);
+      padding: 22px 22px 16px;
+    }
+    header h1{margin:0 0 6px; font-size: 28px; letter-spacing:-0.02em;}
+    header p{margin:0; color:var(--muted); line-height:1.55;}
+    .chips{margin-top:14px; display:flex; flex-wrap:wrap; gap:8px;}
+    .chip{
+      font-size:13px; color:#0f172a;
+      border:1px solid var(--border);
+      background: #fff;
+      padding:6px 10px;
+      border-radius: 999px;
+    }
+    nav{
+      margin-top:18px;
+      padding-top:14px;
+      border-top:1px solid var(--border);
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px 14px;
+      font-size:14px;
+    }
+    nav a{color:#0f172a;}
+
+    section{
+      margin-top:18px;
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      background:#fff;
+      box-shadow: var(--shadow);
+      padding: 18px 18px 10px;
+    }
+    section h2{margin:0 0 10px; font-size:20px; letter-spacing:-0.01em;}
+    section h3{margin:16px 0 8px; font-size:16px;}
+    p,li{line-height:1.7; color:#111827;}
+    .muted{color:var(--muted);}
+    .callout{
+      background: var(--panel);
+      border:1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 12px;
+      margin: 12px 0;
+    }
+    .grid{display:grid; grid-template-columns: 1fr; gap: 12px;}
+    @media(min-width: 980px){
+      .grid.two{grid-template-columns: 1fr 1fr;}
+      .grid.three{grid-template-columns: 1fr 1fr 1fr;}
+    }
+    figure{
+      margin: 12px 0;
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius: 14px;
+      overflow:hidden;
+    }
+    figure img{width:100%; height:auto; display:block; background:#fff;}
+    figcaption{
+      padding: 10px 12px;
+      font-size: 13px;
+      color: var(--muted);
+      border-top:1px solid var(--border);
+    }
+
+    :not(pre) > code{
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      padding: 2px 6px;
+      border-radius: 8px;
+      font-family: var(--mono);
+      font-size: 0.95em;
+      color: #0f172a;
+      white-space: nowrap;
+    }
+
+    .codewrap{
+      border: 1px solid var(--code-border);
+      border-radius: 14px;
+      overflow: hidden;
+      background: var(--code-bg);
+      margin: 12px 0;
+    }
+    .codebar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--code-border);
+      background: #ffffff;
+    }
+    .codebar .label{
+      font-size: 12px;
+      color: var(--code-muted);
+      font-family: var(--mono);
+    }
+    .codebar button{
+      font-size:12px;
+      border: 1px solid var(--btn-border);
+      background: var(--btn-bg);
+      color: var(--btn-text);
+      padding: 6px 10px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    .codebar button:hover{border-color:#94a3b8;}
+
+    pre[class*="language-"]{
+      margin:0;
+      background: var(--code-bg) !important;
+      color: var(--code-text) !important;
+      padding: 14px 14px;
+      overflow:auto;
+      line-height: 1.65;
+      font-size: 13px;
+      tab-size: 2;
+    }
+    code[class*="language-"]{
+      font-family: var(--mono);
+      color: var(--code-text) !important;
+      text-shadow: none !important;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      margin:10px 0 14px;
+      font-size:14px;
+    }
+    th,td{
+      border:1px solid var(--border);
+      padding:8px 10px;
+      text-align:left;
+      vertical-align:top;
+    }
+    th{background:#f8fafc;}
+
+    .hr{height:1px; background:var(--border); margin:12px 0;}
+    .small{font-size:13px;}
+    .pill{
+      display:inline-block;
+      background:#eef2ff;
+      color:#1e3a8a;
+      border:1px solid #e0e7ff;
+      padding:2px 8px;
+      border-radius:999px;
+      font-size:12px;
+      vertical-align:middle;
+    }
+  </style>
+
+  <!-- Prism (light) for python code -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-python.min.js"></script>
+
+  <!-- MathJax for equations -->
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['\\(','\\)'], ['$', '$']],
+        displayMath: [['\\[','\\]']]
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+  <!-- Copy buttons -->
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      document.querySelectorAll(".codewrap").forEach(wrap => {
+        const btn = wrap.querySelector("button[data-copy]");
+        const pre = wrap.querySelector("pre");
+        if (!btn || !pre) return;
+        btn.addEventListener("click", async () => {
+          try{
+            await navigator.clipboard.writeText(pre.innerText);
+            const old = btn.textContent;
+            btn.textContent = "Copied!";
+            setTimeout(()=>btn.textContent = old, 900);
+          }catch(e){
+            btn.textContent = "Copy failed";
+            setTimeout(()=>btn.textContent = "Copy", 900);
+          }
+        });
+      });
+    });
+  </script>
+  <link rel="stylesheet" href="../assets/css/book.css">
+</head>
+
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>PyTorch CNN Coding Prep: Conv2d, Custom <code>nn.Module</code>, Dropout, and Convolution Arithmetic</h1>
+    <p>
+      This tutorial turns the transcript into a practical, self-contained guide to
+      <b>building CNN models in PyTorch</b>. You’ll learn <code>nn.Conv2d</code> basics,
+      how PyTorch uses <b>modules and inheritance</b>, when you need a <b>custom model</b>,
+      how to handle <b>flattening between conv and dense layers</b>,
+      how <b>dropout really works</b>, and how to compute output sizes with
+      <b>convolution arithmetic</b>.
+    </p>
+
+    <div class="chips">
+      <span class="chip">Conv2d arguments</span>
+      <span class="chip">Modules & inheritance</span>
+      <span class="chip">Sequential vs custom models</span>
+      <span class="chip">Flatten/view</span>
+      <span class="chip">Dropout (train vs eval)</span>
+      <span class="chip">Output-size formulas</span>
+    </div>
+
+    <nav>
+      <a href="#conv2d">1) Conv2d essentials</a>
+      <a href="#modules">2) Modules & inheritance</a>
+      <a href="#sequential-vs-custom">3) Sequential vs custom</a>
+      <a href="#cnn-skeleton">4) CNN skeleton</a>
+      <a href="#dropout">5) Dropout (real behavior)</a>
+      <a href="#conv-arithmetic">6) Convolution arithmetic</a>
+      <a href="#cheatsheet">Cheat sheet</a>
+    </nav>
+  </header>
+
+  <section id="conv2d">
+    <h2>1) <code>nn.Conv2d</code> essentials (what you must know before coding CNNs)</h2>
+
+    <p>
+      In PyTorch, the standard convolution layer for images is <code>torch.nn.Conv2d</code>.
+      It’s “2D” because the convolution slides over the <b>spatial axes</b> (height and width).
+      The color/channel axis is handled as “channels,” not as a spatial direction.
+    </p>
+
+    <div class="callout">
+      <p style="margin:0;">
+        <b>Key idea:</b> A Conv2d layer learns a set of filters (kernels).
+        Each filter produces one output channel (one feature map).
+      </p>
+    </div>
+
+    <h3>PyTorch tensor layout (important!)</h3>
+    <p>
+      PyTorch uses the <b>NCHW</b> layout for images:
+    </p>
+    <ul>
+      <li><b>N</b> = batch size</li>
+      <li><b>C</b> = channels (e.g., 3 for RGB)</li>
+      <li><b>H</b> = height</li>
+      <li><b>W</b> = width</li>
+    </ul>
+    <p class="muted">
+      Many tutorials talk about images as H×W×C; that’s fine conceptually, but in PyTorch code you’ll usually use N×C×H×W.
+    </p>
+
+    <h3><code>nn.Conv2d</code> signature (the arguments you’ll use most)</h3>
+    <p>
+      The common form is:
+      \[
+        \mathrm{Conv2d}(\text{in\_channels},\ \text{out\_channels},\ \text{kernel\_size},\ \text{stride},\ \text{padding})
+      \]
+    </p>
+
+    <table>
+      <thead>
+        <tr><th>Argument</th><th>Meaning</th><th>Rule of thumb</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>in_channels</code></td>
+          <td>Number of input channels</td>
+          <td>RGB images → 3. Later layers → number of feature maps from previous conv.</td>
+        </tr>
+        <tr>
+          <td><code>out_channels</code></td>
+          <td>Number of output channels (feature maps)</td>
+          <td>Often grows: 32 → 64 → 128 → …</td>
+        </tr>
+        <tr>
+          <td><code>kernel_size</code></td>
+          <td>Filter size (usually square)</td>
+          <td>Usually odd: 3, 5, 7 (3 is most common in modern CNNs).</td>
+        </tr>
+        <tr>
+          <td><code>stride</code></td>
+          <td>Step size for sliding the kernel</td>
+          <td>Stride 1 keeps resolution (with padding), stride 2 downsamples.</td>
+        </tr>
+        <tr>
+          <td><code>padding</code></td>
+          <td>Zeros added around image border</td>
+          <td>Often chosen to preserve size (common “same-like” behavior).</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>What does the learned weight tensor look like?</h3>
+    <p>
+      Internally, the conv weights form a 4D tensor:
+      \[
+        W \in \mathbb{R}^{C_\text{out} \times C_\text{in} \times K_h \times K_w}
+      \]
+    </p>
+    <p>
+      That is: one kernel per output channel, and each kernel spans <b>all input channels</b>.
+      This matches the transcript idea: “kernel is 4D: input channels, output channels, height, width.”
+      (PyTorch stores it as out×in×kh×kw.)
+    </p>
+
+    <div class="codewrap">
+      <div class="codebar">
+        <span class="label">python • inspect Conv2d parameters</span>
+        <button data-copy type="button">Copy</button>
+      </div>
+<pre class="language-python"><code>import torch
+import torch.nn as nn
+
+conv = nn.Conv2d(in_channels=3, out_channels=16, kernel_size=3, stride=1, padding=1)
+
+print("weight shape:", conv.weight.shape)  # (out_channels, in_channels, kH, kW)
+print("bias shape:", conv.bias.shape)      # (out_channels,)</code></pre>
+    </div>
+
+    <h3>Why Conv2d and not Conv1d / Conv3d?</h3>
+    <ul>
+      <li><b>Conv1d</b>: sequences / time signals (e.g., audio, sensor streams).</li>
+      <li><b>Conv2d</b>: images (height & width are the spatial axes).</li>
+      <li><b>Conv3d</b>: volumes (e.g., medical CT “voxels”) or videos (height, width, time).</li>
+    </ul>
+
+    <figure>
+      <img alt="Convolution animation" src="https://upload.wikimedia.org/wikipedia/commons/1/19/2D_Convolution_Animation.gif">
+      <figcaption>
+        2D convolution animation (Wikimedia Commons):
+        <a href="https://commons.wikimedia.org/wiki/File:2D_Convolution_Animation.gif" target="_blank" rel="noopener">2D_Convolution_Animation.gif</a>
+      </figcaption>
+    </figure>
+  </section>
+
+  <section id="modules">
+    <h2>2) PyTorch “everything is a module”: inheritance and composition</h2>
+
+    <p>
+      PyTorch neural network building blocks are <b>modules</b> (instances of <code>nn.Module</code>).
+      A Linear layer is a module. A ReLU is a module. A Sequential container is also a module.
+      And your entire model is a module too.
+    </p>
+
+    <div class="callout">
+      <p style="margin:0;">
+        <b>Superpower:</b> modules compose hierarchically.
+        You can build a “module of modules,” then use it like a single module, and repeat.
+      </p>
+    </div>
+
+    <h3>Inheritance (why your custom model subclasses <code>nn.Module</code>)</h3>
+    <p>
+      To create your own model class, you inherit from <code>nn.Module</code>.
+      Two key pieces:
+    </p>
+    <ol>
+      <li><b><code>__init__</code></b>: define submodules as attributes (layers you want to learn / run).</li>
+      <li><b><code>forward</code></b>: define the computation (how data flows through layers).</li>
+    </ol>
+
+    <div class="codewrap">
+      <div class="codebar">
+        <span class="label">python • minimal custom MLP (Linear → ReLU → Linear)</span>
+        <button data-copy type="button">Copy</button>
+      </div>
+<pre class="language-python"><code>import torch
+import torch.nn as nn
+
+class TinyMLP(nn.Module):
+    def __init__(self, d_in: int, d_hidden: int, d_out: int):
+        super().__init__()
+        self.fc1 = nn.Linear(d_in, d_hidden)
+        self.act = nn.ReLU()
+        self.fc2 = nn.Linear(d_hidden, d_out)
+
+    def forward(self, x):
+        x = self.fc1(x)
+        x = self.act(x)
+        x = self.fc2(x)
+        return x
+
+model = TinyMLP(d_in=10, d_hidden=32, d_out=3)
+x = torch.randn(5, 10)
+logits = model(x)
+print(logits.shape)  # (5, 3)</code></pre>
+    </div>
+
+    <p class="muted">
+      Notice the key correspondence: defining layers in <code>__init__</code>, applying them in <code>forward</code>.
+    </p>
+  </section>
+
+  <section id="sequential-vs-custom">
+    <h2>3) Sequential vs Custom Models: when to use which</h2>
+
+    <div class="grid two">
+      <div class="callout">
+        <h3 style="margin:0 0 6px;">Option A — <code>nn.Sequential</code></h3>
+        <p style="margin:0;">
+          Great when your network is just a straight stack of layers (no branching, no multi-input/output).
+        </p>
+      </div>
+      <div class="callout">
+        <h3 style="margin:0 0 6px;">Option B — Custom <code>nn.Module</code></h3>
+        <p style="margin:0;">
+          Needed when you must do operations not easily represented as a simple list of layers
+          (reshapes, multiple paths, skip connections, multi-input/output, etc.).
+        </p>
+      </div>
+    </div>
+
+    <h3>Why custom models matter in CNNs</h3>
+    <p>
+      The classic “boundary” in CNNs is:
+      <b>convolution outputs an image tensor</b> (N×C×H×W), but
+      <b>dense layers expect vectors</b> (N×D).
+      You need a reshape/flatten step in between.
+    </p>
+
+    <ul>
+      <li>Modern PyTorch provides <code>nn.Flatten()</code>.</li>
+      <li>But you should still know how to do it manually with <code>x.view(...)</code> or <code>torch.flatten</code>.</li>
+    </ul>
+
+    <div class="codewrap">
+      <div class="codebar">
+        <span class="label">python • Flatten boundary: N×C×H×W → N×(C·H·W)</span>
+        <button data-copy type="button">Copy</button>
+      </div>
+<pre class="language-python"><code>import torch
+x = torch.randn(8, 64, 7, 7)         # (N, C, H, W)
+flat1 = x.view(x.size(0), -1)        # (N, C*H*W)
+flat2 = torch.flatten(x, start_dim=1)
+
+print(flat1.shape, flat2.shape)      # both: (8, 3136)</code></pre>
+    </div>
+
+    <h3>Exercise (recommended)</h3>
+    <p>
+      Recreate a tiny version of <code>nn.Sequential</code>:
+      store modules, then call them in order in <code>forward</code>.
+      This is a great way to lock in “modules + forward pass” thinking.
+    </p>
+  </section>
+
+  <section id="cnn-skeleton">
+    <h2>4) A CNN model skeleton (two clean ways)</h2>
+
+    <p>
+      A practical CNN typically has:
+      <span class="pill">Conv stack</span> → <span class="pill">Flatten</span> → <span class="pill">Dense stack</span>.
+    </p>
+
+    <h3>Way 1: Custom model with two Sequential blocks + explicit view</h3>
+    <div class="codewrap">
+      <div class="codebar">
+        <span class="label">python • CNN as nn.Module (conv Sequential + view + dense Sequential)</span>
+        <button data-copy type="button">Copy</button>
+      </div>
+<pre class="language-python"><code>import torch
+import torch.nn as nn
+
+class SimpleCNN(nn.Module):
+    def __init__(self, num_classes: int = 10):
+        super().__init__()
+
+        self.conv = nn.Sequential(
+            nn.Conv2d(3, 32, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(32, 64, kernel_size=3, stride=2, padding=1),  # downsample
+            nn.ReLU(),
+        )
+
+        # We must know the flattened size here (see convolution arithmetic below).
+        # For example: if input is (3, 32, 32), output after conv might be (64, 16, 16)
+        # so flattened = 64*16*16 = 16384
+        self.fc = nn.Sequential(
+            nn.Linear(64 * 16 * 16, 256),
+            nn.ReLU(),
+            nn.Linear(256, num_classes),
+        )
+
+    def forward(self, x):
+        x = self.conv(x)
+        x = x.view(x.size(0), -1)  # flatten
+        x = self.fc(x)
+        return x
+
+model = SimpleCNN(num_classes=10)
+dummy = torch.randn(4, 3, 32, 32)
+print(model(dummy).shape)  # (4, 10)</code></pre>
+    </div>
+
+    <h3>Way 2: Pure Sequential using <code>nn.Flatten()</code></h3>
+    <p class="muted">
+      This is cleaner, but you still need the correct input size for the first Linear layer.
+    </p>
+
+    <div class="codewrap">
+      <div class="codebar">
+        <span class="label">python • CNN as nn.Sequential (using nn.Flatten)</span>
+        <button data-copy type="button">Copy</button>
+      </div>
+<pre class="language-python"><code>import torch
+import torch.nn as nn
+
+model = nn.Sequential(
+    nn.Conv2d(3, 32, kernel_size=3, stride=1, padding=1),
+    nn.ReLU(),
+    nn.Conv2d(32, 64, kernel_size=3, stride=2, padding=1),
+    nn.ReLU(),
+    nn.Flatten(),
+    nn.Linear(64 * 16 * 16, 256),
+    nn.ReLU(),
+    nn.Linear(256, 10),
+)
+
+dummy = torch.randn(4, 3, 32, 32)
+print(model(dummy).shape)  # (4, 10)</code></pre>
+    </div>
+
+    <h3>A practical trick: compute the flatten size automatically</h3>
+    <p>
+      If you don’t want to do manual arithmetic while prototyping,
+      you can run a dummy tensor through the conv stack inside <code>__init__</code>
+      to infer the flatten dimension once.
+    </p>
+
+    <div class="codewrap">
+      <div class="codebar">
+        <span class="label">python • infer flatten size with a dummy forward pass</span>
+        <button data-copy type="button">Copy</button>
+      </div>
+<pre class="language-python"><code>import torch
+import torch.nn as nn
+
+class AutoShapeCNN(nn.Module):
+    def __init__(self, input_shape=(3, 32, 32), num_classes=10):
+        super().__init__()
+        self.conv = nn.Sequential(
+            nn.Conv2d(3, 32, 3, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(32, 64, 3, stride=2, padding=1),
+            nn.ReLU(),
+        )
+
+        with torch.no_grad():
+            dummy = torch.zeros(1, *input_shape)
+            out = self.conv(dummy)
+            flat_dim = out.view(1, -1).size(1)
+
+        self.head = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(flat_dim, 256),
+            nn.ReLU(),
+            nn.Linear(256, num_classes),
+        )
+
+    def forward(self, x):
+        x = self.conv(x)
+        x = self.head(x)
+        return x
+
+model = AutoShapeCNN()
+print(model(torch.randn(2, 3, 32, 32)).shape)  # (2, 10)</code></pre>
+    </div>
+
+    <p class="muted">
+      This “dummy pass” trick is widely used during research/prototyping.
+      You still should learn the arithmetic, but this keeps you productive.
+    </p>
+  </section>
+
+  <section id="dropout">
+    <h2>5) Dropout regularization (the real behavior, clearly explained)</h2>
+
+    <div class="callout">
+      <p style="margin:0;">
+        <b>Dropout does NOT permanently remove a neuron.</b>
+        It applies a <b>fresh random mask each forward pass in training mode</b>,
+        zeroing some activations temporarily.
+      </p>
+    </div>
+
+    <h3>Core math (inverted dropout)</h3>
+    <p>
+      Let \(h\) be a layer activation vector/tensor. Sample a mask:
+      \[
+        m_i \sim \mathrm{Bernoulli}(q),\quad q = 1-p
+      \]
+      Apply:
+      \[
+        \tilde{h} = \frac{m \odot h}{q}
+      \]
+      This scaling keeps the expected magnitude consistent between train and eval.
+    </p>
+
+    <h3>What happens to gradients?</h3>
+    <p>
+      The derivative wrt activations is:
+      \[
+        \frac{\partial \tilde{h}}{\partial h} = \frac{m}{q}
+      \]
+      So if a unit is dropped (\(m=0\)), its gradient is 0 for that sample. Next batch, the mask changes, so it can update again.
+    </p>
+
+    <h3>Train vs eval mode (must-know)</h3>
+    <ul>
+      <li><code>model.train()</code> → dropout active (random masks)</li>
+      <li><code>model.eval()</code> → dropout disabled (identity)</li>
+    </ul>
+
+    <div class="codewrap">
+      <div class="codebar">
+        <span class="label">python • verify dropout randomness in train vs stability in eval</span>
+        <button data-copy type="button">Copy</button>
+      </div>
+<pre class="language-python"><code>import torch
+import torch.nn as nn
+
+drop = nn.Dropout(p=0.5)
+x = torch.ones(1, 10)
+
+drop.train()
+y1 = drop(x)
+y2 = drop(x)
+
+drop.eval()
+y3 = drop(x)
+y4 = drop(x)
+
+print("train outputs differ:", not torch.allclose(y1, y2))
+print("eval outputs equal:", torch.allclose(y3, y4))</code></pre>
+    </div>
+
+    <h3>Where to place dropout in CNNs</h3>
+    <p>
+      The common default is to place dropout <b>between dense layers</b> (the classifier head),
+      not inside convolution blocks. For conv feature maps, people sometimes use
+      <code>nn.Dropout2d</code> (drops entire channels), but you should treat it as an experiment.
+    </p>
+
+    <div class="codewrap">
+      <div class="codebar">
+        <span class="label">python • typical dropout placement in a CNN head</span>
+        <button data-copy type="button">Copy</button>
+      </div>
+<pre class="language-python"><code>import torch.nn as nn
+
+head = nn.Sequential(
+    nn.Flatten(),
+    nn.Linear(64*16*16, 256),
+    nn.ReLU(),
+    nn.Dropout(p=0.5),
+    nn.Linear(256, 10),
+)</code></pre>
+    </div>
+
+    <figure>
+      <img alt="Dropout illustration" src="https://upload.wikimedia.org/wikipedia/commons/a/a8/Dropout_en.svg">
+      <figcaption>
+        Dropout diagram (Wikimedia Commons):
+        <a href="https://commons.wikimedia.org/wiki/File:Dropout_en.svg" target="_blank" rel="noopener">Dropout_en.svg</a>
+      </figcaption>
+    </figure>
+  </section>
+
+  <section id="conv-arithmetic">
+    <h2>6) Convolution arithmetic (compute output sizes so your Linear layer matches)</h2>
+
+    <p>
+      CNNs become annoying to wire up when you reach the first dense layer, because you must know the flattened size.
+      That requires knowing the conv output size.
+    </p>
+
+    <h3>The PyTorch formula (per spatial dimension)</h3>
+    <p>
+      For height (and similarly width), PyTorch effectively uses:
+      \[
+        H_{\text{out}} = \left\lfloor \frac{H_{\text{in}} + 2P - D\,(K-1) - 1}{S} + 1 \right\rfloor
+      \]
+    </p>
+    <ul>
+      <li>\(H_\text{in}\): input height</li>
+      <li>\(K\): kernel size (height)</li>
+      <li>\(S\): stride</li>
+      <li>\(P\): padding</li>
+      <li>\(D\): dilation (usually 1 unless you set it)</li>
+    </ul>
+
+    <div class="callout">
+      <p style="margin:0;">
+        <b>Common case:</b> dilation \(D=1\). Then:
+        \[
+          H_{\text{out}} = \left\lfloor \frac{H_{\text{in}} + 2P - K}{S} + 1 \right\rfloor
+        \]
+      </p>
+    </div>
+
+    <h3>“Valid” vs “Same-like” behavior</h3>
+    <p>
+      In classic terms (stride 1, dilation 1):
+    </p>
+    <ul>
+      <li><b>Valid</b>: \(P=0\) → \(H_\text{out} = H_\text{in} - K + 1\)</li>
+      <li><b>Same-like</b>: choose \(P\) to keep size when \(S=1\) (often \(P=\lfloor K/2\rfloor\) for odd kernels)</li>
+    </ul>
+
+    <p class="muted">
+      In Keras you can write <code>padding="same"</code>. In PyTorch you usually specify the numeric padding yourself
+      (or in newer versions you may see padding strings in some APIs, but relying on the arithmetic is still essential).
+    </p>
+
+    <h3>Worked example: 32×32 → (stride 2) → 16×16</h3>
+    <p>
+      Suppose:
+      \(H_\text{in}=32\), \(K=3\), \(S=2\), \(P=1\) (a common “same-like downsample” setting).
+      Then:
+      \[
+        H_{\text{out}} = \left\lfloor \frac{32 + 2(1) - 3}{2} + 1 \right\rfloor
+        = \left\lfloor \frac{31}{2} + 1 \right\rfloor
+        = \lfloor 15.5 + 1 \rfloor
+        = 16
+      \]
+    </p>
+
+    <div class="codewrap">
+      <div class="codebar">
+        <span class="label">python • helper to compute conv output size (H/W)</span>
+        <button data-copy type="button">Copy</button>
+      </div>
+<pre class="language-python"><code>import math
+
+def conv_out_size(n_in, k, stride=1, pad=0, dilation=1):
+    return math.floor((n_in + 2*pad - dilation*(k-1) - 1) / stride + 1)
+
+print(conv_out_size(32, k=3, stride=2, pad=1))  # 16</code></pre>
+    </div>
+
+    <h3>Why odd kernel sizes are common</h3>
+    <p>
+      With odd kernels (3,5,7…), there is a clear “center” pixel. This makes it easy to do symmetric padding
+      (e.g., \(P=\lfloor K/2\rfloor\)) and preserve alignment.
+    </p>
+
+    <figure>
+      <img alt="Convolution arithmetic diagram" src="https://upload.wikimedia.org/wikipedia/commons/6/63/Conv2d_padding_strides.gif">
+      <figcaption>
+        Stride/padding intuition (Wikimedia Commons):
+        <a href="https://commons.wikimedia.org/wiki/File:Conv2d_padding_strides.gif" target="_blank" rel="noopener">Conv2d_padding_strides.gif</a>
+      </figcaption>
+    </figure>
+
+    <h3>Shortcut if you hate arithmetic</h3>
+    <p>
+      During prototyping, use the “dummy forward pass” trick shown earlier to infer flatten size.
+      But you still want the formula in your toolbox when reading papers or debugging shape errors.
+    </p>
+  </section>
+
+  <section id="cheatsheet">
+    <h2>Cheat sheet: what to remember</h2>
+
+    <table>
+      <thead><tr><th>Topic</th><th>Remember this</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Tensor layout</td>
+          <td>PyTorch images are usually <b>N×C×H×W</b>.</td>
+        </tr>
+        <tr>
+          <td>Conv2d weights</td>
+          <td><code>(out_channels, in_channels, kH, kW)</code></td>
+        </tr>
+        <tr>
+          <td>Modules</td>
+          <td>Layers/models are <code>nn.Module</code>; composition gives “module of modules”.</td>
+        </tr>
+        <tr>
+          <td>Custom model</td>
+          <td>Define layers in <code>__init__</code>, apply them in <code>forward</code>.</td>
+        </tr>
+        <tr>
+          <td>Conv → Dense boundary</td>
+          <td>Use <code>x.view(x.size(0), -1)</code> or <code>nn.Flatten()</code>.</td>
+        </tr>
+        <tr>
+          <td>Dropout</td>
+          <td>New random mask each forward pass in <code>train()</code>; disabled in <code>eval()</code>.</td>
+        </tr>
+        <tr>
+          <td>Conv arithmetic</td>
+          <td>\( \left\lfloor \frac{H + 2P - D(K-1) - 1}{S} + 1 \right\rfloor \)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p class="muted small">
+      Visual sources used: Wikimedia Commons GIF/SVG assets embedded inline above.
+    </p>
+  </section>
+
+</div>
+  <script src="../assets/js/nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FastAPI & Uvicorn Basics</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        h1 { color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 10px; text-align: center; }
+        h2 { color: #2980b9; margin-top: 40px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        h3 { color: #16a085; margin-top: 30px; }
+        h4 { color: #7f8c8d; margin-top: 20px; font-weight: 600; }
+        p { margin-bottom: 15px; }
+        ul { margin-bottom: 15px; padding-left: 25px; }
+        li { margin-bottom: 8px; }
+        strong { color: #2c3e50; }
+        code {
+            background-color: #f1f3f5;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+            color: #d63384;
+            font-size: 0.9em;
+        }
+        pre {
+            background-color: #282c34;
+            color: #abb2bf;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+            font-size: 0.9em;
+            margin-top: 10px;
+            margin-bottom: 20px;
+        }
+        .method-card {
+            background-color: #fafafa;
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        .method-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .method-badge {
+            background-color: #2c3e50;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-right: 10px;
+            font-family: monospace;
+        }
+        .check { color: #27ae60; }
+        .cross { color: #c0392b; }
+        .note { font-style: italic; color: #666; font-size: 0.95em; }
+        hr { border: 0; height: 1px; background: #ddd; margin: 40px 0; }
+        .mental-model {
+            background-color: #e8f6f3;
+            border-left: 5px solid #16a085;
+            padding: 20px;
+            border-radius: 4px;
+        }
+    </style>
+  <link rel="stylesheet" href="../assets/css/book.css">
+</head>
+<body>
+    <div class="container">
+        <h1>FastAPI & Uvicorn Basics</h1>
+
+        <h2>Definitions</h2>
+
+        <h3>FastAPI</h3>
+        <p>A modern Python web framework for building APIs. You write endpoint functions with Python type hints, and FastAPI uses them to validate requests, serialize responses, and generate interactive API docs automatically.</p>
+
+        <h3>Uvicorn</h3>
+        <p>A fast ASGI server. It’s the program that actually runs your FastAPI app and handles incoming network connections (HTTP/WebSockets), passing requests into your app and sending responses back out.</p>
+
+        <h3>ASGI</h3>
+        <p>Asynchronous Server Gateway Interface: a standard way for an async Python web app (FastAPI/Starlette) to communicate with an async web server (Uvicorn).</p>
+
+        <h2>Why FastAPI + Uvicorn</h2>
+        <ul>
+            <li><strong>FastAPI</strong> gives you the API framework (routing, validation, docs, dependency injection).</li>
+            <li><strong>Uvicorn</strong> gives you the server runtime to serve it efficiently.</li>
+            <li><strong>ASGI</strong> is the glue that enables async concurrency and things like WebSockets (useful for real-time apps).</li>
+        </ul>
+
+        <hr>
+
+        <h2>Mini Tutorial: HTTP Methods</h2>
+        <p class="note">(GET / POST / PUT / PATCH / DELETE) + “safe” + “idempotent” (FastAPI context)</p>
+
+        <h3>Anatomy of an HTTP Request</h3>
+        <ul>
+            <li><strong>Method</strong> (GET/POST/PUT/…): the intent</li>
+            <li><strong>URL</strong> (e.g. <code>/documents/123</code>): the target resource</li>
+            <li><strong>Headers</strong> (e.g. <code>Authorization</code>)</li>
+            <li><strong>Body</strong> (optional JSON): the data you send</li>
+        </ul>
+
+        <h3>Why there are different HTTP methods</h3>
+        <p>HTTP has different methods because they communicate the intent of a request in a standardized way:</p>
+        <ul>
+            <li><strong>Safety</strong>: Some requests are meant to be read-only (GET) vs change data (POST/PUT/PATCH/DELETE).</li>
+            <li><strong>Retries</strong>: Some operations are designed to be safe to repeat (PUT/DELETE are typically idempotent), which matters when networks fail.</li>
+            <li><strong>Caching</strong>: Reads (GET) can be cached by browsers/CDNs/proxies; writes usually aren’t.</li>
+            <li><strong>Tooling & clarity</strong>: The method + URL together form a clear contract (<code>GET /documents/123</code> vs <code>DELETE /documents/123</code>), which helps docs, clients, gateways, and debugging.</li>
+        </ul>
+
+        <h3>Concepts</h3>
+
+        <h4>What “safe” means</h4>
+        <p>A safe method should not change server state.</p>
+        <ul>
+            <li><strong>Safe</strong>: GET, HEAD</li>
+            <li><strong>Not safe</strong>: POST, PUT, PATCH, DELETE</li>
+        </ul>
+        <p class="note">Why it matters: systems may prefetch, cache, or retry safe requests more freely because they shouldn’t cause side effects.</p>
+
+        <h4>What “idempotent” means</h4>
+        <p>An idempotent method means repeating the same request leads to the same final server state.</p>
+        <ul>
+            <li><strong>Idempotent</strong>: GET, HEAD, PUT, DELETE (PATCH is often idempotent if it “sets fields”, but not always)</li>
+            <li><strong>Usually not idempotent</strong>: POST (repeating can create duplicates)</li>
+        </ul>
+        <p class="note">Why it matters: when a client times out, it might retry. Retrying idempotent operations is safer.</p>
+
+        <hr>
+
+        <h2>The Common HTTP Methods</h2>
+        <p class="note">(What they mean + when to use)</p>
+
+        <!-- GET -->
+        <div class="method-card">
+            <div class="method-header">
+                <span class="method-badge" style="background-color: #61affe;">GET</span>
+                <strong>“Give me data” (read-only)</strong>
+            </div>
+            <ul>
+                <li><strong>Meaning</strong>: Retrieve a resource (or list/search results)</li>
+                <li><strong>Safe</strong>: <span class="check">✅</span></li>
+                <li><strong>Idempotent</strong>: <span class="check">✅</span></li>
+                <li><strong>Cacheable</strong>: often <span class="check">✅</span></li>
+                <li><strong>Use for</strong>: fetching documents, listing, searching with simple query params</li>
+            </ul>
+            <p><strong>Example</strong>: <code>GET /documents/123</code></p>
+            
+            <h4>Client call</h4>
+<pre>curl -H "Authorization: Bearer $TOKEN" \
+  http://localhost:8000/documents/123</pre>
+
+            <h4>FastAPI</h4>
+<pre>@app.get("/documents/{doc_id}")
+def get_document(doc_id: int):
+    return {"id": doc_id, "title": "Example"}</pre>
+        </div>
+
+        <!-- POST -->
+        <div class="method-card">
+            <div class="method-header">
+                <span class="method-badge" style="background-color: #49cc90;">POST</span>
+                <strong>“Create or perform an action”</strong>
+            </div>
+            <ul>
+                <li><strong>Meaning</strong>: Submit data to create something or run a server action</li>
+                <li><strong>Safe</strong>: <span class="cross">❌</span></li>
+                <li><strong>Idempotent</strong>: <span class="cross">❌</span> (usually)</li>
+                <li><strong>Cacheable</strong>: usually <span class="cross">❌</span></li>
+                <li><strong>Use for</strong>: creating resources (<code>POST /documents</code>) or “commands” like Q&A query (<code>POST /query</code>)</li>
+            </ul>
+            <p><strong>Example</strong>: <code>POST /query</code> with a question in JSON</p>
+
+            <h4>Client call</h4>
+<pre>curl -X POST http://localhost:8000/query \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"question":"What does my policy say about refunds?"}'</pre>
+
+            <h4>FastAPI</h4>
+<pre>from pydantic import BaseModel
+
+class QueryRequest(BaseModel):
+    question: str
+
+@app.post("/query")
+def query(req: QueryRequest):
+    return {"answer": "Mock answer", "question": req.question}</pre>
+        </div>
+
+        <!-- PUT -->
+        <div class="method-card">
+            <div class="method-header">
+                <span class="method-badge" style="background-color: #fca130;">PUT</span>
+                <strong>“Replace this resource completely”</strong>
+            </div>
+            <ul>
+                <li><strong>Meaning</strong>: Set the resource at this URL to exactly this representation</li>
+                <li><strong>Safe</strong>: <span class="cross">❌</span></li>
+                <li><strong>Idempotent</strong>: <span class="check">✅</span> (repeat = same final state)</li>
+                <li><strong>Use for</strong>: full replacement updates</li>
+            </ul>
+            <p><strong>Example</strong>: <code>PUT /documents/123</code> with full document fields</p>
+
+            <h4>Client call</h4>
+<pre>curl -X PUT http://localhost:8000/documents/123 \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"title":"New title","content":"Full content"}'</pre>
+        </div>
+
+        <!-- PATCH -->
+        <div class="method-card">
+            <div class="method-header">
+                <span class="method-badge" style="background-color: #50e3c2; color: #333;">PATCH</span>
+                <strong>“Update part of this resource”</strong>
+            </div>
+            <ul>
+                <li><strong>Meaning</strong>: Modify only certain fields</li>
+                <li><strong>Safe</strong>: <span class="cross">❌</span></li>
+                <li><strong>Idempotent</strong>: depends (often yes if it “sets” fields)</li>
+                <li><strong>Use for</strong>: small updates like renaming a document</li>
+            </ul>
+            <p><strong>Example</strong>: <code>PATCH /documents/123</code> with <code>{"title":"Renamed"}</code></p>
+
+            <h4>Client call</h4>
+<pre>curl -X PATCH http://localhost:8000/documents/123 \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Renamed"}'</pre>
+        </div>
+
+        <!-- DELETE -->
+        <div class="method-card">
+            <div class="method-header">
+                <span class="method-badge" style="background-color: #f93e3e;">DELETE</span>
+                <strong>“Remove this resource”</strong>
+            </div>
+            <ul>
+                <li><strong>Meaning</strong>: Delete the resource at this URL</li>
+                <li><strong>Safe</strong>: <span class="cross">❌</span></li>
+                <li><strong>Idempotent</strong>: <span class="check">✅</span> (deleting twice still ends “deleted”)</li>
+                <li><strong>Use for</strong>: deleting documents, records, jobs</li>
+            </ul>
+            <p><strong>Example</strong>: <code>DELETE /documents/123</code></p>
+
+            <h4>Client call</h4>
+<pre>curl -X DELETE http://localhost:8000/documents/123 \
+  -H "Authorization: Bearer $TOKEN"</pre>
+        </div>
+
+        <hr>
+
+        <h2>A Quick Mental Model for Your Project</h2>
+        <div class="mental-model">
+            <ul>
+                <li>Use <strong>GET</strong> for fetching: document list/details, status checks.</li>
+                <li>Use <strong>POST</strong> for actions: your Q&A <code>/query</code> is naturally POST (complex body, not a simple “resource fetch”).</li>
+                <li>Use <strong>PUT/PATCH</strong> for updating document metadata or settings.</li>
+                <li>Use <strong>DELETE</strong> to remove a document or ingestion entry.</li>
+            </ul>
+        </div>
+
+        <p style="margin-top: 30px; color: #666;">If you want, next we can do the same mini-tutorial for path params vs query params vs request bodies with examples (<code>/documents/{id}</code>, <code>?limit=</code>, JSON models).</p>
+    </div>
+  <script src="../assets/js/nav.js"></script>
+</body>
+</html>

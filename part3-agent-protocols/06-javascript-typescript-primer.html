@@ -1,0 +1,1261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavaScript & TypeScript Tutorial for Beginners</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            border-bottom: 4px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        h2 {
+            color: #764ba2;
+            margin-top: 40px;
+            margin-bottom: 15px;
+            font-size: 1.8em;
+            border-left: 5px solid #764ba2;
+            padding-left: 15px;
+        }
+
+        h3 {
+            color: #555;
+            margin-top: 25px;
+            margin-bottom: 10px;
+            font-size: 1.3em;
+        }
+
+        h4 {
+            color: #666;
+            margin-top: 20px;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+
+        .intro {
+            background: #f0f4ff;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border-left: 5px solid #667eea;
+        }
+
+        .key-concept {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 5px solid #ffc107;
+        }
+
+        .key-concept strong {
+            color: #856404;
+        }
+
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 20px 0;
+            border-left: 4px solid #667eea;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95em;
+        }
+
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            color: #d63384;
+        }
+
+        pre code {
+            background: transparent;
+            padding: 0;
+            color: #f8f8f2;
+        }
+
+        ul, ol {
+            margin-left: 30px;
+            margin-bottom: 15px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        .note {
+            background: #d1ecf1;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 5px solid #17a2b8;
+        }
+
+        .note::before {
+            content: "📝 Note: ";
+            font-weight: bold;
+            color: #0c5460;
+        }
+
+        .warning {
+            background: #f8d7da;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 5px solid #dc3545;
+        }
+
+        .warning::before {
+            content: "⚠️ Important: ";
+            font-weight: bold;
+            color: #721c24;
+        }
+
+        .step {
+            background: #e7f3ff;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #0066cc;
+        }
+
+        .step-number {
+            font-weight: bold;
+            color: #0066cc;
+        }
+
+        .practice-box {
+            background: #d4edda;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 5px solid #28a745;
+        }
+
+        .practice-box h3 {
+            color: #155724;
+            margin-top: 0;
+        }
+
+        .divider {
+            height: 2px;
+            background: linear-gradient(to right, #667eea, #764ba2);
+            margin: 40px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background: #667eea;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+    </style>
+  <link rel="stylesheet" href="../assets/css/book.css">
+</head>
+<body>
+    <div class="container">
+        <h1>JavaScript & TypeScript Tutorial for Beginners</h1>
+        
+        <div class="intro">
+            <p><strong>Welcome!</strong> This tutorial starts from absolute first principles: what JavaScript is, what Node.js is, and why we can run code "outside the browser". You'll learn JavaScript in a way that prepares you to write clean, component-style code, then transition smoothly into TypeScript.</p>
+            <p>No web development experience required. No HTML or CSS needed. Just pure programming fundamentals.</p>
+        </div>
+
+        <div class="divider"></div>
+
+        <h2>Part 1: JavaScript Fundamentals</h2>
+
+        <h3>1. What is JavaScript?</h3>
+        <p><strong>JavaScript (JS)</strong> is a programming language that lets you write instructions for a computer to execute. Originally designed for web browsers, JavaScript has evolved into a versatile language used in many contexts.</p>
+
+        <p>You can use JavaScript in two main environments:</p>
+        <ol>
+            <li><strong>In a web browser</strong> (Chrome, Safari, Firefox, etc.) - for interactive websites</li>
+            <li><strong>Outside the browser</strong> using <strong>Node.js</strong> - for servers, tools, and applications</li>
+        </ol>
+
+        <h3>What is Node.js?</h3>
+        <p><strong>Node.js</strong> is a runtime environment - a program you install on your computer that can execute JavaScript files directly, just like Python or Java.</p>
+
+        <div class="key-concept">
+            <p><strong>Key Understanding:</strong></p>
+            <ul>
+                <li><strong>JavaScript</strong> = The programming language (the "what")</li>
+                <li><strong>Node.js</strong> = The tool that runs JavaScript on your computer (the "how")</li>
+                <li>Without Node: Your computer doesn't understand <code>.js</code> files</li>
+                <li>With Node: You can run <code>.js</code> files like any other program</li>
+            </ul>
+        </div>
+
+        <div class="divider"></div>
+
+        <h3>2. Your First "Hello World" Program</h3>
+        <p>Let's write and run the simplest possible JavaScript program.</p>
+
+        <div class="step">
+            <p><span class="step-number">Step A:</span> Create a folder named <code>js-basics</code> on your computer</p>
+        </div>
+
+        <div class="step">
+            <p><span class="step-number">Step B:</span> Inside that folder, create a file named <code>hello.js</code></p>
+        </div>
+
+        <div class="step">
+            <p><span class="step-number">Step C:</span> Put this code inside <code>hello.js</code>:</p>
+        </div>
+
+        <pre><code>console.log("Hello world!");</code></pre>
+
+        <div class="step">
+            <p><span class="step-number">Step D:</span> Open a terminal in that folder and run:</p>
+        </div>
+
+        <pre><code>node hello.js</code></pre>
+
+        <p>You should see:</p>
+        <pre><code>Hello world!</code></pre>
+
+        <div class="note">
+            <strong>What just happened?</strong>
+            <ul>
+                <li><code>hello.js</code> is a text file containing JavaScript code</li>
+                <li><code>node hello.js</code> means "run this file using Node.js"</li>
+                <li><code>console.log(...)</code> prints text to the terminal/console</li>
+            </ul>
+        </div>
+
+        <div class="divider"></div>
+
+        <h3>3. How Programs Think: Data and Instructions</h3>
+        <p>Every program consists of two fundamental elements:</p>
+        <ul>
+            <li><strong>Data</strong> - Information like text, numbers, and true/false values</li>
+            <li><strong>Instructions</strong> - Commands that tell the computer what to do with that data</li>
+        </ul>
+
+        <h4>Common Data Types in JavaScript</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Example</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>String</td>
+                    <td><code>"hello"</code></td>
+                    <td>Text (must be in quotes)</td>
+                </tr>
+                <tr>
+                    <td>Number</td>
+                    <td><code>42</code></td>
+                    <td>Integers and decimals</td>
+                </tr>
+                <tr>
+                    <td>Boolean</td>
+                    <td><code>true</code> or <code>false</code></td>
+                    <td>True/false values</td>
+                </tr>
+                <tr>
+                    <td>Null</td>
+                    <td><code>null</code></td>
+                    <td>Intentionally empty value</td>
+                </tr>
+                <tr>
+                    <td>Undefined</td>
+                    <td><code>undefined</code></td>
+                    <td>Not yet assigned a value</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <pre><code>"hello"     // text (string)
+42          // number
+true        // boolean (true/false)
+null        // intentionally empty
+undefined   // not set yet</code></pre>
+
+        <div class="divider"></div>
+
+        <h3>4. Variables: Storing Data for Later Use</h3>
+        <p>A <strong>variable</strong> is like a labeled container that holds a value. Think of it as a named box where you can store information and retrieve it later.</p>
+
+        <h4>Using <code>let</code> (for values that change)</h4>
+        <pre><code>let score = 0;        // Initial value
+score = 10;           // Changed value
+score = score + 5;    // Now score is 15
+console.log(score);   // Prints: 15</code></pre>
+
+        <h4>Using <code>const</code> (for values that stay the same)</h4>
+        <pre><code>const username = "Sam";
+console.log(username);  // Prints: Sam
+
+// username = "John";   // ❌ ERROR! Cannot change a const</code></pre>
+
+        <div class="warning">
+            <strong>Beginner Best Practice:</strong> Always use <code>const</code> by default. Only use <code>let</code> when you genuinely need to change the value later. This prevents accidental changes and makes your code easier to understand.
+        </div>
+
+        <div class="divider"></div>
+
+        <h3>5. Strings: Working with Text</h3>
+        <p>Strings are sequences of characters used to represent text. JavaScript offers multiple ways to work with strings.</p>
+
+        <h4>String Concatenation</h4>
+        <pre><code>const first = "Ada";
+const last = "Lovelace";
+
+// Old style: using + operator
+console.log(first + " " + last);  // Ada Lovelace
+
+// Modern style: template literals (template strings)
+console.log(`${first} ${last}`);  // Ada Lovelace</code></pre>
+
+        <div class="note">
+            Template literals (backticks <code>`</code>) are the modern, preferred way. They're easier to read and allow you to embed expressions directly using <code>${...}</code> syntax.
+        </div>
+
+        <h4>More String Examples</h4>
+        <pre><code>const age = 25;
+const message = `I am ${age} years old`;
+console.log(message);  // I am 25 years old
+
+const calculation = `5 + 3 = ${5 + 3}`;
+console.log(calculation);  // 5 + 3 = 8</code></pre>
+
+        <div class="divider"></div>
+
+        <h3>6. Numbers and Arithmetic Operators</h3>
+        <p>JavaScript provides standard mathematical operators for working with numbers.</p>
+
+        <pre><code>const a = 10;
+const b = 3;
+
+console.log(a + b);  // 13  (addition)
+console.log(a - b);  // 7   (subtraction)
+console.log(a * b);  // 30  (multiplication)
+console.log(a / b);  // 3.333... (division)
+console.log(a % b);  // 1   (remainder/modulo)
+console.log(a ** b); // 1000 (exponentiation: 10³)</code></pre>
+
+        <h4>More Complex Operations</h4>
+        <pre><code>// Order of operations follows standard math rules (PEMDAS)
+const result = (10 + 5) * 2;  // 30
+
+// Increment and decrement
+let counter = 0;
+counter++;  // counter is now 1
+counter--;  // counter is now 0 again
+
+// Compound assignment
+let total = 10;
+total += 5;  // Same as: total = total + 5
+total *= 2;  // Same as: total = total * 2</code></pre>
+
+        <div class="divider"></div>
+
+        <h3>7. Making Decisions: If Statements</h3>
+        <p>Programs need to make choices based on conditions. The <code>if</code> statement lets your code take different paths depending on whether something is true or false.</p>
+
+        <h4>Basic If-Else</h4>
+        <pre><code>const age = 18;
+
+if (age >= 18) {
+  console.log("Adult");
+} else {
+  console.log("Not adult");
+}</code></pre>
+
+        <h4>Multiple Conditions</h4>
+        <pre><code>const score = 85;
+
+if (score >= 90) {
+  console.log("Grade: A");
+} else if (score >= 80) {
+  console.log("Grade: B");
+} else if (score >= 70) {
+  console.log("Grade: C");
+} else {
+  console.log("Grade: F");
+}</code></pre>
+
+        <h4>Comparison Operators</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Operator</th>
+                    <th>Meaning</th>
+                    <th>Example</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>===</code></td>
+                    <td>Equal to</td>
+                    <td><code>5 === 5</code> → true</td>
+                </tr>
+                <tr>
+                    <td><code>!==</code></td>
+                    <td>Not equal to</td>
+                    <td><code>5 !== 3</code> → true</td>
+                </tr>
+                <tr>
+                    <td><code>&gt;</code></td>
+                    <td>Greater than</td>
+                    <td><code>5 &gt; 3</code> → true</td>
+                </tr>
+                <tr>
+                    <td><code>&lt;</code></td>
+                    <td>Less than</td>
+                    <td><code>5 &lt; 3</code> → false</td>
+                </tr>
+                <tr>
+                    <td><code>&gt;=</code></td>
+                    <td>Greater or equal</td>
+                    <td><code>5 &gt;= 5</code> → true</td>
+                </tr>
+                <tr>
+                    <td><code>&lt;=</code></td>
+                    <td>Less or equal</td>
+                    <td><code>3 &lt;= 5</code> → true</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="divider"></div>
+
+        <h3>8. Repeating Work: Loops</h3>
+        <p>Loops allow you to execute code multiple times without writing the same code over and over.</p>
+
+        <h4>The For Loop</h4>
+        <p>Use when you know exactly how many times to repeat:</p>
+        <pre><code>// Count from 1 to 5
+for (let i = 1; i <= 5; i++) {
+  console.log("Count:", i);
+}
+// Output: Count: 1, Count: 2, Count: 3, Count: 4, Count: 5</code></pre>
+
+        <div class="note">
+            <strong>For Loop Anatomy:</strong>
+            <ul>
+                <li><code>let i = 1</code> - Initialize counter</li>
+                <li><code>i <= 5</code> - Continue while this is true</li>
+                <li><code>i++</code> - Increment counter after each iteration</li>
+            </ul>
+        </div>
+
+        <h4>The For...Of Loop (Easiest for Arrays)</h4>
+        <p>Use when you want to loop through each item in a list:</p>
+        <pre><code>const names = ["Ava", "Noah", "Mia"];
+
+for (const name of names) {
+  console.log("Hello,", name);
+}
+// Output: Hello, Ava
+//         Hello, Noah
+//         Hello, Mia</code></pre>
+
+        <h4>While Loop</h4>
+        <p>Use when you don't know how many times you'll need to repeat:</p>
+        <pre><code>let count = 0;
+
+while (count < 3) {
+  console.log("Count is:", count);
+  count++;
+}</code></pre>
+
+        <div class="divider"></div>
+
+        <h3>9. Functions: Reusable Blocks of Logic</h3>
+        <p>A <strong>function</strong> is a named set of instructions that you can run (call) whenever needed. Functions are the foundation of component-style programming.</p>
+
+        <h4>Basic Function</h4>
+        <pre><code>// Define the function
+function add(x, y) {
+  return x + y;
+}
+
+// Use (call) the function
+const result = add(5, 7);
+console.log(result);  // 12</code></pre>
+
+        <h4>Functions with Multiple Statements</h4>
+        <pre><code>function greet(name) {
+  const message = `Hello, ${name}!`;
+  console.log(message);
+  return message;  // Can also return the value
+}
+
+greet("Alice");  // Prints: Hello, Alice!</code></pre>
+
+        <h4>Arrow Functions (Modern Syntax)</h4>
+        <pre><code>// Traditional function
+function multiply(a, b) {
+  return a * b;
+}
+
+// Arrow function (shorter syntax)
+const multiply = (a, b) => {
+  return a * b;
+};
+
+// Even shorter (when only returning one expression)
+const multiply = (a, b) => a * b;</code></pre>
+
+        <div class="key-concept">
+            <p><strong>Why Functions Matter for Components:</strong></p>
+            <p>A component is essentially:</p>
+            <ul>
+                <li><strong>Inputs</strong> - Data passed to the function (parameters)</li>
+                <li><strong>Processing</strong> - Logic inside the function</li>
+                <li><strong>Outputs</strong> - Data returned from the function</li>
+            </ul>
+            <p>Mastering functions is Step #1 toward component-style programming!</p>
+        </div>
+
+        <div class="divider"></div>
+
+        <h3>10. Objects: Grouping Related Data</h3>
+        <p><strong>Objects</strong> are the #1 data structure you'll use for component inputs. They group related pieces of data together with named properties.</p>
+
+        <h4>Creating and Using Objects</h4>
+        <pre><code>const settings = {
+  model: "example-model",
+  temperature: 0.7,
+  maxTokens: 200
+};
+
+// Accessing object properties
+console.log(settings.model);        // example-model
+console.log(settings.temperature);  // 0.7
+console.log(settings.maxTokens);    // 200</code></pre>
+
+        <h4>Destructuring (Modern and Clean)</h4>
+        <p>Extract multiple properties at once:</p>
+        <pre><code>const { model, maxTokens } = settings;
+console.log(model);     // example-model
+console.log(maxTokens); // 200
+
+// This is the same as:
+const model = settings.model;
+const maxTokens = settings.maxTokens;</code></pre>
+
+        <h4>Nested Objects</h4>
+        <pre><code>const user = {
+  name: "Alice",
+  age: 30,
+  address: {
+    city: "New York",
+    country: "USA"
+  }
+};
+
+console.log(user.address.city);  // New York</code></pre>
+
+        <div class="note">
+            Think of destructuring as "unpacking" a config object. This pattern is everywhere in modern JavaScript and component-style code.
+        </div>
+
+        <div class="divider"></div>
+
+        <h3>11. Arrays: Lists of Items</h3>
+        <p><strong>Arrays</strong> store ordered lists of items - perfect for messages, inputs, results, or any collection of data.</p>
+
+        <h4>Creating and Modifying Arrays</h4>
+        <pre><code>const items = ["a", "b", "c"];
+
+// Add to end
+items.push("d");
+console.log(items);  // ["a", "b", "c", "d"]
+
+// Remove from end
+const last = items.pop();
+console.log(last);   // "d"
+
+// Access by index (starts at 0)
+console.log(items[0]);  // "a"
+console.log(items[1]);  // "b"</code></pre>
+
+        <h4>Essential Array Methods</h4>
+        <pre><code>const numbers = [1, 2, 3, 4, 5];
+
+// map: transform each item
+const doubled = numbers.map(n => n * 2);
+console.log(doubled);  // [2, 4, 6, 8, 10]
+
+// filter: keep items that match a condition
+const evens = numbers.filter(n => n % 2 === 0);
+console.log(evens);  // [2, 4]
+
+// find: get first item that matches
+const firstBig = numbers.find(n => n > 3);
+console.log(firstBig);  // 4
+
+// reduce: combine all items into one value
+const sum = numbers.reduce((total, n) => total + n, 0);
+console.log(sum);  // 15</code></pre>
+
+        <h4>Looping Through Arrays</h4>
+        <pre><code>const fruits = ["apple", "banana", "cherry"];
+
+// Method 1: for...of (cleanest)
+for (const fruit of fruits) {
+  console.log(fruit);
+}
+
+// Method 2: forEach (functional style)
+fruits.forEach(fruit => {
+  console.log(fruit);
+});
+
+// Method 3: traditional for loop
+for (let i = 0; i < fruits.length; i++) {
+  console.log(fruits[i]);
+}</code></pre>
+
+        <div class="divider"></div>
+
+        <h3>12. Asynchronous Programming: Waiting for Work to Complete</h3>
+        <p>This is <strong>the most important modern JavaScript concept</strong>. In real applications, many operations take time:</p>
+        <ul>
+            <li>Reading files from disk</li>
+            <li>Making network requests (API calls)</li>
+            <li>Querying databases</li>
+            <li>Any operation that requires waiting</li>
+        </ul>
+
+        <h4>Synchronous vs Asynchronous</h4>
+        <ul>
+            <li><strong>Synchronous (sync)</strong>: Code runs line by line, each line waits for the previous to finish</li>
+            <li><strong>Asynchronous (async)</strong>: You start an operation, let it run in the background, then handle the result when it's ready</li>
+        </ul>
+
+        <h4>The Modern Way: async/await</h4>
+        <pre><code>// Helper function that returns a Promise
+function wait(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// Async function can use 'await' to wait for Promises
+async function run() {
+  console.log("Start");
+  await wait(1000);  // Wait 1 second
+  console.log("After 1 second");
+  await wait(1000);  // Wait another second
+  console.log("After 2 seconds");
+}
+
+run();</code></pre>
+
+        <h4>Real-World Example: Fetching Data</h4>
+        <pre><code>// Simulated API call
+async function fetchUserData(userId) {
+  console.log("Fetching user data...");
+  await wait(1000);  // Simulate network delay
+  
+  return {
+    id: userId,
+    name: "Alice",
+    email: "alice@example.com"
+  };
+}
+
+async function main() {
+  const user = await fetchUserData(123);
+  console.log("User:", user);
+  console.log("Email:", user.email);
+}
+
+main();</code></pre>
+
+        <div class="warning">
+            This skill is <strong>essential</strong> for component-style code. Almost all real-world components perform asynchronous operations.
+        </div>
+
+        <div class="divider"></div>
+
+        <h3>13. Error Handling: Protecting Your Code</h3>
+        <p>Good code anticipates problems and handles them gracefully. The <code>try/catch</code> block lets you catch and handle errors.</p>
+
+        <h4>Basic Try/Catch</h4>
+        <pre><code>function parseJson(text) {
+  return JSON.parse(text);
+}
+
+try {
+  const data = parseJson("{ bad json }");
+  console.log(data);
+} catch (err) {
+  console.log("Error parsing JSON:", err.message);
+}</code></pre>
+
+        <h4>With Async Functions</h4>
+        <pre><code>async function fetchData(url) {
+  try {
+    // Simulate API call that might fail
+    if (url === "") {
+      throw new Error("URL cannot be empty");
+    }
+    
+    const data = await someAsyncOperation(url);
+    return data;
+  } catch (err) {
+    console.error("Failed to fetch:", err.message);
+    return null;  // Return safe default
+  }
+}</code></pre>
+
+        <div class="key-concept">
+            <p><strong>Component-Style Error Handling:</strong></p>
+            <ul>
+                <li><strong>Validate inputs</strong> early and clearly</li>
+                <li><strong>Fail with helpful messages</strong> that explain what went wrong</li>
+                <li><strong>Use try/catch</strong> around risky operations</li>
+                <li><strong>Return safe defaults</strong> when appropriate</li>
+            </ul>
+        </div>
+
+        <div class="divider"></div>
+
+        <h3>14. Modules: Organizing Code Across Files</h3>
+        <p>Real projects split code into multiple files. <strong>Modules</strong> let you export code from one file and import it into another.</p>
+
+        <h4>Example: Math Utilities</h4>
+        <p><strong>File: math.js</strong></p>
+        <pre><code>// Export individual functions
+function add(a, b) {
+  return a + b;
+}
+
+function subtract(a, b) {
+  return a - b;
+}
+
+function multiply(a, b) {
+  return a * b;
+}
+
+// Export them
+module.exports = { add, subtract, multiply };</code></pre>
+
+        <p><strong>File: index.js</strong></p>
+        <pre><code>// Import from math.js
+const { add, multiply } = require("./math");
+
+console.log(add(2, 3));        // 5
+console.log(multiply(4, 5));   // 20</code></pre>
+
+        <p>Run it:</p>
+        <pre><code>node index.js</code></pre>
+
+        <h4>Modern ES Modules (Alternative Syntax)</h4>
+        <p><strong>File: math.mjs</strong></p>
+        <pre><code>// Modern export syntax
+export function add(a, b) {
+  return a + b;
+}
+
+export function multiply(a, b) {
+  return a * b;
+}</code></pre>
+
+        <p><strong>File: index.mjs</strong></p>
+        <pre><code>// Modern import syntax
+import { add, multiply } from "./math.mjs";
+
+console.log(add(2, 3));
+console.log(multiply(4, 5));</code></pre>
+
+        <div class="note">
+            <strong>Why This Matters:</strong> Component-style programming is all about creating reusable, modular code. Each component typically lives in its own file and exports its functionality.
+        </div>
+
+        <div class="divider"></div>
+
+        <h2>Part 2: TypeScript - JavaScript with Type Safety</h2>
+
+        <h3>What is TypeScript?</h3>
+        <p><strong>TypeScript</strong> is JavaScript plus <strong>type annotations</strong>. It helps you catch mistakes before running your code.</p>
+
+        <div class="key-concept">
+            <p><strong>The Problem TypeScript Solves:</strong></p>
+            <pre><code>// JavaScript allows this mistake:
+const x = "10";         // x is a string
+console.log(x * 2);     // 20 (JavaScript converts it)
+// But what if you didn't intend that?
+
+// TypeScript catches it:
+const x: number = "10";  // ❌ ERROR: Type 'string' not assignable to 'number'</code></pre>
+        </div>
+
+        <h3>1. Installing TypeScript</h3>
+        <p>In your project folder, run these commands:</p>
+
+        <pre><code># Initialize a new Node.js project
+npm init -y
+
+# Install TypeScript as a development dependency
+npm install -D typescript
+
+# Create TypeScript configuration file
+npx tsc --init</code></pre>
+
+        <div class="note">
+            This creates a <code>tsconfig.json</code> file that configures how TypeScript compiles your code.
+        </div>
+
+        <div class="divider"></div>
+
+        <h3>2. Your First TypeScript File</h3>
+        <p>Create a file named <code>index.ts</code>:</p>
+
+        <pre><code>const name: string = "Sam";
+const age: number = 30;
+const isActive: boolean = true;
+
+console.log(name, age, isActive);</code></pre>
+
+        <p>Compile TypeScript to JavaScript:</p>
+        <pre><code>npx tsc</code></pre>
+
+        <p>This creates <code>index.js</code>. Now run it:</p>
+        <pre><code>node index.js</code></pre>
+
+        <div class="key-concept">
+            <p><strong>The TypeScript Workflow:</strong></p>
+            <ol>
+                <li>Write code in <code>.ts</code> files (TypeScript)</li>
+                <li>Compile with <code>npx tsc</code> → creates <code>.js</code> files (JavaScript)</li>
+                <li>Run the JavaScript with <code>node</code></li>
+            </ol>
+        </div>
+
+        <div class="divider"></div>
+
+        <h3>3. Essential TypeScript Types</h3>
+
+        <h4>Primitive Types</h4>
+        <pre><code>const enabled: boolean = true;
+const count: number = 5;
+const label: string = "hello";
+const nothing: null = null;
+const notSet: undefined = undefined;</code></pre>
+
+        <h4>Arrays</h4>
+        <pre><code>// Array of strings
+const tags: string[] = ["javascript", "typescript"];
+
+// Array of numbers
+const scores: number[] = [90, 85, 92];
+
+// Alternative syntax (less common)
+const names: Array&lt;string&gt; = ["Alice", "Bob"];</code></pre>
+
+        <h4>Objects (The Most Important)</h4>
+        <pre><code>// Define the shape with 'type'
+type User = {
+  id: number;
+  name: string;
+  email: string;
+  isActive: boolean;
+};
+
+const user: User = {
+  id: 1,
+  name: "Alice",
+  email: "alice@example.com",
+  isActive: true
+};
+
+// TypeScript ensures all properties exist
+console.log(user.name);  // ✅
+console.log(user.age);   // ❌ ERROR: Property 'age' doesn't exist</code></pre>
+
+        <h4>Optional Properties</h4>
+        <pre><code>type Settings = {
+  model: string;
+  temperature: number;
+  maxTokens?: number;  // ← Optional (? makes it optional)
+};
+
+// This is valid (maxTokens is optional)
+const settings: Settings = {
+  model: "gpt-4",
+  temperature: 0.7
+};</code></pre>
+
+        <div class="divider"></div>
+
+        <h3>4. Functions with Types</h3>
+        <p>TypeScript lets you specify types for function parameters and return values.</p>
+
+        <h4>Basic Typed Function</h4>
+        <pre><code>function add(a: number, b: number): number {
+  return a + b;
+}
+
+const result = add(5, 7);    // ✅
+const bad = add("5", "7");   // ❌ ERROR: Argument type 'string' not assignable</code></pre>
+
+        <h4>Arrow Functions</h4>
+        <pre><code>const multiply = (a: number, b: number): number => {
+  return a * b;
+};
+
+// Shorthand
+const divide = (a: number, b: number): number => a / b;</code></pre>
+
+        <h4>Async Functions</h4>
+        <pre><code>async function fetchUserName(id: number): Promise&lt;string&gt; {
+  // Simulate API call
+  await new Promise(resolve => setTimeout(resolve, 100));
+  return `User_${id}`;
+}
+
+// Using it
+async function main() {
+  const name = await fetchUserName(123);
+  console.log(name);  // name is type 'string'
+}
+
+main();</code></pre>
+
+        <div class="note">
+            <code>Promise&lt;string&gt;</code> means "this async function will eventually return a string".
+        </div>
+
+        <div class="divider"></div>
+
+        <h3>5. Component-Style Function Pattern</h3>
+        <p>This is the pattern you'll use constantly for building components. It combines everything you've learned.</p>
+
+        <pre><code>// Define input shape
+type Input = {
+  text: string;
+  repeat: number;
+};
+
+// Define output shape
+type Output = {
+  result: string;
+  length: number;
+};
+
+// Validation function
+function validateInput(input: Input): void {
+  if (input.repeat < 1) {
+    throw new Error("repeat must be at least 1");
+  }
+  if (input.repeat > 100) {
+    throw new Error("repeat cannot exceed 100");
+  }
+  if (!input.text || input.text.trim() === "") {
+    throw new Error("text cannot be empty");
+  }
+}
+
+// Main processing function
+export async function run(input: Input): Promise&lt;Output&gt; {
+  // Step 1: Validate
+  validateInput(input);
+  
+  // Step 2: Process
+  const repeated = Array(input.repeat).fill(input.text).join(" ");
+  
+  // Step 3: Return structured output
+  return {
+    result: repeated,
+    length: repeated.length
+  };
+}
+
+// Example usage
+async function example() {
+  try {
+    const output = await run({
+      text: "Hello",
+      repeat: 3
+    });
+    
+    console.log(output.result);  // "Hello Hello Hello"
+    console.log(output.length);  // 17
+  } catch (err) {
+    console.error("Error:", err.message);
+  }
+}
+
+example();</code></pre>
+
+        <div class="key-concept">
+            <p><strong>This Pattern Teaches:</strong></p>
+            <ul>
+                <li>✅ <strong>Clean inputs</strong> - Well-defined type for what goes in</li>
+                <li>✅ <strong>Validation</strong> - Check inputs before processing</li>
+                <li>✅ <strong>Predictable output</strong> - Well-defined type for what comes out</li>
+                <li>✅ <strong>Async-ready</strong> - Can handle asynchronous operations</li>
+                <li>✅ <strong>Error handling</strong> - Fails gracefully with clear messages</li>
+                <li>✅ <strong>Exportable</strong> - Can be imported and reused in other files</li>
+            </ul>
+        </div>
+
+        <div class="divider"></div>
+
+        <h3>Advanced TypeScript Features</h3>
+
+        <h4>Union Types (Multiple Possible Types)</h4>
+        <pre><code>type Status = "pending" | "success" | "error";
+
+function handleStatus(status: Status) {
+  if (status === "pending") {
+    console.log("Loading...");
+  } else if (status === "success") {
+    console.log("Done!");
+  } else {
+    console.log("Failed!");
+  }
+}
+
+handleStatus("success");   // ✅
+handleStatus("loading");   // ❌ ERROR: Not a valid Status</code></pre>
+
+        <h4>Interfaces (Alternative to Type)</h4>
+        <pre><code>interface User {
+  id: number;
+  name: string;
+  email: string;
+}
+
+// Interfaces can extend
+interface Admin extends User {
+  permissions: string[];
+}
+
+const admin: Admin = {
+  id: 1,
+  name: "Alice",
+  email: "alice@example.com",
+  permissions: ["read", "write", "delete"]
+};</code></pre>
+
+        <h4>Generic Types (Reusable Type Patterns)</h4>
+        <pre><code>// Generic array wrapper
+function wrapInArray&lt;T&gt;(item: T): T[] {
+  return [item];
+}
+
+const nums = wrapInArray(42);        // number[]
+const strs = wrapInArray("hello");   // string[]
+
+// Generic API response
+type ApiResponse&lt;T&gt; = {
+  data: T;
+  status: number;
+  message: string;
+};
+
+const userResponse: ApiResponse&lt;User&gt; = {
+  data: { id: 1, name: "Alice", email: "alice@example.com" },
+  status: 200,
+  message: "Success"
+};</code></pre>
+
+        <div class="divider"></div>
+
+        <h2>Practice Path for Mastery</h2>
+
+        <div class="practice-box">
+            <h3>🎯 Beginner to Component Developer Roadmap</h3>
+            <p>Complete these exercises in order to master component-style programming:</p>
+            
+            <ol>
+                <li>
+                    <strong>Simple Function</strong><br>
+                    Write a function that takes an object with <code>{ firstName, lastName }</code> and returns <code>{ fullName }</code>
+                </li>
+                
+                <li>
+                    <strong>Add Validation</strong><br>
+                    Enhance the function to throw an error if either name is empty
+                </li>
+                
+                <li>
+                    <strong>Make it Async</strong><br>
+                    Convert it to an async function that waits 500ms before returning (simulating a database lookup)
+                </li>
+                
+                <li>
+                    <strong>Split into Modules</strong><br>
+                    Move the function to a separate file and import it in your main file
+                </li>
+                
+                <li>
+                    <strong>Convert to TypeScript</strong><br>
+                    Add proper types for input, output, and the function signature
+                </li>
+                
+                <li>
+                    <strong>Build a Real Component</strong><br>
+                    Create a "user profile" component that takes user data, validates it, and returns formatted profile information
+                </li>
+            </ol>
+        </div>
+
+        <div class="divider"></div>
+
+        <h2>Example: Complete Component</h2>
+        <p>Here's a complete, real-world style component combining all concepts:</p>
+
+        <pre><code>// types.ts - Type definitions
+export type UserInput = {
+  username: string;
+  email: string;
+  age?: number;
+};
+
+export type ValidationResult = {
+  isValid: boolean;
+  errors: string[];
+};
+
+export type ProcessedUser = {
+  username: string;
+  email: string;
+  age: number;
+  createdAt: string;
+};
+
+// validators.ts - Validation logic
+export function validateUser(input: UserInput): ValidationResult {
+  const errors: string[] = [];
+  
+  if (!input.username || input.username.length < 3) {
+    errors.push("Username must be at least 3 characters");
+  }
+  
+  if (!input.email || !input.email.includes("@")) {
+    errors.push("Valid email is required");
+  }
+  
+  if (input.age !== undefined && (input.age < 0 || input.age > 120)) {
+    errors.push("Age must be between 0 and 120");
+  }
+  
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+}
+
+// component.ts - Main component logic
+import { UserInput, ValidationResult, ProcessedUser } from "./types";
+import { validateUser } from "./validators";
+
+export async function processUser(input: UserInput): Promise&lt;ProcessedUser&gt; {
+  // Validate input
+  const validation = validateUser(input);
+  
+  if (!validation.isValid) {
+    throw new Error(`Validation failed: ${validation.errors.join(", ")}`);
+  }
+  
+  // Simulate async processing (e.g., database save)
+  await new Promise(resolve => setTimeout(resolve, 100));
+  
+  // Return processed result
+  return {
+    username: input.username,
+    email: input.email.toLowerCase(),
+    age: input.age ?? 0,  // Default to 0 if not provided
+    createdAt: new Date().toISOString()
+  };
+}
+
+// index.ts - Usage example
+import { processUser } from "./component";
+
+async function main() {
+  try {
+    const result = await processUser({
+      username: "alice123",
+      email: "Alice@Example.com",
+      age: 25
+    });
+    
+    console.log("User processed:", result);
+  } catch (err) {
+    console.error("Failed to process user:", err.message);
+  }
+}
+
+main();</code></pre>
+
+        <div class="divider"></div>
+
+        <h2>Next Steps</h2>
+        <ul>
+            <li>Practice building small components with clear input/output types</li>
+            <li>Learn about popular frameworks that use this pattern (React, Vue, etc.)</li>
+            <li>Explore Node.js libraries for file I/O, HTTP requests, and databases</li>
+            <li>Study design patterns (Factory, Builder, Strategy) in TypeScript</li>
+            <li>Build a complete application with multiple interconnected components</li>
+        </ul>
+
+        <div class="note">
+            <strong>Remember:</strong> The best way to learn is by building. Start small, make mistakes, and gradually increase complexity. Every expert programmer started exactly where you are now!
+        </div>
+    </div>
+  <script src="../assets/js/nav.js"></script>
+</body>
+</html>

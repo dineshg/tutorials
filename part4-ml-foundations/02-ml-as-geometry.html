@@ -1,0 +1,565 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Machine Learning as Geometry • Deep Learning with PyTorch</title>
+
+    <!-- KaTeX (equation rendering) -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"
+    />
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+    ></script>
+    <script>
+      function normalizeBackslashesInsideMath(text) {
+        if (!text || text.indexOf('\\\\') === -1) return text;
+
+        let out = "";
+        let i = 0;
+        let mode = null; // null | 'inline' | 'display'
+
+        const isEscaped = (s, idx) => {
+          let backslashes = 0;
+          for (let j = idx - 1; j >= 0 && s[j] === "\\"; j--) backslashes++;
+          return (backslashes % 2) === 1;
+        };
+
+        while (i < text.length) {
+          if (mode === null) {
+            if (text.startsWith("$$", i)) {
+              mode = "display";
+              out += "$$";
+              i += 2;
+              continue;
+            }
+            if (text[i] === "$" && !isEscaped(text, i)) {
+              mode = "inline";
+              out += "$";
+              i += 1;
+              continue;
+            }
+            out += text[i];
+            i += 1;
+            continue;
+          }
+
+          if (mode === "display") {
+            if (text.startsWith("$$", i) && !isEscaped(text, i)) {
+              mode = null;
+              out += "$$";
+              i += 2;
+              continue;
+            }
+          } else {
+            if (text[i] === "$" && !isEscaped(text, i)) {
+              mode = null;
+              out += "$";
+              i += 1;
+              continue;
+            }
+          }
+
+          if (text[i] === "\\" && text[i + 1] === "\\") {
+            out += "\\";
+            i += 2;
+            continue;
+          }
+
+          out += text[i];
+          i += 1;
+        }
+
+        return out;
+      }
+
+      function normalizeMathInDom(root) {
+        const ignoredParents = new Set(["SCRIPT", "STYLE", "TEXTAREA", "PRE", "CODE", "NOSCRIPT"]);
+        const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+          acceptNode(node) {
+            const parent = node.parentElement;
+            if (!parent) return NodeFilter.FILTER_REJECT;
+            if (ignoredParents.has(parent.tagName)) return NodeFilter.FILTER_REJECT;
+            if (!node.nodeValue) return NodeFilter.FILTER_REJECT;
+            return NodeFilter.FILTER_ACCEPT;
+          },
+        });
+
+        const nodes = [];
+        while (walker.nextNode()) nodes.push(walker.currentNode);
+        for (const node of nodes) {
+          const normalized = normalizeBackslashesInsideMath(node.nodeValue);
+          if (normalized !== node.nodeValue) node.nodeValue = normalized;
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        if (typeof renderMathInElement !== "function") return;
+        normalizeMathInDom(document.body);
+        renderMathInElement(document.body, {
+          delimiters: [
+            { left: "$$", right: "$$", display: true },
+            { left: "\\[", right: "\\]", display: true },
+            { left: "\\(", right: "\\)", display: false },
+          ],
+          throwOnError: false,
+        });
+      });
+    </script>
+
+    <style>
+      :root {
+        --bg: #f6f8fc;
+        --panel: #ffffff;
+        --border: rgba(15, 23, 42, 0.10);
+        --text: #0f172a;
+        --muted: rgba(15, 23, 42, 0.70);
+        --accent: #2563eb;
+        --accent-2: #7c3aed;
+        --code-bg: #0b1020;
+        --code-text: rgba(255, 255, 255, 0.92);
+        --highlight-bg: rgba(250, 204, 21, 0.35);
+        --shadow: 0 18px 48px rgba(2, 6, 23, 0.10);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        height: 100%;
+      }
+
+      body {
+        margin: 0;
+        color: var(--text);
+        background: radial-gradient(900px 500px at 18% -10%, rgba(37, 99, 235, 0.14), transparent 60%),
+          radial-gradient(800px 450px at 90% 8%, rgba(124, 58, 237, 0.12), transparent 55%),
+          linear-gradient(180deg, #ffffff, var(--bg));
+        font: 16px/1.7 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial,
+          "Apple Color Emoji", "Segoe UI Emoji";
+      }
+
+      a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+
+      .wrap {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 56px 18px;
+      }
+
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+
+      .card__topbar {
+        height: 6px;
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      }
+
+      header {
+        padding: 28px 28px 0 28px;
+      }
+
+      .kicker {
+        display: inline-flex;
+        gap: 10px;
+        align-items: center;
+        padding: 6px 10px;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        color: rgba(15, 23, 42, 0.70);
+        background: rgba(15, 23, 42, 0.03);
+        font-size: 13px;
+      }
+
+      h1 {
+        margin: 14px 0 8px 0;
+        font-size: clamp(28px, 4vw, 40px);
+        line-height: 1.15;
+        letter-spacing: -0.02em;
+        background: linear-gradient(90deg, var(--text), rgba(37, 99, 235, 0.95));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+
+      .subtitle {
+        margin: 0 0 22px 0;
+        color: var(--muted);
+        max-width: 80ch;
+      }
+
+      main {
+        padding: 0 28px 28px 28px;
+      }
+
+      p {
+        margin: 14px 0;
+        max-width: 82ch;
+      }
+
+      hr {
+        margin: 20px 0;
+        border: 0;
+        height: 1px;
+        background: rgba(15, 23, 42, 0.10);
+      }
+
+      h2 {
+        margin: 20px 0 6px 0;
+        font-size: 18px;
+        letter-spacing: -0.01em;
+        color: rgba(15, 23, 42, 0.92);
+      }
+
+      h3 {
+        margin: 14px 0 6px 0;
+        font-size: 16px;
+        color: rgba(15, 23, 42, 0.92);
+      }
+
+      ol,
+      ul {
+        margin: 10px 0 0 0;
+        padding-left: 20px;
+      }
+
+      li {
+        margin: 10px 0;
+      }
+
+      .section {
+        margin-top: 18px;
+        padding-top: 18px;
+        border-top: 1px solid rgba(15, 23, 42, 0.08);
+      }
+
+      .callout {
+        margin: 18px 0;
+        padding: 14px 14px;
+        border-radius: 12px;
+        border: 1px solid rgba(37, 99, 235, 0.22);
+        background: rgba(37, 99, 235, 0.06);
+        color: rgba(15, 23, 42, 0.86);
+      }
+
+      /* Code blocks + inline code */
+      code,
+      pre {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+          monospace;
+      }
+
+      :not(pre) > code {
+        padding: 0.15em 0.35em;
+        border-radius: 8px;
+        border: 1px solid rgba(15, 23, 42, 0.12);
+        background: rgba(15, 23, 42, 0.04);
+        color: rgba(15, 23, 42, 0.92);
+        font-size: 0.95em;
+      }
+
+      pre {
+        margin: 14px 0;
+        padding: 14px 14px;
+        border-radius: 14px;
+        background: linear-gradient(180deg, rgba(11, 16, 32, 0.98), rgba(11, 16, 32, 0.92));
+        color: var(--code-text);
+        border: 1px solid rgba(2, 6, 23, 0.18);
+        overflow: auto;
+        box-shadow: 0 10px 26px rgba(2, 6, 23, 0.14);
+      }
+
+      pre code {
+        display: block;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        font-size: 0.95em;
+        line-height: 1.6;
+      }
+
+      /* Highlights */
+      mark {
+        padding: 0.05em 0.2em;
+        border-radius: 8px;
+        background: var(--highlight-bg);
+        color: inherit;
+      }
+
+      blockquote {
+        margin: 14px 0;
+        padding: 10px 14px;
+        border-left: 4px solid rgba(37, 99, 235, 0.35);
+        background: rgba(37, 99, 235, 0.04);
+        border-radius: 12px;
+        color: rgba(15, 23, 42, 0.82);
+      }
+
+      /* Figures / images */
+      .figure {
+        margin: 16px 0;
+        padding: 12px;
+        border: 1px solid rgba(15, 23, 42, 0.10);
+        border-radius: 14px;
+        background: rgba(15, 23, 42, 0.02);
+      }
+
+      .figure img {
+        display: block;
+        width: 100%;
+        height: auto;
+        border-radius: 12px;
+        border: 1px solid rgba(15, 23, 42, 0.10);
+      }
+
+      .figure figcaption {
+        margin-top: 10px;
+        color: rgba(15, 23, 42, 0.70);
+        font-size: 14px;
+      }
+
+      .footer {
+        padding: 14px 28px 26px 28px;
+        color: rgba(15, 23, 42, 0.55);
+        font-size: 13px;
+        border-top: 1px solid rgba(15, 23, 42, 0.08);
+      }
+    </style>
+    <link rel="stylesheet" href="../assets/css/book.css">
+</head>
+
+  <body>
+    <div class="wrap">
+      <article class="card">
+        <div class="card__topbar" aria-hidden="true"></div>
+
+        <header>
+          <div class="kicker">Chapter 1 • Concepts</div>
+          <h1>Machine Learning as Geometry</h1>
+          <p class="subtitle">
+            A concrete mental model: data become points, and learning becomes fitting (or separating)
+            shapes in space.
+          </p>
+        </header>
+
+        <main>
+          <p>
+            Most descriptions of machine learning make it sound mysterious: computers “learn from
+            experience” and “improve automatically.” In this book, we’ll use a much simpler,
+            concrete view:
+          </p>
+
+          <blockquote>
+            <strong>Machine learning is, at its core, a geometry problem.</strong>
+          </blockquote>
+
+          <p>
+            We turn data into points in a space, then learn shapes—lines, planes, and curves—that fit
+            or separate those points.
+          </p>
+
+          <hr />
+
+          <section class="section" aria-labelledby="data-points">
+            <h2 id="data-points">1. Data as Points, Models as Shapes</h2>
+            <p>Every machine learning problem has two parts:</p>
+
+            <figure class="figure">
+              <img
+                src="assets/images/ml-geometry-points.svg"
+                alt="A coordinate plane showing example data as scattered points in a feature space."
+                loading="lazy"
+              />
+              <figcaption>
+                A geometric view of data: each example becomes a point in feature space.
+              </figcaption>
+            </figure>
+
+            <ol>
+              <li>
+                <strong>Features → points in space</strong>
+                <ul>
+                  <li>
+                    A person becomes a point with coordinates like
+                    <em>(years of experience, age, education level, …)</em>.
+                  </li>
+                  <li>
+                    A patient becomes a point like <em>(height, weight, blood pressure, …)</em>.
+                  </li>
+                  <li>Each example is a point in a 2D, 3D, or higher-dimensional space.</li>
+                </ul>
+              </li>
+              <li>
+                <strong>Model → a geometric object</strong>
+                <ul>
+                  <li>In 2D: a <strong>line</strong> or <strong>curve</strong></li>
+                  <li>In 3D: a <strong>plane</strong> or <strong>surface</strong></li>
+                  <li>
+                    In higher dimensions: a <strong>hyperplane</strong> or more complex surface
+                  </li>
+                </ul>
+              </li>
+            </ol>
+
+            <p>Learning means adjusting that geometric object so that it matches the data well.</p>
+          </section>
+
+          <section class="section" aria-labelledby="regression">
+            <h2 id="regression">2. Regression: Fitting Numbers</h2>
+            <p>
+              <strong>Regression</strong> is about predicting a <strong>number</strong>: a salary, a
+              house price, a temperature.
+            </p>
+
+            <figure class="figure">
+              <img
+                src="assets/images/ml-regression-line.svg"
+                alt="A scatter plot with a straight best-fit line illustrating linear regression."
+                loading="lazy"
+              />
+              <figcaption>
+                Regression fits a shape (often a line) through a cloud of points.
+              </figcaption>
+            </figure>
+
+            <h3>Example: Salary vs Experience</h3>
+            <p>We want to predict salary from years of experience:</p>
+            <ul>
+              <li>
+                For each person, we record
+                <ul>
+                  <li>\( x \) = years of experience</li>
+                  <li>\( y \) = salary</li>
+                </ul>
+              </li>
+              <li>Each person is a point \((x, y)\) on a 2D graph.</li>
+            </ul>
+
+            <p>We look for a line:</p>
+            <p>\[ y = mx + b \]</p>
+
+            <ul>
+              <li>\( m \): how much salary increases per year</li>
+              <li>\( b \): salary when experience is zero</li>
+            </ul>
+
+            <p>
+              The learned \( m \) and \( b \) define our model: given a new \( x \), we predict
+              \( y \).
+            </p>
+
+            <p>
+              With more features (experience, age, education, location), each person becomes a point
+              in higher dimensions, and the model becomes a <strong>plane</strong> or
+              <strong>hyperplane</strong> instead of a line. With nonlinear relationships, we replace
+              straight lines with <strong>curves</strong> or more flexible surfaces—but the geometric
+              idea is the same: <strong>we fit a shape to a cloud of points</strong>.
+            </p>
+          </section>
+
+          <section class="section" aria-labelledby="classification">
+            <h2 id="classification">3. Classification: Separating Categories</h2>
+            <p>
+              <strong>Classification</strong> is about predicting a <strong>category</strong>:
+              spam/not spam, dog/cat, fraud/not fraud, at risk/not at risk.
+            </p>
+
+            <figure class="figure">
+              <img
+                src="assets/images/ml-classification-boundary.svg"
+                alt="Two colored clusters of points separated by a decision boundary line."
+                loading="lazy"
+              />
+              <figcaption>
+                Classification learns a decision boundary that separates labeled points.
+              </figcaption>
+            </figure>
+
+            <h3>Example: Cardiovascular Risk from Height and Weight</h3>
+            <p>We want to predict cardiovascular <strong>risk</strong> from:</p>
+            <ul>
+              <li>\( x_1 \) = height</li>
+              <li>\( x_2 \) = weight</li>
+            </ul>
+
+            <p>We encode the label as:</p>
+            <ul>
+              <li><code>0</code> = not at risk</li>
+              <li><code>1</code> = at risk</li>
+            </ul>
+
+            <p>Steps:</p>
+            <ol>
+              <li>Plot each patient as a point \((x_1, x_2)\) in 2D.</li>
+              <li>Color points by label (e.g. blue = 0, green = 1).</li>
+              <li>Find a <strong>line</strong> that separates the colors as well as possible.</li>
+            </ol>
+
+            <p>This line is a <strong>decision boundary</strong>:</p>
+            <ul>
+              <li>One side → predicted “not at risk”</li>
+              <li>Other side → predicted “at risk”</li>
+            </ul>
+
+            <p>
+              In problems like <strong>fraud detection</strong>, each transaction is a point in a
+              high-dimensional space. The model learns a boundary—no longer a simple visible line, but
+              still a geometric surface—that separates “fraud” from “not fraud”.
+            </p>
+          </section>
+
+          <section class="section" aria-labelledby="supervised">
+            <h2 id="supervised">4. Supervised Learning in One Picture</h2>
+            <p>Both regression and classification are forms of <strong>supervised learning</strong>:</p>
+            <ul>
+              <li>We know the <strong>inputs</strong> (features).</li>
+              <li>We know the <strong>targets</strong> (numbers or labels).</li>
+              <li>We learn a function that maps inputs to targets from many examples.</li>
+            </ul>
+
+            <p>Geometrically:</p>
+            <ul>
+              <li><strong>Regression</strong> → fit a line/plane/curve through points.</li>
+              <li>
+                <strong>Classification</strong> → find a boundary that separates differently labeled
+                points.
+              </li>
+            </ul>
+
+            <p>
+              As we move to deep learning and more complex architectures, the spaces and shapes become
+              higher-dimensional and more flexible. But the fundamental picture remains:
+            </p>
+
+            <blockquote>
+              <strong>Data are points.<br />
+              Models are shapes.<br />
+              Learning is finding the shapes that best match the points.</strong>
+            </blockquote>
+          </section>
+        </main>
+
+        <div class="footer">Deep Learning with PyTorch • Concepts</div>
+      </article>
+    </div>
+    <script src="../assets/js/nav.js"></script>
+</body>
+</html>

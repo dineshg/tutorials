@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tenant Identity vs IAM vs Workload Identity (GCP) — The No-Confusion Guide</title>
+
+  <style>
+    :root{
+      /* Light theme (default) */
+      --bg: #f7f9fc;
+      --panel: rgba(2,6,23,.04);
+      --card: rgba(2,6,23,.03);
+      --border: rgba(2,6,23,.10);
+      --text: #0f172a;
+      --muted: #475569;
+
+      --h1: #0f172a;
+      --h2: #1d4ed8;
+      --h3: #0f766e;
+
+      --accent: rgba(29,78,216,.10);
+      --callout: rgba(15,118,110,.08);
+      --warn: rgba(225,29,72,.08);
+
+      /* Keep code blocks in VS Code Dark+ style */
+      --codebg: #1e1e1e;
+      --codeborder: #2d2d2d;
+    }
+
+    @media (prefers-color-scheme: dark){
+      :root{
+        --bg: #0b1220;
+        --panel: rgba(255,255,255,.05);
+        --card: rgba(255,255,255,.06);
+        --border: rgba(255,255,255,.10);
+        --text: #e6eaf2;
+        --muted: #a8b3cf;
+
+        --h1: #eaf0ff;
+        --h2: #93c5fd;
+        --h3: #5eead4;
+
+        --accent: rgba(147,197,253,.14);
+        --callout: rgba(94,234,212,.10);
+        --warn: rgba(249,62,62,.10);
+
+        --codebg: #1e1e1e;
+        --codeborder: #2d2d2d;
+      }
+    }
+
+    body{
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.65;
+      color: var(--text);
+      margin: 0;
+      padding: 28px 18px;
+      background:
+        radial-gradient(1200px 600px at 20% -10%, rgba(37,99,235,.12), transparent 60%),
+        radial-gradient(900px 500px at 90% 10%, rgba(15,118,110,.10), transparent 55%),
+        var(--bg);
+    }
+
+    @media (prefers-color-scheme: dark){
+      body{
+        background:
+          radial-gradient(1200px 600px at 20% -10%, rgba(97,175,254,.18), transparent 60%),
+          radial-gradient(900px 500px at 90% 10%, rgba(94,234,212,.12), transparent 55%),
+          var(--bg);
+      }
+    }
+
+    .container{
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 44px;
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(255,255,255,.85), rgba(255,255,255,.70));
+      border: 1px solid var(--border);
+      box-shadow: 0 10px 30px rgba(2,6,23,.10);
+    }
+
+    @media (prefers-color-scheme: dark){
+      .container{
+        background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+        box-shadow: 0 10px 30px rgba(0,0,0,.35);
+        backdrop-filter: blur(8px);
+      }
+    }
+
+    h1{
+      color: var(--h1);
+      margin: 0 0 10px;
+      letter-spacing: -0.02em;
+      font-size: 2.0rem;
+    }
+    .lead{
+      color: var(--muted);
+      margin: 0 0 18px;
+      max-width: 92ch;
+    }
+
+    .toc{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 14px 0 26px;
+      padding: 0;
+      list-style: none;
+    }
+    .toc a{
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid var(--border);
+      color: var(--text);
+      text-decoration: none;
+      font-size: .92rem;
+    }
+    .toc a:hover{ background: rgba(147,197,253,.12); border-color: rgba(147,197,253,.25); }
+
+    h2{
+      color: var(--h2);
+      margin-top: 44px;
+      border-top: 1px solid var(--border);
+      padding-top: 22px;
+      letter-spacing: -0.01em;
+    }
+    h3{
+      color: var(--h3);
+      margin: 18px 0 10px;
+      font-size: 1.05rem;
+    }
+
+    p{ margin: 0 0 14px; }
+    ul, ol{ margin: 0 0 14px; padding-left: 22px; }
+    li{ margin: 0 0 8px; color: var(--text); }
+
+    strong{ color: var(--h1); }
+    code{
+      background-color: rgba(2,6,23,.05);
+      padding: 2px 6px;
+      border-radius: 7px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      color: var(--text);
+      font-size: 0.92em;
+      border: 1px solid var(--border);
+    }
+
+    @media (prefers-color-scheme: dark){
+      code{
+        background-color: rgba(255,255,255,.07);
+        color: #ffd6ff;
+      }
+    }
+
+    pre{
+      background-color: var(--codebg);
+      color: #d4d4d4;
+      padding: 16px;
+      border-radius: 12px;
+      overflow-x: auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 0.92em;
+      margin: 10px 0 18px;
+      border: 1px solid var(--codeborder);
+      box-shadow: 0 1px 2px rgba(0,0,0,.20);
+    }
+    pre code{
+      background: transparent;
+      border: 0;
+      padding: 0;
+      color: inherit;
+      white-space: pre;
+    }
+
+    .tok-kw  { color: #569cd6; font-weight: 600; } /* keywords */
+    .tok-fn  { color: #dcdcaa; font-weight: 600; } /* function names */
+    .tok-typ { color: #4ec9b0; }                   /* types/classes */
+    .tok-str { color: #ce9178; }                   /* strings */
+    .tok-com { color: #6a9955; }                   /* comments */
+    .tok-num { color: #b5cea8; }                   /* numbers */
+
+    .card{
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px 18px 6px;
+      margin: 16px 0 20px;
+    }
+
+    .callout{
+      background: var(--callout);
+      border: 1px solid rgba(94,234,212,.22);
+      border-left: 5px solid var(--h3);
+      padding: 14px 16px;
+      border-radius: 12px;
+      margin: 18px 0;
+    }
+
+    .warn{
+      background: var(--warn);
+      border: 1px solid rgba(249,62,62,.22);
+      border-left: 5px solid #f93e3e;
+      padding: 14px 16px;
+      border-radius: 12px;
+      margin: 18px 0;
+    }
+
+    .kv{
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin: 10px 0 16px;
+    }
+    @media (max-width: 700px){ .kv{ grid-template-columns: 1fr; } }
+    .kv .box{
+      background: rgba(255,255,255,.05);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+    }
+    .kv .box .k{
+      color: var(--muted);
+      font-size: .85rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 6px;
+    }
+
+    table{
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0 18px;
+      overflow: hidden;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.04);
+    }
+    th, td{
+      padding: 12px 12px;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+      vertical-align: top;
+      text-align: left;
+    }
+    th{
+      color: var(--h1);
+      background: rgba(147,197,253,.10);
+      font-weight: 700;
+    }
+    td{ color: var(--text); }
+    .muted{ color: var(--muted); }
+
+    .footer-note{
+      margin-top: 34px;
+      color: var(--muted);
+      border-top: 1px dashed var(--border);
+      padding-top: 18px;
+    }
+  </style>
+  <link rel="stylesheet" href="../assets/css/book.css">
+</head>
+
+<body>
+  <div class="container">
+    <h1>Tenant Identity vs IAM vs Workload Identity (GCP)</h1>
+    <p class="lead">
+      This tutorial fixes the #1 enterprise confusion: <strong>tenant isolation</strong> (your SaaS data boundaries) is not the same thing as
+      <strong>Cloud IAM</strong> (who can see/use GCP resources) and not the same thing as <strong>org group gating</strong> (who is allowed to use the app at all).
+      We’ll explain all three using your multi-tenant Doc Q&amp;A app as the running example.
+    </p>
+
+    <ul class="toc">
+      <li><a href="#acronyms">Acronyms</a></li>
+      <li><a href="#three-lanes">The 3-lane model</a></li>
+      <li><a href="#scenario1">Scenario 1: Tenant isolation</a></li>
+      <li><a href="#scenario2">Scenario 2: GCP Console (IAM)</a></li>
+      <li><a href="#scenario3">Scenario 3: Org allowlist (groups)</a></li>
+      <li><a href="#together">One request: how they combine</a></li>
+      <li><a href="#mapping">Bearer token → user_id/tenant_id</a></li>
+      <li><a href="#workload">Service account → bucket/secrets</a></li>
+      <li><a href="#code">FastAPI examples</a></li>
+      <li><a href="#mistakes">Common mistakes</a></li>
+    </ul>
+
+    <div class="card" id="acronyms">
+      <h3>Acronyms (quick)</h3>
+      <ul>
+        <li><strong>Tenant</strong>: a customer org (Company A vs Company B)</li>
+        <li><strong>User</strong>: a human inside a tenant (Alice, Bob)</li>
+        <li><strong>OIDC</strong>: login tokens from your IdP (Google Workspace)</li>
+        <li><strong>JWT</strong>: token format often used for access tokens</li>
+        <li><strong>IAM</strong>: GCP permissions to GCP resources (buckets, projects, secrets)</li>
+        <li><strong>Service account</strong>: “machine identity” your backend runs as</li>
+        <li><strong>Workload Identity</strong>: how GKE/Cloud Run give pods/services service-account credentials without storing keys</li>
+        <li><strong>Org allowlist / group gating</strong>: “only members of Group X can use this app”</li>
+      </ul>
+    </div>
+
+    <h2 id="three-lanes">The 3-lane model (memorize this)</h2>
+    <div class="kv">
+      <div class="box">
+        <div class="k">Lane A — End-user identity</div>
+        <div><strong>Who is calling?</strong> Comes in the HTTP request as <code>Authorization: Bearer ...</code>. Used to derive <code>user_id</code> and <code>tenant_id</code>.</div>
+      </div>
+      <div class="box">
+        <div class="k">Lane B — App authorization</div>
+        <div><strong>What can they see?</strong> Your code enforces tenant isolation (DB filters, search filters, RLS backstop).</div>
+      </div>
+      <div class="box">
+        <div class="k">Lane C — Workload identity (IAM)</div>
+        <div><strong>What can the service access?</strong> The backend’s service account permissions to GCS, Secret Manager, Cloud SQL, logs.</div>
+      </div>
+      <div class="box">
+        <div class="k">Org allowlist (gating)</div>
+        <div><strong>Who is allowed in at all?</strong> Often based on Workspace/AD groups. Checked during bootstrap/login.</div>
+      </div>
+    </div>
+
+    <div class="callout">
+      <strong>Shortcut:</strong> Tenant isolation protects <em>customer data inside your app</em>. IAM protects <em>cloud resources</em>. Group gating protects <em>who can even use the app</em>.
+    </div>
+
+    <h2 id="scenario1">Scenario 1 — A normal end user uses your app (tenant isolation)</h2>
+    <div class="card">
+      <h3>Goal</h3>
+      <p>Thousands of users can hit the same API, but each user can only access their tenant’s documents.</p>
+
+      <h3>What makes this work</h3>
+      <ol>
+        <li>User logs in with Google Workspace → frontend receives an <strong>access token</strong>.</li>
+        <li>Frontend calls your API with: <code>Authorization: Bearer &lt;token&gt;</code></li>
+        <li>Backend validates token, extracts <code>user_id</code> and maps to <code>tenant_id</code>.</li>
+        <li>Every DB/search call is scoped: <code>WHERE tenant_id = ...</code></li>
+      </ol>
+
+      <div class="callout">
+        <strong>Key point:</strong> The user does <em>not</em> need GCP Console access. They are not an IAM principal for your cloud resources.
+      </div>
+    </div>
+
+    <h2 id="scenario2">Scenario 2 — An internal employee sees buckets in the GCP Console (IAM)</h2>
+    <div class="card">
+      <h3>Goal</h3>
+      <p>Some employees can see/modify buckets and projects in the GCP Console; others can’t.</p>
+
+      <h3>What controls visibility</h3>
+      <ol>
+        <li>Employee signs into GCP Console with their corporate identity.</li>
+        <li>GCP checks IAM bindings (direct user or group membership).</li>
+        <li>Console shows resources they have permission to list/access.</li>
+      </ol>
+
+      <div class="warn">
+        <strong>Common confusion:</strong> “I can’t see the bucket in console, so tenant isolation must be broken.”  
+        No — console visibility is <strong>IAM</strong>. Tenant isolation is <strong>your app’s logic + DB policies</strong>.
+      </div>
+    </div>
+
+    <h2 id="scenario3">Scenario 3 — Only users in an org group can use the app (allowlist gating)</h2>
+    <div class="card">
+      <h3>Goal</h3>
+      <p>Only users in a particular org group (e.g., “DocQA-Users”) can use the app at all.</p>
+
+      <h3>Where it’s enforced</h3>
+      <ol>
+        <li>User logs in and obtains a token (OIDC).</li>
+        <li>Frontend calls a bootstrap endpoint like <code>GET /me</code> or <code>POST /auth/bootstrap</code>.</li>
+        <li>Backend verifies the token, then checks: “Is this user in allowed group(s)?”</li>
+        <li>If not allowed → return <code>403</code>. If allowed → map to tenant and proceed.</li>
+      </ol>
+
+      <div class="callout">
+        <strong>Group gating answers:</strong> “Can you use the product?”  
+        <strong>Tenant isolation answers:</strong> “Which tenant’s data can you access once inside?”
+      </div>
+    </div>
+
+    <h2 id="together">How all three show up in one request (the full picture)</h2>
+    <div class="card">
+      <p class="muted">Think of it as three independent checks that happen in different places.</p>
+      <ol>
+        <li><strong>Lane A (OIDC token):</strong> Identify caller → <code>user_id</code>, claims, email.</li>
+        <li><strong>Org gate:</strong> Is the user allowed group(s)? If no → <code>403</code>.</li>
+        <li><strong>Lane B (tenant isolation):</strong> Determine <code>tenant_id</code> → scope DB/search to that tenant only.</li>
+        <li><strong>Lane C (workload IAM):</strong> Backend service account reads secrets / reads &amp; writes to GCS / logs.</li>
+      </ol>
+
+      <pre>POST /query HTTP/1.1
+Authorization: Bearer &lt;user_access_token&gt;
+Content-Type: application/json
+
+{ "question": "What did Chandima mention on 1 Dec?" }</pre>
+    </div>
+
+    <h2 id="mapping">How Bearer token maps to user_id and tenant_id</h2>
+    <div class="card">
+      <h3>Why the token string itself is not the identity</h3>
+      <p>
+        Access tokens rotate (expiry, refresh, re-login). The backend does not “recognize” a user by comparing token strings.
+        Instead it validates the token and extracts a stable identity claim.
+      </p>
+
+      <h3>Typical mapping logic</h3>
+      <ol>
+        <li><strong>Verify token</strong> (signature + issuer + audience + expiry).</li>
+        <li><strong>Extract stable user key</strong> (usually <code>sub</code>, combined with <code>iss</code>).</li>
+        <li><strong>Derive tenant</strong> from:
+          <ul>
+            <li>a claim (e.g., <code>tid</code>/<code>tenant_id</code>) <em>or</em></li>
+            <li>a DB lookup (issuer+sub → tenant_id) <em>or</em></li>
+            <li>a policy mapping (email domain → tenant) for B2B setups.</li>
+          </ul>
+        </li>
+      </ol>
+
+      <div class="callout">
+        <strong>Best practice:</strong> store users keyed by <code>(issuer, sub)</code> in your DB. That stays stable even when tokens change.
+      </div>
+    </div>
+
+    <h2 id="workload">How a service account is used to write to a bucket (workload identity)</h2>
+    <div class="card">
+      <h3>What’s happening</h3>
+      <ul>
+        <li>Your backend runs as a <strong>service account</strong> (machine identity).</li>
+        <li>That service account is granted IAM permissions on a bucket (e.g., write objects).</li>
+        <li>When your code calls the GCS SDK, it automatically obtains a short-lived access token for that service account.</li>
+      </ul>
+
+      <div class="callout">
+        <strong>Key idea:</strong> The backend uses its own service identity to reach GCS/Secret Manager — not the end user’s token.
+        The end-user token only decides <em>which tenant path/object</em> the backend is allowed to touch.
+      </div>
+
+      <div class="warn">
+        <strong>Important:</strong> If you let end users access buckets directly via IAM, you are mixing “cloud control plane identity” with “app tenancy”.
+        Most SaaS designs avoid this — users access files through your API (or via signed URLs), while the backend holds storage permissions.
+      </div>
+    </div>
+
+    <h2 id="code">FastAPI examples (clean + simple)</h2>
+
+    <div class="card">
+      <h3>1) End-user identity dependency (Bearer → claims → user_id/tenant_id)</h3>
+      <p class="muted">This is intentionally small: validate token, then map to tenant. In real code your JWT verification can use JWKS.</p>
+
+      <pre data-lang="python"><code>from fastapi import Depends, FastAPI, HTTPException
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from pydantic import BaseModel
+
+app = FastAPI()
+bearer = HTTPBearer(auto_error=True)
+
+class Identity(BaseModel):
+    user_id: str
+    tenant_id: str
+    email: str | None = None
+
+def verify_jwt_and_get_claims(token: str) -&gt; dict:
+    # In production: verify signature (JWKS), iss/aud/exp checks.
+    # Here: pretend token is valid and return decoded claims.
+    return {"sub": "user-123", "iss": "https://accounts.google.com", "email": "alice@acme.com"}
+
+def map_claims_to_tenant(claims: dict) -&gt; str:
+    # Example: domain-based tenant mapping (toy).
+    email = claims.get("email") or ""
+    if "@" not in email:
+        raise HTTPException(status_code=403, detail="No tenant mapping")
+    return email.split("@", 1)[1]  # "acme.com"
+
+def require_allowed_group(claims: dict) -&gt; None:
+    # Example gate. In real life you would check group membership via claims or directory lookup.
+    # If user is not in allowed group(s), block the app.
+    allowed = True
+    if not allowed:
+        raise HTTPException(status_code=403, detail="Not allowed to use the app")
+
+def get_identity(creds: HTTPAuthorizationCredentials = Depends(bearer)) -&gt; Identity:
+    claims = verify_jwt_and_get_claims(creds.credentials)
+    require_allowed_group(claims)
+
+    user_id = claims["sub"]
+    tenant_id = map_claims_to_tenant(claims)
+    return Identity(user_id=user_id, tenant_id=tenant_id, email=claims.get("email"))
+
+@app.get("/me")
+def me(ident: Identity = Depends(get_identity)):
+    return ident</code></pre>
+    </div>
+
+    <div class="card">
+      <h3>2) Workload identity in code (service account → Secret Manager / GCS)</h3>
+      <p class="muted">No keys in code. The SDK picks up the pod/service’s identity automatically.</p>
+
+      <pre data-lang="python"><code># pip install google-cloud-secret-manager google-cloud-storage
+
+from google.cloud import secretmanager, storage
+
+def read_secret_value(secret_resource_name: str) -&gt; str:
+    # Uses workload identity (service account) behind the scenes.
+    client = secretmanager.SecretManagerServiceClient()
+    resp = client.access_secret_version(request={"name": secret_resource_name})
+    return resp.payload.data.decode("utf-8")
+
+def write_tenant_object(bucket: str, tenant_id: str, object_name: str, data: bytes) -&gt; None:
+    # Uses workload identity; IAM decides if this service account can write.
+    gcs = storage.Client()
+    b = gcs.bucket(bucket)
+
+    # App tenancy decides *where* we write (tenant prefix).
+    blob = b.blob(f"{tenant_id}/{object_name}")
+    blob.upload_from_string(data)</code></pre>
+
+      <div class="callout">
+        <strong>Separation of duties:</strong> IAM answers “can the service write to this bucket at all?”
+        Tenant isolation answers “which tenant prefix/object is allowed for this request?”
+      </div>
+    </div>
+
+    <h2 id="mistakes">Common mistakes (and the fix)</h2>
+    <div class="card">
+      <h3>❌ Mistake 1: “Tenant = IAM”</h3>
+      <p><strong>Wrong:</strong> “If IAM is correct, tenants are isolated.”</p>
+      <p><strong>Right:</strong> IAM is cloud infra permissions. Tenant isolation is your app filtering + DB policy (RLS as backstop).</p>
+
+      <h3>❌ Mistake 2: Passing user tokens to cloud APIs</h3>
+      <p><strong>Wrong:</strong> backend calls Secret Manager with the user’s Bearer token.</p>
+      <p><strong>Right:</strong> backend calls cloud APIs using its service account. User token only controls tenant scoping and app permissions.</p>
+
+      <h3>❌ Mistake 3: Losing tenant context in async/background work</h3>
+      <p><strong>Wrong:</strong> enqueue a job without storing <code>tenant_id</code>.</p>
+      <p><strong>Right:</strong> persist <code>tenant_id</code> with the job and enforce tenant checks when the job runs.</p>
+
+      <div class="warn">
+        <strong>Bank-grade habit:</strong> add an audit record for “who requested what” (end-user identity) and “which workload executed it” (service identity).
+      </div>
+    </div>
+
+    <p class="footer-note">
+      If you want, paste your existing HTML “identity” tutorial and I’ll refactor it further into this structure (same theme), keeping your wording but making it clearer and shorter.
+    </p>
+  </div>
+
+  <script>
+    // Tiny Python-ish highlighter (VS Code Dark+ style)
+    (function () {
+      const KW = /\b(async|await|def|class|return|from|import|as|if|elif|else|try|except|raise|for|in|while|with|True|False|None|and|or|not)\b/g;
+      const FN = /\bdef\s+([a-zA-Z_]\w*)\b/g;
+      const TYP = /\bclass\s+([A-Z][A-Za-z0-9_]*)\b/g;
+      const NUM = /\b\d+(\.\d+)?\b/g;
+
+      function escapeHtml(s) {
+        return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+      }
+
+      function highlightPython(text) {
+        let s = escapeHtml(text);
+
+        // strings (simple)
+        s = s.replace(/("([^"\\]|\\.)*")/g, '<span class="tok-str">$1</span>');
+        s = s.replace(/('([^'\\]|\\.)*')/g, '<span class="tok-str">$1</span>');
+
+        // comments
+        s = s.replace(/(^|\n)(\s*#.*)$/g, '$1<span class="tok-com">$2</span>');
+
+        // class + def names
+        s = s.replace(TYP, 'class <span class="tok-typ">$1</span>');
+        s = s.replace(FN, 'def <span class="tok-fn">$1</span>');
+
+        // keywords + numbers
+        s = s.replace(KW, '<span class="tok-kw">$1</span>');
+        s = s.replace(NUM, '<span class="tok-num">$&</span>');
+
+        return s;
+      }
+
+      document.querySelectorAll('pre[data-lang="python"] code').forEach((code) => {
+        const raw = code.textContent || "";
+        code.innerHTML = highlightPython(raw);
+      });
+    })();
+  </script>
+  <script src="../assets/js/nav.js"></script>
+</body>
+</html>

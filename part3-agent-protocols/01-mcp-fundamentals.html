@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP Tutorial with a Simple "Database" Example</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+
+        h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #3498db;
+        }
+
+        h2 {
+            color: #2c3e50;
+            font-size: 1.8em;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            padding-left: 10px;
+            border-left: 4px solid #3498db;
+        }
+
+        h3 {
+            color: #34495e;
+            font-size: 1.4em;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+
+        p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+
+        ul {
+            margin: 15px 0 15px 40px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .divider {
+            border: 0;
+            height: 2px;
+            background: linear-gradient(to right, transparent, #ddd, transparent);
+            margin: 40px 0;
+        }
+
+        .highlight-box {
+            background: #f8f9fa;
+            border-left: 4px solid #3498db;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .info-box {
+            background: #e8f4f8;
+            border: 1px solid #bee5eb;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .info-box h4 {
+            color: #0c5460;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .code-block {
+            margin: 20px 0;
+        }
+
+        .code-header {
+            background: #2c3e50;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 6px 6px 0 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+
+        pre {
+            margin: 0 !important;
+            border-radius: 0 0 6px 6px !important;
+        }
+
+        code {
+            font-family: 'Courier New', Consolas, Monaco, monospace;
+            font-size: 0.9em;
+        }
+
+        .inline-code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            color: #e74c3c;
+            font-family: 'Courier New', monospace;
+        }
+
+        .command-box {
+            background: #2c3e50;
+            color: #2ecc71;
+            padding: 12px 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+        }
+
+        .numbered-list {
+            counter-reset: step-counter;
+            list-style: none;
+            margin-left: 0;
+        }
+
+        .numbered-list li {
+            counter-increment: step-counter;
+            margin-bottom: 15px;
+            padding-left: 40px;
+            position: relative;
+        }
+
+        .numbered-list li::before {
+            content: counter(step-counter);
+            position: absolute;
+            left: 0;
+            top: 0;
+            background: #3498db;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .expected-output {
+            background: #f0fff4;
+            border: 1px solid #9ae6b4;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+
+        .expected-output h4 {
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        strong {
+            color: #2c3e50;
+        }
+    </style>
+  <link rel="stylesheet" href="../assets/css/book.css">
+</head>
+<body>
+    <div class="container">
+        <h1>MCP Tutorial with a Simple "Database" Example</h1>
+
+        <div class="section">
+            <h2>What MCP is</h2>
+            <p>
+                <strong>MCP (Model Context Protocol)</strong> is a standard way for an "AI host" (an app that uses an LLM) to connect to external capabilities through MCP servers.
+            </p>
+            <p>
+                Instead of hard-coding integrations (DB, CRM, ticketing, etc.) inside every app, you run a server that publishes capabilities in a consistent shape. The host connects as an MCP client, discovers what the server offers, and then uses those capabilities to answer user questions (often with an LLM making decisions).
+            </p>
+            <div class="highlight-box" style="margin-top: 20px;">
+                <strong>The Key Insight:</strong> MCP provides a unified framework so the agent doesn't need to learn every system's custom API—it just talks MCP.
+            </div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="section">
+            <h2>Why MCP Exists: The Problem It Solves</h2>
+            
+            <h3>Without MCP</h3>
+            <p>Every connector looks different:</p>
+            <ul>
+                <li>Different endpoints, auth mechanisms, and payload shapes</li>
+                <li>Agents must hardcode provider-specific logic</li>
+                <li>Hard to secure and audit consistently</li>
+                <li>Hard to swap systems (e.g., DB vendor changes) without changing agent logic</li>
+            </ul>
+
+            <div class="info-box">
+                <h4>Example of the Problem:</h4>
+                <p>Without MCP, if you want user data, you might need to know:</p>
+                <ul style="margin-top: 10px;">
+                    <li>Is it <code class="inline-code">GET https://api.vendor.com/users?email=...</code>?</li>
+                    <li>Or <code class="inline-code">SELECT * FROM users WHERE email = ...</code>?</li>
+                    <li>Or <code class="inline-code">sdk.users.get(email)</code>?</li>
+                </ul>
+                <p style="margin-top: 10px;">Each requires different code, different error handling, different security patterns.</p>
+            </div>
+
+            <h3>With MCP: Unified Abstraction</h3>
+            <p>MCP standardizes the interface. Whether the tool internally:</p>
+            <ul>
+                <li>calls an HTTP API,</li>
+                <li>runs a database query,</li>
+                <li>invokes a SaaS SDK,</li>
+                <li>reads from a file system,</li>
+                <li>publishes to a message queue,</li>
+            </ul>
+            <p>The agent <em>always</em> does:</p>
+            <div class="command-box" style="background: #f8f9fa; color: #2c3e50;">
+                call_tool("tool_name", {"arg": "value"})
+            </div>
+            
+            <div class="highlight-box" style="margin-top: 20px;">
+                <strong>One-Sentence Summary:</strong> MCP standardizes how agents discover safe context (resources), learn correct workflows (prompts), and execute controlled operations (tools), so underlying HTTP/DB/SaaS operations become consistent and auditable.
+            </div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="section">
+            <h2>MCP Architecture: How the Pieces Fit Together</h2>
+            
+            <div class="info-box">
+                <h4>Three Main Components:</h4>
+                <div style="margin-top: 15px;">
+                    <p><strong>1. MCP Server</strong></p>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>Exposes Tools / Resources / Prompts</li>
+                        <li>Enforces its own security policies</li>
+                        <li>Hides implementation details (DB, HTTP, SDK)</li>
+                    </ul>
+                </div>
+                <div style="margin-top: 15px;">
+                    <p><strong>2. MCP Client (your app)</strong></p>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>Connects to the server</li>
+                        <li>Fetches prompts and resources</li>
+                        <li>Calls tools</li>
+                        <li>Feeds content to the LLM</li>
+                    </ul>
+                </div>
+                <div style="margin-top: 15px;">
+                    <p><strong>3. LLM / Agent</strong></p>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>Reads the prompt + policy + schema</li>
+                        <li>Decides which tool to call and with what arguments</li>
+                        <li>Never directly touches the DB/API—only through tools</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="highlight-box" style="margin-top: 20px;">
+                <strong>Important:</strong> MCP is not "replacing HTTP." MCP is a standard protocol on top of whatever the server uses internally. The MCP server might call HTTP APIs, databases, SDKs, etc., but the MCP client always speaks MCP.
+            </div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="section">
+            <h2>What MCP is used for</h2>
+            <p>MCP is used when you want an LLM-powered system to:</p>
+            <ul>
+                <li><strong>Discover what it can do</strong> (what tools exist, what resources exist, what prompts exist)</li>
+                <li><strong>Invoke actions safely</strong> (call a tool to fetch data or perform operations)</li>
+                <li><strong>Fetch reference context reliably</strong> (read policies/schemas/config as resources)</li>
+                <li><strong>Reuse standard workflows</strong> (prompts that encode "how to do this safely")</li>
+            </ul>
+            <div class="highlight-box">
+                <strong>In short:</strong> MCP helps you build tool-using LLM apps without reinventing a connector interface for every integration.
+            </div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="section">
+            <h2>Why This Pattern Matters: Key Benefits</h2>
+
+            <h3>1. Separation of Concerns: Read vs. Write</h3>
+            <div class="info-box">
+                <p><strong>Resources</strong> are safe, cacheable "reference documents" for the agent.</p>
+                <p style="margin-top: 10px;"><strong>Tools</strong> are the only things that touch live data (DB/API), so you can lock them down and audit them.</p>
+            </div>
+            <p>This prevents the "LLM invents SQL" problem and makes governance easier.</p>
+
+            <h3>2. Reduced Coupling and Increased Portability</h3>
+            <p>You can replace the server implementation (DB → HTTP API → different vendor) without changing:</p>
+            <ul>
+                <li>the agent logic</li>
+                <li>the client tool-calling logic</li>
+            </ul>
+            <p>...as long as the MCP tool contract remains stable.</p>
+
+            <h3>3. Improved Security Posture</h3>
+            <p>In enterprise setups, you want:</p>
+            <ul>
+                <li>Strict tool allowlists</li>
+                <li>Input schemas and validation</li>
+                <li>Auditing of tool calls</li>
+                <li>Minimal exfiltration surface</li>
+            </ul>
+            <p>MCP naturally fits this because the LLM can't "reach into the DB" directly—only through defined tools.</p>
+
+            <h3>4. Standardized Workflows</h3>
+            <p><strong>Prompts</strong> standardize agent behavior across many clients. They teach the agent the safe/recommended sequence of operations.</p>
+        </div>
+
+        <hr class="divider">
+
+        <div class="section">
+            <h2>MCP components (the 3 primitives)</h2>
+
+            <h3>1) Tools = "do something"</h3>
+            <p>A <strong>Tool</strong> is a callable function exposed by the server.</p>
+            <ul>
+                <li><strong>Input:</strong> arguments (e.g., user_id)</li>
+                <li><strong>Output:</strong> structured data (e.g., dict/JSON)</li>
+                <li><strong>Use for:</strong> database reads, API calls, computations, actions</li>
+            </ul>
+            <div class="info-box">
+                <h4>In this tutorial:</h4>
+                <ul>
+                    <li><code class="inline-code">db_get_user_profile(user_id)</code></li>
+                    <li><code class="inline-code">db_get_subscription(user_id)</code></li>
+                </ul>
+            </div>
+
+            <h3>2) Resources = "read something"</h3>
+            <p>A <strong>Resource</strong> is read-only content, addressed by a URI.</p>
+            <ul>
+                <li><strong>Input:</strong> a URI like <code class="inline-code">db://tooling/guide</code></li>
+                <li><strong>Output:</strong> text or JSON content</li>
+                <li><strong>Use for:</strong> tool guides, schemas, policy text, reference docs</li>
+            </ul>
+            <div class="info-box">
+                <h4>In this tutorial:</h4>
+                <ul>
+                    <li><code class="inline-code">db://tooling/guide</code> (instructions for when to call which tool)</li>
+                </ul>
+            </div>
+
+            <h3>3) Prompts = "how to think / workflow templates"</h3>
+            <p>A <strong>Prompt</strong> is a server-provided template that returns structured messages (system/user) to feed to an LLM.</p>
+            <ul>
+                <li><strong>Input:</strong> parameters (e.g., question, user_id)</li>
+                <li><strong>Output:</strong> "messages" that guide the LLM reliably</li>
+            </ul>
+            <div class="info-box">
+                <h4>In this tutorial:</h4>
+                <ul>
+                    <li><code class="inline-code">account_assistant(question, user_id)</code> returns a workflow telling the LLM:
+                        <ol class="numbered-list" style="margin-top: 10px;">
+                            <li>read the guide resource,</li>
+                            <li>choose the correct tool(s),</li>
+                            <li>summarize results.</li>
+                        </ol>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="section">
+            <h2>Example 1: Single User Lookup (Simple)</h2>
+            <div class="highlight-box">
+                <strong>User asks:</strong>
+                <p style="margin-top: 10px; font-style: italic;">"Confirm my name and what plan I'm on."</p>
+            </div>
+            
+            <p><strong>The LLM should:</strong></p>
+            <ul>
+                <li>call <code class="inline-code">db_get_user_profile(user_id)</code> for name/email</li>
+                <li>call <code class="inline-code">db_get_subscription(user_id)</code> for plan/renewal</li>
+                <li>combine them into a single answer</li>
+            </ul>
+
+            <p><strong>We'll expose:</strong></p>
+            <ul>
+                <li>2 tools (two "DB reads")</li>
+                <li>1 resource (a read-only tool guide)</li>
+                <li>1 prompt (a standard workflow template)</li>
+            </ul>
+        </div>
+
+        <hr class="divider">
+
+        <div class="section">
+            <h2>Part A — MCP Server (Tools + Resource + Prompt)</h2>
+            <p><strong>Save as:</strong> <code class="inline-code">mcp_db_server.py</code></p>
+
+            <div class="code-block">
+                <div class="code-header">mcp_db_server.py</div>
+                <pre><code class="language-python"># pip install "mcp[cli]"
+
+from mcp.server.fastmcp import FastMCP
+from mcp.server.fastmcp.prompts import base
+
+# This creates an MCP server instance.
+# "json_response=True" means tool outputs can be structured JSON.
+mcp = FastMCP("DBMCP", json_response=True)
+
+
+# ============================================================
+# RESOURCE: read-only context
+# ============================================================
+# URI: db://tooling/guide
+# The client reads this via session.read_resource("db://tooling/guide")
+#
+# Think of this as "documentation the LLM can read":
+# - what tools exist
+# - when to use which tool
+# - rules (like "user_id must come from host identity")
+@mcp.resource("db://tooling/guide")
+def tooling_guide() -> str:
+    # Returned value is just text (could also be JSON).
+    # The MCP client will receive it as resource contents.
+    return (
+        "Tool guide:\n"
+        "- Use db_get_user_profile(user_id) for: name, email, profile.\n"
+        "- Use db_get_subscription(user_id) for: plan, billing, renew, payment.\n\n"
+        "Rules:\n"
+        "- user_id must come from the host identity, not from user text.\n"
+        "- If question asks for both profile + plan, call BOTH tools.\n"
+    )
+
+
+# ============================================================
+# PROMPT: reusable workflow template
+# ============================================================
+# Name: account_assistant (the function name is the prompt name)
+#
+# The client calls this via session.get_prompt("account_assistant", arguments={...})
+# The server returns structured messages (system/user) suitable for an LLM.
+#
+# This is NOT a tool call. It does not read DB. It provides instructions.
+@mcp.prompt(title="Account assistant")
+def account_assistant(question: str, user_id: str) -> list[base.Message]:
+    return [
+        base.SystemMessage(
+            "You are an account assistant.\n"
+            "Workflow:\n"
+            "1) Read resource db://tooling/guide\n"
+            "2) Decide which tool(s) to call\n"
+            "3) Call the tool(s)\n"
+            "4) Summarize results briefly\n"
+        ),
+        base.UserMessage(
+            # This is the actual user task formatted in a consistent way.
+            f"user_id={user_id}\nquestion={question}"
+        ),
+    ]
+
+
+# ============================================================
+# TOOL 1: action (DB read) - profile
+# ============================================================
+# Tools are invoked by the client as: tools/call with name + arguments.
+@mcp.tool()
+async def db_get_user_profile(user_id: str) -> dict:
+    # In real life: query your database.
+    # Here: mocked data.
+    return {
+        "user_id": user_id,
+        "full_name": "Alice Example",
+        "email": "alice@bank.com",
+    }
+
+
+# ============================================================
+# TOOL 2: action (DB read) - subscription
+# ============================================================
+@mcp.tool()
+async def db_get_subscription(user_id: str) -> dict:
+    # In real life: query your database.
+    # Here: mocked data.
+    return {
+        "user_id": user_id,
+        "plan": "Pro",
+        "renews_at": "2026-01-10",
+    }
+
+
+if __name__ == "__main__":
+    # Run the MCP server over Streamable HTTP (network server).
+    # Your MCP client will connect to http://127.0.0.1:8765/mcp (default).
+    mcp.run(transport="streamable-http")</code></pre>
+            </div>
+
+            <p><strong>Run it:</strong></p>
+            <div class="command-box">python mcp_db_server.py</div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="section">
+            <h2>Part B — MCP Client + LangChain LLM (uses Prompt + Resource + Tools)</h2>
+            <p><strong>Save as:</strong> <code class="inline-code">mcp_client_langchain.py</code></p>
+
+            <div class="code-block">
+                <div class="code-header">mcp_client_langchain.py</div>
+                <pre><code class="language-python"># pip install langchain langchain-openai langchain-mcp-adapters mcp
+# export OPENAI_API_KEY="..."
+
+import asyncio
+from langchain_openai import ChatOpenAI
+from langchain_core.messages import SystemMessage
+
+from langchain_mcp_adapters.client import MultiServerMCPClient
+from langchain_mcp_adapters.resources import load_mcp_resources
+from langchain_mcp_adapters.prompts import load_mcp_prompt
+
+MCP_URL = "http://127.0.0.1:8765/mcp"
+
+# IMPORTANT: this is host-derived identity (from your auth system in real life).
+# The user/LLM should not be allowed to choose it.
+USER_ID = "u_742"
+
+async def main():
+    # ------------------------------------------------------------
+    # 1) Connect to MCP server
+    # ------------------------------------------------------------
+    mcp_client = MultiServerMCPClient({
+        "db": {"transport": "http", "url": MCP_URL}
+    })
+
+    # ------------------------------------------------------------
+    # 2) Load server tools -> LangChain tools
+    # ------------------------------------------------------------
+    # tools is a list of LangChain Tool wrappers.
+    # Example:
+    #   tools[0].name == "db_get_user_profile"
+    #   tools[1].name == "db_get_subscription"
+    tools = await mcp_client.get_tools()
+
+    # Create a tool-capable LLM and bind these tools so it can request tool calls.
+    llm = ChatOpenAI(model="gpt-4.1-mini", temperature=0).bind_tools(tools)
+
+    question = "Confirm my name and what plan I'm on."
+
+    # ------------------------------------------------------------
+    # 3) Pull Resource + Prompt from MCP server
+    # ------------------------------------------------------------
+    async with mcp_client.session("db") as session:
+        # 3A) Read the Resource (guide/policy text)
+        # blobs is a list of Blob objects returned by the adapter.
+        # Since we ask for 1 URI, blobs typically contains exactly 1 element.
+        blobs = await load_mcp_resources(session, uris=["db://tooling/guide"])
+
+        # guide_text is a plain string extracted from the Blob:
+        # example:
+        # "Tool guide:\n- Use db_get_user_profile(user_id) for: ...\n..."
+        guide_text = blobs[0].as_string() if blobs else ""
+
+        # 3B) Get the Prompt (server-defined messages for the LLM)
+        # prompt_msgs is a list of LangChain message objects.
+        # typically something like:
+        #   [SystemMessage("...workflow..."), HumanMessage("user_id=... question=...")]
+        prompt_msgs = await load_mcp_prompt(
+            session,
+            "account_assistant",
+            arguments={"question": question, "user_id": USER_ID}
+        )
+
+    # ------------------------------------------------------------
+    # 4) Build the messages we send to the LLM
+    # ------------------------------------------------------------
+    messages = []
+
+    # Add the resource guide as system context.
+    # This lets the LLM learn "which tool to use for which question".
+    if guide_text.strip():
+        messages.append(SystemMessage(content="(MCP Resource) Tool guide:\n" + guide_text))
+
+    # Add the server-defined prompt messages (workflow template).
+    messages.extend(prompt_msgs)
+
+    # ------------------------------------------------------------
+    # 5) Agent loop: ask LLM, run tool calls, feed results back
+    # ------------------------------------------------------------
+    while True:
+        # Ask the LLM for the next step
+        ai_msg = await llm.ainvoke(messages)
+        messages.append(ai_msg)
+
+        # If the LLM requests tool calls, they appear here.
+        # Example tool_calls:
+        # [
+        #   {"name":"db_get_user_profile","args":{"user_id":"u_742"}},
+        #   {"name":"db_get_subscription","args":{"user_id":"u_742"}}
+        # ]
+        tool_calls = getattr(ai_msg, "tool_calls", None)
+
+        # If no tool calls, the model produced a final natural-language answer.
+        if not tool_calls:
+            print("\nFINAL ANSWER:")
+            print(ai_msg.content)
+            break
+
+        # Execute each tool call the model requested
+        for tc in tool_calls:
+            tool_name = tc["name"]   # string: which tool to run
+            tool_args = tc["args"]   # dict: arguments for that tool
+
+            # SAFETY: force user_id from host, not from the model.
+            # Even if the model tried to pass a different user_id, we override it.
+            if "user_id" in tool_args:
+                tool_args["user_id"] = USER_ID
+
+            # Find the tool object by name
+            tool = next(t for t in tools if t.name == tool_name)
+
+            # Run the tool. tool_result is usually a dict returned by the MCP tool.
+            # Example:
+            # {"user_id":"u_742","full_name":"Alice Example","email":"alice@bank.com"}
+            tool_result = await tool.ainvoke(tool_args)
+
+            # Feed tool output back to the LLM as system context.
+            messages.append(SystemMessage(content=f"(Tool result) {tool_name}: {tool_result}"))
+
+if __name__ == "__main__":
+    asyncio.run(main())</code></pre>
+            </div>
+
+            <p><strong>Run it:</strong></p>
+            <div class="command-box">python mcp_client_langchain.py</div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="section">
+            <h2>Example 2: Multi-Tool Router (Advanced)</h2>
+            <p>This example demonstrates the power of MCP's unified framework with:</p>
+            <ul>
+                <li><strong>2 tools:</strong> profile lookup and orders lookup</li>
+                <li><strong>2 prompts:</strong> workflow for each tool</li>
+                <li><strong>3 resources:</strong> shared policy and separate schemas</li>
+                <li><strong>LLM routing:</strong> agent chooses which tool to call based on the question</li>
+            </ul>
+
+            <h3>Server Code (Multiple Tools + Resources + Prompts)</h3>
+            <div class="code-block">
+                <div class="code-header">mcp_server_advanced.py</div>
+                <pre><code class="language-python"># filepath: /Users/dineshgamage/Developer/pytorch/END/mcp_server_advanced.py
+# pip install "mcp[cli]"
+
+from mcp.server.fastmcp import FastMCP
+
+mcp = FastMCP("Bank-DB-MCP", json_response=True)
+
+# -------------------------
+# RESOURCES (read-only)
+# -------------------------
+
+@mcp.resource("db://policy/access")
+def policy_access() -> str:
+    return (
+        "POLICY:\n"
+        "- Only allow lookups by email (no bulk export).\n"
+        "- Return only permitted fields.\n"
+        "- If request is ambiguous, ask a clarifying question.\n"
+    )
+
+@mcp.resource("db://schema/user_profile")
+def schema_user_profile() -> str:
+    return (
+        "SCHEMA user_profile:\n"
+        "- email: string (unique)\n"
+        "- full_name: string\n"
+        "- tier: enum(silver|gold|platinum)\n"
+        "- status: enum(active|suspended)\n"
+        "Permitted output fields: email, full_name, tier, status\n"
+    )
+
+@mcp.resource("db://schema/user_orders")
+def schema_user_orders() -> str:
+    return (
+        "SCHEMA user_orders:\n"
+        "- email: string\n"
+        "- orders: list of { order_id: string, total: number, state: string }\n"
+        "Permitted output fields: email, orders\n"
+    )
+
+# -------------------------
+# PROMPTS (server workflows)
+# -------------------------
+
+@mcp.prompt()
+def workflow_user_profile() -> str:
+    return (
+        "WORKFLOW: User Profile Lookup\n"
+        "1) Read db://policy/access\n"
+        "2) Read db://schema/user_profile\n"
+        "3) Call tool db_get_user_profile with {\"email\": \"...\"}\n"
+        "4) Return ONLY permitted fields.\n"
+    )
+
+@mcp.prompt()
+def workflow_user_orders() -> str:
+    return (
+        "WORKFLOW: User Orders Lookup\n"
+        "1) Read db://policy/access\n"
+        "2) Read db://schema/user_orders\n"
+        "3) Call tool db_get_user_orders with {\"email\": \"...\"}\n"
+        "4) Return ONLY permitted fields.\n"
+    )
+
+# -------------------------
+# TOOLS (actions)
+# -------------------------
+
+@mcp.tool()
+def db_get_user_profile(email: str) -> dict:
+    # Unified interface: whether this internally calls HTTP, SQL, or SDK,
+    # the client always uses: call_tool("db_get_user_profile", {"email": "..."})
+    fake_profiles = {
+        "alice@bank.com": {
+            "email": "alice@bank.com",
+            "full_name": "Alice Chen",
+            "tier": "gold",
+            "status": "active"
+        },
+        "bob@bank.com": {
+            "email": "bob@bank.com",
+            "full_name": "Bob Singh",
+            "tier": "silver",
+            "status": "suspended"
+        },
+    }
+    return fake_profiles.get(email) or {"error": "not_found"}
+
+@mcp.tool()
+def db_get_user_orders(email: str) -> dict:
+    fake_orders = {
+        "alice@bank.com": {
+            "email": "alice@bank.com",
+            "orders": [
+                {"order_id": "A1001", "total": 129.50, "state": "PAID"},
+                {"order_id": "A1002", "total": 58.00, "state": "REFUNDED"},
+            ],
+        }
+    }
+    return fake_orders.get(email) or {"error": "not_found"}
+
+if __name__ == "__main__":
+    mcp.run(transport="streamable-http")</code></pre>
+            </div>
+
+            <h3>Client Code (LLM Router + Multiple Resources)</h3>
+            <div class="code-block">
+                <div class="code-header">mcp_client_advanced.py</div>
+                <pre><code class="language-python"># filepath: /Users/dineshgamage/Developer/pytorch/END/mcp_client_advanced.py
+# pip install mcp
+
+import asyncio
+import json
+import re
+from typing import Any, Dict, Literal, TypedDict
+
+from mcp import ClientSession
+from mcp.client.streamable_http import streamable_http_client
+
+MCP_URL = "http://localhost:8000/mcp"
+
+
+class ToolDecision(TypedDict):
+    tool_name: Literal["db_get_user_profile", "db_get_user_orders"]
+    arguments: Dict[str, Any]
+    prompt_to_use: Literal["workflow_user_profile", "workflow_user_orders"]
+
+
+def extract_email(text: str) -> str | None:
+    m = re.search(r"[\w\.-]+@[\w\.-]+\.\w+", text)
+    return m.group(0) if m else None
+
+
+def llm_choose_tool(
+    user_question: str,
+    workflow_profile: str,
+    workflow_orders: str,
+    policy_text: str,
+    schema_profile: str,
+    schema_orders: str,
+) -> ToolDecision:
+    """
+    This simulates what GPT would do:
+    - reads workflows + policy + schemas
+    - picks the right tool
+    - returns a structured decision
+
+    In production, replace this with a real LLM call that outputs JSON.
+    """
+    email = extract_email(user_question) or "alice@bank.com"
+
+    # Minimal routing logic (standing in for LLM reasoning)
+    if "order" in user_question.lower() or "purchase" in user_question.lower():
+        return {
+            "tool_name": "db_get_user_orders",
+            "arguments": {"email": email},
+            "prompt_to_use": "workflow_user_orders"
+        }
+    else:
+        return {
+            "tool_name": "db_get_user_profile",
+            "arguments": {"email": email},
+            "prompt_to_use": "workflow_user_profile"
+        }
+
+
+async def main():
+    user_question = "Show me the orders for alice@bank.com"
+
+    async with streamable_http_client(MCP_URL) as (read, write, _):
+        async with ClientSession(read, write) as session:
+            await session.initialize()
+
+            # 1) Discover server-provided workflows (prompts)
+            p_profile = await session.get_prompt("workflow_user_profile")
+            p_orders = await session.get_prompt("workflow_user_orders")
+
+            workflow_profile = json.dumps(p_profile, indent=2, default=str)
+            workflow_orders = json.dumps(p_orders, indent=2, default=str)
+
+            # 2) Read shared policy + schemas (resources)
+            r_policy = await session.read_resource("db://policy/access")
+            r_schema_profile = await session.read_resource("db://schema/user_profile")
+            r_schema_orders = await session.read_resource("db://schema/user_orders")
+
+            policy_text = json.dumps(r_policy, indent=2, default=str)
+            schema_profile = json.dumps(r_schema_profile, indent=2, default=str)
+            schema_orders = json.dumps(r_schema_orders, indent=2, default=str)
+
+            # 3) LLM chooses which tool to call
+            decision = llm_choose_tool(
+                user_question=user_question,
+                workflow_profile=workflow_profile,
+                workflow_orders=workflow_orders,
+                policy_text=policy_text,
+                schema_profile=schema_profile,
+                schema_orders=schema_orders,
+            )
+
+            print("\n--- TOOL DECISION (what GPT would output) ---")
+            print(json.dumps(decision, indent=2))
+
+            # 4) Client executes the chosen tool via MCP
+            tool_name = decision["tool_name"]
+            args = decision["arguments"]
+
+            result = await session.call_tool(tool_name, arguments=args)
+
+            print("\n--- TOOL RESULT (from MCP server) ---")
+            print(result.structuredContent or {"content": result.content})
+
+
+if __name__ == "__main__":
+    asyncio.run(main())</code></pre>
+            </div>
+
+            <div class="expected-output">
+                <h4>Expected Output:</h4>
+                <pre style="background: white; padding: 10px; border-radius: 4px;"><code>--- TOOL DECISION (what GPT would output) ---
+{
+  "tool_name": "db_get_user_orders",
+  "arguments": {
+    "email": "alice@bank.com"
+  },
+  "prompt_to_use": "workflow_user_orders"
+}
+
+--- TOOL RESULT (from MCP server) ---
+{
+  "email": "alice@bank.com",
+  "orders": [
+    {"order_id": "A1001", "total": 129.5, "state": "PAID"},
+    {"order_id": "A1002", "total": 58.0, "state": "REFUNDED"}
+  ]
+}</code></pre>
+            </div>
+
+            <div class="info-box" style="margin-top: 20px;">
+                <h4>Key Takeaway from Example 2:</h4>
+                <p>Even if <code class="inline-code">db_get_user_profile</code> internally becomes <code class="inline-code">GET https://internal-api/profile?email=...</code>, the client still calls it as <code class="inline-code">call_tool("db_get_user_profile", {"email": ...})</code></p>
+                <p style="margin-top: 10px;"><strong>That's the unified abstraction MCP provides.</strong></p>
+            </div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="section">
+            <h2>What you should observe</h2>
+            <p>When you run the client:</p>
+            <ul>
+                <li>The LLM reads the <strong>resource</strong> (tool guide) and sees that:
+                    <ul style="margin-top: 8px;">
+                        <li>name/email → <code class="inline-code">db_get_user_profile</code></li>
+                        <li>plan/renew → <code class="inline-code">db_get_subscription</code></li>
+                    </ul>
+                </li>
+                <li>The LLM reads the <strong>prompt</strong> (workflow) which tells it to:
+                    <ul style="margin-top: 8px;">
+                        <li>read the guide, call tools, summarize</li>
+                    </ul>
+                </li>
+                <li>The LLM will typically call both tools for the combined question.</li>
+                <li>You'll see a final answer like:</li>
+            </ul>
+
+            <div class="expected-output">
+                <h4>Expected Output:</h4>
+                <p style="font-style: italic; color: #2d3748;">
+                    "Your name is Alice Example and your email is alice@bank.com. Your plan is Pro and it renews on 2026-01-10."
+                </p>
+            </div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="section">
+            <h2>Summary: Why MCP Matters</h2>
+            
+            <ol class="numbered-list">
+                <li><strong>MCP gives a unified "capabilities interface"</strong>
+                    <p style="margin-top: 8px;">To the agent/client, tools look like callable functions, resources look like URIs you can read, and prompts look like workflow templates—regardless of the underlying implementation.</p>
+                </li>
+                
+                <li><strong>MCP separates "read-only context" from "actions"</strong>
+                    <p style="margin-top: 8px;">This is a big safety and design win. Resources are safe, audit-friendly, and cacheable. Tools are gated, validated, and permissioned.</p>
+                </li>
+                
+                <li><strong>MCP reduces coupling and increases portability</strong>
+                    <p style="margin-top: 8px;">You can replace the server implementation without changing the agent logic or client tool-calling logic, as long as the MCP tool contract remains stable.</p>
+                </li>
+                
+                <li><strong>MCP improves security posture</strong>
+                    <p style="margin-top: 8px;">The LLM can't "reach into the DB" directly—only through defined, auditable tools with strict allowlists and input schemas.</p>
+                </li>
+            </ol>
+
+            <div class="highlight-box" style="margin-top: 30px;">
+                <p><strong>Next Steps:</strong> If you paste your real MCP server's tool/resource/prompt names (from list_*), I can align the code to match them exactly.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        hljs.highlightAll();
+    </script>
+  <script src="../assets/js/nav.js"></script>
+</body>
+</html>

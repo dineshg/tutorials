@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP with Authentication - Salesforce Integration Tutorial</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+
+        h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #e74c3c;
+        }
+
+        h2 {
+            color: #2c3e50;
+            font-size: 1.8em;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            padding-left: 10px;
+            border-left: 4px solid #e74c3c;
+        }
+
+        h3 {
+            color: #34495e;
+            font-size: 1.4em;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+
+        p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .divider {
+            border: 0;
+            height: 2px;
+            background: linear-gradient(to right, transparent, #ddd, transparent);
+            margin: 40px 0;
+        }
+
+        .auth-boundaries {
+            background: #fff5f5;
+            border: 2px solid #e74c3c;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 25px 0;
+        }
+
+        .auth-boundaries h3 {
+            color: #c0392b;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+
+        .auth-step {
+            background: #f8f9fa;
+            border-left: 4px solid #e74c3c;
+            padding: 15px 20px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .auth-step h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .auth-step .status {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .status.added {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .info-box {
+            background: #e8f4f8;
+            border: 1px solid #bee5eb;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .info-box h4 {
+            color: #0c5460;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .warning-box {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-left: 4px solid #ffc107;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .warning-box h4 {
+            color: #856404;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .code-block {
+            margin: 20px 0;
+        }
+
+        .code-header {
+            background: #2c3e50;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 6px 6px 0 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+
+        pre {
+            margin: 0 !important;
+            border-radius: 0 0 6px 6px !important;
+        }
+
+        code {
+            font-family: 'Courier New', Consolas, Monaco, monospace;
+            font-size: 0.9em;
+        }
+
+        .inline-code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            color: #e74c3c;
+            font-family: 'Courier New', monospace;
+        }
+
+        ul {
+            margin: 15px 0 15px 40px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        .numbered-list {
+            counter-reset: step-counter;
+            list-style: none;
+            margin-left: 0;
+        }
+
+        .numbered-list li {
+            counter-increment: step-counter;
+            margin-bottom: 15px;
+            padding-left: 40px;
+            position: relative;
+        }
+
+        .numbered-list li::before {
+            content: counter(step-counter);
+            position: absolute;
+            left: 0;
+            top: 0;
+            background: #e74c3c;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .highlight-box {
+            background: #f8f9fa;
+            border-left: 4px solid #e74c3c;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        strong {
+            color: #2c3e50;
+        }
+
+        .key-changes {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .key-changes h3 {
+            color: #0c5460;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+
+        .architecture-note {
+            background: #fff;
+            border: 2px dashed #e74c3c;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 25px 0;
+            text-align: center;
+        }
+
+        .architecture-note p {
+            margin: 10px 0;
+            font-size: 1.1em;
+            text-align: center;
+        }
+
+        .flow-arrow {
+            color: #e74c3c;
+            font-size: 1.5em;
+            margin: 5px 0;
+        }
+    </style>
+  <link rel="stylesheet" href="../assets/css/book.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Updated Example: FastAPI → MCP Server → Salesforce</h1>
+        <p style="font-size: 1.1em; color: #555; margin-bottom: 30px;">
+            <strong>With Authentication and MCP Primitives: Tools / Resources / Prompts</strong>
+        </p>
+
+        <div class="auth-boundaries">
+            <h3>Three Separate Auth Boundaries in Your Bank-Style Setup</h3>
+            
+            <div class="auth-step">
+                <h4>1. User → FastAPI (your app auth)</h4>
+                <p>
+                    User logs in with <strong>Google Workspace (OIDC)</strong>. React calls FastAPI with 
+                    <code class="inline-code">Authorization: Bearer &lt;user_access_token&gt;</code>.
+                </p>
+            </div>
+
+            <div class="auth-step">
+                <h4>2. FastAPI → MCP server (service-to-service auth) 
+                    <span class="status added">✅ THIS IS WHAT WE ADD HERE</span>
+                </h4>
+                <p>
+                    Your FastAPI backend calls the MCP server using a <strong>separate internal Bearer token</strong> 
+                    (or OAuth/JWT/mTLS in real prod). This prevents "anyone who can reach the MCP URL" from using it.
+                </p>
+            </div>
+
+            <div class="auth-step">
+                <h4>3. MCP server → Salesforce (downstream service auth)</h4>
+                <p>
+                    MCP server authenticates to Salesforce as an <strong>integration identity</strong> (service-level) 
+                    using <strong>OAuth JWT Bearer flow</strong>.
+                </p>
+            </div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="section">
+            <h2>Part A — MCP Salesforce Server</h2>
+            <p><strong>Components:</strong> Auth Middleware + Resource + Prompt + Tool</p>
+
+            <div class="info-box">
+                <h4>FastMCP Features Used:</h4>
+                <ul>
+                    <li><strong>Middleware:</strong> Intercept requests for authentication</li>
+                    <li><strong>Resources:</strong> Read-only URIs for policies/schemas/guardrails</li>
+                    <li><strong>Prompts:</strong> Server-defined templates to guide clients/agents consistently</li>
+                    <li><strong>Tools:</strong> Executable actions that interact with external systems</li>
+                </ul>
+            </div>
+
+            <p><strong>Save as:</strong> <code class="inline-code">mcp_salesforce_server.py</code></p>
+
+            <div class="code-block">
+                <div class="code-header">mcp_salesforce_server.py</div>
+                <pre><code class="language-python"># pip install fastmcp httpx PyJWT cryptography cachetools
+
+import os
+import re
+import time
+from typing import Any, Dict, Optional, TypedDict
+
+import httpx
+import jwt
+from cachetools import TTLCache
+
+from fastmcp import FastMCP
+from fastmcp.exceptions import ToolError
+from fastmcp.server.dependencies import get_http_headers
+from fastmcp.server.middleware import Middleware, MiddlewareContext
+
+mcp = FastMCP("DocQA-Salesforce-MCP", json_response=True)
+
+# -----------------------------------------------------------------------------
+# 1) SERVICE-TO-SERVICE AUTH (FastAPI -> MCP)
+#    MCP server requires: Authorization: Bearer <MCP_SERVICE_TOKEN>
+# -----------------------------------------------------------------------------
+MCP_SERVICE_TOKEN = os.environ["MCP_SERVICE_TOKEN"]
+
+class ServiceAuthMiddleware(Middleware):
+    async def on_request(self, context: MiddlewareContext, call_next):
+        # Runs for MCP "request" messages (list tools, call tool, read resource, get prompt, etc.)
+        headers = get_http_headers()
+        auth = headers.get("authorization") or headers.get("Authorization")
+
+        if not auth or not auth.startswith("Bearer "):
+            raise ToolError("Unauthorized: missing Bearer token to call MCP server")
+
+        token = auth.removeprefix("Bearer ").strip()
+        if token != MCP_SERVICE_TOKEN:
+            raise ToolError("Unauthorized: invalid MCP service token")
+
+        return await call_next(context)
+
+mcp.add_middleware(ServiceAuthMiddleware())  # FastMCP middleware registration
+
+# -----------------------------------------------------------------------------
+# 2) SALESFORCE SERVICE-LEVEL AUTH (MCP -> Salesforce)
+#    OAuth JWT Bearer flow to get access_token.
+# -----------------------------------------------------------------------------
+SF_LOGIN_URL   = os.environ.get("SF_LOGIN_URL", "https://login.salesforce.com").rstrip("/")
+SF_CLIENT_ID   = os.environ["SF_CLIENT_ID"]           # Connected App consumer key
+SF_USERNAME    = os.environ["SF_USERNAME"]            # Integration user username
+SF_PRIVATE_KEY = os.environ["SF_PRIVATE_KEY_PEM"]     # PEM private key
+SF_API_VERSION = os.environ.get("SF_API_VERSION", "v60.0")
+
+_token_cache: TTLCache[str, Dict[str, Any]] = TTLCache(maxsize=1, ttl=14 * 60)  # ~14 min cache
+
+def _build_jwt_assertion() -> str:
+    now = int(time.time())
+    payload = {
+        "iss": SF_CLIENT_ID,
+        "sub": SF_USERNAME,
+        "aud": SF_LOGIN_URL,
+        "exp": now + 180,  # short-lived assertion
+    }
+    return jwt.encode(payload, SF_PRIVATE_KEY, algorithm="RS256")
+
+async def _get_salesforce_token() -> tuple[str, str]:
+    cached = _token_cache.get("sf_token")
+    if cached:
+        return cached["access_token"], cached["instance_url"]
+
+    token_url = f"{SF_LOGIN_URL}/services/oauth2/token"
+    data = {
+        "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
+        "assertion": _build_jwt_assertion(),
+    }
+
+    async with httpx.AsyncClient(timeout=10) as client:
+        r = await client.post(token_url, data=data)
+        if r.status_code != 200:
+            raise RuntimeError(f"Salesforce token error: {r.status_code} {r.text}")
+        tok = r.json()
+
+    _token_cache["sf_token"] = {
+        "access_token": tok["access_token"],
+        "instance_url": tok["instance_url"],
+    }
+    return tok["access_token"], tok["instance_url"]
+
+# -----------------------------------------------------------------------------
+# 3) RESOURCE: publish a "bank-safe SOQL policy" as read-only context
+# -----------------------------------------------------------------------------
+@mcp.resource("resource://salesforce/soql_policy")
+def soql_policy() -> str:
+    return (
+        "BANK POLICY:\n"
+        "- Only SELECT queries\n"
+        "- LIMIT required (<= 50)\n"
+        "- No write keywords (INSERT/UPDATE/DELETE/UPSERT/MERGE)\n"
+        "- Prefer allowlisting objects/fields in production\n"
+    )
+
+# -----------------------------------------------------------------------------
+# 4) PROMPT: a reusable instruction template clients/agents can fetch
+# -----------------------------------------------------------------------------
+@mcp.prompt
+def salesforce_safe_query_prompt() -> str:
+    return (
+        "You are generating Salesforce SOQL for a banking environment.\n"
+        "Follow the SOQL policy from resource://salesforce/soql_policy.\n"
+        "Always include LIMIT <= 50. Only SELECT.\n"
+    )
+
+# -----------------------------------------------------------------------------
+# 5) TOOL: execute SOQL (after validation) via Salesforce Query REST endpoint
+#    /services/data/vXX.X/query?q=<soql>
+# -----------------------------------------------------------------------------
+def _validate_soql_bank_safe(soql: str) -> None:
+    s = soql.strip()
+    if not re.match(r"(?is)^select\s", s):
+        raise ValueError("Only SELECT queries are allowed")
+
+    if re.search(r"(?is)\b(insert|update|delete|upsert|merge|drop)\b", s):
+        raise ValueError("Write operations are not allowed")
+
+    m = re.search(r"(?is)\blimit\s+(\d+)\b", s)
+    if not m:
+        raise ValueError("LIMIT is required")
+    if int(m.group(1)) > 50:
+        raise ValueError("LIMIT too high (max 50)")
+
+async def _sf_query(instance_url: str, access_token: str, soql: str) -> Dict[str, Any]:
+    url = f"{instance_url}/services/data/{SF_API_VERSION}/query"
+    headers = {"Authorization": f"Bearer {access_token}"}
+
+    async with httpx.AsyncClient(timeout=15) as client:
+        r = await client.get(url, headers=headers, params={"q": soql})
+        if r.status_code == 401:
+            # token expired/invalid -> clear cache and retry once
+            _token_cache.pop("sf_token", None)
+            access_token, instance_url = await _get_salesforce_token()
+            headers["Authorization"] = f"Bearer {access_token}"
+            r = await client.get(url, headers=headers, params={"q": soql})
+
+        if r.status_code != 200:
+            raise RuntimeError(f"Query error: {r.status_code} {r.text}")
+
+        return r.json()
+
+@mcp.tool()
+async def sf_execute_soql(soql: str) -> Dict[str, Any]:
+    """
+    Executes SOQL under the integration user's permissions.
+    """
+    _validate_soql_bank_safe(soql)
+    access_token, instance_url = await _get_salesforce_token()
+    return await _sf_query(instance_url, access_token, soql)
+
+if __name__ == "__main__":
+    # Streamable HTTP is the common production transport.
+    mcp.run(transport="streamable-http")</code></pre>
+            </div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="section">
+            <h2>Part B — FastAPI Host Endpoint</h2>
+            <p><strong>Calls MCP with Service Authentication</strong></p>
+
+            <div class="info-box">
+                <h4>Key Feature:</h4>
+                <p>
+                    FastMCP's <strong>Streamable HTTP client transport</strong> supports custom headers 
+                    (or a BearerAuth helper) for service-to-service authentication.
+                </p>
+            </div>
+
+            <p><strong>Save as:</strong> <code class="inline-code">main.py</code></p>
+
+            <div class="code-block">
+                <div class="code-header">main.py</div>
+                <pre><code class="language-python"># pip install fastapi uvicorn fastmcp pydantic
+
+import os
+from fastapi import FastAPI, Depends, HTTPException
+from pydantic import BaseModel
+
+from fastmcp import Client
+from fastmcp.client.transports import StreamableHttpTransport
+
+app = FastAPI()
+
+MCP_SF_URL = os.environ["MCP_SF_URL"]                  # e.g. http://mcp-salesforce.internal/mcp
+MCP_SERVICE_TOKEN = os.environ["MCP_SERVICE_TOKEN"]    # same shared secret used by MCP server
+
+class SoqlReq(BaseModel):
+    soql: str
+
+async def get_identity():
+    # Placeholder: in your real app, verify Google OIDC Bearer token and return claims.
+    return {"email": "alice@bank.com", "is_admin": True}
+
+@app.post("/admin/salesforce/query")
+async def admin_salesforce_query(req: SoqlReq, ident=Depends(get_identity)):
+    # Bank rule: only admins can submit "free-form query text"
+    if not ident.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Admin only")
+
+    # Service-to-service auth to MCP server (NOT the end-user token)
+    transport = StreamableHttpTransport(
+        url=MCP_SF_URL,
+        headers={"Authorization": f"Bearer {MCP_SERVICE_TOKEN}"},
+    )
+    mcp_client = Client(transport)
+
+    async with mcp_client:
+        # Optional: read policy/prompt for debugging or to feed an agent
+        policy = await mcp_client.read_resource("resource://salesforce/soql_policy")
+        prompt = await mcp_client.get_prompt("salesforce_safe_query_prompt")
+
+        # Actual tool call
+        res = await mcp_client.call_tool("sf_execute_soql", {"soql": req.soql})
+        return {
+            "policy": policy.content,   # what the server says is allowed
+            "prompt": prompt.messages,  # how the server wants queries generated
+            "result": res,
+        }</code></pre>
+            </div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="section">
+            <h2>What Changed: The "Auth Story"</h2>
+
+            <div class="key-changes">
+                <h3>Key Security Improvements</h3>
+                <ul>
+                    <li>
+                        <strong>FastAPI doesn't just "call the MCP URL."</strong> 
+                        It must present an MCP service token (or OAuth/JWT/mTLS in stricter setups).
+                    </li>
+                    <li>
+                        <strong>The MCP server enforces that token in middleware</strong> 
+                        before allowing any MCP operation (tools/resources/prompts/listing).
+                    </li>
+                    <li>
+                        <strong>Only after that does the MCP tool do Salesforce service-level auth</strong> 
+                        (JWT Bearer) and run SOQL via Salesforce's Query REST endpoint.
+                    </li>
+                </ul>
+            </div>
+
+            <div class="architecture-note">
+                <h3 style="color: #e74c3c; margin-bottom: 20px;">Authentication Flow</h3>
+                <p><strong>User</strong> (Google OIDC)</p>
+                <div class="flow-arrow">↓</div>
+                <p><strong>FastAPI</strong> (User token validated)</p>
+                <div class="flow-arrow">↓</div>
+                <p><strong>MCP Server</strong> (Service token validated in middleware)</p>
+                <div class="flow-arrow">↓</div>
+                <p><strong>Salesforce</strong> (OAuth JWT Bearer flow)</p>
+            </div>
+
+            <div class="warning-box">
+                <h4>Next Level Security:</h4>
+                <p>
+                    If you want to further tighten the "bank-safe" part, the client should never send 
+                    arbitrary SOQL. Instead, send only <strong>parameters</strong> (like email) while 
+                    the MCP server constructs a <strong>fixed allowlisted query</strong> internally.
+                </p>
+            </div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="section">
+            <h2>Environment Variables Required</h2>
+
+            <div class="highlight-box">
+                <h4>MCP Server (mcp_salesforce_server.py):</h4>
+                <ul>
+                    <li><code class="inline-code">MCP_SERVICE_TOKEN</code> - Shared secret for FastAPI → MCP auth</li>
+                    <li><code class="inline-code">SF_CLIENT_ID</code> - Salesforce Connected App consumer key</li>
+                    <li><code class="inline-code">SF_USERNAME</code> - Integration user username</li>
+                    <li><code class="inline-code">SF_PRIVATE_KEY_PEM</code> - PEM private key for JWT signing</li>
+                    <li><code class="inline-code">SF_LOGIN_URL</code> - (Optional) Default: https://login.salesforce.com</li>
+                    <li><code class="inline-code">SF_API_VERSION</code> - (Optional) Default: v60.0</li>
+                </ul>
+            </div>
+
+            <div class="highlight-box" style="margin-top: 20px;">
+                <h4>FastAPI Host (main.py):</h4>
+                <ul>
+                    <li><code class="inline-code">MCP_SF_URL</code> - MCP server URL (e.g., http://mcp-salesforce.internal/mcp)</li>
+                    <li><code class="inline-code">MCP_SERVICE_TOKEN</code> - Same shared secret as MCP server</li>
+                </ul>
+            </div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="section">
+            <h2>Summary: Why This Architecture Matters</h2>
+            
+            <div class="info-box">
+                <h4>Defense in Depth:</h4>
+                <ol class="numbered-list">
+                    <li><strong>User Authentication:</strong> Validates end-user identity via Google OIDC</li>
+                    <li><strong>Service Authentication:</strong> Prevents unauthorized access to MCP server</li>
+                    <li><strong>Downstream Authentication:</strong> Secures integration with Salesforce</li>
+                    <li><strong>Query Validation:</strong> Enforces bank-safe SOQL policies at MCP layer</li>
+                    <li><strong>Resource Policies:</strong> Provides read-only context for LLM agents</li>
+                    <li><strong>Prompt Templates:</strong> Standardizes agent behavior across clients</li>
+                </ol>
+            </div>
+
+            <div class="highlight-box" style="margin-top: 20px;">
+                <p><strong>Result:</strong> A secure, auditable system where each layer has its own authentication 
+                boundary and the MCP server acts as a controlled gateway to sensitive operations.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        hljs.highlightAll();
+    </script>
+  <script src="../assets/js/nav.js"></script>
+</body>
+</html>

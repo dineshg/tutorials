@@ -1,0 +1,700 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Linear Regression and Training in PyTorch • Deep Learning with PyTorch</title>
+
+        <!-- KaTeX (equation rendering) -->
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"
+        />
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+        <script
+            defer
+            src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+        ></script>
+
+        <!-- Code syntax highlighting (highlight.js) -->
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/vs2015.min.css"
+        />
+        <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+        <script
+            defer
+            src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/python.min.js"
+        ></script>
+        <script>
+            document.addEventListener("DOMContentLoaded", () => {
+                if (typeof renderMathInElement !== "function") return;
+                const normalizeBackslashesInsideMath = (text) => {
+                    if (!text || text.indexOf("\\\\") === -1) return text;
+
+                    let out = "";
+                    let i = 0;
+                    let mode = null; // null | 'inline' | 'display'
+
+                    const isEscaped = (s, idx) => {
+                        let backslashes = 0;
+                        for (let j = idx - 1; j >= 0 && s[j] === "\\"; j--) backslashes++;
+                        return backslashes % 2 === 1;
+                    };
+
+                    while (i < text.length) {
+                        if (mode === null) {
+                            if (text.startsWith("$$", i)) {
+                                mode = "display";
+                                out += "$$";
+                                i += 2;
+                                continue;
+                            }
+                            if (text[i] === "$" && !isEscaped(text, i)) {
+                                mode = "inline";
+                                out += "$";
+                                i += 1;
+                                continue;
+                            }
+                            out += text[i];
+                            i += 1;
+                            continue;
+                        }
+
+                        if (mode === "display") {
+                            if (text.startsWith("$$", i) && !isEscaped(text, i)) {
+                                mode = null;
+                                out += "$$";
+                                i += 2;
+                                continue;
+                            }
+                        } else {
+                            if (text[i] === "$" && !isEscaped(text, i)) {
+                                mode = null;
+                                out += "$";
+                                i += 1;
+                                continue;
+                            }
+                        }
+
+                        if (text[i] === "\\" && text[i + 1] === "\\") {
+                            out += "\\";
+                            i += 2;
+                            continue;
+                        }
+
+                        out += text[i];
+                        i += 1;
+                    }
+
+                    return out;
+                };
+
+                const normalizeMathInDom = (root) => {
+                    const ignoredParents = new Set(["SCRIPT", "STYLE", "TEXTAREA", "PRE", "CODE", "NOSCRIPT"]);
+                    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+                        acceptNode(node) {
+                            const parent = node.parentElement;
+                            if (!parent) return NodeFilter.FILTER_REJECT;
+                            if (ignoredParents.has(parent.tagName)) return NodeFilter.FILTER_REJECT;
+                            if (!node.nodeValue) return NodeFilter.FILTER_REJECT;
+                            return NodeFilter.FILTER_ACCEPT;
+                        },
+                    });
+
+                    const nodes = [];
+                    while (walker.nextNode()) nodes.push(walker.currentNode);
+                    for (const node of nodes) {
+                        const normalized = normalizeBackslashesInsideMath(node.nodeValue);
+                        if (normalized !== node.nodeValue) node.nodeValue = normalized;
+                    }
+                };
+
+                normalizeMathInDom(document.body);
+                renderMathInElement(document.body, {
+                    delimiters: [
+                        { left: "$$", right: "$$", display: true },
+                        { left: "\\[", right: "\\]", display: true },
+                        { left: "\\(", right: "\\)", display: false },
+                        { left: "$", right: "$", display: false },
+                    ],
+                    ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code"],
+                    throwOnError: false,
+                });
+            });
+        </script>
+        <script>
+            document.addEventListener("DOMContentLoaded", () => {
+                if (typeof hljs === "undefined") return;
+                hljs.configure({ languages: ["python"] });
+                document.querySelectorAll("pre code").forEach((el) => {
+                    el.classList.add("hljs");
+                    hljs.highlightElement(el);
+                });
+            });
+        </script>
+
+        <style>
+            :root {
+                --bg: #f6f8fc;
+                --panel: #ffffff;
+                --border: rgba(15, 23, 42, 0.10);
+                --text: #0f172a;
+                --muted: rgba(15, 23, 42, 0.70);
+                --accent: #2563eb;
+                --accent-2: #7c3aed;
+                --code-bg: #0b1020;
+                --code-text: rgba(255, 255, 255, 0.92);
+                --highlight-bg: rgba(250, 204, 21, 0.35);
+                --shadow: 0 18px 48px rgba(2, 6, 23, 0.10);
+            }
+
+            * {
+                box-sizing: border-box;
+            }
+
+            html,
+            body {
+                height: 100%;
+            }
+
+            body {
+                margin: 0;
+                color: var(--text);
+                background: radial-gradient(900px 500px at 18% -10%, rgba(37, 99, 235, 0.14), transparent 60%),
+                    radial-gradient(800px 450px at 90% 8%, rgba(124, 58, 237, 0.12), transparent 55%),
+                    linear-gradient(180deg, #ffffff, var(--bg));
+                font: 16px/1.7 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial,
+                    "Apple Color Emoji", "Segoe UI Emoji";
+            }
+
+            a {
+                color: var(--accent);
+                text-decoration: none;
+            }
+            a:hover {
+                text-decoration: underline;
+            }
+
+            .wrap {
+                max-width: 980px;
+                margin: 0 auto;
+                padding: 56px 18px;
+            }
+
+            .card {
+                background: var(--panel);
+                border: 1px solid var(--border);
+                border-radius: 16px;
+                box-shadow: var(--shadow);
+                overflow: hidden;
+            }
+
+            .card__topbar {
+                height: 6px;
+                background: linear-gradient(90deg, var(--accent), var(--accent-2));
+            }
+
+            header {
+                padding: 28px 28px 0 28px;
+            }
+
+            .kicker {
+                display: inline-flex;
+                gap: 10px;
+                align-items: center;
+                padding: 6px 10px;
+                border: 1px solid var(--border);
+                border-radius: 999px;
+                color: rgba(15, 23, 42, 0.70);
+                background: rgba(15, 23, 42, 0.03);
+                font-size: 13px;
+            }
+
+            h1 {
+                margin: 14px 0 8px 0;
+                font-size: clamp(28px, 4vw, 40px);
+                line-height: 1.15;
+                letter-spacing: -0.02em;
+                background: linear-gradient(90deg, var(--text), rgba(37, 99, 235, 0.95));
+                -webkit-background-clip: text;
+                background-clip: text;
+                color: transparent;
+            }
+
+            .subtitle {
+                margin: 0 0 22px 0;
+                color: var(--muted);
+                max-width: 86ch;
+            }
+
+            main {
+                padding: 0 28px 28px 28px;
+            }
+
+            p {
+                margin: 14px 0;
+                max-width: 86ch;
+            }
+
+            h2 {
+                margin: 20px 0 6px 0;
+                font-size: 18px;
+                letter-spacing: -0.01em;
+                color: rgba(15, 23, 42, 0.92);
+            }
+
+            h3 {
+                margin: 14px 0 6px 0;
+                font-size: 16px;
+                color: rgba(15, 23, 42, 0.92);
+            }
+
+            ul {
+                margin: 10px 0 0 0;
+                padding-left: 20px;
+            }
+
+            li {
+                margin: 10px 0;
+            }
+
+            hr {
+                margin: 20px 0;
+                border: 0;
+                height: 1px;
+                background: rgba(15, 23, 42, 0.10);
+            }
+
+            .section {
+                margin-top: 18px;
+                padding-top: 18px;
+                border-top: 1px solid rgba(15, 23, 42, 0.08);
+            }
+
+            .callout {
+                margin: 18px 0;
+                padding: 14px 14px;
+                border-radius: 12px;
+                border: 1px solid rgba(37, 99, 235, 0.22);
+                background: rgba(37, 99, 235, 0.06);
+                color: rgba(15, 23, 42, 0.86);
+            }
+
+            /* Code blocks + inline code */
+            code,
+            pre {
+                font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+                    monospace;
+            }
+
+            :not(pre) > code {
+                padding: 0.15em 0.35em;
+                border-radius: 8px;
+                border: 1px solid rgba(15, 23, 42, 0.12);
+                background: rgba(15, 23, 42, 0.04);
+                color: rgba(15, 23, 42, 0.92);
+                font-size: 0.95em;
+            }
+
+            pre {
+                margin: 14px 0;
+                padding: 16px 16px;
+                border-radius: 14px;
+                background: #1e1e1e;
+                color: #d4d4d4;
+                border: 1px solid rgba(15, 23, 42, 0.18);
+                overflow: auto;
+                box-shadow: 0 10px 26px rgba(2, 6, 23, 0.14);
+                tab-size: 4;
+                -moz-tab-size: 4;
+                white-space: pre;
+            }
+
+            pre code {
+                display: block;
+                padding: 0;
+                border: 0;
+                background: transparent;
+                color: inherit;
+                font-size: 14px;
+                line-height: 1.55;
+                white-space: pre;
+            }
+
+            pre code.hljs {
+                background: transparent;
+            }
+
+            /* Figures / images */
+            .figure {
+                margin: 16px 0;
+                padding: 12px;
+                border: 1px solid rgba(15, 23, 42, 0.10);
+                border-radius: 14px;
+                background: rgba(15, 23, 42, 0.02);
+            }
+
+            .figure img {
+                display: block;
+                width: 100%;
+                height: auto;
+                border-radius: 12px;
+                border: 1px solid rgba(15, 23, 42, 0.10);
+            }
+
+            .figure figcaption {
+                margin-top: 10px;
+                color: rgba(15, 23, 42, 0.70);
+                font-size: 14px;
+            }
+
+            /* KaTeX tweaks */
+            .katex-display {
+                margin: 14px 0;
+                overflow-x: auto;
+                overflow-y: hidden;
+                padding: 10px 12px;
+                border-radius: 12px;
+                background: rgba(15, 23, 42, 0.02);
+                border: 1px solid rgba(15, 23, 42, 0.08);
+            }
+
+            mark {
+                padding: 0.05em 0.2em;
+                border-radius: 8px;
+                background: var(--highlight-bg);
+                color: inherit;
+            }
+
+            .footer {
+                padding: 14px 28px 26px 28px;
+                color: rgba(15, 23, 42, 0.55);
+                font-size: 13px;
+                border-top: 1px solid rgba(15, 23, 42, 0.08);
+            }
+        </style>
+      <link rel="stylesheet" href="../assets/css/book.css">
+</head>
+
+    <body>
+        <div class="wrap">
+            <article class="card">
+                <div class="card__topbar" aria-hidden="true"></div>
+
+                <header>
+                    <div class="kicker">Chapter 2 • Linear Regression</div>
+                    <h1>Linear Regression and Training in PyTorch</h1>
+                    <p class="subtitle">
+                        We’ll connect the math of linear regression to a working PyTorch training loop, keeping
+                        the link between equations and code as clear as possible.
+                    </p>
+                </header>
+
+                <main>
+                    <p>
+                        In the previous chapter we viewed machine learning as a geometry problem: data become
+                        points in a space; models are shapes (lines, planes, curves) that we fit or use to
+                        separate those points. In this chapter we make that concrete with the simplest possible
+                        model: linear regression in PyTorch.
+                    </p>
+
+                    <figure class="figure">
+                        <img
+                            src="assets/images/ml-regression-line.svg"
+                            alt="A scatter plot with a best-fit line illustrating linear regression."
+                            loading="lazy"
+                        />
+                        <figcaption>
+                            The linear regression picture: fit a straight line to data points.
+                        </figcaption>
+                    </figure>
+
+                    <hr />
+
+                    <section class="section" aria-labelledby="dataset-notation">
+                        <h2 id="dataset-notation">2.1 A Simple Dataset and Notation</h2>
+                        <p>Consider a dataset with one input feature and one target. For example:</p>
+                        <ul>
+                            <li>$x$: years of experience</li>
+                            <li>$y$: salary</li>
+                        </ul>
+
+                        <p>We have $N$ samples:</p>
+                        <p>$$ (x_1, y_1), (x_2, y_2), \dots, (x_N, y_N). $$</p>
+
+                        <p>
+                            Here, capital $N$ denotes the total number of samples. The input values $x_i$ and
+                            target values $y_i$ are fixed; our job is to learn a function that maps
+                            $x_i \mapsto \hat{y}_i$ so that predictions $\hat{y}_i$ are close to the true values
+                            $y_i$.
+                        </p>
+
+                        <p>In PyTorch, we store the data as tensors:</p>
+                        <pre><code class="language-python">import torch
+
+# Toy example
+x = torch.tensor([1.0, 2.0, 3.0, 4.0]).view(-1, 1)  # shape: (N, 1)
+y = torch.tensor([2.0, 4.0, 6.0, 8.0]).view(-1, 1)  # shape: (N, 1)</code></pre>
+
+                        <p>
+                            The <code>.view(-1, 1)</code> reshapes the 1D tensors into column vectors of shape
+                            $(N, 1)$, which is the common shape for a single input feature and single output in
+                            PyTorch.
+                        </p>
+                    </section>
+
+                    <section class="section" aria-labelledby="model-line">
+                        <h2 id="model-line">2.2 The Model: A Straight Line</h2>
+                        <p>For simple linear regression, our model is a straight line:</p>
+                        <p>$$ \hat{y} = m x + b. $$</p>
+
+                        <p>For each sample $i$:</p>
+                        <p>$$ \hat{y}_i = m x_i + b. $$</p>
+
+                        <p>
+                            The parameters $m$ (slope) and $b$ (intercept) are unknown; these are what we want to
+                            learn from data.
+                        </p>
+
+                        <p>In PyTorch we represent this line with <code>nn.Linear</code>:</p>
+                        <pre><code class="language-python">import torch.nn as nn
+
+# One input feature, one output
+model = nn.Linear(in_features=1, out_features=1)</code></pre>
+
+                        <p>
+                            This model internally stores a weight and a bias, which correspond to $m$ and $b$:
+                        </p>
+                        <pre><code class="language-python">print(model.weight)  # corresponds roughly to m
+print(model.bias)    # corresponds roughly to b</code></pre>
+
+                        <p>To get predictions, we call the model like a function:</p>
+                        <pre><code class="language-python">y_pred = model(x)  # computes y_hat = m * x + b for all samples</code></pre>
+
+                        <p>
+                            Conceptually, this is computing all the $\hat{y}_i = m x_i + b$ at once using tensor
+                            operations.
+                        </p>
+                    </section>
+
+                    <section class="section" aria-labelledby="loss-mse">
+                        <h2 id="loss-mse">2.3 The Loss Function: Mean Squared Error</h2>
+                        <p>
+                            To evaluate how good a particular line is, we measure how far the predictions are from
+                            the true values. For regression, the standard choice is Mean Squared Error (MSE):
+                        </p>
+
+                        <p>
+                            $$ L(m, b) = \frac{1}{N} \sum_{i=1}^{N} \bigl(y_i - \hat{y}_i\bigr)^2. $$
+                        </p>
+
+                        <p>Substituting the model $\hat{y}_i = m x_i + b$, we can write:</p>
+                        <p>
+                            $$ L(m, b) = \frac{1}{N} \sum_{i=1}^{N} \bigl(y_i - (m x_i + b)\bigr)^2. $$
+                        </p>
+
+                        <p>
+                            Geometrically, $\lvert y_i - \hat{y}_i \rvert$ is the vertical distance from the point
+                            $(x_i, y_i)$ to the line. Squaring and averaging gives us a single non-negative number
+                            that is small when the line fits the data well and large when it does not.
+                        </p>
+
+                        <p>In PyTorch, we use <code>nn.MSELoss</code>:</p>
+                        <pre><code class="language-python">criterion = nn.MSELoss()
+
+y_pred = model(x)
+loss = criterion(y_pred, y)  # scalar tensor: the MSE
+print(loss.item())</code></pre>
+
+                        <p>
+                            At this point we have everything needed to define a supervised learning problem:
+                        </p>
+                        <ul>
+                            <li>a model $\hat{y} = m x + b$, and</li>
+                            <li>
+                                a loss function $L(m, b)$ that tells us how good any particular choice of $m$ and
+                                $b$ is.
+                            </li>
+                        </ul>
+                    </section>
+
+                    <section class="section" aria-labelledby="minimizing">
+                        <h2 id="minimizing">2.4 Learning as Minimizing the Loss</h2>
+                        <p>
+                            The data $(x_i, y_i)$ are given and fixed. The variables in the loss expression are the
+                            parameters $m$ and $b$. Learning means:
+                        </p>
+                        <p>$$ (m^*, b^*) = \arg\min_{m, b} L(m, b). $$</p>
+
+                        <p>
+                            In other words, we want to find the values of $m$ and $b$ that make the mean squared
+                            error as small as possible.
+                        </p>
+
+                        <p>
+                            For very simple models like this, you can derive explicit formulas for $m^*$ and $b^*$
+                            by taking derivatives of $L$ with respect to $m$ and $b$, setting them to zero, and
+                            solving:
+                        </p>
+                        <p>$$ \frac{\partial L}{\partial m} = 0, \qquad \frac{\partial L}{\partial b} = 0. $$</p>
+
+                        <p>
+                            However, this approach does not generalize to more complex models, such as deep neural
+                            networks, where the loss depends on thousands or millions of parameters in highly
+                            nonlinear ways. Instead, we use gradient-based iterative methods.
+                        </p>
+
+                        <p>
+                            For a parameter vector $\theta$ (in our case $\theta = {m, b}$), classic gradient
+                            descent updates parameters as:
+                        </p>
+                        <p>$$ \theta \leftarrow \theta - \eta \nabla_\theta L(\theta), $$</p>
+
+                        <p>where $\eta &gt; 0$ is the learning rate. Applied to our parameters, this becomes:</p>
+                        <p>
+                            $$ m \leftarrow m - \eta \frac{\partial L}{\partial m}, \qquad
+                            b \leftarrow b - \eta \frac{\partial L}{\partial b}. $$
+                        </p>
+
+                        <p>
+                            PyTorch computes these derivatives automatically using automatic differentiation. Our
+                            job is to define the model, the loss, and the optimization procedure; PyTorch will
+                            handle the gradients.
+                        </p>
+                    </section>
+
+                    <section class="section" aria-labelledby="optimizer">
+                        <h2 id="optimizer">2.5 The Optimizer: SGD</h2>
+                        <p>
+                            We now need a component that takes the gradients and updates the parameters. PyTorch
+                            provides several optimizers; the simplest is Stochastic Gradient Descent (SGD):
+                        </p>
+                        <pre><code class="language-python">import torch.optim as optim
+
+learning_rate = 0.01
+optimizer = optim.SGD(model.parameters(), lr=learning_rate)</code></pre>
+
+                        <p>
+                            Here, <code>model.parameters()</code> returns an iterator over the model’s trainable
+                            parameters (in this case, the weight and bias). The optimizer will update these
+                            in-place, using the gradients that PyTorch computes.
+                        </p>
+                    </section>
+
+                    <section class="section" aria-labelledby="training-loop">
+                        <h2 id="training-loop">2.6 The Training Loop</h2>
+                        <p>
+                            Training consists of repeating the same sequence of steps: zeroing gradients, computing
+                            predictions, computing the loss, computing gradients, and updating parameters. Each
+                            full pass through these steps is one training iteration; when we apply this to the
+                            whole dataset repeatedly, we often call each pass through the dataset an epoch.
+                        </p>
+
+                        <figure class="figure">
+                            <img
+                                src="assets/images/pytorch-training-loop.svg"
+                                alt="A flow diagram of a PyTorch training iteration: zero_grad, forward pass, compute loss, backward, optimizer step, repeat."
+                                loading="lazy"
+                            />
+                            <figcaption>
+                                The standard PyTorch training pattern you’ll reuse in nearly every model.
+                            </figcaption>
+                        </figure>
+
+                        <p>A typical training loop for simple linear regression looks like this:</p>
+                        <pre><code class="language-python">num_epochs = 1000
+
+            for epoch in range(num_epochs):
+                    # 1. Zero out previous gradients
+                    optimizer.zero_grad()
+
+                    # 2. Forward pass: compute predictions
+                    y_pred = model(x)
+
+                    # 3. Compute the loss
+                    loss = criterion(y_pred, y)
+
+                    # 4. Backward pass: compute gradients dL/dm and dL/db
+                    loss.backward()
+
+                    # 5. Update parameters using the optimizer
+                    optimizer.step()
+
+                    # (Optional) monitor progress
+                    if (epoch + 1) % 100 == 0:
+                            print(f"Epoch {epoch + 1}, Loss = {loss.item():.4f}")</code></pre>
+
+                        <p>The mapping to the math is direct:</p>
+                        <ul>
+                            <li><code>y_pred = model(x)</code> computes all $\hat{y}_i = m x_i + b$.</li>
+                            <li><code>loss = criterion(y_pred, y)</code> computes $L(m, b)$.</li>
+                            <li>
+                                <code>loss.backward()</code> fills in <code>model.weight.grad</code> and
+                                <code>model.bias.grad</code> with $\frac{\partial L}{\partial m}$ and
+                                $\frac{\partial L}{\partial b}$.
+                            </li>
+                            <li><code>optimizer.step()</code> performs the gradient descent updates.</li>
+                        </ul>
+                    </section>
+
+                    <section class="section" aria-labelledby="results">
+                        <h2 id="results">2.7 Getting Results Out</h2>
+                        <p>
+                            After training, we may want to inspect predictions or plot the learned line. Since many
+                            plotting libraries expect NumPy arrays, we often convert our tensors:
+                        </p>
+                        <pre><code class="language-python">with torch.no_grad():       # disable gradient tracking
+        y_pred = model(x)       # final predictions
+
+x_np = x.detach().numpy()
+y_np = y.detach().numpy()
+y_pred_np = y_pred.detach().numpy()</code></pre>
+
+                        <p>
+                            The <code>detach()</code> call removes tensors from the computation graph, making
+                            conversion to NumPy safe. We can then plot <code>x_np</code> versus <code>y_np</code>
+                            and <code>y_pred_np</code> using Matplotlib, or use them in further analysis.
+                        </p>
+                    </section>
+
+                    <section class="section" aria-labelledby="summary">
+                        <h2 id="summary">2.8 Summary</h2>
+                        <p>
+                            In this chapter we connected the geometric picture of linear regression to both its
+                            mathematical formulation and its PyTorch implementation. We started with a set of data
+                            points $(x_i, y_i)$, defined a linear model:
+                        </p>
+                        <p>$$ \hat{y} = m x + b, $$</p>
+
+                        <p>and measured its performance using the mean squared error:</p>
+                        <p>
+                            $$ L(m, b) = \frac{1}{N} \sum_{i=1}^{N} \bigl(y_i - (m x_i + b)\bigr)^2. $$
+                        </p>
+
+                        <p>
+                            We then viewed learning as minimizing this loss with respect to the parameters $m$ and
+                            $b$:
+                        </p>
+                        <p>$$ (m^*, b^*) = \arg\min_{m, b} L(m, b), $$</p>
+
+                        <p>
+                            and we implemented this using PyTorch’s tensors, <code>nn.Linear</code> model,
+                            <code>nn.MSELoss</code> loss function, and an SGD optimizer inside a training loop.
+                        </p>
+
+                        <div class="callout" role="note">
+                            This simple example is more than a toy: the same pattern—define data, define model,
+                            define loss, define optimizer, write a training loop—will reappear in every deep
+                            learning model we build with PyTorch, from basic neural networks to convolutional and
+                            recurrent architectures.
+                        </div>
+                    </section>
+                </main>
+
+                <div class="footer">Deep Learning with PyTorch • Linear Regression</div>
+            </article>
+        </div>
+      <script src="../assets/js/nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>LLD + Sprint Planning Tutorial (AI Lead): Turn HLD into Buildable Work for a 5-Engineer Team</title>
+  <style>
+    :root{
+      /* Light theme (default) */
+      --bg:#f7f9fc;
+      --card:rgba(2,6,23,.03);
+      --border:rgba(2,6,23,.10);
+      --text:#0f172a;
+      --muted:#475569;
+
+      --h1:#0f172a;
+      --h2:#1d4ed8;
+      --h3:#0f766e;
+
+      --callout:rgba(15,118,110,.08);
+      --warn:rgba(225,29,72,.08);
+      --ok:rgba(29,78,216,.08);
+
+      --codebg:#f6f8fa;
+      --codeborder:#d0d7de;
+    }
+
+    @media (prefers-color-scheme: dark){
+      :root{
+        --bg:#0b1220;
+        --card:rgba(255,255,255,.06);
+        --border:rgba(255,255,255,.12);
+        --text:#e6eaf2;
+        --muted:#a8b3cf;
+
+        --h1:#eaf0ff;
+        --h2:#93c5fd;
+        --h3:#5eead4;
+
+        --callout:rgba(94,234,212,.10);
+        --warn:rgba(255,180,180,.12);
+        --ok:rgba(147,197,253,.12);
+
+        --codebg:#1e1e1e;
+        --codeborder:#2d2d2d;
+      }
+    }
+
+    body{
+      margin:0;
+      padding:28px 18px;
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height:1.65;
+      color:var(--text);
+      background:
+        radial-gradient(1200px 600px at 20% -10%, rgba(37,99,235,.12), transparent 60%),
+        radial-gradient(900px 500px at 90% 10%, rgba(15,118,110,.10), transparent 55%),
+        var(--bg);
+    }
+
+    @media (prefers-color-scheme: dark){
+      body{
+        background:
+          radial-gradient(1200px 600px at 20% -10%, rgba(97,175,254,.18), transparent 60%),
+          radial-gradient(900px 500px at 90% 10%, rgba(94,234,212,.12), transparent 55%),
+          var(--bg);
+      }
+    }
+
+    .container{
+      max-width: 1120px;
+      margin:0 auto;
+      padding:44px;
+      border:1px solid var(--border);
+      border-radius:14px;
+      background: linear-gradient(180deg, rgba(255,255,255,.85), rgba(255,255,255,.70));
+      box-shadow: 0 10px 30px rgba(2,6,23,.10);
+    }
+
+    @media (prefers-color-scheme: dark){
+      .container{
+        background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+        box-shadow: 0 10px 30px rgba(0,0,0,.35);
+        backdrop-filter: blur(8px);
+      }
+    }
+
+    h1{
+      margin:0 0 10px;
+      color:var(--h1);
+      letter-spacing:-0.02em;
+      font-size:2.05rem;
+    }
+    .lead{
+      margin:0 0 18px;
+      color:var(--muted);
+      max-width: 110ch;
+    }
+
+    .toc{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin:14px 0 26px;
+      padding:0;
+      list-style:none;
+    }
+    .toc a{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      background:rgba(255,255,255,.06);
+      border:1px solid var(--border);
+      color:var(--text);
+      text-decoration:none;
+      font-size:.92rem;
+    }
+    .toc a:hover{ background: rgba(147,197,253,.12); border-color: rgba(147,197,253,.25); }
+
+    h2{
+      margin-top:44px;
+      padding-top:22px;
+      border-top:1px solid var(--border);
+      color:var(--h2);
+      letter-spacing:-0.01em;
+    }
+    h3{
+      margin:18px 0 10px;
+      color:var(--h3);
+      font-size:1.08rem;
+    }
+
+    p{ margin:0 0 14px; }
+    ul,ol{ margin:0 0 14px; padding-left:22px; }
+    li{ margin:0 0 8px; }
+
+    .card{
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px 18px 6px;
+      margin: 16px 0 20px;
+    }
+
+    .callout{
+      background: var(--callout);
+      border: 1px solid rgba(94,234,212,.22);
+      border-left: 5px solid var(--h3);
+      padding: 14px 16px;
+      border-radius: 12px;
+      margin: 18px 0;
+    }
+    .warn{
+      background: var(--warn);
+      border: 1px solid rgba(255,180,180,.25);
+      border-left: 5px solid rgba(255,180,180,.9);
+      padding: 14px 16px;
+      border-radius: 12px;
+      margin: 18px 0;
+    }
+    .ok{
+      background: var(--ok);
+      border: 1px solid rgba(147,197,253,.20);
+      border-left: 5px solid rgba(147,197,253,.85);
+      padding: 14px 16px;
+      border-radius: 12px;
+      margin: 18px 0;
+    }
+
+    code{
+      background: rgba(2,6,23,.05);
+      padding: 2px 6px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      color: var(--text);
+      font-size: .92em;
+    }
+
+    @media (prefers-color-scheme: dark){
+      code{
+        background: rgba(255,255,255,.07);
+        color: #ffd6ff;
+      }
+    }
+
+    table{
+      width:100%;
+      border-collapse: collapse;
+      margin: 10px 0 18px;
+      overflow:hidden;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.04);
+    }
+    th,td{
+      text-align:left;
+      padding:10px 12px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      vertical-align: top;
+    }
+    th{ color: var(--h1); font-size: .92rem; }
+    td{ color: var(--text); }
+
+    .grid2{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 10px 0 18px;
+    }
+    @media (max-width: 900px){ .grid2{ grid-template-columns: 1fr; } }
+
+    .box{
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+    }
+    .box .k{
+      color: var(--muted);
+      font-size: .82rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 6px;
+    }
+
+    .pill{
+      display:inline-block;
+      padding: 2px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.05);
+      color: var(--text);
+      font-size: .86rem;
+      margin-right: 6px;
+      margin-bottom: 6px;
+    }
+
+    .footer-note{
+      margin-top: 34px;
+      color: var(--muted);
+      border-top: 1px dashed var(--border);
+      padding-top: 18px;
+    }
+  </style>
+  <link rel="stylesheet" href="../assets/css/book.css">
+</head>
+
+<body>
+  <div class="container">
+    <h1>Step 3 Tutorial: Convert HLD into LLD Tasks + a Sprint-Ready Plan</h1>
+    <p class="lead">
+      You have an approved (or conditionally approved) HLD for the <strong>Exec Document Q&amp;A (cited RAG)</strong> pilot.
+      Now your job as AI Lead is to translate “boxes and arrows” into <strong>implementable stories</strong> with clear owners,
+      a <strong>vertical slice milestone</strong>, and acceptance criteria that include <strong>safety gates</strong> — not just “it works”.
+      This guide assumes you lead <strong>5 AI/ML/Software engineers</strong> in a large enterprise environment.
+    </p>
+
+    <ul class="toc">
+      <li><a href="#principles">Planning principles</a></li>
+      <li><a href="#epics">Define epics</a></li>
+      <li><a href="#verticalslice">Vertical slice milestone</a></li>
+      <li><a href="#stories">Write buildable stories</a></li>
+      <li><a href="#acceptance">Acceptance criteria (incl. safety)</a></li>
+      <li><a href="#team">Assign work to 5 engineers</a></li>
+      <li><a href="#sprintplan">Example sprint plan (2 sprints)</a></li>
+      <li><a href="#definitionofdone">Definition of Done</a></li>
+    </ul>
+
+    <h2 id="principles">1) Planning principles (enterprise reality)</h2>
+    <div class="card">
+      <div class="grid2">
+        <div class="box">
+          <div class="k">What makes a backlog “buildable”</div>
+          <ul>
+            <li>Every item has an owner, inputs, outputs, and acceptance criteria</li>
+            <li>Dependencies are explicit (IAM, networking, data access, secrets)</li>
+            <li>Work is sliced end-to-end (vertical), not by layers only</li>
+            <li>Safety gates are included as first-class requirements</li>
+          </ul>
+        </div>
+        <div class="box">
+          <div class="k">Common failure modes</div>
+          <ul>
+            <li>Only building “the model part” without operability/audit</li>
+            <li>Stories too large (“build retrieval system”) → unclear progress</li>
+            <li>Security conditions treated as “later” → late rework</li>
+            <li>Dependencies discovered mid-sprint → blocked delivery</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="ok">
+        <strong>Lead-level mantra:</strong> “We deliver a safe end-to-end slice early, then improve quality and scale.”
+      </div>
+    </div>
+
+    <h2 id="epics">2) Define epics (map directly to your HLD boxes)</h2>
+    <div class="card">
+      <p>
+        Start by creating epics that mirror the architecture. For this project, a clean set is:
+      </p>
+      <ul>
+        <li><strong>Epic A — Auth &amp; gating:</strong> OIDC validation, org allowlist, tenant mapping, bootstrap endpoint</li>
+        <li><strong>Epic B — Ingestion pipeline:</strong> intake event, extraction, canonical store, indexing</li>
+        <li><strong>Epic C — Retrieval:</strong> strict tenant/corpus filters, ranking, chunk fetch</li>
+        <li><strong>Epic D — Prompting &amp; citations:</strong> context packing, citation format, refusal rules</li>
+        <li><strong>Epic E — Audit &amp; observability:</strong> structured logs, traces, dashboards, runbook hooks</li>
+        <li><strong>Epic F — Evaluation harness:</strong> golden set, citation correctness checks, regression gate in CI/CD</li>
+      </ul>
+
+      <div class="callout">
+        <strong>Tip:</strong> If your architecture review produced “approval conditions”, create one epic or track lane for each condition
+        so nothing gets lost.
+      </div>
+    </div>
+
+    <h2 id="verticalslice">3) Define the vertical slice milestone (the most important planning move)</h2>
+    <div class="card">
+      <p>
+        A vertical slice is a thin, end-to-end path that proves the system works safely with real constraints.
+        It is not “production ready”, but it is <strong>real</strong> and <strong>demoable</strong>.
+      </p>
+
+      <div class="ok">
+        <strong>Vertical slice (Exec Doc Q&amp;A) — definition:</strong>
+        <ul>
+          <li>One user logs in (Workspace OIDC) → backend validates → returns identity</li>
+          <li>One small approved corpus (e.g., 10 meeting notes) is ingested</li>
+          <li>Query retrieves tenant/corpus-filtered chunks</li>
+          <li>LLM returns an answer with citations (or refuses)</li>
+          <li>Audit log is written (no sensitive snippet dumps)</li>
+          <li>Golden set eval runs and produces a simple report</li>
+        </ul>
+      </div>
+
+      <div class="warn">
+        <strong>Anti-pattern:</strong> building “ingestion” for weeks before any end-to-end query works.
+        Your team should be able to run a demo early.
+      </div>
+    </div>
+
+    <h2 id="stories">4) Turn epics into buildable stories (how to slice work)</h2>
+    <div class="card">
+      <p>
+        Each story should be deliverable in 1–4 days by one engineer and have clear testable outputs.
+        Use a consistent story template:
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Story field</th>
+            <th>What to write</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Title</strong></td>
+            <td>Verb + object (e.g., “Implement /auth/bootstrap identity endpoint”)</td>
+          </tr>
+          <tr>
+            <td><strong>Goal</strong></td>
+            <td>What capability is enabled and for whom</td>
+          </tr>
+          <tr>
+            <td><strong>Inputs</strong></td>
+            <td>Request format, upstream data, required secrets</td>
+          </tr>
+          <tr>
+            <td><strong>Outputs</strong></td>
+            <td>Response format, side effects (DB rows, logs, events)</td>
+          </tr>
+          <tr>
+            <td><strong>Acceptance criteria</strong></td>
+            <td>Functional + safety + observability tests</td>
+          </tr>
+          <tr>
+            <td><strong>Dependencies</strong></td>
+            <td>IAM, networking, platform tickets, approvals</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Example story breakdown (one epic)</h3>
+      <ul>
+        <li><strong>Auth/gating:</strong> “Verify JWT”, “Check org allowlist”, “Map tenant”, “Provision user”, “Return /me”</li>
+        <li><strong>Retrieval:</strong> “Index schema includes tenant/corpus tags”, “Search with filters”, “Fetch chunks”</li>
+        <li><strong>Prompting:</strong> “Format citations”, “Refuse when insufficient context”, “Redact patterns”</li>
+      </ul>
+    </div>
+
+    <h2 id="acceptance">5) Acceptance criteria (include safety gates, not just “it works”)</h2>
+    <div class="card">
+      <p>
+        In GenAI, acceptance criteria must include correctness, leakage prevention, and governance.
+        Use the “3-layer” criteria pattern:
+      </p>
+
+      <div class="grid2">
+        <div class="box">
+          <div class="k">Functional</div>
+          <ul>
+            <li>Endpoint works for happy path</li>
+            <li>Correct request/response schema</li>
+            <li>Handles expected error cases</li>
+          </ul>
+        </div>
+        <div class="box">
+          <div class="k">Safety &amp; security</div>
+          <ul>
+            <li>Tenant/corpus filters enforced</li>
+            <li>Prompt injection mitigations applied</li>
+            <li>Refusal behavior when evidence is missing</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="box">
+          <div class="k">Operability</div>
+          <ul>
+            <li>Structured logs with request_id/user/tenant</li>
+            <li>Metrics for latency and failure codes</li>
+            <li>Tracing across retrieval + LLM call</li>
+          </ul>
+        </div>
+        <div class="box">
+          <div class="k">Evidence</div>
+          <ul>
+            <li>Unit tests + integration test runs</li>
+            <li>Golden set eval report updated</li>
+            <li>Demo script for stakeholders</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="ok">
+        <strong>Key acceptance gate:</strong> “Cross-tenant retrieval attempt returns zero results (and logs an audit event).”
+      </div>
+    </div>
+
+    <h2 id="team">6) Assign work to 5 direct reports (a practical team shape)</h2>
+    <div class="card">
+      <p>
+        With 5 engineers, assign ownership by <strong>stream</strong> but ensure the vertical slice comes together.
+        A common structure:
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Engineer (example)</th>
+            <th>Primary stream</th>
+            <th>Deliverables</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Eng 1</td>
+            <td>Auth &amp; identity</td>
+            <td>/auth/bootstrap, tenant mapping, org allowlist gate, user provisioning</td>
+          </tr>
+          <tr>
+            <td>Eng 2</td>
+            <td>Ingestion</td>
+            <td>Pub/Sub/Tasks wiring, extractor stub, canonical store writes, index writes</td>
+          </tr>
+          <tr>
+            <td>Eng 3</td>
+            <td>Retrieval</td>
+            <td>Strict filters, top-k search, chunk fetch, ranking tuning hooks</td>
+          </tr>
+          <tr>
+            <td>Eng 4</td>
+            <td>Prompting &amp; citations</td>
+            <td>Context packing, citation format, refusal rules, redaction hooks</td>
+          </tr>
+          <tr>
+            <td>Eng 5</td>
+            <td>Evals + observability</td>
+            <td>Golden set harness, citation correctness checks, dashboards/alerts, runbook skeleton</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout">
+        <strong>Your role:</strong> manage integration points (contracts, schemas), sequencing, and keep “approval conditions” tracked.
+        You should also reserve time for cross-cutting reviews and stakeholder updates.
+      </div>
+    </div>
+
+    <h2 id="sprintplan">7) Example sprint plan (2 sprints to a vertical slice)</h2>
+    <div class="card">
+      <p>
+        Example assumes 2-week sprints. The goal is a demoable vertical slice by the end of Sprint 1 or early Sprint 2.
+      </p>
+
+      <h3>Sprint 1 — Vertical slice foundations (end-to-end demo)</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Epic</th>
+            <th>Stories (examples)</th>
+            <th>Acceptance focus</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Auth/gating</td>
+            <td>/auth/bootstrap validates JWT; org allowlist check; tenant mapping; user row create-if-missing</td>
+            <td>403 if not allowed; stable user mapping; audit log entry</td>
+          </tr>
+          <tr>
+            <td>Ingestion</td>
+            <td>Ingest 10 sample docs into canonical store; write minimal index entries with tenant/corpus tags</td>
+            <td>Repeatable ingestion; no cross-tenant tags; basic error handling</td>
+          </tr>
+          <tr>
+            <td>Retrieval</td>
+            <td>Search endpoint with strict tenant/corpus filters; returns chunk IDs and text</td>
+            <td>Cross-tenant search returns 0; latency baseline measured</td>
+          </tr>
+          <tr>
+            <td>Prompting/citations</td>
+            <td>RAG prompt template; citations required; refusal when insufficient evidence</td>
+            <td>No uncited answers; refusal cases tested</td>
+          </tr>
+          <tr>
+            <td>Obs/audit</td>
+            <td>Structured log schema; request_id; traces across retrieval + LLM</td>
+            <td>No raw snippets in logs; dashboard stub exists</td>
+          </tr>
+          <tr>
+            <td>Evals</td>
+            <td>Golden set (10–20 Qs); basic evaluator: citation presence + answer groundedness checklist</td>
+            <td>Eval report produced in CI; baseline recorded</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Sprint 2 — Quality + safety hardening (pilot-ready)</h3>
+      <ul>
+        <li>Improve retrieval quality (hybrid ranking, chunking refinements)</li>
+        <li>Add stronger leakage tests and prompt injection tests</li>
+        <li>Add redaction rules and validate policy compliance</li>
+        <li>Expand eval set + add regression gates (must not degrade)</li>
+        <li>Operational readiness: alerts, runbook, on-call handoff</li>
+      </ul>
+    </div>
+
+    <h2 id="definitionofdone">8) Definition of Done (what “complete” means in this org)</h2>
+    <div class="card">
+      <p>
+        Define DoD once and apply to every story. This prevents “works on my machine” delivery.
+      </p>
+      <ul>
+        <li>✅ Code merged with tests (unit + at least one integration test)</li>
+        <li>✅ Observability: logs/metrics/traces updated for the feature</li>
+        <li>✅ Security: tenant/corpus enforcement verified (test case included)</li>
+        <li>✅ Documentation: README snippet or runbook note updated</li>
+        <li>✅ Demoable: a curl/script or Postman request exists</li>
+      </ul>
+
+      <div class="ok">
+        <strong>Lead-level improvement:</strong> add a “safety test” checkbox to every story by default.
+      </div>
+    </div>
+
+    <p class="footer-note">
+      If you want, I can produce a concrete backlog list (20–40 stories) with owners and acceptance criteria for Sprint 1 and Sprint 2
+      based on your exact GCP service choices (GKE, Cloud SQL, GCS, Pub/Sub/Tasks, Vertex AI Search or OpenSearch).
+    </p>
+  </div>
+  <script src="../assets/js/nav.js"></script>
+</body>
+</html>

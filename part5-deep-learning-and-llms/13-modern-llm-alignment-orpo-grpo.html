@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Modern LLM Alignment — Beyond DPO (ORPO, GRPO, KTO, RLAIF)</title>
+  <link rel="stylesheet" href="../assets/css/book.css" />
+  <style>
+    .ch h1 { font-size: 2em; border-bottom: 3px solid #0969da; padding-bottom: .4em; }
+    .ch h2 { font-size: 1.4em; margin-top: 2em; border-left: 4px solid #0969da; padding-left: .6em; }
+    .ch h3 { font-size: 1.15em; margin-top: 1.4em; color: #24292f; }
+    .ch pre { background: #0d1117; color: #e6edf3; padding: 14px 16px; border-radius: 8px; overflow-x: auto; }
+    .ch code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.9em; }
+    .ch p, .ch li { line-height: 1.65; }
+    .ch table { border-collapse: collapse; margin: 12px 0; width: 100%; }
+    .ch th, .ch td { border: 1px solid #d0d7de; padding: 8px 10px; text-align: left; vertical-align: top; }
+    .ch th { background: #f6f8fa; }
+    .eq { background: #f6f8fa; padding: 10px 14px; border-left: 3px solid #57606a; margin: 10px 0; font-family: "Latin Modern Math", "STIX Two Math", serif; }
+  </style>
+</head>
+<body>
+<div class="ch">
+
+<h1>Modern LLM Alignment — Beyond DPO (ORPO, GRPO, KTO, RLAIF)</h1>
+
+<div class="tr-note">
+  <strong>Where this fits</strong>
+  Chapter 12 covered SFT (supervised fine‑tuning) and PEFT (LoRA / QLoRA) —
+  how to make a base LLM follow your instructions and your domain. This
+  chapter is about the next step: <em>preference alignment</em> — how to make
+  the model prefer good outputs over bad outputs at scale, without the
+  fragility of full PPO‑style RLHF.
+</div>
+
+<h2>1) The lineage in one paragraph</h2>
+
+<p><strong>RLHF</strong> (Christiano 2017, InstructGPT 2022) trains a reward model
+from human preference pairs, then uses PPO to optimize the LLM against that
+reward while a KL term tethers it to the SFT model. It works, but it
+requires three models in memory (policy, reference, reward) and PPO
+hyper‑parameter tuning. <strong>DPO</strong> (Rafailov 2023) showed you can skip
+the explicit reward model and PPO and instead minimize a closed‑form
+classification loss directly on preference pairs. The 2024–2025 wave —
+<strong>KTO, ORPO, GRPO, RLAIF</strong> — refines this further along three axes:
+data shape, memory cost, and signal source.</p>
+
+<h2>2) DPO recap (the baseline)</h2>
+
+<p>DPO assumes a Bradley–Terry preference model and trains directly on triples
+$(x, y_w, y_l)$ where $y_w$ is the chosen response and $y_l$ is the rejected
+one. The loss is:</p>
+
+<div class="eq">
+$\mathcal{L}_{\mathrm{DPO}}
+= -\log\sigma\!\left(
+   \beta \log\dfrac{\pi_\theta(y_w|x)}{\pi_{\mathrm{ref}}(y_w|x)}
+ - \beta \log\dfrac{\pi_\theta(y_l|x)}{\pi_{\mathrm{ref}}(y_l|x)}
+\right)$
+</div>
+
+<p>Two models in memory (policy + frozen reference), $\beta$ controls how far
+the policy can drift from the reference. Pros: simple, stable. Cons: needs a
+strong SFT model to start from, and needs paired preference data.</p>
+
+<h2>3) ORPO — Odds‑Ratio Preference Optimization (Hong et al., 2024)</h2>
+
+<p>ORPO removes the reference model entirely and merges SFT and preference
+optimization into a single loss:</p>
+
+<div class="eq">
+$\mathcal{L}_{\mathrm{ORPO}}
+= \mathcal{L}_{\mathrm{SFT}}(y_w \mid x) + \lambda \cdot \mathcal{L}_{\mathrm{OR}}$
+</div>
+
+<p>where $\mathcal{L}_{\mathrm{OR}}$ is the negative log‑sigmoid of the
+log odds‑ratio between the chosen and rejected responses:</p>
+
+<div class="eq">
+$\mathcal{L}_{\mathrm{OR}} = -\log\sigma\!\left(\log\dfrac{\mathrm{odds}_\theta(y_w|x)}{\mathrm{odds}_\theta(y_l|x)}\right),
+\quad \mathrm{odds}_\theta(y|x) = \dfrac{\pi_\theta(y|x)}{1-\pi_\theta(y|x)}$
+</div>
+
+<p><strong>Why people like it:</strong></p>
+<ul>
+  <li>One model in memory — no frozen reference policy. ~50 % less VRAM than DPO.</li>
+  <li>You can go from a base model directly to an aligned model in a single
+      training run; no separate SFT phase needed.</li>
+  <li>Empirically competitive with DPO on Llama / Mistral 7B benchmarks.</li>
+</ul>
+
+<p><strong>Use when:</strong> you have paired preference data and want the simplest,
+cheapest pipeline. The TRL library exposes <code>ORPOTrainer</code> with the
+same interface as <code>DPOTrainer</code>.</p>
+
+<h2>4) KTO — Kahneman–Tversky Optimization (Ethayarajh et al., 2024)</h2>
+
+<p>KTO removes the requirement for <em>paired</em> preference data. Instead of
+$(x, y_w, y_l)$ triples, you label each $(x, y)$ as simply
+<strong>desirable</strong> or <strong>undesirable</strong> — the kind of data you can
+collect at scale from thumbs‑up / thumbs‑down telemetry.</p>
+
+<p>The loss is shaped after Kahneman–Tversky prospect theory: gains on
+desirable samples and losses on undesirable samples are weighted
+asymmetrically (loss aversion). Practically, KTO works well in real product
+settings where almost no one writes paired comparisons but everyone clicks
+👍 / 👎.</p>
+
+<p><strong>Use when:</strong> your feedback is binary, unpaired, and noisy
+(production telemetry, customer ratings).</p>
+
+<h2>5) GRPO — Group Relative Policy Optimization (DeepSeek, 2024–2025)</h2>
+
+<p>GRPO is the algorithm behind DeepSeek‑R1's reasoning training. It is closer
+to PPO than to DPO in spirit but cuts the value/critic network entirely.</p>
+
+<p>For each prompt $x$ you sample a <strong>group</strong> of $G$ responses
+$\{y_1, \dots, y_G\}$ from the current policy. Each is scored by a reward
+function $r_i$ (which can be a learned reward model, but in practice is
+often a <em>verifiable</em> signal: unit‑test pass/fail, math answer match,
+format check). Compute the advantage as the in‑group standardization:</p>
+
+<div class="eq">
+$A_i = \dfrac{r_i - \mathrm{mean}(r_1,\dots,r_G)}{\mathrm{std}(r_1,\dots,r_G)}$
+</div>
+
+<p>Then optimize a PPO‑style clipped objective with a KL penalty against the
+reference policy, using $A_i$ as the per‑sample advantage. No critic
+network, so memory and stability are much better than PPO.</p>
+
+<p><strong>Why it matters:</strong></p>
+<ul>
+  <li>Uses <em>verifiable rewards</em> (RLVR). For math and code you don't need
+      a reward model at all — graders are deterministic.</li>
+  <li>The “group baseline” replaces the value network with cheap Monte‑Carlo
+      variance reduction.</li>
+  <li>This is what produced DeepSeek‑R1's chain‑of‑thought reasoning gains
+      starting from a base model with essentially no preference labels.</li>
+</ul>
+
+<p><strong>Use when:</strong> your task has a programmatic grader (math, code,
+JSON‑schema compliance, tool‑use success) — i.e. RLVR settings.</p>
+
+<h2>6) RLAIF and Constitutional AI</h2>
+
+<p><strong>RLAIF</strong> (RL from AI Feedback) replaces the human labelers with a
+strong LLM judge. You generate response pairs, ask a judge model
+(GPT‑4‑class, Claude, etc.) to pick the better one against a written
+rubric (the “constitution”), and then run DPO/ORPO/PPO on those AI
+preferences.</p>
+
+<p>This is now the standard way to scale alignment to millions of samples.
+Combine it with active learning (only ask the judge when the policy is
+uncertain) and you have a tight, cheap loop.</p>
+
+<h2>7) Choosing between them</h2>
+
+<table>
+  <tr>
+    <th>Method</th><th>Data shape</th><th>Models in VRAM</th>
+    <th>Reward signal</th><th>Pick when…</th>
+  </tr>
+  <tr>
+    <td>SFT (Ch. 12)</td><td>(x, y) demonstrations</td><td>1</td>
+    <td>—</td><td>You only have demonstrations.</td>
+  </tr>
+  <tr>
+    <td>DPO</td><td>(x, y_w, y_l)</td><td>2 (policy + ref)</td>
+    <td>Implicit (BT model)</td><td>Strong baseline, paired prefs available.</td>
+  </tr>
+  <tr>
+    <td>ORPO</td><td>(x, y_w, y_l)</td><td>1</td>
+    <td>Implicit (odds ratio)</td><td>You want SFT + alignment in one run.</td>
+  </tr>
+  <tr>
+    <td>KTO</td><td>(x, y, 👍/👎)</td><td>2</td>
+    <td>Binary utility</td><td>Production telemetry; no paired data.</td>
+  </tr>
+  <tr>
+    <td>GRPO</td><td>(x) + grader</td><td>2</td>
+    <td>Verifiable / RM</td><td>Programmatic grader (math, code, RLVR).</td>
+  </tr>
+  <tr>
+    <td>RLAIF + DPO/ORPO</td><td>(x) + judge LLM</td><td>2</td>
+    <td>AI judge + rubric</td><td>You can afford a strong judge model.</td>
+  </tr>
+  <tr>
+    <td>PPO‑RLHF</td><td>(x, y_w, y_l) + RM</td><td>3 (policy + ref + critic)</td>
+    <td>Learned RM</td><td>You need full RLHF and have the budget.</td>
+  </tr>
+</table>
+
+<h2>8) A practical recipe for an enterprise project</h2>
+
+<ol>
+  <li><strong>SFT</strong> on your domain demonstrations (LoRA / QLoRA — Ch. 12).</li>
+  <li>Collect production thumbs‑up / thumbs‑down from your pilot
+      (Part I, Ch. 11) — this becomes your KTO training set.</li>
+  <li>For tasks with verifiable graders (data extraction, JSON output, code,
+      SQL correctness), spin up a small <strong>GRPO</strong> loop. The grader is
+      typically &lt; 100 lines of Python.</li>
+  <li>For everything else, run <strong>RLAIF → ORPO</strong> with a written rubric
+      reviewed by your domain experts. ORPO over DPO purely for the VRAM
+      and pipeline simplicity.</li>
+  <li>Re‑measure on the eval suite from your AI lead response document
+      (Part I, Ch. 3). Ship only if the metric you committed to moves.</li>
+</ol>
+
+<div class="tr-warn">
+  <strong>Common pitfall</strong>
+  Alignment methods reward what you measure. If your reward model — or your
+  verifiable grader — has a loophole, the policy will find it (reward
+  hacking). Always hold out an evaluation set and inspect samples by hand
+  every iteration.
+</div>
+
+<h2>9) Reading list</h2>
+<ul>
+  <li>Rafailov et al., 2023 — <em>Direct Preference Optimization</em> (DPO).</li>
+  <li>Hong et al., 2024 — <em>ORPO: Monolithic Preference Optimization without Reference Model</em>.</li>
+  <li>Ethayarajh et al., 2024 — <em>KTO: Model Alignment as Prospect Theoretic Optimization</em>.</li>
+  <li>DeepSeek‑AI, 2024 / 2025 — <em>DeepSeekMath</em> and <em>DeepSeek‑R1</em> (GRPO &amp; RLVR).</li>
+  <li>Bai et al., 2022 — <em>Constitutional AI</em> (RLAIF).</li>
+</ul>
+
+</div>
+<script src="../assets/js/nav.js"></script>
+</body>
+</html>

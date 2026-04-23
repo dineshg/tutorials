@@ -1,0 +1,674 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>GitHub Admin Tutorial: Rulesets, Workflows, Actions, Runners, and Enforcement</title>
+  <style>
+    :root{
+      --bg:#ffffff;
+      --fg:#0f172a;
+      --muted:#475569;
+      --card:#f8fafc;
+      --border:#e2e8f0;
+      --link:#2563eb;
+      --ok:#16a34a;
+      --warn:#d97706;
+      --bad:#dc2626;
+      --codebg:#0b1020;
+      --codefg:#e5e7eb;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      color:var(--fg);
+      background:var(--bg);
+      line-height:1.7;
+    }
+    header{
+      border-bottom:1px solid var(--border);
+      background:linear-gradient(180deg,#fff,#fafafa);
+    }
+    .wrap{max-width:1120px;margin:0 auto;padding:24px}
+    h1{margin:0 0 6px;font-size:28px}
+    .sub{margin:0;color:var(--muted)}
+    nav{
+      margin-top:16px;
+      padding:14px 16px;
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:14px;
+    }
+    nav a{color:var(--link);text-decoration:none}
+    nav a:hover{text-decoration:underline}
+    main{padding:24px 0 64px}
+    section{
+      margin:18px 0;
+      padding:18px;
+      border:1px solid var(--border);
+      border-radius:16px;
+      background:#fff;
+    }
+    h2{margin:0 0 10px;font-size:20px}
+    h3{margin:16px 0 8px;font-size:16px}
+    p{margin:10px 0}
+    ul{margin:8px 0 8px 20px}
+    li{margin:6px 0}
+    .pill{
+      display:inline-block;
+      font-size:12px;
+      padding:2px 10px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:var(--card);
+      color:var(--muted);
+      vertical-align:middle;
+      margin-left:8px;
+    }
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    @media (max-width: 900px){.grid{grid-template-columns:1fr}}
+    .box{
+      padding:12px 14px;
+      border:1px solid var(--border);
+      border-radius:14px;
+      background:var(--card);
+      margin:12px 0;
+    }
+    .ok{border-left:4px solid var(--ok)}
+    .warn{border-left:4px solid var(--warn)}
+    .bad{border-left:4px solid var(--bad)}
+    code, pre{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
+    pre{
+      background:var(--codebg);
+      color:var(--codefg);
+      padding:14px 16px;
+      border-radius:14px;
+      overflow:auto;
+      border:1px solid #121a33;
+      margin:10px 0;
+    }
+    .kbd{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      padding:2px 6px;
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius:8px;
+    }
+    a{color:var(--link)}
+    footer{
+      border-top:1px solid var(--border);
+      background:#fafafa;
+      color:var(--muted);
+    }
+    .tiny{font-size:13px;color:var(--muted)}
+    table{
+      width:100%;
+      border-collapse:collapse;
+      margin:12px 0;
+      font-size:14px;
+    }
+    th, td{
+      border:1px solid var(--border);
+      padding:10px;
+      text-align:left;
+      vertical-align:top;
+    }
+    th{background:var(--card)}
+    .callout{
+      background:#fff;
+      border:1px dashed var(--border);
+      border-radius:14px;
+      padding:12px 14px;
+      margin:12px 0;
+    }
+  </style>
+  <link rel="stylesheet" href="../assets/css/book.css">
+</head>
+
+<body>
+<header>
+  <div class="wrap">
+    <h1>GitHub Admin Tutorial: Rulesets, Actions Workflows, Runners, and Enforcement</h1>
+    <p class="sub">
+      A practical admin guide explaining <strong>what runs</strong>, <strong>who runs it</strong>, <strong>where it runs</strong>,
+      and <strong>how GitHub blocks merges/pushes</strong> when policy is not satisfied.
+    </p>
+
+    <nav aria-label="Table of contents">
+      <strong>Contents</strong>
+      <ul>
+        <li><a href="#mentalmodel">1) The admin mental model (the “plumbing”)</a></li>
+        <li><a href="#git-vs-github">2) Git vs GitHub governance (what each can/can’t enforce)</a></li>
+        <li><a href="#workflows">3) Workflows and actions (how GitHub knows what to run)</a></li>
+        <li><a href="#checks">4) Status checks (what the ruleset actually reads)</a></li>
+        <li><a href="#rulesets">5) Rulesets (what they enforce and why they don’t “run tools”)</a></li>
+        <li><a href="#required-workflows">6) Required checks vs Required workflows (enterprise scale)</a></li>
+        <li><a href="#aqua">7) Aqua/Trivy example (scan workflow + merge enforcement)</a></li>
+        <li><a href="#push-controls">8) Push controls (naming, direct pushes, secrets)</a></li>
+        <li><a href="#runners">9) Runners (hosted vs self-hosted) and runner security</a></li>
+        <li><a href="#enterprise">10) Enterprise-wide patterns (recommended setup)</a></li>
+        <li><a href="#troubleshooting">11) Troubleshooting as an admin</a></li>
+        <li><a href="#templates">12) Copy/paste templates</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section id="mentalmodel">
+    <h2>1) The admin mental model (the “plumbing”) <span class="pill">most important</span></h2>
+
+    <p>
+      Think of GitHub governance like a gated building:
+      <strong>workflows produce evidence</strong> (passes/fails) and <strong>rulesets are the bouncer</strong>.
+      The bouncer does not do the inspection themselves; they only check the evidence before letting someone in.
+    </p>
+
+    <div class="box ok">
+      <p><strong>Four building blocks you should memorize:</strong></p>
+      <ul>
+        <li><strong>Workflow</strong>: the script that defines what to do (run tests, scan code, etc.) and when to do it.</li>
+        <li><strong>Runner</strong>: the machine that executes workflow jobs.</li>
+        <li><strong>Status check</strong>: the recorded outcome from the workflow job (pass/fail) attached to a commit/PR.</li>
+        <li><strong>Ruleset</strong>: the policy gate that blocks merge/push if conditions aren’t met.</li>
+      </ul>
+    </div>
+
+    <div class="box warn">
+      <p><strong>Key clarification:</strong> If you type <code>aqua-trivy-scan</code> into a ruleset, you are not “turning on Aqua”.</p>
+      <p>
+        You are saying: <em>“I expect a check with this name to exist and be passing.”</em>
+        Someone/something must create that check—usually a workflow file in the repository or a GitHub App integration.
+      </p>
+    </div>
+
+    <div class="callout">
+      <p class="tiny"><strong>Admin perspective:</strong> Your job is to ensure (1) the right workflows exist and run on the right events, and (2) the ruleset requires the correct checks and restricts bypass.</p>
+    </div>
+  </section>
+
+  <section id="git-vs-github">
+    <h2>2) Git vs GitHub governance (what each can/can’t enforce)</h2>
+
+    <p>
+      This matters because people often say “Git should block X”. In reality:
+      <strong>Git is the version control system</strong>, while <strong>GitHub is the policy and automation platform</strong>.
+    </p>
+
+    <div class="grid">
+      <div class="box">
+        <h3>Git (alone)</h3>
+        <p>
+          Git controls commits/branches and lets you push/fetch. It can run optional local hooks, but those are not reliable for enforcement
+          because users can bypass them. Git itself does not understand “tests passed” or “scan passed” across a company.
+        </p>
+        <ul>
+          <li>Good for: history, branching, collaboration primitives.</li>
+          <li>Not good for: enterprise policy enforcement of scans/tests.</li>
+        </ul>
+      </div>
+
+      <div class="box">
+        <h3>GitHub (platform)</h3>
+        <p>
+          GitHub adds PRs, reviews, checks, and enforcement. This is where administrators set rules and apply them across repositories.
+        </p>
+        <ul>
+          <li>PR process: reviews, approvals, merge strategies.</li>
+          <li>Automation: GitHub Actions workflows.</li>
+          <li>Governance: rulesets, required checks/workflows, branch restrictions.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="workflows">
+    <h2>3) Workflows and actions (how GitHub knows what to run)</h2>
+
+    <p>
+      GitHub Actions is configured by YAML files stored in the repository at <code>.github/workflows/*.yml</code>.
+      GitHub watches for specific events (like PR updates or pushes). When an event occurs, GitHub checks:
+      “Do I have any workflows whose <code>on:</code> section matches this event?” If yes, those workflows are scheduled to run.
+    </p>
+
+    <div class="box ok">
+      <h3>Workflow anatomy</h3>
+      <table aria-label="Actions glossary">
+        <thead>
+          <tr><th>Term</th><th>Plain English</th><th>Why admins care</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Workflow</strong></td>
+            <td>A set of jobs triggered by events.</td>
+            <td>Defines what will run (or not run) for a PR/push.</td>
+          </tr>
+          <tr>
+            <td><strong>Job</strong></td>
+            <td>Runs on one runner; contains steps.</td>
+            <td>Each job produces a check result; required checks often match job names.</td>
+          </tr>
+          <tr>
+            <td><strong>Step</strong></td>
+            <td>One action call (<code>uses</code>) or one shell command (<code>run</code>).</td>
+            <td>Steps are where tools run; failures here fail the job/check.</td>
+          </tr>
+          <tr>
+            <td><strong>Action</strong></td>
+            <td>Reusable unit referenced via <code>uses: owner/repo@ref</code>.</td>
+            <td>This is how you “bring in” scanners like Trivy/Aqua into workflows.</td>
+          </tr>
+          <tr>
+            <td><strong>Runner</strong></td>
+            <td>The compute that executes the job.</td>
+            <td>Admins control runner availability, security, and who can use them.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="box">
+      <h3>“How is that container/tool found?” (your earlier question)</h3>
+      <p>
+        In a workflow, the line <code>uses: aquasecurity/trivy-action@master</code> is an explicit pointer to an Action repository.
+        GitHub fetches that action and runs it. If the action is Docker-based, its own <code>action.yml</code> defines the container image.
+        If it is composite-based, it runs commands directly on the runner (often installing Trivy and executing it).
+      </p>
+      <p class="tiny">
+        As an admin, you care about pinning versions (avoid floating refs like <code>@master</code> for stricter supply-chain control),
+        and restricting which actions are allowed via org/enterprise policies.
+      </p>
+    </div>
+  </section>
+
+  <section id="checks">
+    <h2>4) Status checks (what the ruleset actually reads)</h2>
+
+    <p>
+      A <strong>status check</strong> is a named pass/fail result attached to a commit and shown on the PR.
+      When a job finishes, GitHub records the result. Rulesets don’t inspect your code; they simply check
+      whether the required check names are present and successful.
+    </p>
+
+    <div class="box ok">
+      <h3>How check names are typically formed</h3>
+      <p>
+        The UI usually shows checks as <strong><code>&lt;workflow name&gt; / &lt;job name&gt;</code></strong>.
+        Example: workflow name <code>aqua-trivy-scan</code> with job name <code>scan</code> → check appears as <code>aqua-trivy-scan / scan</code>.
+      </p>
+    </div>
+
+    <div class="box warn">
+      <h3>Why admins often get “stuck”</h3>
+      <ul>
+        <li>They require <code>aqua-trivy-scan</code> but the real check is <code>aqua-trivy-scan / scan</code>.</li>
+        <li>The workflow doesn’t run on <code>pull_request</code>, so PRs never get that check.</li>
+        <li>Actions are disabled by org policy, so checks never run.</li>
+        <li>The check exists, but the job is “skipped” due to workflow conditions.</li>
+      </ul>
+      <p class="tiny">Admin practice: always read the PR “Checks” list and copy the exact check name to your ruleset.</p>
+    </div>
+  </section>
+
+  <section id="rulesets">
+    <h2>5) Rulesets (what they enforce and why they don’t “run tools”)</h2>
+
+    <p>
+      A ruleset is a server-side enforcement policy attached to branch targets (e.g., <code>main</code> or <code>release/*</code>).
+      It can block pushes, block merges, require approvals, require checks, and more.
+      But it does not run scanners or execute workflows; it only evaluates the recorded states of checks and PR requirements.
+    </p>
+
+    <div class="grid">
+      <div class="box ok">
+        <h3>Rulesets can enforce</h3>
+        <ul>
+          <li>Require PRs (no direct merge)</li>
+          <li>Require approvals / code owners</li>
+          <li>Require status checks to pass</li>
+          <li>Restrict direct pushes / force pushes</li>
+          <li>Restrict branch creation/updates (naming patterns)</li>
+        </ul>
+      </div>
+
+      <div class="box bad">
+        <h3>Rulesets cannot do by themselves</h3>
+        <ul>
+          <li>Install tools like Aqua/Trivy</li>
+          <li>Decide what to run without workflows or required-workflow feature</li>
+          <li>Produce a check result without something executing</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="box">
+      <h3>What this means for your “Aqua enforcement” requirement</h3>
+      <p>
+        You must have a workflow (or required workflow) that performs the Aqua scan and fails if policy is violated.
+        Then the ruleset requires the check to be green before merge.
+      </p>
+    </div>
+  </section>
+
+  <section id="required-workflows">
+    <h2>6) Required checks vs Required workflows (enterprise scale)</h2>
+
+    <p>
+      There are two ways to enforce scanning outcomes with rulesets. They look similar but behave differently:
+    </p>
+
+    <div class="box ok">
+      <h3>Required checks (most common)</h3>
+      <p>
+        You list a check name (e.g., <code>aqua-trivy-scan / scan</code>) and GitHub blocks merges until that check is successful.
+        This relies on each repo (or a shared reusable workflow) producing the same check name.
+      </p>
+      <ul>
+        <li>Pros: simple, widely used, clear in PR UI.</li>
+        <li>Cons: requires standardization; check name drift causes broken merges.</li>
+      </ul>
+    </div>
+
+    <div class="box ok">
+      <h3>Required workflows (better for enterprise governance)</h3>
+      <p>
+        Instead of requiring a “name that must appear”, you require a specific workflow to run.
+        This is useful when you want centralized enforcement and fewer per-repo variations.
+      </p>
+      <ul>
+        <li>Pros: less drift; admins can enforce a standard baseline.</li>
+        <li>Cons: still requires Actions to be enabled and configured for the targeted repos.</li>
+      </ul>
+    </div>
+
+    <div class="box warn">
+      <p>
+        <strong>Practical admin advice:</strong> use required workflows for the baseline (security + compliance),
+        and required checks for additional repo-specific checks.
+      </p>
+    </div>
+  </section>
+
+  <section id="aqua">
+    <h2>7) Aqua/Trivy example (scan workflow + merge enforcement)</h2>
+
+    <p>
+      Below is a concrete “end-to-end” example: the workflow produces a scan check, and the ruleset blocks merges if it fails.
+      The workflow must <strong>fail</strong> when policy is violated; that failure becomes the red status check.
+    </p>
+
+    <h3>7.1 Workflow: run Trivy (Aqua) and fail on HIGH/CRITICAL</h3>
+    <p>Create: <code>.github/workflows/aqua-trivy-scan.yml</code></p>
+
+    <pre><code>name: aqua-trivy-scan
+
+on:
+  pull_request:
+  push:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    name: scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Trivy filesystem scan (fail on HIGH/CRITICAL)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: fs
+          scan-ref: .
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          format: table
+          exit-code: 1</code></pre>
+
+    <div class="box ok">
+      <h3>What check appears in the PR?</h3>
+      <p>Typically: <code>aqua-trivy-scan / scan</code>. That is the string you require in the ruleset.</p>
+    </div>
+
+    <h3>7.2 Ruleset: block merge to main unless the scan check is green</h3>
+    <ul>
+      <li>Create/edit a ruleset targeting branch: <code>main</code>.</li>
+      <li>Enable “Require a pull request”.</li>
+      <li>Enable “Require status checks to pass”.</li>
+      <li>Select <code>aqua-trivy-scan / scan</code> as a required check.</li>
+      <li>Disable direct pushes to <code>main</code> (recommended).</li>
+    </ul>
+
+    <div class="box warn">
+      <p>
+        <strong>Why must the workflow exist?</strong> Because the ruleset only checks for the recorded status check.
+        If there is no workflow producing <code>aqua-trivy-scan / scan</code>, the ruleset has no green check to verify—merge stays blocked.
+      </p>
+    </div>
+  </section>
+
+  <section id="push-controls">
+    <h2>8) Push controls (naming, direct pushes, secrets)</h2>
+
+    <p>
+      “Push-time enforcement” means blocking a push before it lands in the repository history.
+      GitHub can do this strongly for a few categories; for heavier scans, the common pattern is merge gating.
+    </p>
+
+    <div class="grid">
+      <div class="box ok">
+        <h3>Strong push-time controls</h3>
+        <ul>
+          <li><strong>Block direct pushes</strong> to protected branches (via ruleset).</li>
+          <li><strong>Branch naming restrictions</strong> (allow only certain patterns).</li>
+          <li><strong>Secret push protection</strong> (block pushes containing detected secrets).</li>
+        </ul>
+      </div>
+      <div class="box warn">
+        <h3>Why not push-gate everything?</h3>
+        <p>
+          Many scans take time (minutes). Push rejection must be near-instant and synchronous.
+          Therefore, organizations usually enforce “heavy scanning” at merge time (required checks) and keep push-time controls
+          for fast, deterministic rules (naming, protected branches, secret push protection).
+        </p>
+      </div>
+    </div>
+
+    <h3>Branch naming enforcement example</h3>
+    <p>As an admin, you typically allow only patterns like:</p>
+    <pre><code>feature/*
+bugfix/*
+hotfix/*
+chore/*
+release/*</code></pre>
+
+    <p class="tiny">
+      Note: In GitHub, rulesets often work by targeting patterns and restricting create/update. You configure allowed patterns by restricting broadly and
+      explicitly permitting specific patterns (depending on your chosen ruleset approach).
+    </p>
+  </section>
+
+  <section id="runners">
+    <h2>9) Runners (hosted vs self-hosted) and runner security</h2>
+
+    <p>
+      A runner is the execution environment for jobs. If someone can run code on a runner, they effectively execute arbitrary commands in that environment.
+      That’s why runner governance (which repos can use which runners) is a core admin responsibility.
+    </p>
+
+    <div class="grid">
+      <div class="box">
+        <h3>GitHub-hosted runners</h3>
+        <p>
+          GitHub manages them; they are generally ephemeral and reset between jobs. This reduces persistence risk.
+          Great default for most repos and for consistent environments.
+        </p>
+        <ul>
+          <li>Select with: <code>runs-on: ubuntu-latest</code></li>
+          <li>Minimal operational work for admins</li>
+        </ul>
+      </div>
+
+      <div class="box">
+        <h3>Self-hosted runners</h3>
+        <p>
+          You manage the machines (VMs/on-prem/Kubernetes). Choose these when you need strict network access, specialized tools, or compliance controls.
+          However, you must treat them as sensitive and isolate them from untrusted workloads.
+        </p>
+        <ul>
+          <li>Select with labels: <code>runs-on: [self-hosted, linux, x64, secure]</code></li>
+          <li>Admins should use runner groups to restrict usage</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="box bad">
+      <h3>Self-hosted runner security (short, practical)</h3>
+      <ul>
+        <li>Use <strong>runner groups</strong> and allow only selected repos.</li>
+        <li>Keep a “secure” runner group for sensitive repos; do not allow broad access.</li>
+        <li>Prefer <strong>ephemeral runners</strong> (one job → destroy) for high-security posture.</li>
+        <li>Do not allow fork PRs or untrusted code to run on sensitive runners.</li>
+        <li>Minimize secrets exposure; assume workflow-exposed secrets can be exfiltrated.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="enterprise">
+    <h2>10) Enterprise-wide patterns (recommended setup)</h2>
+
+    <p>
+      Enterprise governance works best when you standardize:
+      workflow names, job names, required checks, and who can bypass rulesets.
+      Your goal is to make compliance “boring” and predictable.
+    </p>
+
+    <div class="box ok">
+      <h3>Recommended enterprise baseline</h3>
+      <ul>
+        <li><strong>Enterprise ruleset</strong> applied to protected branches (e.g., <code>main</code>, <code>release/*</code>).</li>
+        <li><strong>Require PR</strong> + <strong>require approvals</strong> (optional based on policy).</li>
+        <li><strong>Require checks</strong>: tests + scan checks (<code>aqua-trivy-scan / scan</code>).</li>
+        <li><strong>Block direct pushes</strong> to protected branches.</li>
+        <li><strong>Branch naming restriction</strong> (limit branch creation/update patterns).</li>
+        <li><strong>Secret push protection</strong> enabled org/enterprise-wide.</li>
+      </ul>
+    </div>
+
+    <div class="box ok">
+      <h3>Scaling tip: required workflows</h3>
+      <p>
+        If you can use required workflows, centralize the baseline scanning workflow so every repo gets the same scanning behavior and check naming.
+        This reduces drift and makes rulesets more stable.
+      </p>
+    </div>
+  </section>
+
+  <section id="troubleshooting">
+    <h2>11) Troubleshooting as an admin</h2>
+
+    <div class="box">
+      <h3>Problem: “Ruleset requires Aqua scan but no check appears”</h3>
+      <ul>
+        <li>Does the repo contain <code>.github/workflows/aqua-trivy-scan.yml</code>?</li>
+        <li>Does it trigger on <code>pull_request</code> (not only on push)?</li>
+        <li>Are GitHub Actions enabled at org/enterprise level for that repo?</li>
+        <li>Does the workflow have conditions that skip it for some branches?</li>
+        <li>Is the job failing before it reports a check (syntax errors, permission errors, runner issues)?</li>
+      </ul>
+    </div>
+
+    <div class="box">
+      <h3>Problem: “I required aqua-trivy-scan but merges still blocked”</h3>
+      <ul>
+        <li>Confirm the exact check name shown on PR (often <code>aqua-trivy-scan / scan</code>).</li>
+        <li>Require the exact name in the ruleset.</li>
+        <li>Ensure the check is not “skipped” or “neutral” for PRs.</li>
+      </ul>
+    </div>
+
+    <div class="box">
+      <h3>Problem: “Self-hosted runner never picks up jobs”</h3>
+      <ul>
+        <li>Is the runner online and registered?</li>
+        <li>Does the workflow use the runner’s labels in <code>runs-on</code>?</li>
+        <li>Is the runner in a runner group that allows this repository?</li>
+        <li>Do org policies restrict runner usage?</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="templates">
+    <h2>12) Copy/paste templates</h2>
+
+    <h3>12.1 Minimal workflow skeleton</h3>
+    <pre><code>name: example-workflow
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  job1:
+    name: job1
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "hello"</code></pre>
+
+    <h3>12.2 Standardized Aqua/Trivy scan workflow (recommended naming)</h3>
+    <pre><code>name: aqua-trivy-scan
+
+on:
+  pull_request:
+  push:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    name: scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: fs
+          scan-ref: .
+          severity: HIGH,CRITICAL
+          exit-code: 1</code></pre>
+
+    <h3>12.3 Self-hosted runner selector</h3>
+    <pre><code>runs-on: [self-hosted, linux, x64, secure-runner]</code></pre>
+
+    <div class="box ok">
+      <p><strong>Final admin summary:</strong></p>
+      <ul>
+        <li>Workflows define what runs (<code>.github/workflows</code>).</li>
+        <li>Runners execute jobs (<code>runs-on</code>).</li>
+        <li>Jobs produce named checks (<code>workflow / job</code>).</li>
+        <li>Rulesets enforce policy by requiring those checks and restricting push/merge behavior.</li>
+      </ul>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p><strong>Done.</strong> This document focuses strictly on GitHub admin concepts: rulesets, workflows/actions, runners, and enforcement behavior.</p>
+    <p class="tiny">If you want, tell me your exact org structure (enterprise → orgs → repos) and the branch patterns you use, and I’ll tailor the “enterprise baseline” section into a concrete rollout plan.</p>
+  </div>
+</footer>
+  <script src="../assets/js/nav.js"></script>
+</body>
+</html>

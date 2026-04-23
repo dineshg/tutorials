@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>After HLD: What the AI Lead Does Next (Working Under an AI Head) — Tutorial</title>
+  <style>
+    :root{
+      /* Light theme (default) */
+      --bg:#f7f9fc;
+      --card:rgba(2,6,23,.03);
+      --border:rgba(2,6,23,.10);
+      --text:#0f172a;
+      --muted:#475569;
+
+      --h1:#0f172a;
+      --h2:#1d4ed8;
+      --h3:#0f766e;
+
+      --callout:rgba(15,118,110,.08);
+      --warn:rgba(225,29,72,.08);
+      --ok:rgba(29,78,216,.08);
+
+      --codebg:#f6f8fa;
+      --codeborder:#d0d7de;
+    }
+
+    @media (prefers-color-scheme: dark){
+      :root{
+        --bg:#0b1220;
+        --card:rgba(255,255,255,.06);
+        --border:rgba(255,255,255,.12);
+        --text:#e6eaf2;
+        --muted:#a8b3cf;
+
+        --h1:#eaf0ff;
+        --h2:#93c5fd;
+        --h3:#5eead4;
+
+        --callout:rgba(94,234,212,.10);
+        --warn:rgba(255,180,180,.12);
+        --ok:rgba(147,197,253,.12);
+
+        --codebg:#1e1e1e;
+        --codeborder:#2d2d2d;
+      }
+    }
+
+    body{
+      margin:0;
+      padding:28px 18px;
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height:1.65;
+      color:var(--text);
+      background:
+        radial-gradient(1200px 600px at 20% -10%, rgba(37,99,235,.12), transparent 60%),
+        radial-gradient(900px 500px at 90% 10%, rgba(15,118,110,.10), transparent 55%),
+        var(--bg);
+    }
+
+    @media (prefers-color-scheme: dark){
+      body{
+        background:
+          radial-gradient(1200px 600px at 20% -10%, rgba(97,175,254,.18), transparent 60%),
+          radial-gradient(900px 500px at 90% 10%, rgba(94,234,212,.12), transparent 55%),
+          var(--bg);
+      }
+    }
+
+    .container{
+      max-width: 1050px;
+      margin:0 auto;
+      padding:44px;
+      border:1px solid var(--border);
+      border-radius:14px;
+      background: linear-gradient(180deg, rgba(255,255,255,.85), rgba(255,255,255,.70));
+      box-shadow: 0 10px 30px rgba(2,6,23,.10);
+    }
+
+    @media (prefers-color-scheme: dark){
+      .container{
+        background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+        box-shadow: 0 10px 30px rgba(0,0,0,.35);
+        backdrop-filter: blur(8px);
+      }
+    }
+
+    h1{
+      margin:0 0 10px;
+      color:var(--h1);
+      letter-spacing:-0.02em;
+      font-size:2.05rem;
+    }
+    .lead{
+      margin:0 0 18px;
+      color:var(--muted);
+      max-width: 105ch;
+    }
+
+    .toc{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin:14px 0 26px;
+      padding:0;
+      list-style:none;
+    }
+    .toc a{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      background:rgba(255,255,255,.06);
+      border:1px solid var(--border);
+      color:var(--text);
+      text-decoration:none;
+      font-size:.92rem;
+    }
+    .toc a:hover{ background: rgba(147,197,253,.12); border-color: rgba(147,197,253,.25); }
+
+    h2{
+      margin-top:44px;
+      padding-top:22px;
+      border-top:1px solid var(--border);
+      color:var(--h2);
+      letter-spacing:-0.01em;
+    }
+    h3{
+      margin:18px 0 10px;
+      color:var(--h3);
+      font-size:1.08rem;
+    }
+
+    p{ margin:0 0 14px; }
+    ul,ol{ margin:0 0 14px; padding-left:22px; }
+    li{ margin:0 0 8px; }
+
+    .card{
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px 18px 6px;
+      margin: 16px 0 20px;
+    }
+
+    .callout{
+      background: var(--callout);
+      border: 1px solid rgba(94,234,212,.22);
+      border-left: 5px solid var(--h3);
+      padding: 14px 16px;
+      border-radius: 12px;
+      margin: 18px 0;
+    }
+    .warn{
+      background: var(--warn);
+      border: 1px solid rgba(255,180,180,.25);
+      border-left: 5px solid rgba(255,180,180,.9);
+      padding: 14px 16px;
+      border-radius: 12px;
+      margin: 18px 0;
+    }
+    .ok{
+      background: var(--ok);
+      border: 1px solid rgba(147,197,253,.20);
+      border-left: 5px solid rgba(147,197,253,.85);
+      padding: 14px 16px;
+      border-radius: 12px;
+      margin: 18px 0;
+    }
+
+    code{
+      background: rgba(2,6,23,.05);
+      padding: 2px 6px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      color: var(--text);
+      font-size: .92em;
+    }
+
+    @media (prefers-color-scheme: dark){
+      code{
+        background: rgba(255,255,255,.07);
+        color: #ffd6ff;
+      }
+    }
+
+    table{
+      width:100%;
+      border-collapse: collapse;
+      margin: 10px 0 18px;
+      overflow:hidden;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.04);
+    }
+    th,td{
+      text-align:left;
+      padding:10px 12px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      vertical-align: top;
+    }
+    th{ color: var(--h1); font-size: .92rem; }
+    td{ color: var(--text); }
+
+    .grid2{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 10px 0 18px;
+    }
+    @media (max-width: 900px){ .grid2{ grid-template-columns: 1fr; } }
+
+    .box{
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+    }
+    .box .k{
+      color: var(--muted);
+      font-size: .82rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 6px;
+    }
+
+    .pill{
+      display:inline-block;
+      padding: 2px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.05);
+      color: var(--text);
+      font-size: .86rem;
+      margin-right: 6px;
+      margin-bottom: 6px;
+    }
+
+    .footer-note{
+      margin-top: 34px;
+      color: var(--muted);
+      border-top: 1px dashed var(--border);
+      padding-top: 18px;
+    }
+  </style>
+  <link rel="stylesheet" href="../assets/css/book.css">
+</head>
+
+<body>
+  <div class="container">
+    <h1>After HLD: What You Do Next (AI Lead Under an AI Head)</h1>
+    <p class="lead">
+      You’ve written the <strong>High-Level Design (HLD)</strong> for the Exec Document Q&amp;A pilot.
+      Now you move from “design” into <strong>alignment → approvals → delivery readiness</strong>.
+      This tutorial explains the next steps, the artifacts you produce, and how to manage upwards when you have an <strong>AI Head</strong>.
+    </p>
+
+    <ul class="toc">
+      <li><a href="#mentalmodel">Mental model</a></li>
+      <li><a href="#sequence">Next sequence</a></li>
+      <li><a href="#artifacts">Artifacts</a></li>
+      <li><a href="#upmanage">Up-managing your AI Head</a></li>
+      <li><a href="#checklist">Checklist</a></li>
+    </ul>
+
+    <h2 id="mentalmodel">1) Mental model: what changes after HLD</h2>
+    <div class="card">
+      <p>
+        HLD is the point where the system becomes <strong>reviewable</strong>.
+        The next phase is about making it <strong>approvable</strong> and <strong>buildable</strong>.
+      </p>
+
+      <div class="grid2">
+        <div class="box">
+          <div class="k">Before (HLD)</div>
+          <ul>
+            <li>Boxes &amp; arrows + trust boundaries</li>
+            <li>Core service choices + alternatives</li>
+            <li>Key risks + mitigations</li>
+            <li>Open questions</li>
+          </ul>
+        </div>
+        <div class="box">
+          <div class="k">After (execution-ready)</div>
+          <ul>
+            <li>Architecture review approval (or approval with conditions)</li>
+            <li>LLD tasks and sprint backlog</li>
+            <li>Provisioning tickets in flight (IAM, networking, data access)</li>
+            <li>Vertical slice milestone defined</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="ok">
+        <strong>Lead-level framing:</strong> after HLD, your job is to remove surprises and unblock dependencies before the team hits them.
+      </div>
+    </div>
+
+    <h2 id="sequence">2) The next sequence (what you do, step-by-step)</h2>
+
+    <div class="card">
+      <h3>Step 1 — Socialise the HLD before formal review (24–72 hours)</h3>
+      <p><span class="pill">Goal</span> Prevent reviewers from seeing the design for the first time in the meeting.</p>
+      <ul>
+        <li>Send HLD to: <strong>Security/IAM</strong>, <strong>Platform (GKE)</strong>, <strong>Data Owner</strong>, <strong>Privacy/Risk</strong>, <strong>EM</strong>.</li>
+        <li>Ask for comments focused on: trust boundaries, data-to-LLM rules, audit logging, access enforcement, retention.</li>
+        <li>Update HLD and produce a short “Open Questions / Decisions Needed” list.</li>
+      </ul>
+      <div class="callout">
+        <strong>Why this matters:</strong> formal review time is scarce. Pre-alignment increases approval likelihood dramatically.
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Step 2 — Run the Architecture Review (and capture approval conditions)</h3>
+      <p><span class="pill">Goal</span> Get “Approved to build pilot” + clear conditions to satisfy.</p>
+      <p><strong>Bring:</strong></p>
+      <ul>
+        <li>HLD (service choices + alternatives + trust boundaries)</li>
+        <li>ADRs (why we chose key patterns)</li>
+        <li>Threat model summary (top risks + mitigations)</li>
+        <li>Draft go-live gates: audit + eval + leakage tests</li>
+      </ul>
+
+      <p><strong>Leave with:</strong></p>
+      <ul>
+        <li>Approval outcome: approved / approved with conditions / rejected</li>
+        <li>Action items, owners, and deadlines</li>
+        <li>Any required controls (e.g., redaction policy, log schema, data classification constraints)</li>
+      </ul>
+
+      <div class="warn">
+        <strong>Enterprise reality:</strong> “approved with conditions” is common. Capture conditions precisely and put them in your tracker.
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Step 3 — Convert HLD into LLD tasks + sprint plan (buildable backlog)</h3>
+      <p><span class="pill">Goal</span> Turn boxes-and-arrows into implementable stories with owners.</p>
+      <p>What you do:</p>
+      <ol>
+        <li>Define epics: Auth/gating, ingestion, retrieval, prompting/citations, audit/observability, eval harness.</li>
+        <li>Define the <strong>vertical slice</strong> milestone (end-to-end thin slice early).</li>
+        <li>Write acceptance criteria (must include safety gates, not just “it works”).</li>
+      </ol>
+
+      <div class="ok">
+        <strong>Vertical slice example:</strong> ingest sample docs → retrieve with corpus/tenant filters → answer with citations → write audit log → run golden set.
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Step 4 — Start provisioning &amp; dependency tickets immediately</h3>
+      <p><span class="pill">Goal</span> Avoid “blocked by approvals” mid-sprint.</p>
+      <ul>
+        <li>GKE: namespaces, workload identity/service accounts, CI/CD access, image scanning gates</li>
+        <li>Data: Cloud SQL instance + private connectivity + roles, GCS buckets + retention/IAM</li>
+        <li>Async: Pub/Sub topics/subscriptions + DLQ, Cloud Tasks queues</li>
+        <li>Security: Secret Manager secrets + KMS keys, logging retention rules</li>
+        <li>Egress: allowlist/proxy approval for the LLM endpoint</li>
+      </ul>
+      <div class="callout">
+        <strong>Lead-level behavior:</strong> treat provisioning as part of delivery, not “someone else will do it.”
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Step 5 — Engineering kickoff (internal) to start delivery</h3>
+      <p><span class="pill">Goal</span> Align the team on “what good looks like” and reduce rework.</p>
+      <ul>
+        <li>Confirm vertical slice scope</li>
+        <li>Agree API contracts (e.g., bootstrap identity, query endpoint)</li>
+        <li>Agree evaluation gates (golden set baseline + regression runs)</li>
+        <li>Agree “Definition of Done” includes logs/tests/dashboards</li>
+      </ul>
+    </div>
+
+    <h2 id="artifacts">3) Artifacts you produce after HLD (practical set)</h2>
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>Artifact</th>
+            <th>Purpose</th>
+            <th>What it contains (minimum)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Architecture Review Pack</strong></td>
+            <td>Approval to build</td>
+            <td>Trust boundaries, identity/access model, data flows, service choices, risks+mitigations</td>
+          </tr>
+          <tr>
+            <td><strong>ADR set</strong></td>
+            <td>Record “why”</td>
+            <td>Cited-only, tenant isolation, corpus gate, model boundary, eval gates</td>
+          </tr>
+          <tr>
+            <td><strong>Approval Conditions Tracker</strong></td>
+            <td>Make conditions actionable</td>
+            <td>Condition, owner, due date, evidence required, status</td>
+          </tr>
+          <tr>
+            <td><strong>Sprint Backlog</strong></td>
+            <td>Make work buildable</td>
+            <td>Epics/stories, owners, acceptance criteria, dependencies</td>
+          </tr>
+          <tr>
+            <td><strong>Dependency/Provisioning Tickets</strong></td>
+            <td>Unblock infra</td>
+            <td>IAM, networking, secrets, DB, buckets, topics, egress</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 id="upmanage">4) Up-managing your AI Head (your manager)</h2>
+    <div class="card">
+      <p>
+        Your AI Head doesn’t need every detail. They need confidence that risks are controlled and delivery is on track.
+        The best tool is a short, consistent weekly update.
+      </p>
+
+      <div class="ok">
+        <strong>Weekly “AI Lead pack” (1 page):</strong>
+        <ul>
+          <li><strong>Status:</strong> what shipped, what’s demoable</li>
+          <li><strong>Approvals:</strong> what’s done, what’s blocked, who owns it</li>
+          <li><strong>Top 3 risks:</strong> and mitigation plan</li>
+          <li><strong>Decisions/escalations needed:</strong> exactly what you need from them</li>
+          <li><strong>Next week plan:</strong> vertical slice milestones</li>
+        </ul>
+      </div>
+
+      <div class="warn">
+        <strong>Lead-level signal:</strong> don’t bring problems without options.
+        Bring “risk + options + recommended path + what you need from leadership.”
+      </div>
+    </div>
+
+    <h2 id="checklist">5) Quick checklist (post-HLD)</h2>
+    <div class="card">
+      <ul>
+        <li>☐ HLD socialised with Security/Platform/Data Owner/Privacy before review</li>
+        <li>☐ Architecture review booked and pack sent ahead of time</li>
+        <li>☐ ADRs drafted for key decisions</li>
+        <li>☐ Review outcome captured with explicit conditions and owners</li>
+        <li>☐ Backlog created with vertical slice milestone and acceptance criteria</li>
+        <li>☐ Provisioning tickets raised (IAM, DB, storage, pubsub/tasks, secrets, egress)</li>
+        <li>☐ Team engineering kickoff completed</li>
+        <li>☐ Weekly AI Head update pack started</li>
+      </ul>
+
+      <div class="callout">
+        <strong>Outcome:</strong> you exit the “design phase” with approvals in motion, engineering unblocked, and stakeholders aligned.
+      </div>
+    </div>
+
+    <p class="footer-note">
+      If you want, I can generate a concrete “Approval Conditions Tracker” table and a sprint backlog outline for the first two sprints
+      of this exact Doc Q&amp;A pilot (vertical slice first).
+    </p>
+  </div>
+  <script src="../assets/js/nav.js"></script>
+</body>
+</html>

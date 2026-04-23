@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AI Lead Response Doc: Executive Document Q&A Pilot (Cited, Secure, Measurable)</title>
+  <style>
+    :root{
+      /* Light theme (default) */
+      --bg:#f7f9fc;
+      --card:rgba(2,6,23,.03);
+      --border:rgba(2,6,23,.10);
+      --text:#0f172a;
+      --muted:#475569;
+
+      --h1:#0f172a;
+      --h2:#1d4ed8;
+      --h3:#0f766e;
+
+      --callout:rgba(15,118,110,.08);
+      --warn:rgba(225,29,72,.08);
+      --ok:rgba(29,78,216,.08);
+
+      --codebg:#f6f8fa;
+      --codeborder:#d0d7de;
+    }
+
+    @media (prefers-color-scheme: dark){
+      :root{
+        --bg:#0b1220;
+        --card:rgba(255,255,255,.06);
+        --border:rgba(255,255,255,.12);
+        --text:#e6eaf2;
+        --muted:#a8b3cf;
+
+        --h1:#eaf0ff;
+        --h2:#93c5fd;
+        --h3:#5eead4;
+
+        --callout:rgba(94,234,212,.10);
+        --warn:rgba(255,180,180,.12);
+        --ok:rgba(147,197,253,.12);
+
+        --codebg:#1e1e1e;
+        --codeborder:#2d2d2d;
+      }
+    }
+
+    body{
+      margin:0;
+      padding:28px 18px;
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height:1.65;
+      color:var(--text);
+      background:
+        radial-gradient(1200px 600px at 20% -10%, rgba(37,99,235,.12), transparent 60%),
+        radial-gradient(900px 500px at 90% 10%, rgba(15,118,110,.10), transparent 55%),
+        var(--bg);
+    }
+
+    @media (prefers-color-scheme: dark){
+      body{
+        background:
+          radial-gradient(1200px 600px at 20% -10%, rgba(97,175,254,.18), transparent 60%),
+          radial-gradient(900px 500px at 90% 10%, rgba(94,234,212,.12), transparent 55%),
+          var(--bg);
+      }
+    }
+
+    .container{
+      max-width: 1040px;
+      margin:0 auto;
+      padding:44px;
+      border:1px solid var(--border);
+      border-radius:14px;
+      background: linear-gradient(180deg, rgba(255,255,255,.85), rgba(255,255,255,.70));
+      box-shadow: 0 10px 30px rgba(2,6,23,.10);
+    }
+
+    @media (prefers-color-scheme: dark){
+      .container{
+        background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+        box-shadow: 0 10px 30px rgba(0,0,0,.35);
+        backdrop-filter: blur(8px);
+      }
+    }
+
+    h1{
+      margin:0 0 10px;
+      color:var(--h1);
+      letter-spacing:-0.02em;
+      font-size:2.05rem;
+    }
+    .lead{
+      margin:0 0 18px;
+      color:var(--muted);
+      max-width: 96ch;
+    }
+
+    .meta{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 16px 0 8px;
+    }
+    @media (max-width: 820px){ .meta{ grid-template-columns: 1fr; } }
+
+    .box{
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+    }
+    .box .k{
+      color: var(--muted);
+      font-size: .82rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 6px;
+    }
+
+    .toc{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin:14px 0 26px;
+      padding:0;
+      list-style:none;
+    }
+    .toc a{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      background:rgba(255,255,255,.06);
+      border:1px solid var(--border);
+      color:var(--text);
+      text-decoration:none;
+      font-size:.92rem;
+    }
+    .toc a:hover{ background: rgba(147,197,253,.12); border-color: rgba(147,197,253,.25); }
+
+    h2{
+      margin-top:44px;
+      padding-top:22px;
+      border-top:1px solid var(--border);
+      color:var(--h2);
+      letter-spacing:-0.01em;
+    }
+    h3{
+      margin:18px 0 10px;
+      color:var(--h3);
+      font-size:1.08rem;
+    }
+
+    p{ margin:0 0 14px; }
+    ul,ol{ margin:0 0 14px; padding-left:22px; }
+    li{ margin:0 0 8px; }
+
+    .card{
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px 18px 6px;
+      margin: 16px 0 20px;
+    }
+    .callout{
+      background: var(--callout);
+      border: 1px solid rgba(94,234,212,.22);
+      border-left: 5px solid var(--h3);
+      padding: 14px 16px;
+      border-radius: 12px;
+      margin: 18px 0;
+    }
+    .warn{
+      background: var(--warn);
+      border: 1px solid rgba(255,180,180,.25);
+      border-left: 5px solid rgba(255,180,180,.9);
+      padding: 14px 16px;
+      border-radius: 12px;
+      margin: 18px 0;
+    }
+    .ok{
+      background: var(--ok);
+      border: 1px solid rgba(147,197,253,.20);
+      border-left: 5px solid rgba(147,197,253,.85);
+      padding: 14px 16px;
+      border-radius: 12px;
+      margin: 18px 0;
+    }
+
+    code{
+      background: rgba(2,6,23,.05);
+      padding: 2px 6px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      color: var(--text);
+      font-size: .92em;
+    }
+    pre{
+      background-color: var(--codebg);
+      color: var(--text);
+      padding: 14px 16px;
+      border-radius: 12px;
+      overflow-x: auto;
+      border: 1px solid var(--codeborder);
+      margin: 10px 0 18px;
+      box-shadow: 0 1px 2px rgba(2,6,23,.10);
+      font-size: .92em;
+    }
+
+    @media (prefers-color-scheme: dark){
+      code{
+        background: rgba(255,255,255,.07);
+        color: #ffd6ff;
+      }
+      pre{
+        color: #d4d4d4;
+        box-shadow: 0 1px 2px rgba(0,0,0,.20);
+      }
+    }
+
+    table{
+      width:100%;
+      border-collapse: collapse;
+      margin: 10px 0 18px;
+      overflow:hidden;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.04);
+    }
+    th,td{
+      text-align:left;
+      padding:10px 12px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      vertical-align: top;
+    }
+    th{ color: var(--h1); font-size: .92rem; }
+    td{ color: var(--text); }
+    .small{ color: var(--muted); font-size: .95rem; }
+
+    .footer-note{
+      margin-top: 34px;
+      color: var(--muted);
+      border-top: 1px dashed var(--border);
+      padding-top: 18px;
+    }
+  </style>
+  <link rel="stylesheet" href="../assets/css/book.css">
+</head>
+
+<body>
+  <div class="container">
+    <h1>AI Lead Response Doc</h1>
+    <p class="lead">
+      This document is the typical <strong>Lead AI Engineer</strong> output after receiving a business intake brief.
+      It turns “we want an LLM tool for docs” into a delivery-ready plan: scope, safety, evaluation, architecture, and a pilot roadmap.
+      The example context is an <strong>Executive Document Q&amp;A</strong> assistant (meeting notes/packs) that returns <strong>cited answers</strong>.
+    </p>
+
+    <div class="meta">
+      <div class="box">
+        <div class="k">Initiative</div>
+        Executive Document Intelligence (Meeting Notes/Packs) — Pilot
+      </div>
+      <div class="box">
+        <div class="k">Owner</div>
+        Lead AI Engineer (delivery) + Business Owner (outcome/adoption)
+      </div>
+      <div class="box">
+        <div class="k">Target Users</div>
+        Execs + EAs (Executive Assistants); optionally Ops leadership
+      </div>
+      <div class="box">
+        <div class="k">Core Promise</div>
+        Fast, grounded answers <em>with citations</em> over an approved corpus, with strict access control.
+      </div>
+    </div>
+
+    <ul class="toc">
+      <li><a href="#summary">Summary</a></li>
+      <li><a href="#workflow">Target workflow</a></li>
+      <li><a href="#scope">Pilot scope</a></li>
+      <li><a href="#success">Success metrics</a></li>
+      <li><a href="#safety">Safety &amp; controls</a></li>
+      <li><a href="#architecture">Architecture</a></li>
+      <li><a href="#eval">Evaluation plan</a></li>
+      <li><a href="#ops">Operations</a></li>
+      <li><a href="#plan">Team plan &amp; timeline</a></li>
+      <li><a href="#risks">Risks &amp; mitigations</a></li>
+      <li><a href="#asks">Dependencies / asks</a></li>
+    </ul>
+
+    <h2 id="summary">1) Executive summary</h2>
+    <div class="card">
+      <p>
+        We will deliver a pilot assistant that answers natural-language questions over <strong>approved meeting notes/packs</strong>
+        and returns <strong>grounded answers with citations</strong> (source link + excerpt; timestamp if transcript exists).
+      </p>
+      <p>
+        The pilot is intentionally narrow: one controlled corpus, one exec cohort, and a small set of question patterns.
+        This ensures we can meet enterprise requirements: access control, auditability, safe failure behavior, and measurable impact.
+      </p>
+      <div class="ok">
+        <strong>Pilot objective:</strong> reduce EA time spent searching/compiling answers, while keeping answers provably grounded and access-controlled.
+      </div>
+    </div>
+
+    <h2 id="workflow">2) Target workflow (validated with EA + Ops)</h2>
+    <div class="card">
+      <h3>Why EA and Ops are first-class stakeholders</h3>
+      <ul>
+        <li><strong>EA (Executive Assistant):</strong> owns the exec workflow (meeting packs, minutes, action logs). Defines “usable output” and proof format.</li>
+        <li><strong>Ops (Operations):</strong> cares about speed, reliability, and failure tolerance. Defines “what goes wrong if the answer is wrong.”</li>
+      </ul>
+
+      <h3>Primary user story (pilot)</h3>
+      <p>
+        “As an executive (or EA supporting an exec), I ask: <em>What did Chandima mention about no meeting on 1 Dec?</em>
+        and receive a short answer plus citations to the exact source text.”
+      </p>
+
+      <h3>Response contract</h3>
+      <ul>
+        <li><strong>Answer:</strong> 2–6 sentences</li>
+        <li><strong>Citations:</strong> document title + link + quoted excerpt (and timestamp if applicable)</li>
+        <li><strong>Safe failure:</strong> if evidence isn’t found, respond “not found” and suggest next-best queries</li>
+      </ul>
+
+      <div class="callout">
+        <strong>EA acceptance test:</strong> “I can copy/paste the answer into a briefing email and it includes proof.”<br/>
+        <strong>Ops acceptance test:</strong> “It doesn’t guess when evidence is missing; it fails safely.”
+      </div>
+    </div>
+
+    <h2 id="scope">3) Pilot scope (smallest safe slice)</h2>
+    <div class="card">
+      <h3>In scope</h3>
+      <ul>
+        <li>One exec cohort (e.g., 5–10 execs + their EAs)</li>
+        <li>One approved corpus (e.g., one recurring meeting series)</li>
+        <li>Question patterns:
+          <ul>
+            <li>“Who said what, when” (speaker + date + topic)</li>
+            <li>“What was agreed / actioned” (initially via cited retrieval; structured extraction later)</li>
+          </ul>
+        </li>
+        <li>Audited Q&amp;A with citations</li>
+      </ul>
+
+      <h3>Out of scope (pilot)</h3>
+      <ul>
+        <li>Searching all enterprise docs across all BUs</li>
+        <li>Write-back actions (auto-email, auto-ticketing)</li>
+        <li>Customer PII-heavy corpora (unless explicitly approved for a later phase)</li>
+      </ul>
+
+      <div class="warn">
+        <strong>Scope guardrail:</strong> “All docs in the company” is a phase-2 ambition, not a phase-1 pilot.
+      </div>
+    </div>
+
+    <h2 id="success">4) Success metrics (business + quality + operations)</h2>
+    <div class="card">
+      <h3>Business impact</h3>
+      <ul>
+        <li>EA time saved per exec per week (baseline + post-pilot measurement)</li>
+        <li>Time-to-answer for top recurring questions (before/after)</li>
+        <li>User adoption: weekly active users in pilot group</li>
+      </ul>
+
+      <h3>Quality</h3>
+      <ul>
+        <li><strong>Citation correctness:</strong> cited doc/chunk actually supports the answer</li>
+        <li><strong>Groundedness:</strong> answer statements are supported by retrieved context</li>
+        <li><strong>Refusal correctness:</strong> says “not found” when evidence is insufficient</li>
+      </ul>
+
+      <h3>Operational</h3>
+      <ul>
+        <li>Latency P50/P95 (target defined with business; typical: a few seconds)</li>
+        <li>Error rate and dependency health (retrieval, model, ingestion freshness)</li>
+        <li>Cost per question (LLM tokens + retrieval cost)</li>
+      </ul>
+    </div>
+
+    <h2 id="safety">5) Safety &amp; controls (enterprise non-negotiables)</h2>
+    <div class="card">
+      <h3>Access control (who can see what)</h3>
+      <ul>
+        <li>Users authenticate via SSO (e.g., Google Workspace)</li>
+        <li>Group gate: only users in an approved org group can access the tool</li>
+        <li>Corpus gate: retrieval is limited to document sets approved by data owners</li>
+        <li>Per-request audit log: who asked, what sources were used, and when</li>
+      </ul>
+
+      <h3>Model safety behavior</h3>
+      <ul>
+        <li>Require citations for all factual claims</li>
+        <li>Refuse if insufficient evidence</li>
+        <li>Minimize context sent to the LLM (only retrieved snippets)</li>
+      </ul>
+
+      <div class="callout">
+        <strong>Principle:</strong> “If you can’t cite it, you can’t say it.”
+      </div>
+    </div>
+
+    <h2 id="architecture">6) Architecture (high level)</h2>
+    <div class="card">
+      <h3>Ingestion path</h3>
+      <ol>
+        <li>Fetch approved documents/transcripts</li>
+        <li>Extract canonical text + metadata (meeting date, title, participants/speaker if available, source link)</li>
+        <li>Store canonical text + metadata as system-of-record</li>
+        <li>Build retrieval index that supports semantic search + strict filters (date/speaker/corpus)</li>
+      </ol>
+
+      <h3>Query path</h3>
+      <ol>
+        <li>User asks a question</li>
+        <li>Verify identity and authorization (group + corpus)</li>
+        <li>Retrieve relevant chunks (with strict filters)</li>
+        <li>Generate answer using retrieved context only</li>
+        <li>Return answer + citations; write audit log</li>
+      </ol>
+
+      <pre>
+User → (SSO) → API → retrieve (filtered) → LLM (context only) → answer + citations → audit log
+      </pre>
+    </div>
+
+    <h2 id="eval">7) Evaluation plan (how we avoid “demo success”)</h2>
+    <div class="card">
+      <h3>Golden set (week 1)</h3>
+      <ul>
+        <li>Collect 30–50 real questions from EAs/Ops</li>
+        <li>For each question, identify expected source doc(s)</li>
+        <li>Define scoring rubric:
+          <ul>
+            <li>citation correctness</li>
+            <li>groundedness</li>
+            <li>refusal correctness</li>
+          </ul>
+        </li>
+      </ul>
+
+      <h3>Release gates</h3>
+      <ul>
+        <li>Minimum citation correctness on sampled set</li>
+        <li>No cross-user/cross-corpus leakage in tests</li>
+        <li>Acceptable latency/cost for pilot cohort</li>
+      </ul>
+
+      <div class="ok">
+        <strong>Why this matters:</strong> enterprises ship what they can measure and defend.
+        “Looks good in a demo” is not a release criterion.
+      </div>
+    </div>
+
+    <h2 id="ops">8) Operations &amp; support model</h2>
+    <div class="card">
+      <h3>Observability</h3>
+      <ul>
+        <li>Metrics: latency, error rate, token usage, retrieval hit rate</li>
+        <li>Logs: request audit trail, citation trace, dependency errors</li>
+        <li>Alerting: dependency outages, cost anomalies, ingestion failures</li>
+      </ul>
+
+      <h3>Runbook essentials</h3>
+      <ul>
+        <li>How to diagnose “wrong answer” reports (check citations + retrieved chunks)</li>
+        <li>How to handle “not found” (ingestion freshness, metadata coverage)</li>
+        <li>How to disable a corpus quickly if misconfigured</li>
+      </ul>
+    </div>
+
+    <h2 id="plan">9) Team plan &amp; timeline (example for a 5-person team)</h2>
+    <div class="card">
+      <h3>Work lanes</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Lane</th>
+            <th>Owner</th>
+            <th>Key deliverables</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Ingestion &amp; metadata</td>
+            <td>2 engineers</td>
+            <td>connectors, extraction, incremental sync, canonical schema</td>
+          </tr>
+          <tr>
+            <td>Backend &amp; security</td>
+            <td>2 engineers</td>
+            <td>SSO validation, group/corpus gating, audit logs, API endpoints</td>
+          </tr>
+          <tr>
+            <td>Retrieval/LLM &amp; eval</td>
+            <td>1 engineer + AI lead</td>
+            <td>chunking, filters, prompting, citation formatting, eval harness</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Milestone sketch</h3>
+      <ul>
+        <li><strong>Week 1:</strong> stakeholder workshop (EA/Ops), golden set, schema, first ingestion slice</li>
+        <li><strong>Week 2:</strong> retrieval + citations prototype, baseline eval</li>
+        <li><strong>Week 3–4:</strong> harden access control, improve retrieval/prompting, expand golden set</li>
+        <li><strong>Week 5–6:</strong> pilot rollout, monitoring, feedback loop, measured outcomes</li>
+      </ul>
+    </div>
+
+    <h2 id="risks">10) Risks &amp; mitigations</h2>
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>Risk</th>
+            <th>Why it matters</th>
+            <th>Mitigation</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Cross-user / cross-corpus leakage</td>
+            <td>Severe privacy breach</td>
+            <td>Strict gating + tests + audit logs; limit pilot corpus</td>
+          </tr>
+          <tr>
+            <td>Hallucinated answers</td>
+            <td>Loss of trust; governance risk</td>
+            <td>Citations required; refuse if insufficient evidence; eval gates</td>
+          </tr>
+          <tr>
+            <td>Sensitive data exposure to model provider</td>
+            <td>Compliance &amp; privacy exposure</td>
+            <td>Send minimal retrieved context; redaction rules; approved corpora only</td>
+          </tr>
+          <tr>
+            <td>Low adoption</td>
+            <td>“Demo trap”</td>
+            <td>Co-design with EA; output format matches briefings; weekly feedback loop</td>
+          </tr>
+          <tr>
+            <td>Source documents are messy</td>
+            <td>Retrieval fails without metadata</td>
+            <td>Define canonical schema; enrich metadata; iterate on chunking</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 id="asks">11) Dependencies / asks (what I need to proceed)</h2>
+    <div class="card">
+      <ul>
+        <li>Named pilot cohort + business owner confirmation</li>
+        <li>Document source list + data owner sign-off for pilot corpus</li>
+        <li>Security/IAM contacts to confirm approved patterns</li>
+        <li>EA and Ops representatives for weekly co-design and acceptance testing</li>
+        <li>Agreement on pilot success metrics and how we will measure them</li>
+      </ul>
+
+      <div class="ok">
+        <strong>Next step:</strong> schedule a 60–90 minute workshop with the EA rep + Ops rep + Business owner to finalize:
+        (1) top questions, (2) “proof format,” (3) corpus boundaries, and (4) baseline measurement plan.
+      </div>
+    </div>
+
+    <p class="footer-note">
+      Optional appendices you can add for real enterprise rollout:
+      A) Data classification &amp; retention rules, B) release checklist, C) incident response plan, D) cost/FinOps policy.
+    </p>
+  </div>
+  <script src="../assets/js/nav.js"></script>
+</body>
+</html>

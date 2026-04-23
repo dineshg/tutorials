@@ -1,0 +1,847 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ANN FFN Tutorial — Part 2: Training, Evaluation, Debugging, Synthetic Regression</title>
+
+  <!-- Light theme + high-contrast code blocks -->
+  <style>
+    :root{
+      --bg:#ffffff;
+      --panel:#f6f8fa;
+      --text:#111827;
+      --muted:#4b5563;
+      --border:#e5e7eb;
+      --accent:#2563eb;
+      --accent2:#16a34a;
+      --shadow: 0 10px 30px rgba(0,0,0,.06);
+      --radius: 14px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+
+      /* Code (light, readable) */
+      --code-bg: #f8fafc;
+      --code-border: #e2e8f0;
+      --code-text: #0f172a;
+      --code-muted: #475569;
+      --btn-bg: #ffffff;
+      --btn-border: #cbd5e1;
+      --btn-text: #0f172a;
+    }
+    html,body{background:var(--bg); color:var(--text); font-family:var(--sans); margin:0;}
+    a{color:var(--accent); text-decoration:none;}
+    a:hover{text-decoration:underline;}
+    .wrap{max-width:1020px; margin:0 auto; padding:28px 18px 80px;}
+    header{
+      border:1px solid var(--border);
+      background: linear-gradient(180deg, #ffffff, #fbfdff);
+      box-shadow: var(--shadow);
+      border-radius: var(--radius);
+      padding: 22px 22px 16px;
+    }
+    header h1{margin:0 0 6px; font-size: 28px; letter-spacing:-0.02em;}
+    header p{margin:0; color:var(--muted); line-height:1.5;}
+    .chips{margin-top:14px; display:flex; flex-wrap:wrap; gap:8px;}
+    .chip{
+      font-size:13px; color:#0f172a;
+      border:1px solid var(--border);
+      background: #fff;
+      padding:6px 10px;
+      border-radius: 999px;
+    }
+    nav{
+      margin-top:18px;
+      padding-top:14px;
+      border-top:1px solid var(--border);
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px 14px;
+      font-size:14px;
+    }
+    nav a{color:#0f172a;}
+    section{
+      margin-top:18px;
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      background:#fff;
+      box-shadow: var(--shadow);
+      padding: 18px 18px 10px;
+    }
+    section h2{margin:0 0 10px; font-size:20px; letter-spacing:-0.01em;}
+    section h3{margin:16px 0 8px; font-size:16px;}
+    p,li{line-height:1.7; color:#111827;}
+    .muted{color:var(--muted);}
+    .callout{
+      background: var(--panel);
+      border:1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 12px;
+      margin: 12px 0;
+    }
+    .grid{display:grid; grid-template-columns: 1fr; gap: 12px;}
+    @media(min-width: 900px){
+      .grid.two{grid-template-columns: 1fr 1fr;}
+      .grid.three{grid-template-columns: 1fr 1fr 1fr;}
+    }
+    figure{
+      margin: 12px 0;
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius: 14px;
+      overflow:hidden;
+    }
+    figure img{width:100%; height:auto; display:block; background:#fff;}
+    figcaption{
+      padding: 10px 12px;
+      font-size: 13px;
+      color: var(--muted);
+      border-top:1px solid var(--border);
+    }
+    .pill{
+      display:inline-block;
+      background:#eef2ff;
+      color:#1e3a8a;
+      border:1px solid #e0e7ff;
+      padding:2px 8px;
+      border-radius:999px;
+      font-size:12px;
+      vertical-align:middle;
+    }
+    .hr{height:1px; background:var(--border); margin:12px 0;}
+    .small{font-size:13px;}
+
+    /* Inline code */
+    :not(pre) > code{
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      padding: 2px 6px;
+      border-radius: 8px;
+      font-family: var(--mono);
+      font-size: 0.95em;
+      color: #0f172a;
+      white-space: nowrap;
+    }
+
+    /* Code block wrapper with header + copy button */
+    .codewrap{
+      border: 1px solid var(--code-border);
+      border-radius: 14px;
+      overflow: hidden;
+      background: var(--code-bg);
+      margin: 12px 0;
+    }
+    .codebar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--code-border);
+      background: #ffffff;
+    }
+    .codebar .label{
+      font-size: 12px;
+      color: var(--code-muted);
+      font-family: var(--mono);
+    }
+    .codebar button{
+      font-size:12px;
+      border: 1px solid var(--btn-border);
+      background: var(--btn-bg);
+      color: var(--btn-text);
+      padding: 6px 10px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    .codebar button:hover{border-color:#94a3b8;}
+    pre[class*="language-"]{
+      margin:0;
+      background: var(--code-bg) !important;
+      color: var(--code-text) !important;
+      padding: 14px 14px;
+      overflow:auto;
+      line-height: 1.6;
+      font-size: 13px;
+    }
+    code[class*="language-"]{
+      font-family: var(--mono);
+      color: var(--code-text) !important;
+      text-shadow: none !important;
+    }
+  </style>
+
+  <!-- Prism syntax highlighting (light) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-python.min.js"></script>
+
+  <!-- MathJax for equations -->
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['\\(','\\)'], ['$', '$']],
+        displayMath: [['\\[','\\]']]
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+  <!-- Copy buttons -->
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      document.querySelectorAll(".codewrap").forEach(wrap => {
+        const btn = wrap.querySelector("button[data-copy]");
+        const pre = wrap.querySelector("pre");
+        if (!btn || !pre) return;
+        btn.addEventListener("click", async () => {
+          try{
+            await navigator.clipboard.writeText(pre.innerText);
+            const old = btn.textContent;
+            btn.textContent = "Copied!";
+            setTimeout(()=>btn.textContent = old, 900);
+          }catch(e){
+            btn.textContent = "Copy failed";
+            setTimeout(()=>btn.textContent = "Copy", 900);
+          }
+        });
+      });
+    });
+  </script>
+  <link rel="stylesheet" href="../assets/css/book.css">
+</head>
+
+<body>
+  <div class="wrap">
+    <header>
+      <h1>ANN FFN Tutorial — Part 2</h1>
+      <p>
+        <span class="pill">Training at scale</span> with mini-batches,
+        <span class="pill">evaluation</span> (accuracy + confusion matrix),
+        and a <span class="pill">synthetic regression</span> example for visual intuition.
+      </p>
+
+      <div class="chips">
+        <span class="chip">Mini-batch gradient descent</span>
+        <span class="chip">Argmax over logits</span>
+        <span class="chip">Accuracy over DataLoader</span>
+        <span class="chip">GPU device placement</span>
+        <span class="chip">Confusion matrix + error analysis</span>
+        <span class="chip">Synthetic data + surface fitting</span>
+      </div>
+
+      <nav>
+        <a href="#mbgd">Mini-batches & why they work</a>
+        <a href="#pipeline">Data pipeline & transforms</a>
+        <a href="#trainloop">Training loop patterns</a>
+        <a href="#accuracy">Accuracy with batches</a>
+        <a href="#argmax">Logits, softmax, argmax</a>
+        <a href="#gpu">GPU: keeping tensors on one device</a>
+        <a href="#confmat">Confusion matrix & mistakes</a>
+        <a href="#synthetic">Synthetic regression surface</a>
+        <a href="#tuning">Hyperparameter tuning mindset</a>
+        <a href="#credits">Online plots used</a>
+      </nav>
+    </header>
+
+    <section id="mbgd">
+      <h2>1) Mini-batches: the practical way to train on large datasets</h2>
+
+      <p>
+        Most training objectives are averages over a dataset. If your dataset has \(N\) samples and per-sample loss \(\ell_i(\theta)\),
+        the empirical risk is:
+      </p>
+      <p>
+        \[
+          L(\theta) = \frac{1}{N}\sum_{i=1}^N \ell_i(\theta)
+        \]
+      </p>
+
+      <p>
+        Computing \(\nabla_\theta L(\theta)\) over all \(N\) samples every step is expensive. Instead, we use a mini-batch \(B\)
+        (a small random subset) and approximate the loss and gradient:
+      </p>
+      <p>
+        \[
+          \widehat{L}_B(\theta) = \frac{1}{|B|}\sum_{i\in B}\ell_i(\theta),
+          \quad
+          \nabla_\theta \widehat{L}_B(\theta) \approx \nabla_\theta L(\theta)
+        \]
+      </p>
+
+      <div class="callout">
+        <p style="margin:0;">
+          <b>Intuition:</b> if batches are shuffled, each batch is a “representative sample” of the dataset.
+          Over many steps, you still see the whole dataset, but each update is much cheaper.
+        </p>
+      </div>
+
+      <figure>
+        <img alt="Optimizer animations (SGD and friends)" src="https://upload.wikimedia.org/wikipedia/commons/7/7c/Optimizer_Animations.gif">
+        <figcaption>
+          Optimizer behavior (Wikimedia Commons): <a href="https://commons.wikimedia.org/wiki/File:Optimizer_Animations.gif" target="_blank" rel="noopener">Optimizer_Animations.gif</a>
+        </figcaption>
+      </figure>
+    </section>
+
+    <section id="pipeline">
+      <h2>2) Data pipeline: datasets, transforms, and DataLoader</h2>
+
+      <p>
+        A clean PyTorch pipeline usually has three parts:
+      </p>
+      <ol>
+        <li><b>Dataset</b>: knows how to fetch one sample \((x,y)\)</li>
+        <li><b>Transform(s)</b>: preprocessing applied per sample</li>
+        <li><b>DataLoader</b>: batching, shuffling, parallel loading</li>
+      </ol>
+
+      <h3>MNIST: why values become 0–1 only when transformed</h3>
+      <p class="muted">
+        MNIST is stored as 8-bit integers (0–255). <code>transforms.ToTensor()</code> converts to float and scales to \([0,1]\).
+        If you inspect raw stored tensors, you’ll see 0–255. If you iterate through the DataLoader with the transform, you’ll see 0–1.
+      </p>
+
+      <div class="codewrap">
+        <div class="codebar">
+          <span class="label">python • verify raw vs transformed MNIST ranges</span>
+          <button data-copy type="button">Copy</button>
+        </div>
+<pre class="language-python"><code>from torchvision import datasets, transforms
+
+train_raw = datasets.MNIST(root="data", train=True, download=True, transform=None)
+print("raw dtype:", train_raw.data.dtype)
+print("raw min/max:", int(train_raw.data.min()), int(train_raw.data.max()))  # typically 0..255
+
+train_tf = datasets.MNIST(root="data", train=True, download=True, transform=transforms.ToTensor())
+x0, y0 = train_tf[0]
+print("transformed dtype:", x0.dtype)
+print("transformed min/max:", float(x0.min()), float(x0.max()))  # typically 0..1</code></pre>
+      </div>
+
+      <div class="callout">
+        <p style="margin:0;">
+          <b>Rule of thumb:</b> keep preprocessing inside the Dataset via <code>transform=...</code>.
+          That way every training/eval pass uses the same consistent inputs.
+        </p>
+      </div>
+    </section>
+
+    <section id="trainloop">
+      <h2>3) Training loop patterns that scale</h2>
+
+      <p>
+        A robust training loop separates:
+      </p>
+      <ul>
+        <li><b>training mode</b> (updates parameters) vs <b>evaluation mode</b> (no updates)</li>
+        <li><b>metrics</b> computed batch-by-batch</li>
+        <li><b>device transfers</b> done once per batch</li>
+      </ul>
+
+      <h3>One update step on a batch</h3>
+      <p>
+        For a batch \((x_B, y_B)\), gradient descent performs:
+      </p>
+      <p>
+        \[
+          \theta \leftarrow \theta - \eta \nabla_\theta \widehat{L}_B(\theta)
+        \]
+      </p>
+
+      <h3>Canonical PyTorch “inner loop”</h3>
+      <div class="codewrap">
+        <div class="codebar">
+          <span class="label">python • canonical mini-batch update step</span>
+          <button data-copy type="button">Copy</button>
+        </div>
+<pre class="language-python"><code>model.train()                 # enables train-time behavior (e.g., dropout/bn)
+for x, y in train_loader:
+    x, y = x.to(device), y.to(device)
+
+    optimizer.zero_grad()     # clear old gradients
+    logits = model(x)         # forward pass
+    loss = criterion(logits, y)
+
+    loss.backward()           # compute gradients
+    optimizer.step()          # update parameters</code></pre>
+      </div>
+
+      <h3>Epoch loss: average over batches</h3>
+      <p class="muted">
+        If you collect per-batch losses \(\{\widehat{L}_{B_k}\}\) in one epoch, a common summary is the mean:
+        \[
+          \text{epoch\_loss} = \frac{1}{K}\sum_{k=1}^K \widehat{L}_{B_k}
+        \]
+        This is a practical proxy for “how training is going” without doing a second full pass just to re-measure loss.
+      </p>
+    </section>
+
+    <section id="accuracy">
+      <h2>4) Accuracy when your data arrives in batches</h2>
+
+      <p>
+        When data comes via a DataLoader, you usually can’t compute accuracy in one shot.
+        The simple fix is to accumulate counts.
+      </p>
+
+      <p>
+        \[
+          \text{accuracy} = \frac{\sum_{i=1}^{N} \mathbb{1}\{\hat{y}_i = y_i\}}{N}
+        \]
+      </p>
+
+      <p class="muted">
+        With batches, you compute “correct in this batch” and “batch size”, then add them up.
+      </p>
+
+      <div class="codewrap">
+        <div class="codebar">
+          <span class="label">python • batched accuracy over a DataLoader</span>
+          <button data-copy type="button">Copy</button>
+        </div>
+<pre class="language-python"><code>@torch.no_grad()
+def accuracy_loader(model, loader, device):
+    model.eval()
+    correct = 0
+    total = 0
+    for x, y in loader:
+        x, y = x.to(device), y.to(device)
+        logits = model(x)
+        pred = logits.argmax(dim=1)           # class index
+        correct += (pred == y).sum().item()
+        total += y.numel()
+    return correct / total</code></pre>
+      </div>
+
+      <div class="callout">
+        <p style="margin:0;">
+          <b>Tip:</b> use <code>@torch.no_grad()</code> in evaluation to reduce memory usage and speed things up.
+        </p>
+      </div>
+    </section>
+
+    <section id="argmax">
+      <h2>5) Logits vs probabilities: why argmax is enough for predictions</h2>
+
+      <p>
+        Many classification models output <b>logits</b> \(z \in \mathbb{R}^K\). Softmax converts logits into probabilities:
+      </p>
+      <p>
+        \[
+          \mathrm{softmax}(z)_i = \frac{e^{z_i}}{\sum_{j=1}^K e^{z_j}}
+        \]
+      </p>
+
+      <p>
+        For <b>choosing the predicted class</b>, you almost never need the probabilities. You only need:
+        \[
+          \hat{y} = \arg\max_i z_i
+        \]
+      </p>
+
+      <div class="callout">
+        <p style="margin:0;">
+          <b>Key fact:</b> <code>argmax(softmax(z)) == argmax(z)</code>. Exponentials preserve ordering and the denominator is shared.
+        </p>
+      </div>
+
+      <figure>
+        <img alt="Softmax illustration (English)" src="https://upload.wikimedia.org/wikipedia/commons/a/a6/Softmax_en.svg">
+        <figcaption>
+          Softmax illustration (Wikimedia Commons): <a href="https://commons.wikimedia.org/wiki/File:Softmax_en.svg" target="_blank" rel="noopener">Softmax_en.svg</a>
+        </figcaption>
+      </figure>
+
+      <h3>PyTorch: get indices (classes) from logits</h3>
+      <div class="codewrap">
+        <div class="codebar">
+          <span class="label">python • logits → predicted class indices</span>
+          <button data-copy type="button">Copy</button>
+        </div>
+<pre class="language-python"><code>logits = model(x)            # shape: (B, K)
+pred = torch.argmax(logits, dim=1)  # shape: (B,)</code></pre>
+      </div>
+
+      <p class="muted">
+        If you want probabilities for interpretability (e.g., confidence), you can still compute:
+        <code>probs = torch.softmax(logits, dim=1)</code>.
+        For training with <code>nn.CrossEntropyLoss</code>, keep the model output as logits.
+      </p>
+    </section>
+
+    <section id="gpu">
+      <h2>6) GPU usage: avoid “tensors on different devices” errors</h2>
+
+      <p>
+        In PyTorch, your model parameters live on a device (CPU or GPU). Your data must be on the same device
+        before you do operations between them.
+      </p>
+
+      <div class="grid two">
+        <div class="callout">
+          <p style="margin:0;">
+            <b>Do:</b>
+            <br/>• <code>model.to(device)</code>
+            <br/>• <code>x.to(device), y.to(device)</code> each batch
+          </p>
+        </div>
+        <div class="callout">
+          <p style="margin:0;">
+            <b>Don’t:</b>
+            <br/>• keep model on GPU and data on CPU (or vice versa)
+            <br/>• mix tensors across devices in one computation
+          </p>
+        </div>
+      </div>
+
+      <div class="codewrap">
+        <div class="codebar">
+          <span class="label">python • device selection + consistent placement</span>
+          <button data-copy type="button">Copy</button>
+        </div>
+<pre class="language-python"><code>device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+model = model.to(device)
+
+for x, y in train_loader:
+    x, y = x.to(device), y.to(device)
+    logits = model(x)
+    ...</code></pre>
+      </div>
+    </section>
+
+    <section id="confmat">
+      <h2>7) Debugging classification: confusion matrix + misclassified samples</h2>
+
+      <p>
+        Overall accuracy hides <i>which</i> classes are being confused. A confusion matrix breaks errors down by class.
+        For a \(K\)-class problem, it’s a \(K \times K\) table where entry \((i,j)\) counts:
+        “true label \(i\) predicted as \(j\)”.
+      </p>
+
+      <figure>
+        <img alt="Confusion matrix example" src="https://upload.wikimedia.org/wikipedia/commons/5/5a/Confusion_matrix.png">
+        <figcaption>
+          Confusion matrix example (Wikimedia Commons): <a href="https://commons.wikimedia.org/wiki/File:Confusion_matrix.png" target="_blank" rel="noopener">Confusion_matrix.png</a>
+        </figcaption>
+      </figure>
+
+      <h3>Collect predictions for a full DataLoader pass</h3>
+      <div class="codewrap">
+        <div class="codebar">
+          <span class="label">python • gather all predictions + labels</span>
+          <button data-copy type="button">Copy</button>
+        </div>
+<pre class="language-python"><code>@torch.no_grad()
+def collect_preds(model, loader, device):
+    model.eval()
+    all_pred = []
+    all_y = []
+    for x, y in loader:
+        x = x.to(device)
+        logits = model(x)
+        pred = logits.argmax(dim=1).cpu()
+        all_pred.append(pred)
+        all_y.append(y.cpu())
+    return torch.cat(all_y), torch.cat(all_pred)</code></pre>
+      </div>
+
+      <h3>Compute confusion matrix (two options)</h3>
+
+      <div class="grid two">
+        <div>
+          <p class="muted"><b>Option A:</b> pure PyTorch (no extra deps)</p>
+          <div class="codewrap">
+            <div class="codebar">
+              <span class="label">python • confusion matrix in pure torch</span>
+              <button data-copy type="button">Copy</button>
+            </div>
+<pre class="language-python"><code>def confusion_matrix_torch(y_true, y_pred, num_classes):
+    cm = torch.zeros((num_classes, num_classes), dtype=torch.int64)
+    for t, p in zip(y_true, y_pred):
+        cm[t, p] += 1
+    return cm
+
+y_true, y_pred = collect_preds(model, test_loader, device)
+cm = confusion_matrix_torch(y_true, y_pred, num_classes=10)
+print(cm)</code></pre>
+          </div>
+        </div>
+
+        <div>
+          <p class="muted"><b>Option B:</b> scikit-learn (convenient)</p>
+          <div class="codewrap">
+            <div class="codebar">
+              <span class="label">python • confusion matrix via scikit-learn</span>
+              <button data-copy type="button">Copy</button>
+            </div>
+<pre class="language-python"><code># pip install scikit-learn
+from sklearn.metrics import confusion_matrix
+
+y_true, y_pred = collect_preds(model, test_loader, device)
+cm = confusion_matrix(y_true.numpy(), y_pred.numpy(), labels=list(range(10)))
+print(cm)</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <h3>Find and visualize misclassified samples</h3>
+      <p class="muted">
+        Once you know common confusions, actually look at examples. (The code below generates plots when <i>you</i> run it.)
+      </p>
+
+      <div class="codewrap">
+        <div class="codebar">
+          <span class="label">python • extract misclassified MNIST examples + plot a grid</span>
+          <button data-copy type="button">Copy</button>
+        </div>
+<pre class="language-python"><code>import matplotlib.pyplot as plt
+
+@torch.no_grad()
+def get_misclassified(model, loader, device, max_items=25):
+    model.eval()
+    items = []
+    for x, y in loader:
+        x, y = x.to(device), y.to(device)
+        logits = model(x)
+        pred = logits.argmax(dim=1)
+        wrong = pred != y
+        if wrong.any():
+            xw = x[wrong].cpu()
+            yw = y[wrong].cpu()
+            pw = pred[wrong].cpu()
+            for i in range(xw.size(0)):
+                items.append((xw[i], int(yw[i]), int(pw[i])))
+                if len(items) >= max_items:
+                    return items
+    return items
+
+mis = get_misclassified(model, test_loader, device, max_items=16)
+
+# Plot (runs locally; not generated in this HTML)
+fig, axes = plt.subplots(4, 4, figsize=(6, 6))
+for ax, (img, y, p) in zip(axes.ravel(), mis):
+    ax.imshow(img.squeeze(0), cmap="gray")
+    ax.set_title(f"true={y}, pred={p}", fontsize=9)
+    ax.axis("off")
+plt.tight_layout()
+plt.show()</code></pre>
+      </div>
+    </section>
+
+    <section id="synthetic">
+      <h2>8) Synthetic regression: fit a non-linear surface you can visualize</h2>
+
+      <p>
+        Classification isn’t the only job for feed-forward nets. For regression, the output layer is typically <b>identity</b> (no activation),
+        and the loss is often mean squared error (MSE).
+      </p>
+
+      <h3>Define a “bumpy” 2D function</h3>
+      <p>
+        We’ll sample \(x \in \mathbb{R}^2\) uniformly in a box and define targets:
+      </p>
+      <p>
+        \[
+          y = \cos(2x_1) + \cos(3x_2)
+        \]
+      </p>
+
+      <figure>
+        <img alt="3D surface plot example" src="https://upload.wikimedia.org/wikipedia/commons/8/80/3-D_surface_plot.jpg">
+        <figcaption>
+          Example 3D surface plot (Wikimedia Commons): <a href="https://commons.wikimedia.org/wiki/File:3-D_surface_plot.jpg" target="_blank" rel="noopener">3-D_surface_plot.jpg</a>
+        </figcaption>
+      </figure>
+
+      <h3>Generate data + 3D scatter (run locally)</h3>
+      <div class="codewrap">
+        <div class="codebar">
+          <span class="label">python • synthetic dataset + 3D scatter</span>
+          <button data-copy type="button">Copy</button>
+        </div>
+<pre class="language-python"><code>import numpy as np
+import torch
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 (needed for 3D)
+
+# Reproducibility
+torch.manual_seed(0)
+np.random.seed(0)
+
+N = 5000
+x = (torch.rand(N, 2) * 6.0) - 3.0                 # uniform in [-3, 3]^2
+y = torch.cos(2.0 * x[:, 0]) + torch.cos(3.0 * x[:, 1])
+y = y.unsqueeze(1)                                  # shape (N, 1)
+
+# 3D scatter (generated when you run this)
+fig = plt.figure(figsize=(6, 5))
+ax = fig.add_subplot(111, projection="3d")
+ax.scatter(x[:,0].numpy(), x[:,1].numpy(), y[:,0].numpy(), s=3)
+ax.set_xlabel("x1"); ax.set_ylabel("x2"); ax.set_zlabel("y")
+plt.show()</code></pre>
+      </div>
+
+      <h3>Model: 2 → 128 → 1 (ReLU hidden, identity output)</h3>
+      <div class="codewrap">
+        <div class="codebar">
+          <span class="label">python • regression FFN + training loop</span>
+          <button data-copy type="button">Copy</button>
+        </div>
+<pre class="language-python"><code>import torch.nn as nn
+from torch.utils.data import TensorDataset, DataLoader
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+ds = TensorDataset(x, y)
+loader = DataLoader(ds, batch_size=256, shuffle=True)
+
+model = nn.Sequential(
+    nn.Linear(2, 128),
+    nn.ReLU(),
+    nn.Linear(128, 1),
+).to(device)
+
+criterion = nn.MSELoss()
+optimizer = torch.optim.Adam(model.parameters(), lr=3e-2)
+
+def train_epochs(epochs=50):
+    model.train()
+    history = []
+    for ep in range(epochs):
+        losses = []
+        for xb, yb in loader:
+            xb, yb = xb.to(device), yb.to(device)
+            optimizer.zero_grad()
+            pred = model(xb)
+            loss = criterion(pred, yb)
+            loss.backward()
+            optimizer.step()
+            losses.append(loss.item())
+        history.append(float(np.mean(losses)))
+        if (ep + 1) % 10 == 0:
+            print(f"epoch {ep+1:03d} | mse {history[-1]:.6f}")
+    return history
+
+loss_hist = train_epochs(epochs=60)</code></pre>
+      </div>
+
+      <h3>Predict on a grid: meshgrid → model → reshape → surface</h3>
+      <p class="muted">
+        To draw a smooth surface, you evaluate the model on a grid of \((x_1, x_2)\) points.
+        The key is reshaping: grids are 2D, the model wants a 2-column matrix, and the output must be reshaped back to the grid.
+      </p>
+
+      <div class="codewrap">
+        <div class="codebar">
+          <span class="label">python • meshgrid predictions + 3D surface plot (run locally)</span>
+          <button data-copy type="button">Copy</button>
+        </div>
+<pre class="language-python"><code>@torch.no_grad()
+def plot_surface(model, lim=3.0, steps=80):
+    model.eval()
+    xs = torch.linspace(-lim, lim, steps)
+    ys = torch.linspace(-lim, lim, steps)
+    X, Y = torch.meshgrid(xs, ys, indexing="ij")       # shapes (steps, steps)
+
+    grid = torch.stack([X.reshape(-1), Y.reshape(-1)], dim=1).to(device)  # (steps*steps, 2)
+    Z = model(grid).reshape(steps, steps).cpu()
+
+    # Plot
+    import matplotlib.pyplot as plt
+    from mpl_toolkits.mplot3d import Axes3D  # noqa: F401
+    fig = plt.figure(figsize=(7, 5))
+    ax = fig.add_subplot(111, projection="3d")
+    ax.plot_surface(X.numpy(), Y.numpy(), Z.numpy(), linewidth=0, antialiased=True)
+    ax.set_xlabel("x1"); ax.set_ylabel("x2"); ax.set_zlabel("pred y")
+    plt.show()
+
+plot_surface(model)</code></pre>
+      </div>
+
+      <div class="callout">
+        <p style="margin:0;">
+          <b>What you’re checking visually:</b> does the learned surface match the “bumpy” cosine structure?
+          If not, try adjusting learning rate, epochs, batch size, or hidden width.
+        </p>
+      </div>
+    </section>
+
+    <section id="tuning">
+      <h2>9) Hyperparameters: a practical experimentation workflow</h2>
+
+      <p>
+        Hyperparameters (learning rate, batch size, number of epochs, hidden width, optimizer choice) don’t come with universal rules
+        that always win. A reliable workflow is:
+      </p>
+      <ol>
+        <li><b>Start reasonable</b> (common defaults: Adam or SGD, moderate LR, moderate batch size)</li>
+        <li><b>Confirm learning</b> (loss decreases; accuracy increases)</li>
+        <li><b>Search locally</b> (try a small grid around current settings)</li>
+        <li><b>Use evidence</b> (plots/metrics) to decide next changes</li>
+      </ol>
+
+      <h3>Minimal grid-search skeleton</h3>
+      <div class="codewrap">
+        <div class="codebar">
+          <span class="label">python • tiny hyperparameter sweep skeleton</span>
+          <button data-copy type="button">Copy</button>
+        </div>
+<pre class="language-python"><code>def run_experiment(lr, hidden, epochs=3):
+    model = nn.Sequential(
+        nn.Linear(28*28, hidden),
+        nn.ReLU(),
+        nn.Linear(hidden, 10),
+    ).to(device)
+
+    opt = torch.optim.SGD(model.parameters(), lr=lr)
+    crit = nn.CrossEntropyLoss()
+
+    for _ in range(epochs):
+        model.train()
+        for x, y in train_loader:
+            x = x.view(x.size(0), -1).to(device)
+            y = y.to(device)
+            opt.zero_grad()
+            logits = model(x)
+            loss = crit(logits, y)
+            loss.backward()
+            opt.step()
+
+    acc = accuracy_loader(model, test_loader, device)
+    return acc
+
+for lr in [0.3, 0.1, 0.03]:
+    for hidden in [64, 128, 256]:
+        acc = run_experiment(lr=lr, hidden=hidden, epochs=2)
+        print(f"lr={lr:<5} hidden={hidden:<4} -> test acc {acc:.4f}")</code></pre>
+      </div>
+
+      <div class="callout">
+        <p style="margin:0;">
+          <b>Goal:</b> don’t hunt for mystical “best” defaults—build a habit of quick, disciplined experiments.
+        </p>
+      </div>
+    </section>
+
+    <section id="credits">
+      <h2>Online plots used in this Part 2</h2>
+      <ul class="small">
+        <li>Optimizer animation (SGD variants): <a href="https://commons.wikimedia.org/wiki/File:Optimizer_Animations.gif" target="_blank" rel="noopener">Optimizer_Animations.gif</a></li>
+        <li>Softmax illustration: <a href="https://commons.wikimedia.org/wiki/File:Softmax_en.svg" target="_blank" rel="noopener">Softmax_en.svg</a></li>
+        <li>Confusion matrix example: <a href="https://commons.wikimedia.org/wiki/File:Confusion_matrix.png" target="_blank" rel="noopener">Confusion_matrix.png</a></li>
+        <li>3D surface plot example: <a href="https://commons.wikimedia.org/wiki/File:3-D_surface_plot.jpg" target="_blank" rel="noopener">3-D_surface_plot.jpg</a></li>
+      </ul>
+
+      <div class="hr"></div>
+      <p class="muted small">
+        This page embeds images hosted online (Wikimedia). Code blocks are intentionally high-contrast and include copy buttons.
+        When you run the plotting code locally, it will generate the visualizations (this HTML itself does not generate plots).
+      </p>
+    </section>
+
+  </div>
+  <script src="../assets/js/nav.js"></script>
+</body>
+</html>

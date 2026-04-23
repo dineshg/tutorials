@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Transformers &amp; Attention</title>
+  <link rel="stylesheet" href="../assets/css/book.css" />
+  <style>
+    .ch h1 { font-size: 2em; border-bottom: 3px solid #0969da; padding-bottom: .4em; }
+    .ch h2 { font-size: 1.4em; margin-top: 2em; border-left: 4px solid #0969da; padding-left: .6em; }
+    .ch h3 { font-size: 1.15em; margin-top: 1.4em; color: #24292f; }
+    .ch pre { background: #0d1117; color: #e6edf3; padding: 14px 16px; border-radius: 8px; overflow-x: auto; }
+    .ch code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.9em; }
+    .ch p, .ch li { line-height: 1.65; }
+    .ch table { border-collapse: collapse; margin: 12px 0; width: 100%; }
+    .ch th, .ch td { border: 1px solid #d0d7de; padding: 8px 10px; text-align: left; vertical-align: top; }
+    .ch th { background: #f6f8fa; }
+    .eq { background: #f6f8fa; padding: 10px 14px; border-left: 3px solid #57606a; margin: 10px 0; font-family: "Latin Modern Math", "STIX Two Math", serif; }
+  </style>
+</head>
+<body>
+<div class="ch">
+
+<h1>Transformers &amp; Attention</h1>
+
+<div class="tr-note">
+  <strong>Where this fits</strong>
+  Chapter 10 (RNNs) gave you a sequence model that processes one token at a
+  time and keeps a hidden state. That gives you sequential dependence but
+  poor parallelism, vanishing gradients on long context, and an information
+  bottleneck through one hidden vector. The Transformer (Vaswani et al.,
+  2017) replaced the recurrent step with <em>attention</em> — every token
+  looks at every other token in parallel. Every modern LLM you'll fine‑tune
+  in Chapter 12 is a Transformer.
+</div>
+
+<h2>1) The intuition: a soft, content‑based dictionary lookup</h2>
+
+<p>Think of attention as a dictionary lookup that is differentiable.</p>
+<ul>
+  <li>For each token you want to <em>update</em>, you compute a <strong>query</strong> vector
+      <em>q</em>: "what kind of context do I need?"</li>
+  <li>For every token in the sequence (including itself) you have a
+      <strong>key</strong> <em>k</em> ("what kind of context do I provide?") and a
+      <strong>value</strong> <em>v</em> ("what would I contribute if attended to?").</li>
+  <li>You score each (q, k) pair, turn the scores into a probability
+      distribution with softmax, and return the weighted average of values.</li>
+</ul>
+
+<p>That's it. The whole Transformer is this operation, stacked, with a small
+feed‑forward network in between, and residual connections + LayerNorm.</p>
+
+<h2>2) Scaled dot‑product attention</h2>
+
+<p>Stack the queries, keys and values into matrices $Q \in \mathbb{R}^{n\times d_k}$,
+$K \in \mathbb{R}^{n\times d_k}$, $V \in \mathbb{R}^{n\times d_v}$ where $n$ is the
+sequence length. Then:</p>
+
+<div class="eq">
+$\mathrm{Attention}(Q,K,V) = \mathrm{softmax}\!\left(\dfrac{QK^{\top}}{\sqrt{d_k}}\right) V$
+</div>
+
+<p>The $\sqrt{d_k}$ scaling keeps the dot products from growing too large with
+dimension, which would push softmax into a near‑one‑hot regime and kill the
+gradients. Implemented in PyTorch:</p>
+
+<pre><code>import torch, torch.nn.functional as F
+
+def scaled_dot_product_attention(Q, K, V, mask=None):
+    d_k = Q.size(-1)
+    scores = (Q @ K.transpose(-2, -1)) / d_k**0.5      # (..., n, n)
+    if mask is not None:
+        scores = scores.masked_fill(mask == 0, float("-inf"))
+    weights = F.softmax(scores, dim=-1)                # (..., n, n)
+    return weights @ V                                 # (..., n, d_v)
+</code></pre>
+
+<h3>Causal (decoder) masking</h3>
+<p>For language modeling, position $i$ may only attend to positions
+$\le i$. The mask is the lower triangular matrix of ones; everything
+above the diagonal is set to $-\infty$ before softmax.</p>
+
+<pre><code>n = Q.size(-2)
+causal = torch.tril(torch.ones(n, n, device=Q.device))
+out = scaled_dot_product_attention(Q, K, V, mask=causal)
+</code></pre>
+
+<h2>3) Multi‑head attention</h2>
+
+<p>One attention head learns one notion of relevance. Real language has many
+in parallel — syntactic agreement, coreference, topic, etc. Multi‑head
+attention runs $h$ attention operations in parallel on linear projections
+of $Q, K, V$ into smaller subspaces, then concatenates and projects back:</p>
+
+<div class="eq">
+$\mathrm{MHA}(X) = \big[\mathrm{head}_1; \dots; \mathrm{head}_h\big] W^{O},
+\quad \mathrm{head}_i = \mathrm{Attention}(XW_i^{Q}, XW_i^{K}, XW_i^{V})$
+</div>
+
+<pre><code>import torch, torch.nn as nn
+
+class MultiHeadAttention(nn.Module):
+    def __init__(self, d_model, n_heads):
+        super().__init__()
+        assert d_model % n_heads == 0
+        self.h, self.d_k = n_heads, d_model // n_heads
+        self.W_q = nn.Linear(d_model, d_model, bias=False)
+        self.W_k = nn.Linear(d_model, d_model, bias=False)
+        self.W_v = nn.Linear(d_model, d_model, bias=False)
+        self.W_o = nn.Linear(d_model, d_model, bias=False)
+
+    def forward(self, x, mask=None):
+        B, N, _ = x.shape
+        def split(t): return t.view(B, N, self.h, self.d_k).transpose(1, 2)
+        Q, K, V = split(self.W_q(x)), split(self.W_k(x)), split(self.W_v(x))
+        out = F.scaled_dot_product_attention(Q, K, V, is_causal=mask is None)
+        out = out.transpose(1, 2).contiguous().view(B, N, self.h * self.d_k)
+        return self.W_o(out)
+</code></pre>
+
+<div class="tr-tip">
+  <strong>Use the built‑in</strong>
+  Since PyTorch 2.0, <code>F.scaled_dot_product_attention</code> dispatches to
+  fused kernels (FlashAttention‑2, memory‑efficient attention) where
+  available. Hand‑rolling the einsum version is good for understanding,
+  not for production.
+</div>
+
+<h2>4) Position information: sinusoidal vs RoPE</h2>
+
+<p>Self‑attention is <em>permutation‑equivariant</em> — shuffle the input tokens
+and you get the same shuffled output. Language is not permutation‑invariant,
+so we add positional information.</p>
+
+<h3>Sinusoidal (Vaswani et al., original)</h3>
+<p>Add a fixed sinusoidal vector to each token embedding before the first
+layer:</p>
+<div class="eq">
+$\mathrm{PE}(p, 2i) = \sin\!\bigl(p / 10000^{2i/d}\bigr),\quad
+ \mathrm{PE}(p, 2i+1) = \cos\!\bigl(p / 10000^{2i/d}\bigr)$
+</div>
+<p>Pros: simple. Cons: weak length extrapolation; baked into embeddings.</p>
+
+<h3>Rotary Position Embedding — RoPE (used by LLaMA, Mistral, Qwen, Gemma)</h3>
+<p>RoPE rotates pairs of dimensions of $Q$ and $K$ by an angle proportional
+to the position. Because it acts on $Q$ and $K$ multiplicatively rather
+than additively on the embedding, the dot product
+$Q_m^{\top} K_n$ becomes a function of the <em>relative</em> position
+$m - n$:</p>
+<div class="eq">
+$\langle\mathrm{RoPE}(q, m),\ \mathrm{RoPE}(k, n)\rangle
+   = f(q, k, m - n)$
+</div>
+<p>This makes long‑context generalization much better and is why every
+modern open‑weights LLM uses it. Variants like <strong>YaRN</strong> and
+<strong>NTK‑aware scaling</strong> stretch RoPE's effective range to extend a
+4k‑trained model to 32k+ tokens at inference.</p>
+
+<h2>5) The full Transformer block</h2>
+
+<p>One block (decoder‑only flavor) is:</p>
+<pre><code>class Block(nn.Module):
+    def __init__(self, d_model, n_heads, d_ff):
+        super().__init__()
+        self.ln1 = nn.LayerNorm(d_model)
+        self.attn = MultiHeadAttention(d_model, n_heads)
+        self.ln2 = nn.LayerNorm(d_model)
+        self.ff  = nn.Sequential(
+            nn.Linear(d_model, d_ff), nn.GELU(),
+            nn.Linear(d_ff, d_model),
+        )
+
+    def forward(self, x):
+        x = x + self.attn(self.ln1(x))   # pre‑norm residual
+        x = x + self.ff(self.ln2(x))
+        return x
+</code></pre>
+
+<p>Stack $L$ blocks, prepend a token‑embedding + positional encoding, append
+a final LayerNorm and an unembedding (often tied to the input embedding),
+and you have a GPT‑style language model.</p>
+
+<h2>6) Encoder, decoder, encoder‑decoder</h2>
+<table>
+  <tr><th>Variant</th><th>Attention pattern</th><th>Examples</th><th>Used for</th></tr>
+  <tr>
+    <td>Encoder‑only</td><td>Bidirectional (no mask)</td>
+    <td>BERT, RoBERTa, DeBERTa, modern embedding models</td>
+    <td>Classification, embeddings, retrieval</td>
+  </tr>
+  <tr>
+    <td>Decoder‑only</td><td>Causal mask</td>
+    <td>GPT‑x, LLaMA, Mistral, Qwen, Gemma, Claude, DeepSeek</td>
+    <td>Generation, chat, code, agents</td>
+  </tr>
+  <tr>
+    <td>Encoder‑decoder</td><td>Bidirectional encoder + causal decoder + cross‑attention</td>
+    <td>T5, FLAN‑T5, BART, original NMT Transformer</td>
+    <td>Translation, summarization, seq‑to‑seq</td>
+  </tr>
+</table>
+
+<h2>7) Inference: KV cache</h2>
+
+<p>At training time you process the whole sequence in parallel. At
+generation time you produce one token at a time. Naively you would
+recompute all of $K$ and $V$ for every prefix — quadratic per token.
+Instead you cache the per‑layer $K$ and $V$ tensors:</p>
+<ul>
+  <li>For token $t$, compute only the new $q_t, k_t, v_t$.</li>
+  <li>Append $k_t, v_t$ to the cache.</li>
+  <li>Attention is now $q_t$ against the cached $K, V$ — linear in $t$.</li>
+</ul>
+<p>The KV cache is the main reason LLM inference is memory‑bound rather than
+compute‑bound, and the reason context length costs RAM (each extra token
+adds <code>2 · n_layers · n_heads · d_head · dtype_bytes</code> per request).</p>
+
+<h2>8) Efficiency: FlashAttention, MQA, GQA, sliding window</h2>
+<ul>
+  <li><strong>FlashAttention</strong> (Dao et al., 2022; v2 2023; v3 2024) computes the
+      same softmax attention but tiles the work to keep $QK^{\top}$ in
+      on‑chip SRAM and never materializes the full $n \times n$ matrix in
+      HBM. Result: ~2–4× speedup and much less memory.</li>
+  <li><strong>Multi‑Query Attention (MQA)</strong> shares one $K$/$V$ projection across
+      all heads — shrinks the KV cache by $h\times$. Used in PaLM.</li>
+  <li><strong>Grouped‑Query Attention (GQA)</strong> is the compromise: one $K$/$V$
+      per group of $g$ query heads. Used in LLaMA‑2/3, Mistral, Qwen2,
+      Gemma 2 — basically the modern default.</li>
+  <li><strong>Sliding‑window attention</strong> (Mistral, Gemma) restricts each token
+      to attend only to the last $W$ tokens, lowering the attention cost
+      from $O(n^2)$ to $O(nW)$.</li>
+  <li><strong>Mixture of Experts (MoE)</strong> (Mixtral, DeepSeek‑V3) replaces the
+      feed‑forward block with a router that picks $k$ of $E$ experts per
+      token — more parameters, similar FLOPs.</li>
+</ul>
+
+<h2>9) Pulling it all together</h2>
+<ol>
+  <li>Embed tokens; add positional info (sinusoidal, learned, or RoPE).</li>
+  <li>Stack $L$ Transformer blocks (pre‑norm + residual + GQA + SwiGLU/GELU FFN).</li>
+  <li>Final LayerNorm + tied unembedding → logits over the vocabulary.</li>
+  <li>For generation: KV cache + sampling (greedy / temperature / top‑p / top‑k).</li>
+</ol>
+
+<div class="tr-tip">
+  <strong>What to read next</strong>
+  Chapter 12 — LLM fine‑tuning — picks up exactly here, taking a pretrained
+  decoder‑only Transformer and adapting it with PEFT (LoRA / QLoRA), then
+  Chapter 13 covers preference alignment beyond DPO.
+</div>
+
+</div>
+<script src="../assets/js/nav.js"></script>
+</body>
+</html>

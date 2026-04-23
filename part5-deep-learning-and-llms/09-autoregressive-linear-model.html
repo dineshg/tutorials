@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Forecasting (Next Section): Coding an Autoregressive Linear Model in PyTorch</title>
+
+  <!-- Light theme, readable code blocks -->
+  <style>
+    :root{
+      --bg:#ffffff; --fg:#111827; --muted:#6b7280;
+      --card:#f9fafb; --border:#e5e7eb; --codebg:#f3f4f6;
+      --link:#1d4ed8;
+    }
+    body{ margin:0; background:var(--bg); color:var(--fg);
+      font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;}
+    main{ max-width:980px; margin:0 auto; padding:32px 20px 64px;}
+    h1,h2,h3{ line-height:1.2; margin:0.8em 0 0.4em;}
+    h1{ font-size:2.0rem; }
+    h2{ font-size:1.45rem; margin-top:1.5em; }
+    h3{ font-size:1.15rem; margin-top:1.2em; }
+    p{ margin:0.6em 0; }
+    .card{ background:var(--card); border:1px solid var(--border);
+      border-radius:14px; padding:16px 16px; margin:14px 0; }
+    .muted{ color:var(--muted); }
+    a{ color:var(--link); }
+    ul{ margin:0.4em 0 0.8em 1.2em; }
+    code, pre{ font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace; }
+    pre{ background:var(--codebg); border:1px solid var(--border);
+      border-radius:14px; padding:14px 14px; overflow:auto; margin:12px 0; }
+    .grid2{ display:grid; grid-template-columns: 1fr 1fr; gap:14px; }
+    @media (max-width: 860px){ .grid2{ grid-template-columns:1fr; } }
+    img{ max-width:100%; height:auto; border-radius:14px; border:1px solid var(--border); background:#fff; }
+    .eq{ background:#fff; border:1px dashed var(--border); border-radius:14px; padding:10px 12px; margin:12px 0; }
+    .warn{ border-left:4px solid #f59e0b; padding-left:12px; }
+    .ok{ border-left:4px solid #10b981; padding-left:12px; }
+  </style>
+
+  <!-- MathJax for equations -->
+  <script>
+    window.MathJax = { tex: { inlineMath: [['\\(','\\)'], ['$', '$']] } };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <link rel="stylesheet" href="../assets/css/book.css">
+</head>
+
+<body>
+<main>
+  <header class="card">
+    <h1>Forecasting (Code): Autoregressive Linear Model in PyTorch</h1>
+    <p class="muted">
+      Goal: implement an <b>autoregressive (AR)</b> linear model for time-series prediction, and learn the
+      <b>right vs wrong</b> way to forecast multiple steps ahead.
+    </p>
+  </header>
+
+  <section>
+    <h2>1) The setup</h2>
+    <div class="card">
+      <p>
+        We’ll build a synthetic dataset: a sine wave (optionally with noise), then create supervised learning
+        examples by sliding a window of length <b>T</b>.
+      </p>
+
+      <div class="eq">
+        <div><b>Windowing idea</b></div>
+        <div>
+          Input: \(\;X_t = [x_t, x_{t+1}, \dots, x_{t+T-1}]\;\) (shape \(T\))<br/>
+          Target: \(\;y_t = x_{t+T}\;\)
+        </div>
+      </div>
+
+      <p class="muted">
+        This “AR(T)” model is just linear regression where the “features” are the previous T time steps.
+      </p>
+    </div>
+
+    <div class="card">
+      <h3>Optional visual: sine wave (online image)</h3>
+      <p class="muted">A sine wave is periodic, which makes it great for controlled experiments.</p>
+      <!-- Replace the src with any other trusted sine-wave SVG if you prefer -->
+      <img
+        src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Sine_wave.svg"
+        alt="Sine wave plot (SVG) from Wikimedia"
+      />
+    </div>
+  </section>
+
+  <section>
+    <h2>2) Build the dataset (windowing)</h2>
+    <div class="card">
+      <p>
+        We create a length-1000 series, then produce \((X, y)\) pairs using a sliding window.
+        This is exactly where off-by-one mistakes love to hide—so we’ll write it clearly.
+      </p>
+    </div>
+
+<pre><code># --- Imports ---
+import numpy as np
+import torch
+import torch.nn as nn
+import matplotlib.pyplot as plt
+
+# Reproducibility
+np.random.seed(0)
+torch.manual_seed(0)
+
+# --- 1) Create a synthetic time series ---
+N = 1000
+omega = 0.1
+series = np.sin(omega * np.arange(N))
+
+# OPTIONAL: add noise (uncomment to test realistic behavior)
+# noise_std = 0.2
+# series = series + noise_std * np.random.randn(N)
+
+plt.figure()
+plt.plot(series)
+plt.title("Synthetic time series")
+plt.xlabel("t")
+plt.ylabel("x[t]")
+plt.show()
+
+# --- 2) Turn the series into supervised learning data ---
+T = 10  # use previous 10 steps to predict the next step
+
+X_list, y_list = [], []
+# t goes from 0 to N - T - 1 so that y[t] = series[t+T] is valid
+for t in range(0, N - T):
+    X_list.append(series[t : t + T])      # length T
+    y_list.append(series[t + T])          # scalar target
+
+X = np.array(X_list)          # shape: (N-T, T)
+y = np.array(y_list).reshape(-1, 1)  # shape: (N-T, 1)
+
+print("X shape:", X.shape, "y shape:", y.shape)
+</code></pre>
+
+    <div class="card warn">
+      <p><b>Important:</b> For time series, do <b>not</b> shuffle before splitting into train/validation.
+      Your “validation” should be in the future relative to training.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>3) Train/validation split (chronological)</h2>
+<pre><code># Chronological split: first half train, second half validation
+split = len(X) // 2
+X_train, y_train = X[:split], y[:split]
+X_val,   y_val   = X[split:], y[split:]
+
+# Convert to torch tensors
+X_train_t = torch.tensor(X_train, dtype=torch.float32)
+y_train_t = torch.tensor(y_train, dtype=torch.float32)
+X_val_t   = torch.tensor(X_val,   dtype=torch.float32)
+y_val_t   = torch.tensor(y_val,   dtype=torch.float32)
+</code></pre>
+  </section>
+
+  <section>
+    <h2>4) The AR model in PyTorch</h2>
+    <div class="card">
+      <p>
+        The AR(T) linear model is literally one layer:
+        it maps \( \mathbb{R}^T \rightarrow \mathbb{R} \).
+      </p>
+
+      <div class="eq">
+        \( \hat{x}_{t+T} = b + \sum_{i=0}^{T-1} w_i \, x_{t+i} \)
+      </div>
+    </div>
+
+<pre><code># Model: linear regression on the window
+model = nn.Linear(T, 1)
+
+loss_fn = nn.MSELoss()
+optimizer = torch.optim.Adam(model.parameters(), lr=0.05)
+</code></pre>
+  </section>
+
+  <section>
+    <h2>5) Training loop (full-batch gradient descent)</h2>
+    <div class="card">
+      <p>
+        Because this dataset is small, we can do “full GD” (use all training data each step).
+        For bigger datasets you’d use mini-batches, but the forecasting logic below stays the same.
+      </p>
+    </div>
+
+<pre><code>def train_full_gd(model, Xtr, ytr, epochs=300):
+    losses = []
+    for epoch in range(epochs):
+        model.train()  # good habit (matters for dropout/batchnorm later)
+
+        pred = model(Xtr)                 # shape: (n, 1)
+        loss = loss_fn(pred, ytr)
+
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+        losses.append(loss.item())
+    return losses
+
+losses = train_full_gd(model, X_train_t, y_train_t, epochs=300)
+
+plt.figure()
+plt.plot(losses)
+plt.title("Training loss (MSE)")
+plt.xlabel("epoch")
+plt.ylabel("loss")
+plt.show()
+</code></pre>
+  </section>
+
+  <section>
+    <h2>6) Forecasting: the “wrong” way vs the correct way</h2>
+
+    <div class="card warn">
+      <h3>The wrong way (looks great, but it’s cheating for multi-step forecasting)</h3>
+      <p>
+        This method uses the true validation windows \(X_{\text{val}}\) at every step.
+        That means each prediction is effectively <b>1-step-ahead</b> using real history.
+      </p>
+      <p class="muted">
+        It answers: “How good is the model at 1-step prediction if I always give it correct inputs?”
+        It does <b>not</b> answer: “How good is the model at forecasting 50 steps into the future?”
+      </p>
+    </div>
+
+<pre><code># WRONG for multi-step: uses ground-truth inputs each time ("teacher forcing"-like)
+model.eval()
+with torch.no_grad():
+    wrong_preds = []
+    for i in range(len(X_val_t)):
+        # X_val_t[i] has shape (T,), but model expects (batch, T)
+        p = model(X_val_t[i].view(1, -1))  # (1, 1)
+        wrong_preds.append(p.item())
+
+plt.figure()
+plt.plot(y_val_t.numpy(), label="target")
+plt.plot(wrong_preds, label="wrong forecast (cheating)")
+plt.title("Validation: wrong vs target")
+plt.legend()
+plt.show()
+</code></pre>
+
+    <div class="card ok">
+      <h3>The correct way (recursive / roll-forward forecasting)</h3>
+      <p>
+        Once you move into the future, you don’t have the true \(x_{t}\) anymore — you only have your
+        <b>previous predictions</b>. So after predicting one step, you must feed it back in to predict the next.
+      </p>
+    </div>
+
+<pre><code># CORRECT multi-step forecast: use your own predictions as future inputs
+model.eval()
+with torch.no_grad():
+    correct_preds = []
+
+    # Start from the *first* validation input window
+    last_x = X_val_t[0].clone()  # shape: (T,)
+
+    for _ in range(len(y_val_t)):
+        p = model(last_x.view(1, -1))      # shape: (1, 1)
+        correct_preds.append(p.item())
+
+        # Update the window: drop oldest, append newest prediction
+        # Keep everything as torch tensors
+        last_x = torch.cat([last_x[1:], p.view(-1)])  # (T-1,) + (1,) -> (T,)
+
+plt.figure()
+plt.plot(y_val_t.numpy(), label="target")
+plt.plot(correct_preds, label="correct forecast (recursive)")
+plt.title("Validation: correct vs target")
+plt.legend()
+plt.show()
+</code></pre>
+
+    <div class="card">
+      <h3>What you should observe</h3>
+      <ul>
+        <li><b>No-noise sine wave:</b> both methods can look nearly perfect.</li>
+        <li>
+          <b>Noisy sine wave:</b> the “wrong” method often still looks great, while the recursive method degrades,
+          because small errors compound as you roll forward.
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>7) Why can a linear AR model predict a sine wave so well?</h2>
+    <div class="card">
+      <p>
+        A sine wave has an exact <b>2-step linear recurrence</b>. You can write:
+      </p>
+
+      <div class="eq">
+        If \(x_t = \sin(\omega t)\), then<br/>
+        \[
+          x_{t+1} = 2\cos(\omega)\,x_t - x_{t-1}
+        \]
+      </div>
+
+      <p class="muted">
+        This means an AR(2) model (two past values) can represent the sine wave perfectly (in the no-noise case).
+        Noise breaks the exact recurrence, which is why recursive forecasting becomes imperfect.
+      </p>
+    </div>
+
+    <div class="card">
+      <h3>Sketch of the derivation (optional)</h3>
+      <p>
+        Use the identity:
+        \[
+          \sin(a+b) + \sin(a-b) = 2\sin(a)\cos(b)
+        \]
+        Let \(a = \omega t\) and \(b = \omega\). Then:
+        \[
+          \sin(\omega(t+1)) + \sin(\omega(t-1)) = 2\sin(\omega t)\cos(\omega)
+        \]
+        Rearranging gives:
+        \[
+          \sin(\omega(t+1)) = 2\cos(\omega)\sin(\omega t) - \sin(\omega(t-1))
+        \]
+        which is exactly the AR(2) recurrence.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <h2>8) Common gotchas (quick checklist)</h2>
+    <div class="card">
+      <ul>
+        <li><b>Shape mistakes:</b> a single window is shape \((T,)\), but the model expects \((1, T)\).</li>
+        <li><b>Random train/test split:</b> don’t do it for forecasting—split chronologically.</li>
+        <li><b>Evaluating only 1-step ahead:</b> can be useful, but it’s not the same as multi-step forecasting.</li>
+        <li><b>Error compounding:</b> recursive forecasting will drift if the model is slightly wrong.</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer class="card">
+    <p class="muted">
+      Next natural step: replace the linear AR model with a nonlinear sequence model (e.g., an RNN/GRU/LSTM),
+      and repeat the same “wrong vs correct” forecast comparison.
+    </p>
+  </footer>
+</main>
+  <script src="../assets/js/nav.js"></script>
+</body>
+</html>

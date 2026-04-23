@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Part II — Backend, Platform &amp; Security</title>
+  <link rel="stylesheet" href="../assets/css/book.css" />
+</head>
+<body>
+
+<h1>Part II — Backend, Platform &amp; Security</h1>
+<p>The platform layer that the agent and ML systems sit on top of: FastAPI
+basics, the request lifecycle, concurrency &amp; user isolation, background work
+and retries, the full authentication stack (SSO/OAuth2/OIDC/PKCE/JWT vs
+opaque), workload identity vs end‑user identity, multi‑tenant isolation,
+external integrations, and the GitHub governance that keeps the codebase
+shippable.</p>
+
+<div class="tr-tip">
+  <strong>Reading order tip</strong>
+  Chapters 1–5 are the FastAPI runtime story. Chapters 6–9 are the auth
+  story (start with the short SSO/OIDC primer, then go deep). Chapters 10–13
+  are about identity at the platform/cloud boundary. Chapter 14 covers
+  GitHub controls, and Chapter 15 (NEW) covers post‑password modern auth.
+</div>
+
+<h2>Chapters in order</h2>
+<ol>
+  <li><a href="01-fastapi-uvicorn-basics.html">FastAPI &amp; Uvicorn basics</a></li>
+  <li><a href="02-http-methods.html">HTTP methods</a></li>
+  <li><a href="03-fastapi-request-mapping.html">FastAPI request mapping</a></li>
+  <li><a href="04-concurrency-user-isolation.html">Concurrency &amp; user isolation</a></li>
+  <li><a href="05-background-tasks-and-retries.html">Background tasks &amp; retries</a></li>
+  <li><a href="06-sso-oauth2-oidc-primer.html">SSO / OAuth2 / OIDC primer</a></li>
+  <li><a href="07-oidc-oauth2-pkce-fastapi.html">OIDC + OAuth2 + PKCE in FastAPI</a></li>
+  <li><a href="08-registering-new-users.html">Registering new users</a></li>
+  <li><a href="09-authentication-deep-dive.html">Authentication deep dive</a></li>
+  <li><a href="10-enduser-vs-workload-identity.html">End‑user vs workload identity</a></li>
+  <li><a href="11-gcp-workload-identity.html">GCP workload identity</a></li>
+  <li><a href="12-tenant-iam-ad-groups.html">Tenant isolation, IAM &amp; AD groups</a></li>
+  <li><a href="13-external-service-integration.html">External service integration</a></li>
+  <li><a href="14-github-governance.html">GitHub governance &amp; CI</a></li>
+  <li><a href="15-modern-auth-additions.html">Modern auth additions: Passkeys, DPoP, mTLS, token exchange <em>(NEW)</em></a></li>
+</ol>
+
+<script src="../assets/js/nav.js"></script>
+</body>
+</html>

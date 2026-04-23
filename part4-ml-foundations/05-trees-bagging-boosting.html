@@ -1,0 +1,1028 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Bagging & Boosting (AdaBoost + XGBoost) — Trees, Impurities, and How Splits Work</title>
+
+<!-- KaTeX (math rendering) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script>
+  window.addEventListener("DOMContentLoaded", () => {
+    if (typeof renderMathInElement !== "function") return;
+    renderMathInElement(document.body, {
+      delimiters: [
+        { left: "$$", right: "$$", display: true },
+        { left: "\\[", right: "\\]", display: true },
+        { left: "\\(", right: "\\)", display: false },
+        { left: "$", right: "$", display: false }
+      ],
+      ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code"],
+      throwOnError: false,
+    });
+  });
+</script>
+<style>
+  :root{
+    --bg:#ffffff;
+    --panel:#f8fafc;
+    --panel2:#f1f5f9;
+    --border:#e5e7eb;
+    --text:#0f172a;
+    --muted:#475569;
+
+    --blue:#2563eb;
+    --cyan:#06b6d4;
+    --green:#059669;
+    --amber:#f59e0b;
+    --rose:#e11d48;
+    --violet:#7c3aed;
+
+    --codebg:#0b1220;
+    --codefg:#e6edf3;
+
+    --shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+    --shadow2: 0 10px 25px rgba(15, 23, 42, 0.06);
+    --radius: 16px;
+  }
+
+  html, body { height: 100%; }
+  body{
+    margin:0;
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    color:var(--text);
+    background:
+      radial-gradient(1200px 600px at 10% -20%, rgba(37, 99, 235, 0.12), transparent 60%),
+      radial-gradient(1000px 600px at 90% 0%, rgba(6, 182, 212, 0.10), transparent 55%),
+      radial-gradient(900px 600px at 80% 90%, rgba(5, 150, 105, 0.10), transparent 55%),
+      var(--bg);
+    line-height:1.7;
+  }
+
+  .wrap{ max-width: 1100px; margin: 0 auto; padding: 42px 22px 90px; }
+
+  header.hero{
+    background: linear-gradient(135deg, rgba(37,99,235,0.12), rgba(6,182,212,0.10), rgba(5,150,105,0.10));
+    border:1px solid var(--border);
+    border-radius: calc(var(--radius) + 6px);
+    padding: 28px 24px;
+    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+  }
+  header.hero:before{
+    content:"";
+    position:absolute; inset:-2px;
+    background:
+      radial-gradient(500px 200px at 20% 20%, rgba(124,58,237,0.16), transparent 60%),
+      radial-gradient(500px 200px at 70% 60%, rgba(245,158,11,0.14), transparent 60%);
+    pointer-events:none;
+  }
+  .hero-inner{ position: relative; display:grid; gap:14px; }
+  .kicker{
+    display:inline-flex; gap:10px; align-items:center;
+    font-size: 13px; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--muted);
+  }
+  .pill{
+    display:inline-flex; align-items:center; gap:8px;
+    padding: 7px 12px;
+    background: rgba(255,255,255,0.75);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    box-shadow: var(--shadow2);
+    font-weight: 600;
+  }
+  .dot{ width:10px; height:10px; border-radius:50%; background:var(--blue); box-shadow: 0 0 0 4px rgba(37,99,235,0.14); }
+  h1{
+    margin: 2px 0 0;
+    font-size: clamp(28px, 3.6vw, 44px);
+    line-height: 1.15;
+  }
+  .sub{
+    margin:0;
+    color: var(--muted);
+    font-size: clamp(15px, 1.4vw, 18px);
+    max-width: 78ch;
+  }
+
+  nav.toc{
+    margin-top: 14px;
+    display:flex; flex-wrap: wrap;
+    gap: 10px;
+  }
+  nav.toc a{
+    text-decoration:none;
+    color: var(--text);
+    font-weight: 600;
+    font-size: 14px;
+    padding: 8px 12px;
+    background: rgba(255,255,255,0.7);
+    border:1px solid var(--border);
+    border-radius: 999px;
+    transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+  }
+  nav.toc a:hover{
+    transform: translateY(-1px);
+    box-shadow: var(--shadow2);
+    border-color: rgba(37,99,235,0.35);
+  }
+
+  section{
+    margin-top: 34px;
+    background: rgba(255,255,255,0.7);
+    border:1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow2);
+    padding: 22px 22px 10px;
+  }
+
+  h2{
+    margin: 0 0 6px;
+    font-size: 26px;
+    display:flex;
+    align-items:center;
+    gap: 10px;
+  }
+  .tag{
+    font-size: 12px;
+    padding: 4px 9px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: rgba(241,245,249,0.7);
+    color: var(--muted);
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+  h3{
+    margin-top: 20px;
+    margin-bottom: 8px;
+    font-size: 18px;
+    color: #0b2a4a;
+  }
+  p{ margin: 10px 0; }
+
+  .grid{
+    display:grid;
+    gap: 14px;
+  }
+  @media (min-width: 880px){
+    .grid.cols2{ grid-template-columns: 1fr 1fr; }
+    .grid.cols3{ grid-template-columns: 1fr 1fr 1fr; }
+  }
+
+  .card{
+    background: linear-gradient(180deg, rgba(248,250,252,0.86), rgba(241,245,249,0.65));
+    border:1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 14px 10px;
+  }
+  .card strong{ color: #0b2a4a; }
+  .callout{
+    border-left: 6px solid var(--blue);
+    background: rgba(37,99,235,0.06);
+    padding: 12px 14px;
+    border-radius: 12px;
+    margin: 14px 0;
+  }
+  .callout.green{ border-left-color: var(--green); background: rgba(5,150,105,0.08); }
+  .callout.amber{ border-left-color: var(--amber); background: rgba(245,158,11,0.10); }
+  .callout.violet{ border-left-color: var(--violet); background: rgba(124,58,237,0.10); }
+  .callout.rose{ border-left-color: var(--rose); background: rgba(225,29,72,0.08); }
+
+  ul{ margin: 10px 0 14px 18px; }
+  li{ margin: 6px 0; }
+
+  .math{
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    background: rgba(15, 23, 42, 0.06);
+    border:1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 10px;
+    padding: 10px 12px;
+    overflow-x:auto;
+  }
+  .math .katex-display{ margin: 0; }
+  /* KaTeX is built from many inline-block spans; prevent awkward per-glyph wrapping. */
+  .math .katex, .math .katex-display{ white-space: nowrap; }
+  pre.code{
+    margin: 12px 0;
+    background: var(--codebg);
+    color: var(--codefg);
+    border-radius: 14px;
+    padding: 14px 14px;
+    overflow-x:auto;
+    border: 1px solid rgba(255,255,255,0.10);
+  }
+
+  table{
+    width:100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 12px 0 16px;
+    overflow:hidden;
+    border-radius: 14px;
+    border:1px solid var(--border);
+    background: rgba(255,255,255,0.75);
+  }
+  th, td{
+    padding: 12px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    font-size: 14px;
+  }
+  th{
+    text-align:left;
+    background: rgba(241,245,249,0.75);
+    color:#0b2a4a;
+    font-weight: 800;
+  }
+  tr:last-child td{ border-bottom:none; }
+
+  details{
+    margin: 12px 0 18px;
+    border:1px dashed rgba(37,99,235,0.35);
+    border-radius: 14px;
+    background: rgba(37,99,235,0.05);
+    padding: 10px 12px;
+  }
+  summary{
+    cursor:pointer;
+    font-weight: 800;
+    color:#0b2a4a;
+  }
+
+  .badge{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.75);
+    font-weight: 800;
+    font-size: 13px;
+  }
+  .badge .b{ width:10px; height:10px; border-radius:50%; background: var(--blue); }
+  .badge .g{ background: var(--green); }
+  .badge .a{ background: var(--amber); }
+  .badge .v{ background: var(--violet); }
+
+  .mini-diagram{
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: rgba(255,255,255,0.75);
+    padding: 12px;
+  }
+  .mini-diagram svg{ width:100%; height:auto; display:block; }
+
+  footer{
+    margin-top: 26px;
+    color: var(--muted);
+    font-size: 13px;
+    text-align: center;
+  }
+  a{ color: var(--blue); }
+</style>
+  <link rel="stylesheet" href="../assets/css/book.css">
+</head>
+
+<body>
+  <div class="wrap">
+    <header class="hero" id="top">
+      <div class="hero-inner">
+        <div class="kicker">
+          <span class="pill"><span class="dot"></span> One-page tutorial</span>
+          <span class="pill"><span class="dot" style="background:var(--green); box-shadow:0 0 0 4px rgba(5,150,105,0.14)"></span> Trees → Ensembles</span>
+          <span class="pill"><span class="dot" style="background:var(--amber); box-shadow:0 0 0 4px rgba(245,158,11,0.16)"></span> Impurities explained</span>
+        </div>
+        <h1>Bagging & Boosting (AdaBoost + XGBoost)<br/>with Decision Tree Splits & Impurities</h1>
+        <p class="sub">
+          This page is a complete, friendly walkthrough of what we discussed:
+          how decision trees split using <strong>Gini impurity</strong> and <strong>Information Gain</strong>,
+          how <strong>Bagging</strong> (Random Forests) works, how <strong>Boosting</strong> works,
+          a deep step-by-step of <strong>AdaBoost</strong>, and what makes <strong>XGBoost</strong> fast and powerful —
+          including what’s <em>sequential</em> vs what can be <em>parallelized</em>.
+        </p>
+        <nav class="toc">
+          <a href="#ensembles">Ensembles</a>
+          <a href="#trees">Decision Trees</a>
+          <a href="#impurity">Gini & Information Gain</a>
+          <a href="#split-example">A Split Example</a>
+          <a href="#bagging">Bagging & Random Forest</a>
+          <a href="#boosting">Boosting Overview</a>
+          <a href="#adaboost">AdaBoost Deep Dive</a>
+          <a href="#xgboost">Gradient Boosting & XGBoost</a>
+          <a href="#parallel">Sequential vs Parallel</a>
+          <a href="#compare">Random Forest vs XGBoost</a>
+          <a href="#cheatsheet">Cheat Sheet</a>
+        </nav>
+      </div>
+    </header>
+
+    <!-- 1) Ensembles -->
+    <section id="ensembles">
+      <h2>1) What is an Ensemble? <span class="tag">Big Picture</span></h2>
+
+      <div class="callout">
+        <strong>Ensemble learning</strong> means we combine many simple models to create one strong model.
+        The individual models are called <strong>base learners</strong> (often decision trees).
+      </div>
+
+      <div class="grid cols2">
+        <div class="card">
+          <h3>Why does combining models help?</h3>
+          <ul>
+            <li><strong>Reduce variance</strong>: if one model is “noisy”, averaging many models smooths errors.</li>
+            <li><strong>Reduce bias</strong>: if one model is “too simple”, sequential correction can capture complex patterns.</li>
+            <li><strong>Stability</strong>: ensembles are less sensitive to small changes in data.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3>The two main families</h3>
+          <p><span class="badge"><span class="b"></span>Bagging</span> builds many models independently and averages/votes.</p>
+          <p><span class="badge"><span class="g g"></span>Boosting</span> builds models sequentially, each correcting earlier mistakes.</p>
+          <p class="callout amber" style="margin-top:10px">
+            <strong>Key theme:</strong> Bagging focuses on <strong>variance reduction</strong>. Boosting focuses on <strong>bias reduction</strong> (and can also reduce variance with regularization).
+          </p>
+        </div>
+      </div>
+
+      <div class="mini-diagram" aria-label="Bagging vs Boosting diagram">
+        <svg viewBox="0 0 980 210" role="img">
+          <defs>
+            <linearGradient id="g1" x1="0" x2="1">
+              <stop offset="0" stop-color="rgba(37,99,235,0.18)"/>
+              <stop offset="1" stop-color="rgba(6,182,212,0.14)"/>
+            </linearGradient>
+            <linearGradient id="g2" x1="0" x2="1">
+              <stop offset="0" stop-color="rgba(5,150,105,0.16)"/>
+              <stop offset="1" stop-color="rgba(124,58,237,0.14)"/>
+            </linearGradient>
+          </defs>
+
+          <rect x="15" y="16" width="455" height="178" rx="16" fill="url(#g1)" stroke="rgba(15,23,42,0.14)"/>
+          <text x="34" y="44" font-size="16" font-weight="800" fill="#0b2a4a">Bagging (Random Forest style)</text>
+          <text x="34" y="70" font-size="13" fill="#0b2a4a">Trees trained independently (can run in parallel)</text>
+
+          <!-- bagging trees -->
+          <g transform="translate(40,88)">
+            <rect x="0" y="0" width="70" height="58" rx="12" fill="rgba(255,255,255,0.75)" stroke="rgba(15,23,42,0.15)"/>
+            <text x="13" y="34" font-size="13" font-weight="800" fill="#0b2a4a">Tree 1</text>
+
+            <rect x="95" y="0" width="70" height="58" rx="12" fill="rgba(255,255,255,0.75)" stroke="rgba(15,23,42,0.15)"/>
+            <text x="108" y="34" font-size="13" font-weight="800" fill="#0b2a4a">Tree 2</text>
+
+            <rect x="190" y="0" width="70" height="58" rx="12" fill="rgba(255,255,255,0.75)" stroke="rgba(15,23,42,0.15)"/>
+            <text x="203" y="34" font-size="13" font-weight="800" fill="#0b2a4a">Tree 3</text>
+
+            <rect x="285" y="0" width="70" height="58" rx="12" fill="rgba(255,255,255,0.75)" stroke="rgba(15,23,42,0.15)"/>
+            <text x="298" y="34" font-size="13" font-weight="800" fill="#0b2a4a">Tree 4</text>
+
+            <text x="370" y="34" font-size="22" font-weight="900" fill="#0b2a4a">→</text>
+            <rect x="405" y="-2" width="90" height="62" rx="14" fill="rgba(255,255,255,0.82)" stroke="rgba(15,23,42,0.18)"/>
+            <text x="419" y="26" font-size="13" font-weight="900" fill="#0b2a4a">Average /</text>
+            <text x="419" y="44" font-size="13" font-weight="900" fill="#0b2a4a">Vote</text>
+          </g>
+
+          <rect x="510" y="16" width="455" height="178" rx="16" fill="url(#g2)" stroke="rgba(15,23,42,0.14)"/>
+          <text x="529" y="44" font-size="16" font-weight="800" fill="#0b2a4a">Boosting (AdaBoost / XGBoost style)</text>
+          <text x="529" y="70" font-size="13" fill="#0b2a4a">Trees trained sequentially (each corrects previous errors)</text>
+
+          <!-- boosting chain -->
+          <g transform="translate(535,92)">
+            <rect x="0" y="0" width="90" height="55" rx="12" fill="rgba(255,255,255,0.75)" stroke="rgba(15,23,42,0.15)"/>
+            <text x="16" y="33" font-size="13" font-weight="800" fill="#0b2a4a">Tree 1</text>
+
+            <text x="100" y="35" font-size="22" font-weight="900" fill="#0b2a4a">→</text>
+
+            <rect x="125" y="0" width="90" height="55" rx="12" fill="rgba(255,255,255,0.75)" stroke="rgba(15,23,42,0.15)"/>
+            <text x="141" y="33" font-size="13" font-weight="800" fill="#0b2a4a">Tree 2</text>
+
+            <text x="225" y="35" font-size="22" font-weight="900" fill="#0b2a4a">→</text>
+
+            <rect x="250" y="0" width="90" height="55" rx="12" fill="rgba(255,255,255,0.75)" stroke="rgba(15,23,42,0.15)"/>
+            <text x="266" y="33" font-size="13" font-weight="800" fill="#0b2a4a">Tree 3</text>
+
+            <text x="350" y="35" font-size="22" font-weight="900" fill="#0b2a4a">→</text>
+
+            <rect x="375" y="0" width="105" height="55" rx="12" fill="rgba(255,255,255,0.82)" stroke="rgba(15,23,42,0.18)"/>
+            <text x="386" y="24" font-size="13" font-weight="900" fill="#0b2a4a">Add weighted</text>
+            <text x="386" y="42" font-size="13" font-weight="900" fill="#0b2a4a">contributions</text>
+          </g>
+        </svg>
+      </div>
+    </section>
+
+    <!-- 2) Decision Trees -->
+    <section id="trees">
+      <h2>2) Decision Trees: How They Learn <span class="tag">Foundation</span></h2>
+
+      <div class="grid cols2">
+        <div class="card">
+          <h3>What a split really is</h3>
+          <p>
+            At a node, a decision tree searches for a question like:
+            <span class="math">$\text{feature}_j \le \text{threshold}$</span>
+            that divides the data into two groups (left/right).
+          </p>
+          <p>
+            The tree wants the children nodes to be <strong>more “pure”</strong> than the parent —
+            meaning each child contains mostly one class (for classification),
+            or reduced spread (for regression).
+          </p>
+        </div>
+
+        <div class="card">
+          <h3>The tree’s “greedy” rule</h3>
+          <p>
+            Trees usually use a greedy strategy:
+            <strong>pick the best split right now</strong>,
+            then repeat inside each child node.
+          </p>
+          <div class="callout amber">
+            Greedy means: it doesn’t look ahead many steps; it chooses the best local improvement.
+            That’s why trees are fast and intuitive — but also why a single tree can be unstable.
+          </div>
+        </div>
+      </div>
+
+      <details>
+        <summary>Optional: what does “best” mean in practice?</summary>
+        <p>
+          “Best” means the split that most reduces a chosen impurity measure (Gini/Entropy),
+          or for modern boosting (XGBoost) the split that most reduces the training loss (objective).
+          The spirit is identical: <strong>choose the split that creates the most useful separation</strong>.
+        </p>
+      </details>
+    </section>
+
+    <!-- 3) Impurity -->
+    <section id="impurity">
+      <h2>3) Impurity Measures: Gini and Information Gain <span class="tag">Splitting Criteria</span></h2>
+
+      <div class="callout violet">
+        <strong>Impurity</strong> is a number that tells you how mixed the classes are inside a node.
+        Lower impurity = node is closer to “all one class”.
+      </div>
+
+      <div class="grid cols2">
+        <div class="card">
+          <h3>Gini Impurity (CART; very common)</h3>
+          <p><strong>Idea:</strong> if a node is mostly one class, it’s pure; if it’s evenly mixed, it’s impure.</p>
+          <div class="math">
+            $$\mathrm{Gini}(\text{node}) = 1 - \sum_k p_k^2$$
+          </div>
+          <ul>
+            <li>Binary example: if p = 0.7 and 0.3 → Gini = 1 − (0.49 + 0.09) = 0.42</li>
+            <li>Pure node: p = 1.0 and 0.0 → Gini = 0</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3>Entropy & Information Gain (ID3/C4.5 style)</h3>
+          <p><strong>Idea:</strong> entropy measures “surprise” or uncertainty in the class label.</p>
+          <div class="math">
+            $$\mathrm{Entropy}(\text{node}) = -\sum_k p_k\,\log_2(p_k)$$
+          </div>
+          <p>
+            A split is chosen by maximizing Information Gain:
+          </p>
+          <div class="math">
+            $$IG = \mathrm{Entropy}(\text{parent}) - \left(\frac{N_L}{N}\,\mathrm{Entropy}(L) + \frac{N_R}{N}\,\mathrm{Entropy}(R)\right)$$
+          </div>
+        </div>
+      </div>
+
+      <div class="callout green">
+        <strong>How the tree uses impurity:</strong><br/>
+        For each candidate split, compute the children impurities, take a weighted average,
+        then choose the split with the <strong>largest impurity reduction</strong>.
+      </div>
+
+      <details>
+        <summary>Gini reduction formula (same shape as Information Gain)</summary>
+        <div class="math">
+          $$\mathrm{GiniSplit} = \frac{N_L}{N}\,\mathrm{Gini}(L) + \frac{N_R}{N}\,\mathrm{Gini}(R) \qquad
+          \mathrm{GiniGain} = \mathrm{Gini}(\text{parent}) - \mathrm{GiniSplit}$$
+        </div>
+      </details>
+    </section>
+
+    <!-- 4) Split example -->
+    <section id="split-example">
+      <h2>4) A Concrete Split Example (Step-by-Step) <span class="tag">Intuition</span></h2>
+
+      <p>
+        Imagine a node contains 10 training samples for binary classification (Yes/No):
+        <strong>6 Yes</strong>, <strong>4 No</strong>.
+      </p>
+
+      <div class="grid cols2">
+        <div class="card">
+          <h3>Parent impurity (Gini)</h3>
+          <p>p(Yes)=0.6, p(No)=0.4</p>
+          <div class="math">
+            $$\mathrm{Gini}(\text{parent}) = 1 - (0.6^2 + 0.4^2) = 1 - (0.36 + 0.16) = 0.48$$
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Try a candidate split</h3>
+          <p>Suppose we test: <span class="math">$\text{Age} \le 30$</span></p>
+          <ul>
+            <li>Left child: 6 samples → 5 Yes, 1 No</li>
+            <li>Right child: 4 samples → 1 Yes, 3 No</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="grid cols2">
+        <div class="card">
+          <h3>Child impurities</h3>
+          <div class="math">
+            $$\begin{aligned}
+            \mathrm{Gini}(L) &= 1 - \left(\left(\frac{5}{6}\right)^2 + \left(\frac{1}{6}\right)^2\right) = 1 - \frac{26}{36} = \frac{10}{36} \approx 0.2778 \\
+            \mathrm{Gini}(R) &= 1 - \left(\left(\frac{1}{4}\right)^2 + \left(\frac{3}{4}\right)^2\right) = 1 - \frac{10}{16} = \frac{6}{16} = 0.375
+            \end{aligned}$$
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Weighted average & gain</h3>
+          <div class="math">
+            $$\begin{aligned}
+            \mathrm{GiniSplit} &= \frac{6}{10}\cdot 0.2778 + \frac{4}{10}\cdot 0.375 = 0.3167 \\
+            \mathrm{GiniGain} &= 0.48 - 0.3167 = 0.1633
+            \end{aligned}$$
+          </div>
+          <p>
+            The tree would compare this gain with all other possible splits and choose the biggest.
+          </p>
+        </div>
+      </div>
+
+      <div class="callout">
+        <strong>Core takeaway:</strong> every split is “just” computing impurity before and after.
+        Ensembles (bagging/boosting) change <em>how</em> trees are trained, not the basic logic of splitting.
+      </div>
+    </section>
+
+    <!-- 5) Bagging -->
+    <section id="bagging">
+      <h2>5) Bagging and Random Forests <span class="tag">Variance Reduction</span></h2>
+
+      <div class="grid cols2">
+        <div class="card">
+          <h3>Bagging in plain words</h3>
+          <p>
+            Bagging trains many trees on slightly different versions of the dataset.
+            Each tree makes its own prediction, then we combine predictions by
+            <strong>averaging</strong> (regression) or <strong>voting</strong> (classification).
+          </p>
+          <div class="callout green">
+            Bagging is powerful because averaging many noisy models tends to cancel out random errors.
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>How do we get “different versions” of the data?</h3>
+          <p>
+            Using <strong>bootstrap sampling</strong>:
+            sample N points from the training set <em>with replacement</em>.
+            Some points repeat, some are missing.
+          </p>
+          <ul>
+            <li>Each tree sees a different dataset → trees become less correlated.</li>
+            <li>Less correlation → averaging works better.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3>Random Forest: Bagging + Feature Randomness</h3>
+      <div class="grid cols2">
+        <div class="card">
+          <p>
+            Random Forest adds one more trick:
+            at each split, it considers only a <strong>random subset of features</strong>.
+          </p>
+          <ul>
+            <li>This makes trees even more diverse.</li>
+            <li>Diversity improves the power of averaging.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <p><strong>What split criterion is used?</strong></p>
+          <p>
+            Usually <strong>Gini impurity</strong> for classification (CART-style),
+            and variance/MSE for regression.
+          </p>
+          <div class="callout amber">
+            In Random Forest, trees are independent, so you can train trees in parallel very easily.
+          </div>
+        </div>
+      </div>
+
+      <details>
+        <summary>Common Random Forest terms</summary>
+        <ul>
+          <li><strong>n_estimators</strong>: number of trees.</li>
+          <li><strong>max_features</strong>: how many features to try at each split.</li>
+          <li><strong>OOB (out-of-bag) error</strong>: estimate accuracy using samples left out of each bootstrap.</li>
+        </ul>
+      </details>
+    </section>
+
+    <!-- 6) Boosting overview -->
+    <section id="boosting">
+      <h2>6) Boosting Overview <span class="tag">Bias Reduction</span></h2>
+
+      <div class="callout">
+        <strong>Boosting</strong> trains trees one after another.
+        Each new tree is trained to correct mistakes made by the current ensemble.
+      </div>
+
+      <div class="grid cols2">
+        <div class="card">
+          <h3>Boosting as “learning from errors”</h3>
+          <p>
+            Suppose the first model is a little better than random.
+            It will still make mistakes on “hard” examples.
+            Boosting increases focus on those hard examples, so the next model improves where it matters.
+          </p>
+          <p>
+            Over many rounds, the ensemble becomes very strong.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3>Two major boosting styles</h3>
+          <ul>
+            <li><strong>AdaBoost</strong>: reweights training examples; uses a weighted vote.</li>
+            <li><strong>Gradient Boosting / XGBoost</strong>: minimizes a loss function using gradients; adds trees as corrections.</li>
+          </ul>
+          <div class="callout amber">
+            Boosting is sequential at the “tree level”: tree (t) depends on results from tree (t−1).
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7) AdaBoost -->
+    <section id="adaboost">
+      <h2>7) AdaBoost (Adaptive Boosting) — Deep Dive <span class="tag">Weights + Weak Learners</span></h2>
+
+      <div class="callout violet">
+        AdaBoost is easiest to understand if you imagine the algorithm is “turning up the volume” on points it got wrong.
+        Those points become more important in the next round.
+      </div>
+
+      <h3>What AdaBoost uses as base learners</h3>
+      <div class="grid cols2">
+        <div class="card">
+          <p>
+            Most commonly: <strong>decision stumps</strong> (depth-1 trees).
+            A stump is one split like:
+            <span class="math">$\text{feature}_j \le \text{threshold}$</span>.
+          </p>
+          <p>
+            A stump is weak by itself, but many stumps combined can form a complex boundary.
+          </p>
+        </div>
+        <div class="card">
+          <p>
+            AdaBoost is typically described for binary labels:
+            <span class="math">$y \in \{-1, +1\}$</span>.
+            (It can be extended, but binary is the cleanest story.)
+          </p>
+        </div>
+      </div>
+
+      <h3>AdaBoost algorithm (step-by-step)</h3>
+      <pre class="code">
+Initialize weights: w_i = 1/N for i=1..N
+
+For t = 1..T:
+  1) Train weak learner h_t(x) using weights w_i
+  2) Compute weighted error:
+       ε_t = Σ w_i * 1[y_i ≠ h_t(x_i)]
+  3) Compute learner weight (importance):
+       α_t = 0.5 * ln( (1 − ε_t) / ε_t )
+  4) Update sample weights:
+       w_i ← w_i * exp( −α_t * y_i * h_t(x_i) )
+     (misclassified points get upweighted)
+  5) Normalize weights so Σ w_i = 1
+
+Final prediction:
+  H(x) = sign( Σ α_t * h_t(x) )
+      </pre>
+
+      <div class="grid cols2">
+        <div class="card">
+          <h3>What does α mean?</h3>
+          <p>
+            <strong>α<sub>t</sub></strong> is how much we trust the stump.
+            If a stump has low error, it gets a larger α (more voting power).
+          </p>
+          <div class="math">
+            $$\alpha_t = \tfrac{1}{2}\ln\left(\frac{1-\varepsilon_t}{\varepsilon_t}\right)$$
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Why weights focus on mistakes</h3>
+          <p>
+            If a point is misclassified, the term
+            <span class="math">$\exp(-\alpha\, y\, h(x))$</span>
+            becomes <strong>exp(+α)</strong>, increasing its weight.
+            Correct points shrink by <strong>exp(−α)</strong>.
+          </p>
+          <div class="callout amber">
+            This is why AdaBoost can be sensitive to noise/outliers:
+            if an outlier is repeatedly misclassified, its weight can become huge.
+          </div>
+        </div>
+      </div>
+
+      <h3>How splitting/impurity works inside AdaBoost</h3>
+      <div class="callout green">
+        AdaBoost changes the “importance” of each training sample via weights.
+        That means when the stump chooses a split, it effectively uses a <strong>weighted impurity</strong> (or weighted classification error).
+      </div>
+
+      <details>
+        <summary>Weighted Gini idea (intuition)</summary>
+        <p>
+          In a normal node, class probability is “count of class / total count”.
+          In AdaBoost, it becomes “sum of weights of class / sum of all weights”.
+        </p>
+        <div class="math">
+          $$p_k = \frac{\sum_i w_i\,\mathbf{1}[y_i = k]}{\sum_i w_i} \qquad
+          \mathrm{WeightedGini} = 1 - \sum_k p_k^2$$
+        </div>
+        <p>
+          The stump still tries to reduce impurity — but now mistakes have larger weights,
+          so splits that fix mistakes become more attractive.
+        </p>
+      </details>
+
+      <details>
+        <summary>Mini numeric example (why a weak learner can get high α)</summary>
+        <p>
+          If ε = 0.2 (20% weighted error), then:
+        </p>
+        <div class="math">
+          $$\alpha = \tfrac{1}{2}\ln\left(\frac{0.8}{0.2}\right) = \tfrac{1}{2}\ln(4) \approx 0.693$$
+        </div>
+        <p>
+          That’s a strong positive weight, meaning the stump gets a meaningful vote.
+          If ε approaches 0.5, α approaches 0 (weak vote).
+        </p>
+      </details>
+    </section>
+
+    <!-- 8) XGBoost -->
+    <section id="xgboost">
+      <h2>8) Gradient Boosting and XGBoost <span class="tag">Loss Optimization</span></h2>
+
+      <div class="callout">
+        <strong>Gradient Boosting</strong> generalizes boosting by saying:
+        “Let’s minimize a loss function (objective) by adding trees that move us in the best direction.”
+      </div>
+
+      <h3>Gradient Boosting idea in simple steps</h3>
+      <div class="grid cols2">
+        <div class="card">
+          <ol>
+            <li>Start with a simple prediction (like the average).</li>
+            <li>Compute how wrong you are (residuals / gradients).</li>
+            <li>Train a small tree to predict those errors.</li>
+            <li>Add the tree (scaled by a learning rate) to improve predictions.</li>
+            <li>Repeat.</li>
+          </ol>
+        </div>
+        <div class="card">
+          <p><strong>Additive model view:</strong></p>
+          <div class="math">
+            $$\hat{y}^{(t)}(x) = \hat{y}^{(t-1)}(x) + \eta\, f_t(x)$$
+          </div>
+          <p>
+            Here <strong>η</strong> is the learning rate (shrinkage).
+            Smaller η usually needs more trees but improves generalization.
+          </p>
+        </div>
+      </div>
+
+      <h3>What makes XGBoost special?</h3>
+      <div class="grid cols3">
+        <div class="card">
+          <p><strong>Second-order optimization</strong></p>
+          <p>
+            Uses gradients (g) <em>and</em> Hessians (h) to choose better splits.
+          </p>
+          <span class="badge"><span class="v v"></span> More accurate split scoring</span>
+        </div>
+        <div class="card">
+          <p><strong>Regularization</strong></p>
+          <p>
+            Penalizes complex trees to reduce overfitting.
+            (Think: don’t let the model become “too wiggly”.)
+          </p>
+          <span class="badge"><span class="a a"></span> Better generalization</span>
+        </div>
+        <div class="card">
+          <p><strong>Engineering for speed</strong></p>
+          <p>
+            Histogram splits, cache efficiency, parallel computation, GPU support, distributed training.
+          </p>
+          <span class="badge"><span class="g g"></span> Much faster on large data</span>
+        </div>
+      </div>
+
+      <h3>How does XGBoost decide splits (vs Gini/Entropy)?</h3>
+      <div class="callout violet">
+        Random Forest uses <strong>impurity reduction</strong> (Gini/Entropy).<br/>
+        XGBoost uses <strong>objective reduction</strong> (loss + regularization).<br/><br/>
+        But conceptually, both are choosing the split that gives the “best improvement”.
+      </div>
+
+      <details>
+        <summary>Split “gain” intuition (no heavy math)</summary>
+        <p>
+          For a candidate split, XGBoost summarizes the node using two numbers:
+          the sum of gradients (G) and sum of Hessians (H) in that node.
+          It can estimate how much the objective improves if we split into left and right.
+        </p>
+        <div class="math">
+          $$\mathrm{Gain} \approx \mathrm{Score}(L) + \mathrm{Score}(R) - \mathrm{Score}(\text{parent}) - \gamma$$
+        </div>
+        <p>
+          Where γ is a penalty for creating a new split (discourages unnecessary splits).
+        </p>
+      </details>
+
+      <details>
+        <summary>Parallel-friendly split finding (histograms)</summary>
+        <p>
+          XGBoost often uses a histogram algorithm:
+        </p>
+        <ul>
+          <li>Bucket each feature into bins (like 256 bins).</li>
+          <li>Accumulate gradient/Hessian sums per bin.</li>
+          <li>Scan bins to find the best threshold.</li>
+        </ul>
+        <p>
+          This makes split-finding fast and parallelizable across features and bins.
+        </p>
+      </details>
+    </section>
+
+    <!-- 9) Sequential vs Parallel -->
+    <section id="parallel">
+      <h2>9) Sequential vs Parallel in Boosting (XGBoost) <span class="tag">Important Detail</span></h2>
+
+      <div class="callout amber">
+        <strong>Boosting is sequential across trees</strong> because tree t needs the gradients/residuals from the current model (trees 1..t−1).
+        So you can’t train all trees at once.
+      </div>
+
+      <h3>So how can XGBoost still be fast?</h3>
+      <p>
+        Because XGBoost parallelizes <strong>within each boosting round</strong>.
+        Think: “We can’t write Chapter 5 before Chapter 4, but many people can work in parallel on Chapter 4.”
+      </p>
+
+      <div class="grid cols2">
+        <div class="card">
+          <h3>What can be parallelized inside a round?</h3>
+          <ul>
+            <li><strong>Gradient & Hessian computation</strong> per data point (independent operations).</li>
+            <li><strong>Split search across features</strong> (each feature can be evaluated separately).</li>
+            <li><strong>Histogram building</strong> (bin counts/aggregations can be parallelized).</li>
+            <li><strong>Node processing at the same depth</strong> (level-wise growth enables parallel node expansion).</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3>Distributed / multi-GPU idea</h3>
+          <ul>
+            <li>Each worker computes local gradient statistics.</li>
+            <li>Workers do a <strong>reduce</strong> (sum) to combine stats.</li>
+            <li>Then the best split is chosen globally.</li>
+          </ul>
+          <div class="callout green">
+            Trees stay sequential, but the expensive computations inside each tree are distributed.
+          </div>
+        </div>
+      </div>
+
+      <details>
+        <summary>What XGBoost does NOT parallelize</summary>
+        <ul>
+          <li>Training tree (t+1) before finishing tree (t)</li>
+          <li>Skipping gradient dependency (that would break boosting)</li>
+        </ul>
+      </details>
+    </section>
+
+    <!-- 10) Comparison -->
+    <section id="compare">
+      <h2>10) Random Forest vs XGBoost <span class="tag">Practical Comparison</span></h2>
+
+      <table>
+        <tr>
+          <th>Aspect</th>
+          <th>Random Forest (Bagging)</th>
+          <th>XGBoost (Boosting)</th>
+        </tr>
+        <tr>
+          <td><strong>Training style</strong></td>
+          <td>Independent trees (parallel)</td>
+          <td>Sequential trees (each corrects errors)</td>
+        </tr>
+        <tr>
+          <td><strong>Main benefit</strong></td>
+          <td>Reduces variance, very robust</td>
+          <td>Reduces bias strongly, often best accuracy</td>
+        </tr>
+        <tr>
+          <td><strong>Split criterion</strong></td>
+          <td>Gini / Entropy (classification) or MSE (regression)</td>
+          <td>Objective gain using gradients & Hessians + regularization</td>
+        </tr>
+        <tr>
+          <td><strong>Noise sensitivity</strong></td>
+          <td>Usually more tolerant</td>
+          <td>More sensitive; needs regularization/tuning</td>
+        </tr>
+        <tr>
+          <td><strong>Hyperparameters</strong></td>
+          <td>Fewer critical knobs</td>
+          <td>More knobs; more control (and more tuning)</td>
+        </tr>
+        <tr>
+          <td><strong>Parallelism</strong></td>
+          <td>Across trees</td>
+          <td>Within each tree / round (features, bins, nodes)</td>
+        </tr>
+      </table>
+
+      <div class="callout">
+        <strong>Rule of thumb:</strong>
+        If you want a strong baseline with little tuning, Random Forest is great.
+        If you want maximum performance on tabular data and can tune/regularize, XGBoost often wins.
+      </div>
+    </section>
+
+    <!-- 11) Cheat sheet -->
+    <section id="cheatsheet">
+      <h2>11) Quick Cheat Sheet <span class="tag">Remember Fast</span></h2>
+
+      <div class="grid cols2">
+        <div class="card">
+          <h3>Bagging (Random Forest)</h3>
+          <ul>
+            <li><strong>Goal:</strong> reduce variance.</li>
+            <li><strong>How:</strong> bootstrap samples + random feature subsets.</li>
+            <li><strong>Combine:</strong> vote / average.</li>
+            <li><strong>Splits:</strong> Gini/Entropy (classification).</li>
+            <li><strong>Parallel:</strong> yes, across trees.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3>Boosting (AdaBoost / XGBoost)</h3>
+          <ul>
+            <li><strong>Goal:</strong> reduce bias by fixing errors.</li>
+            <li><strong>AdaBoost:</strong> reweight samples; weighted vote with α.</li>
+            <li><strong>Gradient Boosting:</strong> fit residuals/gradients; add trees.</li>
+            <li><strong>XGBoost:</strong> optimized objective + regularization + fast splits.</li>
+            <li><strong>Parallel:</strong> not across trees, but inside each round.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="callout rose">
+        <strong>If you only remember one thing:</strong><br/>
+        Trees split by reducing “badness” (impurity or loss).<br/>
+        Bagging improves stability by averaging many independent trees.<br/>
+        Boosting improves accuracy by sequentially correcting mistakes.
+      </div>
+
+      <p style="margin-top:16px;">
+        Jump back to the top: <a href="#top">↑</a>
+      </p>
+    </section>
+
+    <footer>
+      Built as a single self-contained HTML page (light theme). Copy into a file and open in your browser.
+    </footer>
+  </div>
+  <script src="../assets/js/nav.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AI Lead Playbook: 7 Days After Kickoff (Doc Q&A Pilot) — Tutorial + Document Pack</title>
+  <style>
+    :root{
+      /* Light theme (default) */
+      --bg:#f7f9fc;
+      --card:rgba(2,6,23,.03);
+      --border:rgba(2,6,23,.10);
+      --text:#0f172a;
+      --muted:#475569;
+
+      --h1:#0f172a;
+      --h2:#1d4ed8;
+      --h3:#0f766e;
+
+      --callout:rgba(15,118,110,.08);
+      --warn:rgba(225,29,72,.08);
+      --ok:rgba(29,78,216,.08);
+
+      --codebg:#f6f8fa;
+      --codeborder:#d0d7de;
+    }
+
+    @media (prefers-color-scheme: dark){
+      :root{
+        --bg:#0b1220;
+        --card:rgba(255,255,255,.06);
+        --border:rgba(255,255,255,.12);
+        --text:#e6eaf2;
+        --muted:#a8b3cf;
+
+        --h1:#eaf0ff;
+        --h2:#93c5fd;
+        --h3:#5eead4;
+
+        --callout:rgba(94,234,212,.10);
+        --warn:rgba(255,180,180,.12);
+        --ok:rgba(147,197,253,.12);
+
+        --codebg:#1e1e1e;
+        --codeborder:#2d2d2d;
+      }
+    }
+
+    body{
+      margin:0;
+      padding:28px 18px;
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height:1.65;
+      color:var(--text);
+      background:
+        radial-gradient(1200px 600px at 20% -10%, rgba(37,99,235,.12), transparent 60%),
+        radial-gradient(900px 500px at 90% 10%, rgba(15,118,110,.10), transparent 55%),
+        var(--bg);
+    }
+
+    @media (prefers-color-scheme: dark){
+      body{
+        background:
+          radial-gradient(1200px 600px at 20% -10%, rgba(97,175,254,.18), transparent 60%),
+          radial-gradient(900px 500px at 90% 10%, rgba(94,234,212,.12), transparent 55%),
+          var(--bg);
+      }
+    }
+
+    .container{
+      max-width: 1080px;
+      margin:0 auto;
+      padding:44px;
+      border:1px solid var(--border);
+      border-radius:14px;
+      background: linear-gradient(180deg, rgba(255,255,255,.85), rgba(255,255,255,.70));
+      box-shadow: 0 10px 30px rgba(2,6,23,.10);
+    }
+
+    @media (prefers-color-scheme: dark){
+      .container{
+        background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+        box-shadow: 0 10px 30px rgba(0,0,0,.35);
+        backdrop-filter: blur(8px);
+      }
+    }
+
+    h1{
+      margin:0 0 10px;
+      color:var(--h1);
+      letter-spacing:-0.02em;
+      font-size:2.05rem;
+    }
+    .lead{
+      margin:0 0 18px;
+      color:var(--muted);
+      max-width: 100ch;
+    }
+
+    .meta{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 16px 0 8px;
+    }
+    @media (max-width: 860px){ .meta{ grid-template-columns: 1fr; } }
+
+    .box{
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+    }
+    .box .k{
+      color: var(--muted);
+      font-size: .82rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 6px;
+    }
+
+    .toc{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin:14px 0 26px;
+      padding:0;
+      list-style:none;
+    }
+    .toc a{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      background:rgba(255,255,255,.06);
+      border:1px solid var(--border);
+      color:var(--text);
+      text-decoration:none;
+      font-size:.92rem;
+    }
+    .toc a:hover{ background: rgba(147,197,253,.12); border-color: rgba(147,197,253,.25); }
+
+    h2{
+      margin-top:44px;
+      padding-top:22px;
+      border-top:1px solid var(--border);
+      color:var(--h2);
+      letter-spacing:-0.01em;
+    }
+    h3{
+      margin:18px 0 10px;
+      color:var(--h3);
+      font-size:1.08rem;
+    }
+
+    p{ margin:0 0 14px; }
+    ul,ol{ margin:0 0 14px; padding-left:22px; }
+    li{ margin:0 0 8px; }
+
+    .card{
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px 18px 6px;
+      margin: 16px 0 20px;
+    }
+
+    .callout{
+      background: var(--callout);
+      border: 1px solid rgba(94,234,212,.22);
+      border-left: 5px solid var(--h3);
+      padding: 14px 16px;
+      border-radius: 12px;
+      margin: 18px 0;
+    }
+    .warn{
+      background: var(--warn);
+      border: 1px solid rgba(255,180,180,.25);
+      border-left: 5px solid rgba(255,180,180,.9);
+      padding: 14px 16px;
+      border-radius: 12px;
+      margin: 18px 0;
+    }
+    .ok{
+      background: var(--ok);
+      border: 1px solid rgba(147,197,253,.20);
+      border-left: 5px solid rgba(147,197,253,.85);
+      padding: 14px 16px;
+      border-radius: 12px;
+      margin: 18px 0;
+    }
+
+    code{
+      background: rgba(2,6,23,.05);
+      padding: 2px 6px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      color: var(--text);
+      font-size: .92em;
+    }
+    pre{
+      background-color: var(--codebg);
+      color: var(--text);
+      padding: 14px 16px;
+      border-radius: 12px;
+      overflow-x: auto;
+      border: 1px solid var(--codeborder);
+      margin: 10px 0 18px;
+      box-shadow: 0 1px 2px rgba(2,6,23,.10);
+      font-size: .92em;
+      white-space: pre;
+    }
+
+    @media (prefers-color-scheme: dark){
+      code{
+        background: rgba(255,255,255,.07);
+        color: #ffd6ff;
+      }
+      pre{
+        color: #d4d4d4;
+        box-shadow: 0 1px 2px rgba(0,0,0,.20);
+      }
+    }
+
+    table{
+      width:100%;
+      border-collapse: collapse;
+      margin: 10px 0 18px;
+      overflow:hidden;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.04);
+    }
+    th,td{
+      text-align:left;
+      padding:10px 12px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      vertical-align: top;
+    }
+    th{ color: var(--h1); font-size: .92rem; }
+    td{ color: var(--text); }
+
+    .grid2{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 10px 0 18px;
+    }
+    @media (max-width: 860px){ .grid2{ grid-template-columns: 1fr; } }
+
+    .pill{
+      display:inline-block;
+      padding: 2px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.05);
+      color: var(--text);
+      font-size: .86rem;
+      margin-right: 6px;
+      margin-bottom: 6px;
+    }
+
+    .footer-note{
+      margin-top: 34px;
+      color: var(--muted);
+      border-top: 1px dashed var(--border);
+      padding-top: 18px;
+    }
+  </style>
+  <link rel="stylesheet" href="../assets/css/book.css">
+</head>
+
+<body>
+  <div class="container">
+    <h1>AI Lead Playbook: 7 Days After Kickoff</h1>
+    <p class="lead">
+      This tutorial is a step-by-step guide for what an <strong>AI Lead Engineer</strong> does immediately after the pilot kickoff meeting.
+      It is aligned to our example project: <strong>Executive Document Q&amp;A</strong> (meeting notes/packs → cited answers) with strict access control.
+      The focus is not “build a demo” — it’s “ship a safe, measurable pilot.”
+    </p>
+
+    <div class="meta">
+      <div class="box">
+        <div class="k">Project</div>
+        Executive Document Q&amp;A (Cited RAG Assistant)
+      </div>
+      <div class="box">
+        <div class="k">Enterprise reality</div>
+        Governance + access + evaluation gates must exist before users see it
+      </div>
+      <div class="box">
+        <div class="k">AI Lead outcome</div>
+        Convert kickoff decisions into approvals + backlog + evaluation + operating model
+      </div>
+      <div class="box">
+        <div class="k">Team shape (example)</div>
+        5 engineers (data + software) + stakeholders (EA/Ops/Security/Data Owners)
+      </div>
+    </div>
+
+    <ul class="toc">
+      <li><a href="#northstar">North Star (what we’re building)</a></li>
+      <li><a href="#week">7-day plan</a></li>
+      <li><a href="#docs">Document pack (templates)</a></li>
+      <li><a href="#roles">Who writes what</a></li>
+      <li><a href="#gates">Release gates</a></li>
+      <li><a href="#checklist">AI lead checklist</a></li>
+    </ul>
+
+    <h2 id="northstar">0) North Star: what we’re actually building</h2>
+    <div class="card">
+      <p>
+        A pilot tool that answers questions like: <em>“What did Chandima mention about no meeting on 1 Dec?”</em>
+        and returns:
+      </p>
+      <ul>
+        <li><strong>Short answer</strong> (2–6 sentences)</li>
+        <li><strong>Citations</strong> (doc title + link + excerpt; timestamp if transcript exists)</li>
+        <li><strong>Safe failure</strong> (“not found” when evidence is insufficient)</li>
+        <li><strong>Audit trail</strong> (who asked, what evidence was used)</li>
+      </ul>
+
+      <div class="ok">
+        <strong>Lead-level framing:</strong> “If you can’t cite it, you can’t say it.”
+      </div>
+
+      <div class="warn">
+        <strong>Pilot constraint:</strong> we only answer over an approved, bounded corpus. “All company docs” is a later phase.
+      </div>
+    </div>
+
+    <h2 id="week">1) The 7 days after kickoff (what I do, day by day)</h2>
+
+    <div class="card">
+      <h3>Day 0–1: Freeze decisions + unblock access</h3>
+      <p><span class="pill">Goal</span> Make the pilot buildable by eliminating ambiguity and starting approval workflows.</p>
+      <ol>
+        <li><strong>Publish the Decision Record</strong> (pilot cohort, corpus, exclusions, success metrics, named owners).</li>
+        <li><strong>Create the Approvals Tracker</strong> (data owner approvals, IAM/service identity requests, privacy/risk checks).</li>
+        <li><strong>Confirm the pilot cohort mechanism</strong>: names vs org group (recommended: group).</li>
+      </ol>
+
+      <div class="callout">
+        <strong>Why this is first:</strong> approvals take longer than engineering. Start them immediately or delivery stalls in week 2.
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Day 2–3: Produce reviewable design + sprint-ready execution plan</h3>
+      <p><span class="pill">Goal</span> Get “approval to build” and start engineering with a clear vertical slice milestone.</p>
+      <ol>
+        <li><strong>Write the Architecture Review Pack (HLD)</strong> with trust boundaries, access model, data flows, risks.</li>
+        <li><strong>Write 3–5 ADRs</strong> documenting key decisions (citations-only, tenant isolation, corpus gating, etc.).</li>
+        <li><strong>Convert the plan into epics + stories</strong> and define the <em>vertical slice</em> milestone.</li>
+      </ol>
+
+      <div class="ok">
+        <strong>Vertical slice definition:</strong> ingest a small approved sample → retrieve with filters → answer with citations → audit log → eval run.
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Day 3–4: Co-design with EA + Ops and build the “Golden Set”</h3>
+      <p><span class="pill">Goal</span> Lock real workflow and create evaluation gates.</p>
+      <ol>
+        <li><strong>Run a co-design session</strong> with EA + Ops to define what “usable output” looks like.</li>
+        <li><strong>Collect 30–50 real questions</strong> and record expected source documents.</li>
+        <li><strong>Define the scoring rubric</strong> (citation correctness, groundedness, refusal correctness).</li>
+      </ol>
+
+      <div class="callout">
+        <strong>AI lead rule:</strong> you don’t “finish prompting” — you ship prompts behind eval gates and iterate with evidence.
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Day 5–7: Set the operating model + drive the first slice to demo readiness</h3>
+      <p><span class="pill">Goal</span> Make the pilot safe to run, not just build.</p>
+      <ol>
+        <li><strong>Define runbooks</strong> (wrong answer investigation, “not found” investigation, dependency outage behavior).</li>
+        <li><strong>Define go-live checklist</strong> (auth, gating, audit logs, eval threshold, dashboards).</li>
+        <li><strong>Demo the vertical slice internally</strong> to stakeholders and capture feedback.</li>
+      </ol>
+
+      <div class="warn">
+        <strong>Important:</strong> A pilot without monitoring, audit logs, and a support owner is a “prototype,” not enterprise delivery.
+      </div>
+    </div>
+
+    <h2 id="docs">2) The AI Lead Document Pack (aligned to this project)</h2>
+
+    <div class="card">
+      <h3>2.1 Decision Record (template)</h3>
+      <p class="small">This is the single most important artifact to prevent scope drift.</p>
+      <pre>
+Title: Exec Doc Q&A Pilot — Decision Record (v1)
+
+1) Pilot Cohort
+- Access group: docqa-pilot-execs@company.com
+- Access group: docqa-pilot-eas@company.com
+- Pilot champion: (name)
+
+2) Approved Corpus
+- Source: (Drive/SharePoint/etc.)
+- Locations: (folder IDs / site URLs)
+- Time window: last 6 months
+- Exclusions: HR, Legal, customer PII-heavy corpora
+
+3) Success Metrics (Pilot)
+- EA time saved: baseline measured week 0 → target +30% improvement
+- Citation correctness: >= X on golden set
+- Adoption: weekly active users >= Y
+
+4) Go-live Gate (Pilot)
+- All access controls enforced
+- Audit logging active
+- Golden set passes thresholds
+- Monitoring dashboards live
+- Named support owner
+
+5) Owners / Contacts
+- Business owner:
+- Data owner:
+- Security/IAM:
+- Privacy/Risk:
+- AI lead:
+      </pre>
+    </div>
+
+    <div class="card">
+      <h3>2.2 Architecture Review Pack (HLD) — what it must contain</h3>
+      <ul>
+        <li><strong>System diagram + trust boundaries</strong> (where identity is verified, where data is stored, where LLM is called)</li>
+        <li><strong>Identity + access model</strong>: SSO, group gating, corpus gating, tenant/user mapping</li>
+        <li><strong>Data flow</strong>: what is ingested, stored, indexed, retrieved, and sent to the LLM</li>
+        <li><strong>Threats &amp; mitigations</strong>: leakage, prompt injection, sensitive logs, exfil</li>
+        <li><strong>Operational view</strong>: metrics/logs/traces, failure modes, runbook ownership</li>
+      </ul>
+      <div class="callout">
+        <strong>Architecture review purpose:</strong> approval to build (early) and approval to go-live (later).
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>2.3 ADRs (Architecture Decision Records) for this project</h3>
+      <ul>
+        <li><code>ADR-001</code> — “Cited answers only; refuse without evidence.”</li>
+        <li><code>ADR-002</code> — “Tenant isolation strategy (tenant_id/user_id; DB backstop).”</li>
+        <li><code>ADR-003</code> — “Pilot uses corpus allowlist; per-doc ACLs in phase 2.”</li>
+        <li><code>ADR-004</code> — “Model boundary: send only retrieved snippets; redact sensitive patterns.”</li>
+        <li><code>ADR-005</code> — “Evaluation gates required for prompt/retrieval changes.”</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>2.4 EA/Ops Co-Design Notes + Output Contract</h3>
+      <ul>
+        <li>What counts as “proof”: snippet + link, optional timestamp</li>
+        <li>Answer length and tone suitable for executive briefings</li>
+        <li>Refusal rules (“not found” behavior)</li>
+        <li>Examples of good questions vs bad questions</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>2.5 Golden Set + Rubric (evaluation pack)</h3>
+      <p class="small">You build this from real EA/Ops questions. It becomes your go-live gate.</p>
+      <pre>
+Golden Set entry example:
+- Question: "What did Chandima mention about no meeting on 1 Dec?"
+- Expected evidence: "Exec Forum Minutes 2024-12-01" section "Agenda changes"
+- Score:
+  - Citation correctness (0/1/2)
+  - Groundedness (0/1/2)
+  - Refusal correctness (0/1)
+  - Helpfulness (0/1)
+      </pre>
+      <div class="ok">
+        <strong>Lead-level move:</strong> every prompt/retrieval change runs the golden set and compares metrics.
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>2.6 Runbooks + Go-live checklist</h3>
+      <ul>
+        <li><strong>Runbook:</strong> “Wrong answer” → check citations → check retrieved chunks → check ingestion freshness</li>
+        <li><strong>Runbook:</strong> “Not found” → verify corpus boundaries → verify metadata → verify index update</li>
+        <li><strong>Checklist:</strong> access control enforced, audit logs written, eval thresholds met, dashboards live</li>
+      </ul>
+    </div>
+
+    <h2 id="roles">3) Who writes what (team of 5)</h2>
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>Artifact / Workstream</th>
+            <th>Primary owner</th>
+            <th>Support</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Decision record, ADRs, eval gates</td>
+            <td><strong>AI Lead</strong></td>
+            <td>Business owner, EM</td>
+          </tr>
+          <tr>
+            <td>Architecture review pack</td>
+            <td><strong>AI Lead</strong></td>
+            <td>Security/IAM, EM, senior engineer</td>
+          </tr>
+          <tr>
+            <td>Golden set + rubric</td>
+            <td><strong>AI Lead</strong></td>
+            <td>EA rep, Ops rep, SME</td>
+          </tr>
+          <tr>
+            <td>Ingestion & metadata</td>
+            <td>Data engineers (2)</td>
+            <td>AI lead (schema), data owners</td>
+          </tr>
+          <tr>
+            <td>Backend/auth/audit</td>
+            <td>Software engineers (2)</td>
+            <td>Security/IAM, AI lead (requirements)</td>
+          </tr>
+          <tr>
+            <td>Runbooks + dashboards</td>
+            <td>EM / senior engineer</td>
+            <td>AI lead (what to measure), Ops</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 id="gates">4) Release gates (what must be true before pilot users get access)</h2>
+    <div class="card">
+      <ul>
+        <li><strong>Auth gate:</strong> only allowed org group can access</li>
+        <li><strong>Corpus gate:</strong> retrieval restricted to approved doc sets</li>
+        <li><strong>Citation gate:</strong> answers contain citations or refuse</li>
+        <li><strong>Leakage gate:</strong> cross-user/cross-corpus tests pass</li>
+        <li><strong>Audit gate:</strong> every answer logs user + cited sources</li>
+        <li><strong>Eval gate:</strong> golden set meets threshold</li>
+        <li><strong>Ops gate:</strong> dashboards + runbook + support owner exist</li>
+      </ul>
+
+      <div class="warn">
+        <strong>Enterprise truth:</strong> “Working” is not enough. It must be <em>measurable, auditable, and operable</em>.
+      </div>
+    </div>
+
+    <h2 id="checklist">5) AI Lead checklist (copy/paste)</h2>
+    <div class="card">
+      <ul>
+        <li>☐ Decision record published and agreed</li>
+        <li>☐ Approvals tracker created with named owners</li>
+        <li>☐ Architecture review pack drafted and review booked</li>
+        <li>☐ ADRs created for key choices</li>
+        <li>☐ EA/Ops co-design session completed</li>
+        <li>☐ Golden set + rubric created</li>
+        <li>☐ Sprint backlog created + vertical slice milestone defined</li>
+        <li>☐ Runbooks drafted + go-live checklist defined</li>
+        <li>☐ Pilot comms/training outline assigned to business owner/EA</li>
+      </ul>
+
+      <div class="ok">
+        <strong>Result:</strong> by the end of week 1, you have a governable plan + measurable gates + build momentum.
+      </div>
+    </div>
+
+    <p class="footer-note">
+      If you want, I can generate a fully filled-out <strong>Decision Record</strong>, <strong>Architecture Review Pack outline</strong>,
+      and a sample <strong>Golden Set</strong> (30 questions) using your “meeting notes” scenario so you can reuse them in interviews.
+    </p>
+  </div>
+  <script src="../assets/js/nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OIDC + OAuth2 + PKCE → Bearer Token → FastAPI Identity</title>
+  <style>
+    :root{
+      /* Light theme (default) */
+      --bg: #f7f9fc;
+      --panel: rgba(2,6,23,.04);
+      --card: rgba(2,6,23,.03);
+      --border: rgba(2,6,23,.10);
+      --text: #0f172a;
+      --muted: #475569;
+
+      --h1: #0f172a;
+      --h2: #1d4ed8;
+      --h3: #0f766e;
+
+      --accent: rgba(29,78,216,.10);
+      --callout: rgba(15,118,110,.08);
+      --warn: rgba(225,29,72,.08);
+
+      /* Keep code blocks in VS Code Dark+ style */
+      --codebg: #1e1e1e;
+      --codeborder: #2d2d2d;
+    }
+
+    @media (prefers-color-scheme: dark){
+      :root{
+        --bg: #0b1220;
+        --panel: rgba(255,255,255,.05);
+        --card: rgba(255,255,255,.06);
+        --border: rgba(255,255,255,.10);
+        --text: #e6eaf2;
+        --muted: #a8b3cf;
+
+        --h1: #eaf0ff;
+        --h2: #93c5fd;
+        --h3: #5eead4;
+
+        --accent: rgba(147,197,253,.14);
+        --callout: rgba(94,234,212,.10);
+        --warn: rgba(249,62,62,.10);
+
+        --codebg: #1e1e1e;
+        --codeborder: #2d2d2d;
+      }
+    }
+
+    body{
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.65;
+      color: var(--text);
+      margin: 0;
+      padding: 28px 18px;
+      background:
+        radial-gradient(1200px 600px at 20% -10%, rgba(37,99,235,.12), transparent 60%),
+        radial-gradient(900px 500px at 90% 10%, rgba(15,118,110,.10), transparent 55%),
+        var(--bg);
+    }
+
+    @media (prefers-color-scheme: dark){
+      body{
+        background:
+          radial-gradient(1200px 600px at 20% -10%, rgba(97,175,254,.18), transparent 60%),
+          radial-gradient(900px 500px at 90% 10%, rgba(94,234,212,.12), transparent 55%),
+          var(--bg);
+      }
+    }
+
+    .container{
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 44px;
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(255,255,255,.85), rgba(255,255,255,.70));
+      border: 1px solid var(--border);
+      box-shadow: 0 10px 30px rgba(2,6,23,.10);
+    }
+
+    @media (prefers-color-scheme: dark){
+      .container{
+        background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+        box-shadow: 0 10px 30px rgba(0,0,0,.35);
+        backdrop-filter: blur(8px);
+      }
+    }
+
+    h1{
+      color: var(--h1);
+      margin: 0 0 10px;
+      letter-spacing: -0.02em;
+      font-size: 2.0rem;
+    }
+    .lead{
+      color: var(--muted);
+      margin: 0 0 18px;
+      max-width: 90ch;
+    }
+
+    .toc{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 14px 0 26px;
+      padding: 0;
+      list-style: none;
+    }
+    .toc a{
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid var(--border);
+      color: var(--text);
+      text-decoration: none;
+      font-size: .92rem;
+    }
+    .toc a:hover{ background: rgba(147,197,253,.12); border-color: rgba(147,197,253,.25); }
+
+    h2{
+      color: var(--h2);
+      margin-top: 44px;
+      border-top: 1px solid var(--border);
+      padding-top: 22px;
+      letter-spacing: -0.01em;
+    }
+    h3{
+      color: var(--h3);
+      margin: 18px 0 10px;
+      font-size: 1.05rem;
+    }
+
+    p{ margin: 0 0 14px; }
+    ul, ol{ margin: 0 0 14px; padding-left: 22px; }
+    li{ margin: 0 0 8px; color: var(--text); }
+    strong{ color: var(--h1); }
+
+    code{
+      background-color: rgba(2,6,23,.05);
+      padding: 2px 6px;
+      border-radius: 7px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      color: var(--text);
+      font-size: 0.92em;
+      border: 1px solid var(--border);
+    }
+
+    @media (prefers-color-scheme: dark){
+      code{
+        background-color: rgba(255,255,255,.07);
+        color: #ffd6ff;
+      }
+    }
+
+    pre{
+      background-color: var(--codebg);
+      color: #d4d4d4; /* VS Code editor foreground */
+      padding: 16px;
+      border-radius: 12px;
+      overflow-x: auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 0.92em;
+      margin: 10px 0 18px;
+      border: 1px solid var(--codeborder);
+      box-shadow: 0 1px 2px rgba(0,0,0,.20);
+    }
+
+    /* VS Code Dark+ token colors (used by the tiny JS highlighter below) */
+    .tok-kw  { color: #569cd6; font-weight: 600; } /* keywords */
+    .tok-fn  { color: #dcdcaa; font-weight: 600; } /* function names */
+    .tok-typ { color: #4ec9b0; }                   /* types/classes */
+    .tok-str { color: #ce9178; }                   /* strings */
+    .tok-com { color: #6a9955; }                   /* comments */
+    .tok-num { color: #b5cea8; }                   /* numbers */
+
+    /* Make inline code on white blocks still pleasant if nested */
+    pre code{
+      background: transparent;
+      border: 0;
+      padding: 0;
+      color: inherit;
+      white-space: pre;
+    }
+
+    .card{
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px 18px 6px;
+      margin: 16px 0 20px;
+    }
+
+    .callout{
+      background: var(--callout);
+      border: 1px solid rgba(94,234,212,.22);
+      border-left: 5px solid var(--h3);
+      padding: 14px 16px;
+      border-radius: 12px;
+      margin: 18px 0;
+    }
+
+    .warn{
+      background: var(--warn);
+      border: 1px solid rgba(249,62,62,.22);
+      border-left: 5px solid #f93e3e;
+      padding: 14px 16px;
+      border-radius: 12px;
+      margin: 18px 0;
+    }
+
+    .kv{
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin: 10px 0 16px;
+    }
+    @media (max-width: 700px){ .kv{ grid-template-columns: 1fr; } }
+    .kv .box{
+      background: rgba(255,255,255,.05);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+    }
+    .kv .box .k{
+      color: var(--muted);
+      font-size: .85rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 6px;
+    }
+
+    .footer-note{
+      margin-top: 34px;
+      color: var(--muted);
+      border-top: 1px dashed var(--border);
+      padding-top: 18px;
+    }
+    a{ color: var(--h2); }
+  </style>
+  <link rel="stylesheet" href="../assets/css/book.css">
+</head>
+
+<body>
+  <div class="container">
+    <h1>OIDC + OAuth2 + PKCE → Bearer Token → FastAPI Identity</h1>
+    <p class="lead">
+      This is the same story end-to-end: how a React SPA securely obtains an <code>access_token</code> (PKCE),
+      and how FastAPI validates that token and maps it to <code>tenant_id</code> + <code>user_id</code> per request.
+    </p>
+
+    <div class="card" id="acronyms">
+      <h3>Acronyms (quick reference)</h3>
+      <ul>
+        <li><strong>IdP</strong>: Identity Provider (e.g., Google Identity, Auth0, Okta, Entra ID)</li>
+        <li><strong>OAuth2</strong>: OAuth 2.0 (authorization framework; how clients get tokens to call APIs)</li>
+        <li><strong>OIDC</strong>: OpenID Connect (authentication layer on top of OAuth2; adds login + identity claims)</li>
+        <li><strong>PKCE</strong>: Proof Key for Code Exchange (protects authorization-code flow for public clients like SPAs)</li>
+        <li><strong>JWT</strong>: JSON Web Token (self-contained, signed token format commonly used for access tokens)</li>
+        <li><strong>JWKS</strong>: JSON Web Key Set (IdP endpoint that publishes public signing keys for JWT verification)</li>
+        <li><strong>SPA</strong>: Single Page Application (React running in the browser)</li>
+      </ul>
+    </div>
+
+    <div class="card" id="jwt-jwks">
+      <h3>JWT &amp; JWKS (the missing piece)</h3>
+      <p>
+        The confusion usually comes from not separating two steps:
+        <strong>(1) token issuance</strong> (frontend ↔ IdP) vs <strong>(2) token validation</strong> (backend verifying the token).
+      </p>
+
+      <h3>JWT (JSON Web Token)</h3>
+      <ul>
+        <li>
+          A <strong>JWT</strong> is a compact token format commonly used for <code>access_token</code>.
+          It is typically <strong>signed</strong> so APIs can verify it hasn’t been tampered with.
+        </li>
+        <li>
+          It usually contains <strong>claims</strong> (e.g., <code>sub</code>, <code>iss</code>, <code>aud</code>, <code>exp</code>) inside the token payload.
+        </li>
+      </ul>
+      <pre>JWT structure (conceptual):
+header.payload.signature
+
+- header: metadata (often includes "kid" = key id)
+- payload: claims (sub, iss, aud, exp, ...)
+- signature: proves the IdP signed it with its private key</pre>
+
+      <h3>JWKS (JSON Web Key Set)</h3>
+      <ul>
+        <li>
+          A <strong>JWKS</strong> is the IdP’s published set of <strong>public keys</strong>.
+          Your backend uses these public keys to verify the JWT signature.
+        </li>
+        <li>
+          The backend typically fetches JWKS from a well-known IdP URL, caches it, and refreshes periodically (key rotation).
+        </li>
+        <li>
+          The JWT header often includes <code>kid</code> so the backend can pick the correct public key from the JWKS.
+        </li>
+      </ul>
+
+      <div class="callout">
+        <strong>Where they come into the picture:</strong><br />
+        The IdP issues an <code>access_token</code> (often a <strong>JWT</strong>). Then the backend validates the token signature using the IdP’s <strong>JWKS</strong>.
+        This is why the backend usually does <em>not</em> need to call the IdP “to ask who the user is” on every request.
+      </div>
+    </div>
+
+    <ul class="toc">
+      <li><a href="#bearer">Bearer token per request</a></li>
+      <li><a href="#oidc-vs-oauth2">OAuth2 vs OIDC</a></li>
+      <li><a href="#pkce">What PKCE is</a></li>
+      <li><a href="#setup">One-time setup</a></li>
+      <li><a href="#sequence">Message sequence</a></li>
+      <li><a href="#backend-validation">Backend validation</a></li>
+      <li><a href="#jwks-fetch-cache">JWKS fetch/cache</a></li>
+      <li><a href="#onboarding">User registration & access</a></li>
+      <li><a href="#final-mapping">Mapping Token to Identity</a></li>
+      <li><a href="#scale">Why it scales</a></li>
+    </ul>
+
+    <h2 id="bearer">Bearer token per request (how FastAPI identifies callers)</h2>
+    <p>Your backend identifies the user (and tenant) because every request carries:</p>
+    <pre>Authorization: Bearer &lt;token&gt;</pre>
+    <p>The key questions are:</p>
+    <ul>
+      <li>How does the frontend generate <code>&lt;token&gt;</code> securely?</li>
+      <li>How does the backend trust it?</li>
+    </ul>
+
+    <h2 id="oidc-vs-oauth2">OAuth2 vs OIDC (in this story)</h2>
+    <div class="kv">
+      <div class="box">
+        <div class="k">OAuth2</div>
+        <div>How the client obtains an <strong>access token</strong> to call an API.</div>
+      </div>
+      <div class="box">
+        <div class="k">OIDC</div>
+        <div>Adds <strong>authentication</strong> (“login”) and identity info (ID token + claims) on top of OAuth2.</div>
+      </div>
+    </div>
+    <p>In practice:</p>
+    <ul>
+      <li>The React app uses <strong>OIDC</strong> to sign in with an IdP (e.g., Google Workspace).</li>
+      <li>The React app uses the resulting <strong>access token</strong> as the Bearer token when calling FastAPI.</li>
+    </ul>
+
+    <h2 id="pkce">What PKCE is (and why you need it)</h2>
+
+    <div class="card">
+      <h3>The problem PKCE solves</h3>
+      <p>
+        A React SPA is a <strong>public client</strong>: it cannot safely store a permanent client secret in the browser.
+        Without protection, an attacker who steals the authorization code could exchange it for tokens.
+      </p>
+
+      <h3>PKCE in one sentence</h3>
+      <p>
+        PKCE (“Proof Key for Code Exchange”) makes the authorization code usable only by the same client instance that started the login.
+      </p>
+
+      <h3>How PKCE works (simple)</h3>
+      <ol>
+        <li>React generates a random secret string: <code>code_verifier</code></li>
+        <li>React hashes it into <code>code_challenge</code></li>
+        <li>React sends <code>code_challenge</code> during the login redirect</li>
+        <li>Later, when exchanging the authorization code for tokens, React must present the original <code>code_verifier</code></li>
+        <li>The IdP checks the verifier matches the earlier challenge</li>
+      </ol>
+
+      <div class="callout">
+        <strong>Result:</strong> If someone stole the authorization code but doesn’t have the verifier, they can’t get tokens.
+      </div>
+
+      <div class="warn">
+        <strong>Important boundary:</strong> PKCE is between the frontend and the IdP. Your FastAPI backend does not perform PKCE.
+      </div>
+    </div>
+
+    <h2 id="setup">What you must set up first (one-time)</h2>
+
+    <div class="card">
+      <h3>On the Identity Provider (e.g., Google Identity / Workspace)</h3>
+      <ul>
+        <li>Create an OAuth client for your SPA</li>
+        <li>You get a <code>client_id</code></li>
+        <li>Set redirect URI (e.g., <code>https://app.example.com/callback</code>)</li>
+        <li>Choose scopes (typical: <code>openid email profile</code>)</li>
+      </ul>
+
+      <h3>On FastAPI (what the backend “keeps”)</h3>
+      <p>The backend remains stateless and does not store per-user sessions. It keeps:</p>
+      <ul>
+        <li>Trusted issuer(s) (who is allowed to mint tokens)</li>
+        <li>Expected audience (token must be intended for your API/client)</li>
+        <li>Access to the IdP’s public signing keys (JWKS), usually cached</li>
+      </ul>
+      <div class="callout"><strong>That’s enough</strong> to validate tokens for any user on any request.</div>
+    </div>
+
+    <h2 id="sequence">Concrete message sequence (OIDC Authorization Code + PKCE)</h2>
+
+    <div class="card">
+      <h3>1) React redirects user to the IdP /authorize (includes PKCE challenge)</h3>
+      <pre>GET https://accounts.google.com/o/oauth2/v2/auth?
+  response_type=code&
+  client_id=YOUR_CLIENT_ID&
+  redirect_uri=https%3A%2F%2Fapp.example.com%2Fcallback&
+  scope=openid%20email%20profile&
+  state=RANDOM_STATE&
+  code_challenge=PKCE_CHALLENGE&
+  code_challenge_method=S256</pre>
+      <ul>
+        <li><code>response_type=code</code> → request an authorization code</li>
+        <li><code>scope=openid ...</code> → OIDC login + identity</li>
+        <li><code>code_challenge</code> → PKCE protection</li>
+      </ul>
+
+      <h3>2) IdP redirects back with the authorization code</h3>
+      <pre>GET https://app.example.com/callback?code=AUTH_CODE&amp;state=RANDOM_STATE</pre>
+
+      <h3>3) React exchanges code for tokens at /token (includes PKCE verifier)</h3>
+      <pre>POST https://oauth2.googleapis.com/token HTTP/1.1
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=authorization_code&
+code=AUTH_CODE&
+redirect_uri=https%3A%2F%2Fapp.example.com%2Fcallback&
+client_id=YOUR_CLIENT_ID&
+code_verifier=PKCE_VERIFIER</pre>
+
+      <h3>4) IdP returns tokens</h3>
+      <pre>{
+  "token_type": "Bearer",
+  "access_token": "....",
+  "id_token": "....",
+  "expires_in": 3600,
+  "scope": "openid email profile"
+}</pre>
+      <p>Now the frontend can call your API.</p>
+    </div>
+
+    <h2>The API call to FastAPI (per user, per request)</h2>
+    <pre>POST /query HTTP/1.1
+Host: api.example.com
+Authorization: Bearer &lt;access_token_for_user_742&gt;
+Content-Type: application/json
+
+{ "question": "..." }</pre>
+
+    <h2 id="backend-validation">How the backend knows the token is “correct”</h2>
+    <p>FastAPI doesn’t “trust the browser”. It trusts the IdP’s signature + standard token checks.</p>
+
+    <div class="callout">
+      <strong>Does the backend call the IdP on every request?</strong><br />
+      Usually <strong>no</strong>. With <strong>JWT access tokens</strong>, the backend verifies the signature locally using the IdP’s
+      <strong>public keys</strong> (from <strong>JWKS</strong>), plus it checks standard claims (<code>iss</code>, <code>aud</code>, <code>exp</code>).
+      The backend may fetch JWKS occasionally (and cache it), not per request.
+    </div>
+
+    <div class="card">
+      <h3>What “signature verification using JWKS” means</h3>
+      <ol>
+        <li>The IdP signs the JWT with its <strong>private key</strong> when issuing the token.</li>
+        <li>The backend reads the token header (often containing <code>kid</code>).</li>
+        <li>The backend selects the matching <strong>public key</strong> from the cached <strong>JWKS</strong>.</li>
+        <li>The backend verifies the JWT signature. If it matches, the token was minted by the IdP and wasn’t altered.</li>
+      </ol>
+    </div>
+
+    <div class="card" id="jwks-fetch-cache">
+      <h3>How the backend gets JWKS, where it caches it, and when it refreshes</h3>
+      <p>
+        <strong>Where does JWKS come from?</strong> In OIDC, the IdP exposes a discovery document at
+        <code>/.well-known/openid-configuration</code>. That JSON includes a <code>jwks_uri</code> URL.
+      </p>
+      <p>
+        <strong>Where is it cached?</strong> Most APIs cache JWKS <strong>in memory</strong> inside each running process (each Uvicorn worker / each GKE pod).
+        That means:
+      </p>
+      <ul>
+        <li>Pod A caches keys in Pod A memory (Pod B has its own cache).</li>
+        <li>On restart/rollout, the cache is empty and re-fetched on first request (or warm-up).</li>
+      </ul>
+      <p>
+        <strong>When does it refresh?</strong> Common triggers:
+      </p>
+      <ul>
+        <li><strong>TTL expiry</strong> (e.g., refresh every 5–60 minutes).</li>
+        <li><strong>Unknown <code>kid</code></strong> (IdP rotated keys; refetch JWKS and retry once).</li>
+        <li><strong>Startup warm-up</strong> (optional: fetch once at boot so first request is fast).</li>
+      </ul>
+
+      <div class="callout">
+        <strong>Practical note:</strong> caching is an optimization; correctness comes from signature verification + claim checks.
+        Key rotation is why “refetch on unknown kid” is a standard pattern.
+      </div>
+
+    </div>
+
+    <h2 id="final-mapping">How the Backend Maps a Dynamic Token to a Stable User ID</h2>
+    <p>The backend does not identify a user by the literal Bearer token string (because tokens change over time). Instead, it uses a 3-step mapping for every single request:</p>
+
+    <div class="card">
+      <h3>1) Validate the Bearer token</h3>
+      <p>The token is usually a JWT signed by your Identity Provider (e.g., Google). FastAPI verifies the signature using the IdP’s public keys (JWKS) and checks basic claims like:</p>
+      <ul>
+        <li><code>exp</code> (not expired)</li>
+        <li><code>iss</code> (issued by the expected IdP)</li>
+        <li><code>aud</code> (intended for your app/API)</li>
+      </ul>
+      <p>If any check fails, the request is rejected (401).</p>
+
+      <h3>2) Extract a stable user identifier → <code>user_id</code></h3>
+      <p>After validation, FastAPI reads the token’s claims (the payload). The <code>sub</code> (subject) claim is typically the stable unique identifier for the user at that IdP.</p>
+      <pre>user_id = claims["sub"]</pre>
+
+      <h3>3) Derive or look up the tenant → <code>tenant_id</code></h3>
+      <p>The backend then determines which tenant that user belongs to, using one of these common strategies:</p>
+      <ul>
+        <li><strong>Claim-based:</strong> If the token includes a tenant/org claim (e.g. <code>tenant_id</code>, <code>tid</code>, <code>org_id</code>), use it directly.</li>
+        <li><strong>Database mapping (most common):</strong> Store a user table keyed by <code>(iss, sub)</code>. Look up <code>(claims["iss"], claims["sub"])</code> to find the <code>tenant_id</code>. If not found, you can optionally provision the user and assign a tenant.</li>
+        <li><strong>Domain mapping (common for Google Workspace):</strong> Use the <code>email</code> claim and map the domain to a tenant (e.g., <code>alice@acme.com</code> → tenant “acme”).</li>
+      </ul>
+    </div>
+
+    <div class="callout">
+      <strong>Key idea:</strong> Tokens rotate, but <code>sub</code> (plus <code>iss</code>) is stable. The mapping is always:
+      token → validated claims → stable user key → tenant.
+    </div>
+
+    <div class="warn">
+      <strong>Anti-pattern:</strong> don’t store “current user” in a global variable and don’t treat the token value as a permanent user identifier.
+      Tokens are short-lived and will naturally differ across time and devices.
+    </div>
+  </div>
+
+  <!-- NEW: tiny self-contained Python-ish highlighter for white code blocks -->
+  <script>
+    // ...existing code...
+
+    (function () {
+      const KW = /\b(async|await|def|class|return|from|import|as|if|elif|else|try|except|raise|for|in|while|with|True|False|None)\b/g;
+      const FN = /\bdef\s+([a-zA-Z_]\w*)\b/g;
+      const TYP = /\bclass\s+([A-Z][A-Za-z0-9_]*)\b/g;
+      const NUM = /\b\d+(\.\d+)?\b/g;
+
+      function escapeHtml(s) {
+        return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+      }
+
+      function highlightPython(text) {
+        // escape first
+        let s = escapeHtml(text);
+
+        // strings (simple, not perfect)
+        s = s.replace(/("([^"\\]|\\.)*")/g, '<span class="tok-str">$1</span>');
+        s = s.replace(/('([^'\\]|\\.)*')/g, '<span class="tok-str">$1</span>');
+
+        // comments
+        s = s.replace(/(^|\n)(\s*#.*)$/g, '$1<span class="tok-com">$2</span>');
+
+        // class + def names
+        s = s.replace(TYP, 'class <span class="tok-typ">$1</span>');
+        s = s.replace(FN, 'def <span class="tok-fn">$1</span>');
+
+        // keywords + numbers
+        s = s.replace(KW, '<span class="tok-kw">$1</span>');
+        s = s.replace(NUM, '<span class="tok-num">$&</span>');
+
+        return s;
+      }
+
+      document.querySelectorAll('pre[data-lang="python"] code').forEach((code) => {
+        const raw = code.textContent || "";
+        code.innerHTML = highlightPython(raw);
+      });
+    })();
+  </script>
+  <script src="../assets/js/nav.js"></script>
+</body>
+</html>

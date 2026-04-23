@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FastAPI HTTP Function Mapping</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        h1 { color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 10px; text-align: center; }
+        h2 { color: #2980b9; margin-top: 40px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        h3 { color: #16a085; margin-top: 25px; font-size: 1.1em; }
+        p { margin-bottom: 15px; }
+        ul, ol { margin-bottom: 15px; padding-left: 25px; }
+        li { margin-bottom: 8px; }
+        code {
+            background-color: #f1f3f5;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+            color: #d63384;
+            font-size: 0.9em;
+        }
+        pre {
+            background-color: #282c34;
+            color: #abb2bf;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+            font-size: 0.9em;
+            margin-top: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #3e4451;
+        }
+        .result-box {
+            background-color: #e8f6f3;
+            border-left: 4px solid #16a085;
+            padding: 10px 15px;
+            margin: 10px 0;
+            font-family: monospace;
+            color: #2c3e50;
+        }
+        .step-card {
+            background-color: #fafafa;
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        hr { border: 0; height: 1px; background: #ddd; margin: 40px 0; }
+        .subtitle { text-align: center; color: #666; margin-top: -10px; margin-bottom: 30px; }
+    </style>
+  <link rel="stylesheet" href="../assets/css/book.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Mini tutorial: One concrete HTTP message → what FastAPI receives</h1>
+        <p class="subtitle">(req, top_k, authorization)</p>
+
+        <h2>1) The FastAPI endpoint</h2>
+<pre>from fastapi import FastAPI, Header
+from pydantic import BaseModel
+
+app = FastAPI()
+
+class QueryReq(BaseModel):
+    question: str
+
+@app.post("/query")
+def query(req: QueryReq, top_k: int = 5, authorization: str | None = Header(None)):
+    return {
+        "q": req.question,
+        "top_k": top_k,
+        "auth_header": authorization,
+    }</pre>
+
+        <hr>
+
+        <h2>2) A real HTTP request message (what the client sends)</h2>
+<pre>POST /query?top_k=10 HTTP/1.1
+Host: api.example.com
+Authorization: Bearer abc.def.ghi
+Content-Type: application/json
+Accept: application/json
+
+{ "question": "What does my policy say about refunds?" }</pre>
+
+        <hr>
+
+        <h2>3) How FastAPI maps that message into your function arguments</h2>
+
+        <div class="step-card">
+            <h3>A) Method + path decide which function runs</h3>
+            <ul>
+                <li><strong>Method</strong> = POST</li>
+                <li><strong>Path</strong> = <code>/query</code></li>
+            </ul>
+            <p>So FastAPI matches: <code>@app.post("/query")</code> → it will call <code>query(...)</code>.</p>
+        </div>
+
+        <div class="step-card">
+            <h3>B) Query string becomes <code>top_k</code></h3>
+            <p>From the first line: <code>/query?top_k=10</code></p>
+            <ul>
+                <li>FastAPI finds <code>top_k="10"</code> in the query string</li>
+                <li>Converts <code>"10"</code> → <code>10</code> because you typed it as <code>int</code></li>
+                <li>If it wasn’t provided, it would use the default <code>5</code></li>
+            </ul>
+            <div class="result-box">Result: top_k = 10</div>
+        </div>
+
+        <div class="step-card">
+            <h3>C) Header becomes <code>authorization</code></h3>
+            <p>From the headers: <code>Authorization: Bearer abc.def.ghi</code></p>
+            <p>Because you wrote: <code>authorization: str | None = Header(None)</code></p>
+            <p>FastAPI reads the Authorization header and sets:</p>
+            <div class="result-box">authorization = "Bearer abc.def.ghi"</div>
+            <p><em>If the header was missing, it would be None.</em></p>
+        </div>
+
+        <div class="step-card">
+            <h3>D) JSON body becomes <code>req</code></h3>
+            <p>From the body:</p>
+            <pre>{ "question": "What does my policy say about refunds?" }</pre>
+            <p>Because <code>req</code> is a Pydantic model (<code>QueryReq</code>), FastAPI:</p>
+            <ol>
+                <li>parses the JSON into a dict</li>
+                <li>validates it matches <code>QueryReq</code> (must have <code>question: str</code>)</li>
+                <li>constructs a Python object:</li>
+            </ol>
+            <div class="result-box">req = QueryReq(question="What does my policy say about refunds?")</div>
+            <p>So inside your function:</p>
+            <ul>
+                <li><code>req</code> is not “the raw request”</li>
+                <li><code>req</code> is a validated object built from the JSON body</li>
+                <li>you access fields like <code>req.question</code></li>
+            </ul>
+        </div>
+
+        <hr>
+
+        <h2>4) What FastAPI effectively calls (conceptually)</h2>
+<pre>query(
+    req=QueryReq(question="What does my policy say about refunds?"),
+    top_k=10,
+    authorization="Bearer abc.def.ghi",
+)</pre>
+
+        <p style="background-color: #fff3cd; padding: 15px; border-radius: 4px; border: 1px solid #ffeeba; color: #856404;">
+            <strong>Summary:</strong> That’s the whole mapping: query params → normal args, headers → <code>Header(...)</code> args, JSON body → Pydantic model arg (<code>req</code>), and the method+path choose the endpoint.
+        </p>
+    </div>
+  <script src="../assets/js/nav.js"></script>
+</body>
+</html>

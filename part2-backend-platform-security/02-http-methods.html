@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTTP Methods (Beginner-Friendly) — FastAPI</title>
+    <style>
+        :root{
+            /* Light theme (default) */
+            --bg: #f7f9fc;
+            --panel: #ffffff;
+            --card: #ffffff;
+            --text: #0f172a;
+            --muted: #475569;
+            --border: rgba(2,6,23,.10);
+            --shadow: 0 10px 30px rgba(2,6,23,.10);
+            --codebg: #f6f8fa;
+
+            --h1: #0f172a;
+            --h2: #1d4ed8;
+            --h3: #0f766e;
+
+            --get: #61affe;
+            --post: #49cc90;
+            --put: #fca130;
+            --patch: #50e3c2;
+            --delete: #f93e3e;
+
+            --callout: rgba(94,234,212,.10);
+            --warn: rgba(249,62,62,.10);
+
+            --focus: rgba(147,197,253,.20);
+            --ok: rgba(73,204,144,.14);
+            --note: rgba(97,175,254,.12);
+        }
+
+        @media (prefers-color-scheme: dark){
+            :root{
+                --bg: #0b1220;
+                --panel: #0f1b33;
+                --card: #111f3c;
+                --text: #e6eaf2;
+                --muted: #a8b3cf;
+                --border: rgba(255,255,255,.10);
+                --shadow: 0 10px 30px rgba(0,0,0,.35);
+                --codebg: #0a1020;
+
+                --h1: #eaf0ff;
+                --h2: #93c5fd;
+                --h3: #5eead4;
+            }
+        }
+
+        *{ box-sizing: border-box; }
+
+        body{
+            font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.65;
+            color: var(--text);
+            background: radial-gradient(1200px 600px at 20% -10%, rgba(37,99,235,.12), transparent 60%),
+                        radial-gradient(900px 500px at 90% 10%, rgba(15,118,110,.10), transparent 55%),
+                        var(--bg);
+            margin: 0;
+            padding: 28px 18px;
+        }
+
+        @media (prefers-color-scheme: dark){
+            body{
+                background: radial-gradient(1200px 600px at 20% -10%, rgba(97,175,254,.18), transparent 60%),
+                            radial-gradient(900px 500px at 90% 10%, rgba(94,234,212,.12), transparent 55%),
+                            var(--bg);
+            }
+        }
+
+        .container{
+            max-width: 980px;
+            margin: 0 auto;
+            background: linear-gradient(180deg, rgba(255,255,255,.85), rgba(255,255,255,.70));
+            border: 1px solid var(--border);
+            padding: 44px;
+            border-radius: 14px;
+            box-shadow: var(--shadow);
+        }
+
+        @media (prefers-color-scheme: dark){
+            .container{
+                background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+                backdrop-filter: blur(8px);
+            }
+        }
+
+        .header{
+            display: grid;
+            grid-template-columns: 1.15fr 0.85fr;
+            gap: 18px;
+            align-items: start;
+        }
+
+        @media (max-width: 860px){
+            .container{ padding: 28px 18px; }
+            .header{ grid-template-columns: 1fr; }
+        }
+
+        h1{
+            color: var(--h1);
+            margin: 0 0 10px;
+            text-align: left;
+            letter-spacing: -0.02em;
+            font-size: 2.05rem;
+        }
+
+        .lead{
+            color: var(--muted);
+            margin: 0 0 18px;
+            max-width: 78ch;
+        }
+
+        .quickbox{
+            background: rgba(255,255,255,.04);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 16px 16px;
+        }
+        .quickbox h3{ margin: 0 0 8px; color: var(--h2); }
+        .quickbox ul{ margin: 0; padding-left: 18px; }
+        .quickbox li{ margin: 0 0 6px; color: var(--muted); }
+
+        .toc{
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 14px 0 26px;
+            padding: 0;
+            list-style: none;
+        }
+        .toc a{
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(255,255,255,.06);
+            border: 1px solid var(--border);
+            color: var(--text);
+            text-decoration: none;
+            font-size: .92rem;
+        }
+        .toc a:hover{ background: rgba(147,197,253,.12); border-color: rgba(147,197,253,.25); }
+
+        h2{
+            color: var(--h2);
+            margin-top: 44px;
+            border-top: 1px solid var(--border);
+            padding-top: 22px;
+            letter-spacing: -0.01em;
+        }
+        h3{ color: var(--h3); margin-top: 0; }
+        h4{
+            color: var(--muted);
+            margin-top: 18px;
+            font-weight: 700;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        p{ margin: 0 0 14px; }
+        ul{ margin: 0 0 14px; padding-left: 22px; }
+        li{ margin: 0 0 8px; color: var(--text); }
+        strong{ color: var(--h1); }
+
+        code{
+            background-color: rgba(2,6,23,.05);
+            padding: 2px 6px;
+            border-radius: 7px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+            color: var(--text);
+            font-size: 0.92em;
+            border: 1px solid var(--border);
+        }
+
+        pre{
+            background-color: var(--codebg);
+            color: var(--text);
+            padding: 16px 16px;
+            border-radius: 12px;
+            overflow-x: auto;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+            font-size: 0.92em;
+            margin: 10px 0 18px;
+            border: 1px solid var(--border);
+        }
+
+        @media (prefers-color-scheme: dark){
+            code{
+                background-color: rgba(255,255,255,.07);
+                color: #ffd6ff;
+            }
+            pre{
+                color: #cbd5e1;
+                border: 1px solid rgba(255,255,255,.08);
+            }
+        }
+
+        .card{
+            background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 22px;
+            margin: 18px 0 22px;
+        }
+
+        .grid{
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 14px;
+        }
+        .col-6{ grid-column: span 6; }
+        .col-12{ grid-column: span 12; }
+        @media (max-width: 860px){
+            .col-6{ grid-column: span 12; }
+        }
+
+        .mini{
+            background: rgba(255,255,255,.04);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 16px;
+        }
+        .mini h3{ margin: 0 0 8px; }
+        .mini p{ margin: 0; color: var(--muted); }
+
+        .badge{
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-weight: 800;
+            color: #0b1220;
+            font-size: 0.78em;
+            vertical-align: middle;
+            margin-right: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .badge.get { background-color: var(--get); }
+        .badge.post { background-color: var(--post); }
+        .badge.put { background-color: var(--put); }
+        .badge.patch { background-color: var(--patch); }
+        .badge.delete { background-color: var(--delete); }
+
+        .badge.star{
+            background: rgba(255,255,255,.12);
+            color: var(--h1);
+            border: 1px solid rgba(255,255,255,.18);
+        }
+
+        .tag{
+            display: inline-flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        .chip{
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,.05);
+            color: var(--muted);
+            font-size: .84em;
+        }
+        .chip.safe{ background: rgba(97,175,254,.12); color: #cfe6ff; border-color: rgba(97,175,254,.22); }
+        .chip.unsafe{ background: rgba(249,62,62,.10); color: #ffd1d1; border-color: rgba(249,62,62,.20); }
+        .chip.idem{ background: rgba(73,204,144,.12); color: #c8ffe1; border-color: rgba(73,204,144,.22); }
+        .chip.nidem{ background: rgba(252,161,48,.14); color: #ffe1c1; border-color: rgba(252,161,48,.22); }
+        .chip.cache{ background: rgba(147,197,253,.12); color: #e5f0ff; border-color: rgba(147,197,253,.22); }
+        .chip.body{ background: rgba(255,255,255,.06); color: var(--muted); }
+
+        .pill{
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,.05);
+            color: var(--muted);
+            font-size: .85em;
+            margin-left: 8px;
+        }
+
+        .concept-box{
+            background: var(--callout);
+            border: 1px solid rgba(94,234,212,.22);
+            border-left: 5px solid var(--h3);
+            padding: 14px 16px;
+            border-radius: 12px;
+            margin: 18px 0;
+            color: var(--text);
+        }
+
+        .warn{
+            background: var(--warn);
+            border: 1px solid rgba(249,62,62,.22);
+            border-left: 5px solid var(--delete);
+            padding: 14px 16px;
+            border-radius: 12px;
+            margin: 18px 0;
+            color: var(--text);
+        }
+
+        .subtitle{ color: var(--muted); font-style: italic; margin-top: -10px; margin-bottom: 18px; }
+
+        table{
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0 6px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        th, td{
+            text-align: left;
+            padding: 12px 12px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top;
+        }
+        th{
+            background: rgba(147,197,253,.10);
+            color: var(--h1);
+            font-size: .92rem;
+        }
+        td{ color: var(--text); }
+        tr:last-child td{ border-bottom: 0; }
+
+        hr{ border: 0; height: 1px; background: var(--border); margin: 28px 0; }
+
+        .footer-note{
+            margin-top: 34px;
+            color: var(--muted);
+            border-top: 1px dashed var(--border);
+            padding-top: 18px;
+        }
+        a{ color: var(--h2); }
+
+        .svgwrap{
+            background: rgba(255,255,255,.04);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 12px;
+        }
+        .svgwrap .cap{ color: var(--muted); margin-top: 10px; font-size: .92em; }
+
+        .kbd{
+            display: inline-block;
+            padding: 1px 6px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,.05);
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+            font-size: .92em;
+            color: #e5f0ff;
+        }
+    </style>
+  <link rel="stylesheet" href="../assets/css/book.css">
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>HTTP methods (the “verbs” of the web) — beginner friendly</h1>
+                <p class="lead">
+                    HTTP methods tell the server (and intermediaries like browsers, proxies, CDNs) what you intend to do with a URL:
+                    read, create, replace, patch, delete. That intent unlocks important behavior like caching, retries, idempotency,
+                    and clearer security controls.
+                </p>
+
+                <ul class="toc">
+                    <li><a href="#core">Core ideas</a></li>
+                    <li><a href="#methods-table">Quick table</a></li>
+                    <li><a href="#widely-used">Widely used (⭐)</a></li>
+                    <li><a href="#less-used">Less used but important</a></li>
+                    <li><a href="#rare">Rare / niche</a></li>
+                    <li><a href="#rest">REST-style mapping</a></li>
+                    <li><a href="#put-vs-post">PUT vs POST confusion</a></li>
+                    <li><a href="#request-shape">HTTP request shape</a></li>
+                    <li><a href="#fastapi">How FastAPI decodes</a></li>
+                </ul>
+            </div>
+
+            <aside class="quickbox" aria-label="Quick takeaway">
+                <h3>Quick takeaway</h3>
+                <ul>
+                    <li><span class="badge get">GET</span> read (safe)</li>
+                    <li><span class="badge post">POST</span> create or run an action</li>
+                    <li><span class="badge put">PUT</span> replace full resource</li>
+                    <li><span class="badge patch">PATCH</span> partial update</li>
+                    <li><span class="badge delete">DELETE</span> remove</li>
+                </ul>
+                <p class="cap" style="margin: 10px 0 0; color: var(--muted);">
+                    You’ll use the ⭐ methods 99% of the time.
+                </p>
+            </aside>
+        </div>
+
+
+        <h2 id="core">Core ideas you should know</h2>
+        <p class="subtitle">These concepts explain why method choice matters (caching, retries, correctness).</p>
+
+        <div class="grid">
+            <div class="mini col-6">
+                <h3>Safe vs unsafe</h3>
+                <p><strong>Safe</strong> means: “should not change server state” (read-only).</p>
+                <div class="tag">
+                    <span class="chip safe">Safe: GET, HEAD, OPTIONS</span>
+                    <span class="chip unsafe">Unsafe: POST, PUT, PATCH, DELETE</span>
+                </div>
+            </div>
+            <div class="mini col-6">
+                <h3>Idempotent vs non-idempotent</h3>
+                <p><strong>Idempotent</strong> means: repeating the same request leads to the same final state as doing it once.</p>
+                <div class="tag">
+                    <span class="chip idem">Idempotent: GET, PUT, DELETE, HEAD, OPTIONS</span>
+                    <span class="chip nidem">Often non-idempotent: POST (and sometimes PATCH)</span>
+                </div>
+            </div>
+            <div class="mini col-12">
+                <h3>Cacheable (common in practice)</h3>
+                <p>
+                    <span class="chip cache">GET is commonly cacheable</span>
+                    <span class="chip body">Others are usually not cached unless explicitly configured</span>
+                </p>
+            </div>
+        </div>
+
+        <div class="concept-box">
+            <strong>Beginner rule:</strong> Pick the method that matches intent first.
+            Then think about safety, idempotency, caching, and security.
+            <span class="pill">Method + URL = contract</span>
+        </div>
+
+        <h2 id="methods-table">Quick table (print-this-in-your-brain)</h2>
+        <p class="subtitle">⭐ = widely used. Most APIs are mostly these 5.</p>
+
+        <table aria-label="HTTP methods quick reference">
+            <thead>
+                <tr>
+                    <th>Method</th>
+                    <th>Intent</th>
+                    <th>Safe?</th>
+                    <th>Idempotent?</th>
+                    <th>Commonly cacheable?</th>
+                    <th>Body typical?</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="badge star">⭐</span> <span class="badge get">GET</span></td>
+                    <td>Read data</td>
+                    <td>Yes</td>
+                    <td>Yes</td>
+                    <td>Often</td>
+                    <td>Usually no</td>
+                </tr>
+                <tr>
+                    <td><span class="badge star">⭐</span> <span class="badge post">POST</span></td>
+                    <td>Create / run action</td>
+                    <td>No</td>
+                    <td>No (by default)</td>
+                    <td>Usually no</td>
+                    <td>Often yes</td>
+                </tr>
+                <tr>
+                    <td><span class="badge star">⭐</span> <span class="badge put">PUT</span></td>
+                    <td>Replace full resource (or create at known URL)</td>
+                    <td>No</td>
+                    <td>Yes</td>
+                    <td>Usually no</td>
+                    <td>Often yes</td>
+                </tr>
+                <tr>
+                    <td><span class="badge star">⭐</span> <span class="badge patch">PATCH</span></td>
+                    <td>Partial update</td>
+                    <td>No</td>
+                    <td>Depends</td>
+                    <td>Usually no</td>
+                    <td>Often yes</td>
+                </tr>
+                <tr>
+                    <td><span class="badge star">⭐</span> <span class="badge delete">DELETE</span></td>
+                    <td>Remove resource</td>
+                    <td>No</td>
+                    <td>Yes (in intent)</td>
+                    <td>Usually no</td>
+                    <td>Usually no</td>
+                </tr>
+                <tr>
+                    <td><span class="badge">HEAD</span></td>
+                    <td>Like GET, but headers only</td>
+                    <td>Yes</td>
+                    <td>Yes</td>
+                    <td>Often</td>
+                    <td>No</td>
+                </tr>
+                <tr>
+                    <td><span class="badge">OPTIONS</span></td>
+                    <td>Discover what’s allowed</td>
+                    <td>Yes</td>
+                    <td>Yes</td>
+                    <td>Usually no</td>
+                    <td>No</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2 id="widely-used">Widely used methods (you’ll use these 99% of the time)</h2>
+
+        <div class="svgwrap" aria-label="Inline diagram: method intent">
+            <svg viewBox="0 0 900 170" width="100%" height="auto" role="img" aria-label="Method intent diagram">
+                <defs>
+                    <linearGradient id="g1" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0" stop-color="rgba(97,175,254,.35)" />
+                        <stop offset="1" stop-color="rgba(94,234,212,.18)" />
+                    </linearGradient>
+                </defs>
+                <rect x="12" y="14" width="876" height="142" rx="16" fill="url(#g1)" stroke="rgba(255,255,255,.16)" />
+                <text x="32" y="55" fill="rgba(230,234,242,.92)" font-size="22" font-family="ui-sans-serif, system-ui">Think of a URL like a noun (resource). Methods are verbs.</text>
+                <text x="32" y="88" fill="rgba(230,234,242,.88)" font-size="18" font-family="ui-sans-serif, system-ui">GET = read</text>
+                <text x="178" y="88" fill="rgba(230,234,242,.88)" font-size="18" font-family="ui-sans-serif, system-ui">POST = create/action</text>
+                <text x="392" y="88" fill="rgba(230,234,242,.88)" font-size="18" font-family="ui-sans-serif, system-ui">PUT = replace</text>
+                <text x="535" y="88" fill="rgba(230,234,242,.88)" font-size="18" font-family="ui-sans-serif, system-ui">PATCH = partial</text>
+                <text x="700" y="88" fill="rgba(230,234,242,.88)" font-size="18" font-family="ui-sans-serif, system-ui">DELETE = remove</text>
+                <path d="M32 110 H868" stroke="rgba(255,255,255,.22)" stroke-width="2" />
+                <circle cx="120" cy="110" r="7" fill="#61affe" />
+                <circle cx="292" cy="110" r="7" fill="#49cc90" />
+                <circle cx="468" cy="110" r="7" fill="#fca130" />
+                <circle cx="622" cy="110" r="7" fill="#50e3c2" />
+                <circle cx="800" cy="110" r="7" fill="#f93e3e" />
+            </svg>
+            <div class="cap">Inline SVG “image”: self-contained, no external assets.</div>
+        </div>
+
+        <!-- ⭐ GET -->
+        <div class="card">
+            <h3><span class="badge star">⭐</span> <span class="badge get">GET</span> — read</h3>
+            <p><strong>Use when</strong>: fetching data (read-only).</p>
+            <p><strong>Example</strong>: <code>GET /users/42</code> → return user 42</p>
+            <div class="tag">
+                <span class="chip safe">Safe</span>
+                <span class="chip idem">Idempotent</span>
+                <span class="chip cache">Commonly cacheable</span>
+            </div>
+
+            <h4>Full request message</h4>
+<pre>GET /users/42?include=orders HTTP/1.1
+Host: api.example.com
+Authorization: Bearer &lt;token&gt;
+Accept: application/json</pre>
+
+            <h4>FastAPI</h4>
+<pre>from fastapi import FastAPI
+
+app = FastAPI()
+
+@app.get("/users/{user_id}")
+def get_user(user_id: int, include: str | None = None):
+    return {"user_id": user_id, "include": include}</pre>
+            <div class="concept-box">
+                <strong>Beginner tip:</strong> If you can bookmark it, refresh it, or share the URL and it still makes sense,
+                it’s probably a <code>GET</code>.
+            </div>
+        </div>
+
+        <!-- ⭐ POST -->
+        <div class="card">
+            <h3><span class="badge star">⭐</span> <span class="badge post">POST</span> — create or “do an action”</h3>
+            <p><strong>Use when</strong>:</p>
+            <ul>
+                <li>Creating a new resource under a collection (<code>POST /orders</code>)</li>
+                <li>Triggering an operation that doesn’t map cleanly to CRUD (<code>POST /reports/run</code>)</li>
+            </ul>
+            <p><strong>Example</strong>: <code>POST /orders</code> with body <code>{"items": [...]}</code> → creates a new order</p>
+            <div class="tag">
+                <span class="chip unsafe">Unsafe</span>
+                <span class="chip nidem">Not idempotent by default</span>
+                <span class="chip body">Body usually contains the “create/action” input</span>
+            </div>
+
+            <h4>Full request message</h4>
+<pre>POST /orders HTTP/1.1
+Host: api.example.com
+Authorization: Bearer &lt;token&gt;
+Content-Type: application/json
+Accept: application/json
+
+{ "items": [{"sku": "ABC", "qty": 2}] }</pre>
+
+            <h4>FastAPI</h4>
+<pre>from pydantic import BaseModel
+
+class CreateOrder(BaseModel):
+    items: list[dict]
+
+@app.post("/orders")
+def create_order(payload: CreateOrder):
+    return {"created": True, "order_id": 123, "items": payload.items}</pre>
+        </div>
+
+        <!-- ⭐ PUT -->
+        <div class="card">
+            <h3><span class="badge star">⭐</span> <span class="badge put">PUT</span> — replace (or create at a known URL)</h3>
+            <p><strong>Use when</strong>: you want the resource at a URL to become exactly what you send.</p>
+            <p><strong>Example</strong>: <code>PUT /users/42</code> with a full user object → replaces user 42</p>
+            <div class="tag">
+                <span class="chip unsafe">Unsafe</span>
+                <span class="chip idem">Idempotent</span>
+                <span class="chip body">Body usually contains the full resource state</span>
+            </div>
+
+            <h4>Full request message</h4>
+<pre>PUT /users/42 HTTP/1.1
+Host: api.example.com
+Authorization: Bearer &lt;token&gt;
+Content-Type: application/json
+Accept: application/json
+
+{ "id": 42, "name": "Asha", "email": "asha@example.com" }</pre>
+
+            <div class="warn">
+                <strong>Common beginner bug:</strong> Using <code>PUT</code> with a partial body.
+                <br>By intent, <code>PUT</code> is “replace the full resource”, so missing fields might get wiped unless you implement merge behavior.
+            </div>
+        </div>
+
+        <!-- ⭐ PATCH -->
+        <div class="card">
+            <h3><span class="badge star">⭐</span> <span class="badge patch">PATCH</span> — partial update</h3>
+            <p><strong>Use when</strong>: updating only some fields.</p>
+            <p><strong>Example</strong>: <code>PATCH /users/42</code> with <code>{"email": "new@x.com"}</code></p>
+            <div class="tag">
+                <span class="chip unsafe">Unsafe</span>
+                <span class="chip nidem">Idempotency depends on design</span>
+                <span class="chip body">Body contains only changed fields (usually)</span>
+            </div>
+
+            <h4>Example PATCH request message</h4>
+<pre>PATCH /users/42 HTTP/1.1
+Host: api.example.com
+Authorization: Bearer &lt;token&gt;
+Content-Type: application/json
+Accept: application/json
+
+{ "email": "new@x.com" }</pre>
+
+            <div class="concept-box">
+                <strong>Idempotency note:</strong> A patch like “set email to X” is usually idempotent.
+                A patch like “increment login_count by 1” is not.
+            </div>
+        </div>
+
+        <!-- ⭐ DELETE -->
+        <div class="card">
+            <h3><span class="badge star">⭐</span> <span class="badge delete">DELETE</span> — remove</h3>
+            <p><strong>Use when</strong>: deleting a resource.</p>
+            <p><strong>Example</strong>: <code>DELETE /users/42</code></p>
+            <div class="tag">
+                <span class="chip unsafe">Unsafe</span>
+                <span class="chip idem">Idempotent in intent</span>
+            </div>
+            <div class="concept-box">
+                <strong>Beginner intuition:</strong> Deleting twice should still end “deleted”.
+                The second delete often returns <code>404</code> or <code>204</code> depending on API design.
+            </div>
+        </div>
+
+        <h2 id="less-used">Common but less used (still important)</h2>
+
+        <div class="card">
+            <h3><span class="badge">HEAD</span> — like GET, but only headers</h3>
+            <p><strong>Use when</strong>: you want metadata without downloading the body.</p>
+            <p><strong>Example</strong>: check if a file changed using <code>ETag</code>/<code>Last-Modified</code>.</p>
+        </div>
+
+        <div class="card">
+            <h3><span class="badge">OPTIONS</span> — “what’s allowed here?”</h3>
+            <p><strong>Use when</strong>: discovering supported methods/headers.</p>
+            <p><strong>Most common real-world use</strong>: CORS preflight (browser checks if it can call your API cross-origin).</p>
+            <div class="concept-box">
+                If you ever see a browser sending an <code>OPTIONS</code> request before your real request,
+                that’s usually CORS, not “your frontend being weird”.
+            </div>
+        </div>
+
+        <h2 id="rare">Rare / niche methods (you’ll see them sometimes)</h2>
+        <div class="card">
+            <h3><span class="badge">TRACE</span> — diagnostic (often disabled)</h3>
+            <p>Often disabled for security reasons.</p>
+        </div>
+        <div class="card">
+            <h3><span class="badge">CONNECT</span> — tunneling (proxies + HTTPS)</h3>
+            <p>Used to establish a tunnel through an HTTP proxy (common in corporate networks).</p>
+        </div>
+
+        <h2 id="rest">Practical mapping to REST-style endpoints</h2>
+        <p class="subtitle">Collections vs single resources</p>
+
+        <table aria-label="REST mapping examples">
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Method</th>
+                    <th>Example</th>
+                    <th>Meaning</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Collection</td>
+                    <td><span class="badge get">GET</span></td>
+                    <td><code>GET /items</code></td>
+                    <td>List/search items</td>
+                </tr>
+                <tr>
+                    <td>Collection</td>
+                    <td><span class="badge post">POST</span></td>
+                    <td><code>POST /items</code></td>
+                    <td>Create a new item (server assigns ID)</td>
+                </tr>
+                <tr>
+                    <td>Single resource</td>
+                    <td><span class="badge get">GET</span></td>
+                    <td><code>GET /items/{id}</code></td>
+                    <td>Read one item</td>
+                </tr>
+                <tr>
+                    <td>Single resource</td>
+                    <td><span class="badge put">PUT</span></td>
+                    <td><code>PUT /items/{id}</code></td>
+                    <td>Replace item (or create if not exists)</td>
+                </tr>
+                <tr>
+                    <td>Single resource</td>
+                    <td><span class="badge patch">PATCH</span></td>
+                    <td><code>PATCH /items/{id}</code></td>
+                    <td>Partial update</td>
+                </tr>
+                <tr>
+                    <td>Single resource</td>
+                    <td><span class="badge delete">DELETE</span></td>
+                    <td><code>DELETE /items/{id}</code></td>
+                    <td>Delete</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2 id="put-vs-post">The “PUT vs POST feels same” confusion (quick intuition)</h2>
+        <div class="grid">
+            <div class="mini col-6">
+                <h3><span class="badge post">POST</span> = “You decide what happens”</h3>
+                <p>
+                    Think: “Here’s something; you decide what happens (often create a new thing).”
+                    The server usually chooses the new ID.
+                </p>
+            </div>
+            <div class="mini col-6">
+                <h3><span class="badge put">PUT</span> = “Make this URL have this exact content”</h3>
+                <p>
+                    Think: “Make <code>/users/42</code> look exactly like this payload.”
+                    You’re targeting a specific URL.
+                </p>
+            </div>
+        </div>
+
+        <div class="concept-box">
+            <strong>If you repeat the same request:</strong>
+            <ul>
+                <li>Repeating <code>PUT</code> should converge to the same final state (idempotent).</li>
+                <li>Repeating <code>POST</code> can create duplicates unless you add idempotency keys.</li>
+            </ul>
+        </div>
+
+        <h2 id="request-shape">What an HTTP request looks like</h2>
+        <p>A client talks to your FastAPI backend by sending an HTTP request message:</p>
+
+        <pre>METHOD /path?query=string HTTP/1.1
+Header-Name: value
+Authorization: Bearer &lt;token&gt;
+Content-Type: application/json
+
+{ "optional": "body" }</pre>
+
+        <ul>
+            <li><strong>METHOD</strong>: intent (<code>GET</code>/<code>POST</code>/<code>PUT</code>/<code>PATCH</code>/<code>DELETE</code>)</li>
+            <li><strong>/path</strong>: which resource (e.g. <code>/documents/123</code>)</li>
+            <li><strong>?query=…</strong>: options/filters (e.g. <code>?limit=20</code>)</li>
+            <li><strong>Headers</strong>: metadata (auth token, content type)</li>
+            <li><strong>Body</strong>: payload (often JSON; usually only for POST/PUT/PATCH)</li>
+        </ul>
+
+        <h2 id="fastapi">How FastAPI “decodes” the message</h2>
+        <p>FastAPI turns parts of the HTTP message into Python values using type hints:</p>
+        <ul>
+            <li><strong>Path params</strong> → function args (e.g. <code>user_id: int</code>)</li>
+            <li><strong>Query params</strong> → function args (e.g. <code>limit: int = 20</code>)</li>
+            <li><strong>Headers</strong> → via <code>Header(...)</code> or security dependencies</li>
+            <li><strong>JSON body</strong> → Pydantic models (request schemas)</li>
+        </ul>
+        <p style="color: #c0392b; font-style: italic;">If types don’t match, FastAPI returns a 422 validation error automatically.</p>
+
+        <p class="footer-note">
+            Next step (if you want): a tiny FastAPI example showing all 5 ⭐ methods on <code>/items</code>
+            with status codes and idempotency behavior.
+        </p>
+    </div>
+  <script src="../assets/js/nav.js"></script>
+</body>
+</html>

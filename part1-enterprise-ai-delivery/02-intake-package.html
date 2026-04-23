@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>What Arrives on the Lead AI Engineer’s Desk (Enterprise Intake Package)</title>
+  <style>
+    :root{
+      /* Light theme (default) */
+      --bg:#f7f9fc;
+      --panel:rgba(2,6,23,.04);
+      --card:rgba(2,6,23,.03);
+      --border:rgba(2,6,23,.10);
+      --text:#0f172a;
+      --muted:#475569;
+
+      --h1:#0f172a;
+      --h2:#1d4ed8;
+      --h3:#0f766e;
+
+      --callout:rgba(15,118,110,.08);
+      --warn:rgba(225,29,72,.08);
+      --ok:rgba(29,78,216,.08);
+    }
+
+    @media (prefers-color-scheme: dark){
+      :root{
+        --bg:#0b1220;
+        --panel:rgba(255,255,255,.05);
+        --card:rgba(255,255,255,.06);
+        --border:rgba(255,255,255,.12);
+        --text:#e6eaf2;
+        --muted:#a8b3cf;
+
+        --h1:#eaf0ff;
+        --h2:#93c5fd;
+        --h3:#5eead4;
+
+        --callout:rgba(94,234,212,.10);
+        --warn:rgba(255,180,180,.12);
+        --ok:rgba(147,197,253,.12);
+      }
+    }
+
+    body{
+      margin:0;
+      padding:28px 18px;
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height:1.65;
+      color:var(--text);
+      background:
+        radial-gradient(1200px 600px at 20% -10%, rgba(37,99,235,.12), transparent 60%),
+        radial-gradient(900px 500px at 90% 10%, rgba(15,118,110,.10), transparent 55%),
+        var(--bg);
+    }
+
+    @media (prefers-color-scheme: dark){
+      body{
+        background:
+          radial-gradient(1200px 600px at 20% -10%, rgba(97,175,254,.18), transparent 60%),
+          radial-gradient(900px 500px at 90% 10%, rgba(94,234,212,.12), transparent 55%),
+          var(--bg);
+      }
+    }
+
+    .container{
+      max-width: 1040px;
+      margin:0 auto;
+      padding:44px;
+      border:1px solid var(--border);
+      border-radius:14px;
+      background: linear-gradient(180deg, rgba(255,255,255,.85), rgba(255,255,255,.70));
+      box-shadow: 0 10px 30px rgba(2,6,23,.10);
+    }
+
+    @media (prefers-color-scheme: dark){
+      .container{
+        background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+        box-shadow: 0 10px 30px rgba(0,0,0,.35);
+        backdrop-filter: blur(8px);
+      }
+    }
+
+    h1{
+      margin:0 0 10px;
+      color:var(--h1);
+      letter-spacing:-0.02em;
+      font-size:2.05rem;
+    }
+    .lead{
+      margin:0 0 18px;
+      color:var(--muted);
+      max-width: 96ch;
+    }
+
+    .toc{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin:14px 0 26px;
+      padding:0;
+      list-style:none;
+    }
+    .toc a{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      background:rgba(255,255,255,.06);
+      border:1px solid var(--border);
+      color:var(--text);
+      text-decoration:none;
+      font-size:.92rem;
+    }
+    .toc a:hover{ background: rgba(147,197,253,.12); border-color: rgba(147,197,253,.25); }
+
+    h2{
+      margin-top:44px;
+      padding-top:22px;
+      border-top:1px solid var(--border);
+      color:var(--h2);
+      letter-spacing:-0.01em;
+    }
+    h3{
+      margin:18px 0 10px;
+      color:var(--h3);
+      font-size:1.08rem;
+    }
+
+    p{ margin:0 0 14px; }
+    ul,ol{ margin:0 0 14px; padding-left:22px; }
+    li{ margin:0 0 8px; }
+
+    .card{
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px 18px 6px;
+      margin: 16px 0 20px;
+    }
+
+    .callout{
+      background: var(--callout);
+      border: 1px solid rgba(94,234,212,.22);
+      border-left: 5px solid var(--h3);
+      padding: 14px 16px;
+      border-radius: 12px;
+      margin: 18px 0;
+    }
+    .warn{
+      background: var(--warn);
+      border: 1px solid rgba(255,180,180,.25);
+      border-left: 5px solid rgba(255,180,180,.9);
+      padding: 14px 16px;
+      border-radius: 12px;
+      margin: 18px 0;
+    }
+    .ok{
+      background: var(--ok);
+      border: 1px solid rgba(147,197,253,.20);
+      border-left: 5px solid rgba(147,197,253,.85);
+      padding: 14px 16px;
+      border-radius: 12px;
+      margin: 18px 0;
+    }
+
+    code{
+      background: rgba(2,6,23,.05);
+      padding: 2px 6px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      color: var(--text);
+      font-size: .92em;
+    }
+
+    @media (prefers-color-scheme: dark){
+      code{
+        background: rgba(255,255,255,.07);
+        color: #ffd6ff;
+      }
+    }
+
+    table{
+      width:100%;
+      border-collapse: collapse;
+      margin: 10px 0 18px;
+      overflow:hidden;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.04);
+    }
+    th,td{
+      text-align:left;
+      padding:10px 12px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      vertical-align: top;
+    }
+    th{ color: var(--h1); font-size: .92rem; }
+    td{ color: var(--text); }
+    .small{ color: var(--muted); font-size: .95rem; }
+
+    .checklist{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 10px 0 18px;
+    }
+    @media (max-width: 820px){ .checklist{ grid-template-columns: 1fr; } }
+
+    .box{
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+    }
+    .box .k{
+      color: var(--muted);
+      font-size: .82rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 6px;
+    }
+
+    .footer-note{
+      margin-top: 34px;
+      color: var(--muted);
+      border-top: 1px dashed var(--border);
+      padding-top: 18px;
+    }
+  </style>
+  <link rel="stylesheet" href="../assets/css/book.css">
+</head>
+
+<body>
+  <div class="container">
+    <h1>Enterprise Intake Package: What Arrives on the Lead AI Engineer’s Desk</h1>
+    <p class="lead">
+      This HTML tutorial is designed for <strong>future Lead AI Engineers</strong> in large enterprises (banks/airlines).
+      It describes the typical “package” you receive when a business use case is ready to become a real AI delivery.
+      The goal is to help you quickly assess readiness, risks, and your day-1 actions.
+    </p>
+
+    <ul class="toc">
+      <li><a href="#why">Why this package exists</a></li>
+      <li><a href="#what">What you should receive</a></li>
+      <li><a href="#roles">Who the people are</a></li>
+      <li><a href="#redflags">Red flags &amp; missing pieces</a></li>
+      <li><a href="#day1">What you do on day 1</a></li>
+      <li><a href="#template">Copy/paste intake template</a></li>
+    </ul>
+
+    <h2 id="why">1) Why an “intake package” exists</h2>
+    <div class="card">
+      <p>
+        In an enterprise, “AI requests” are filtered through governance (security/privacy/risk/architecture) so delivery teams
+        don’t start with a vague idea. When the request reaches you, it should already have:
+      </p>
+      <ul>
+        <li>a defined business problem</li>
+        <li>an owner accountable for outcomes</li>
+        <li>approved or approvable data sources</li>
+        <li>constraints (privacy/security/audit) made explicit</li>
+      </ul>
+      <div class="callout">
+        <strong>Lead-level expectation:</strong> you convert the package into scope, architecture, evaluation gates,
+        operating model, and a pilot plan — not “build a demo.”
+      </div>
+    </div>
+
+    <h2 id="what">2) What you should receive (the “minimum viable intake”)</h2>
+
+    <div class="ok">
+      <strong>If you don’t receive these, ask for them immediately.</strong>
+      You can still proceed in discovery mode, but you should treat it as “not ready for build.”
+    </div>
+
+    <div class="checklist">
+      <div class="box">
+        <div class="k">Business brief</div>
+        <ul>
+          <li>problem statement (“what hurts”)</li>
+          <li>users + workflow (who does what today)</li>
+          <li>example questions/tasks</li>
+          <li>success metrics (time saved, accuracy, adoption)</li>
+        </ul>
+      </div>
+
+      <div class="box">
+        <div class="k">Ownership</div>
+        <ul>
+          <li><strong>Sponsor</strong> (senior leader who backs it)</li>
+          <li><strong>Business owner</strong> (accountable for outcomes + adoption)</li>
+          <li>named representatives: EA + Ops + SME</li>
+        </ul>
+      </div>
+
+      <div class="box">
+        <div class="k">Data scope</div>
+        <ul>
+          <li>which sources (Drive/SharePoint/Confluence/email/transcripts)</li>
+          <li>who the <strong>data owner</strong> is for each source</li>
+          <li>what is in-scope vs out-of-scope</li>
+          <li>data sensitivity classification (PII/confidential/etc.)</li>
+        </ul>
+      </div>
+
+      <div class="box">
+        <div class="k">Constraints &amp; controls</div>
+        <ul>
+          <li>access control expectations (“who can see what”)</li>
+          <li>audit/logging requirements</li>
+          <li>privacy requirements (PII handling, retention)</li>
+          <li>risk tolerance: “what happens if it’s wrong?”</li>
+        </ul>
+      </div>
+
+      <div class="box">
+        <div class="k">Delivery expectations</div>
+        <ul>
+          <li>pilot cohort size and timeline</li>
+          <li>support model (who owns it after launch)</li>
+          <li>non-functional requirements: latency, uptime</li>
+        </ul>
+      </div>
+
+      <div class="box">
+        <div class="k">Approvals / gates</div>
+        <ul>
+          <li>security/IAM contact for approvals</li>
+          <li>privacy/legal/risk contact if needed</li>
+          <li>architecture review process (if required)</li>
+        </ul>
+      </div>
+    </div>
+
+    <h2 id="roles">3) Who the people are (and what you should expect from them)</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Role</th>
+          <th>What they provide in the intake</th>
+          <th>What you should ask them</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Sponsor</strong> (often GM-level)</td>
+          <td>Authority, budget influence, unblock access issues, approve pilot scope</td>
+          <td>“What’s the business outcome, and how will we measure success?”</td>
+        </tr>
+
+        <tr>
+          <td><strong>Business owner</strong></td>
+          <td>Accountability for adoption, priorities, and acceptance criteria</td>
+          <td>“Which workflows are must-have for pilot? What is the rollout plan?”</td>
+        </tr>
+
+        <tr>
+          <td><strong>EA (Executive Assistant)</strong></td>
+          <td>Real workflow + top recurring exec questions + acceptable answer format</td>
+          <td>“What does ‘proof’ look like? Link/snippet/timestamp? What’s the top 20 questions?”</td>
+        </tr>
+
+        <tr>
+          <td><strong>Ops (Operations)</strong></td>
+          <td>Urgency constraints + failure tolerance + what “wrong answer” costs</td>
+          <td>“When it’s wrong, what’s the impact? When it’s missing, how should it behave?”</td>
+        </tr>
+
+        <tr>
+          <td><strong>SME (Subject Matter Expert)</strong></td>
+          <td>Ground truth interpretations + what docs matter + evaluation support</td>
+          <td>“What sources are authoritative? What are common ambiguous cases?”</td>
+        </tr>
+
+        <tr>
+          <td><strong>Data owner</strong></td>
+          <td>Approval for access, usage, retention, classification rules</td>
+          <td>“What is allowed to be ingested? Any exclusions? How should retention work?”</td>
+        </tr>
+
+        <tr>
+          <td><strong>Security/IAM</strong></td>
+          <td>Access model constraints, least privilege guidance, secrets/network expectations</td>
+          <td>“What’s the approved pattern for identity, service accounts, and audit logging?”</td>
+        </tr>
+
+        <tr>
+          <td><strong>Privacy/Legal/Risk</strong></td>
+          <td>PII/regulated-data constraints, release conditions, policy compliance</td>
+          <td>“What data can leave the boundary? What redaction/logging rules apply?”</td>
+        </tr>
+
+        <tr>
+          <td><strong>EM (Engineering Manager)</strong></td>
+          <td>Resourcing, delivery cadence, quality bar, operational ownership</td>
+          <td>“What’s the team capacity and what must we trade off to hit pilot?”</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout">
+      <strong>Quick reminder:</strong>
+      “EA” and “Ops” are not merely “stakeholders.” They often define the workflow reality and the acceptable output format.
+      If you skip them, you risk building something that demos well but doesn’t get used.
+    </div>
+
+    <h2 id="redflags">4) Red flags (signals the intake is not ready)</h2>
+    <div class="card">
+      <ul>
+        <li><strong>No business owner:</strong> nobody accountable for adoption → high risk of “demo only.”</li>
+        <li><strong>No data owner identified:</strong> access will stall later.</li>
+        <li><strong>Unbounded scope:</strong> “search all documents in the company” on day 1 → push back to a pilot corpus.</li>
+        <li><strong>No success metric:</strong> you can’t prove impact → define baseline and targets.</li>
+        <li><strong>No risk statement:</strong> “wrong answers are fine” is rarely true in enterprise.</li>
+        <li><strong>No access model:</strong> unclear whether users have different document permissions.</li>
+      </ul>
+
+      <div class="warn">
+        <strong>Hard stop pattern:</strong> If they want “free-form Q&amp;A over everything” without citations, auditing, or access control,
+        you should reframe to a safe pilot first.
+      </div>
+    </div>
+
+    <h2 id="day1">5) What you do on day 1 (as Lead AI Engineer)</h2>
+    <div class="card">
+      <h3>Your day-1 goal</h3>
+      <p>
+        Turn the intake package into a delivery-ready plan with measurable outcomes and safety controls.
+      </p>
+
+      <h3>Day-1 outputs (typical)</h3>
+      <ol>
+        <li><strong>Problem reframing</strong> into a single sentence that implies controls (e.g., “cited answers over approved corpus”).</li>
+        <li><strong>MVP definition</strong>: one BU, one corpus, 1–2 question patterns.</li>
+        <li><strong>Evaluation plan</strong>: a golden set of 30–50 questions + citation correctness rubric.</li>
+        <li><strong>Risk register</strong>: cross-user leakage, hallucinations, sensitive data exposure, adoption failure.</li>
+        <li><strong>Architecture sketch</strong>: ingestion → canonical store → retrieval → LLM → citations → audit log.</li>
+        <li><strong>Team plan</strong>: lanes (ingestion, backend/security, retrieval/LLM/eval) + owners + sprint goals.</li>
+      </ol>
+
+      <div class="callout">
+        <strong>Lead-level move:</strong> schedule a co-design session with EAs and Ops within week 1.
+        Ask them for the top recurring questions and define “acceptable evidence.”
+      </div>
+    </div>
+
+    <h2 id="template">6) Copy/paste template: “What I expect to receive”</h2>
+    <div class="card">
+      <p class="small">
+        You can copy/paste this into an email/Confluence page and use it as your standard intake checklist.
+      </p>
+
+      <h3>6.1 Intake summary</h3>
+      <ul>
+        <li><strong>Problem statement:</strong> …</li>
+        <li><strong>BU / business area:</strong> …</li>
+        <li><strong>Users:</strong> …</li>
+        <li><strong>Top 5 user questions/tasks:</strong> …</li>
+      </ul>
+
+      <h3>6.2 Ownership</h3>
+      <ul>
+        <li><strong>Sponsor:</strong> …</li>
+        <li><strong>Business owner:</strong> …</li>
+        <li><strong>EA representative:</strong> …</li>
+        <li><strong>Ops representative:</strong> …</li>
+        <li><strong>SME:</strong> …</li>
+      </ul>
+
+      <h3>6.3 Data scope</h3>
+      <ul>
+        <li><strong>Sources:</strong> …</li>
+        <li><strong>Data owners:</strong> …</li>
+        <li><strong>Classification:</strong> …</li>
+        <li><strong>Out of scope:</strong> …</li>
+      </ul>
+
+      <h3>6.4 Constraints &amp; controls</h3>
+      <ul>
+        <li><strong>Access control model:</strong> …</li>
+        <li><strong>Audit/logging requirements:</strong> …</li>
+        <li><strong>Privacy requirements (PII):</strong> …</li>
+        <li><strong>Failure tolerance:</strong> …</li>
+      </ul>
+
+      <h3>6.5 Success criteria</h3>
+      <ul>
+        <li><strong>Business metrics:</strong> …</li>
+        <li><strong>Quality metrics:</strong> …</li>
+        <li><strong>Operational metrics:</strong> …</li>
+      </ul>
+
+      <h3>6.6 Delivery expectations</h3>
+      <ul>
+        <li><strong>Pilot cohort:</strong> …</li>
+        <li><strong>Timeline:</strong> …</li>
+        <li><strong>Support model:</strong> …</li>
+        <li><strong>Approvals needed:</strong> …</li>
+      </ul>
+
+      <div class="ok">
+        <strong>Rule of thumb:</strong>
+        If you can’t fill these fields, you’re still in discovery, not delivery.
+      </div>
+    </div>
+
+    <p class="footer-note">
+      Want a realistic example filled out (meeting notes Q&amp;A for execs)?
+      Tell me whether the documents are in Drive, SharePoint, Confluence, email, or transcripts and I’ll generate a completed intake package.
+    </p>
+  </div>
+  <script src="../assets/js/nav.js"></script>
+</body>
+</html>

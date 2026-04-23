@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Section: Recurrent Neural Networks (RNNs) — The Elman Unit, Weight Sharing, and Cost Savings</title>
+
+  <!-- Light theme -->
+  <style>
+    :root{
+      --bg:#ffffff; --fg:#111827; --muted:#6b7280; --card:#f9fafb; --border:#e5e7eb;
+      --codebg:#0b1020; --codefg:#e5e7eb; --accent:#2563eb;
+    }
+    body{ margin:0; background:var(--bg); color:var(--fg); font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; }
+    .wrap{ max-width:980px; margin:0 auto; padding:32px 20px 80px; }
+    h1{ font-size:34px; margin:0 0 8px; letter-spacing:-0.02em; }
+    h2{ font-size:22px; margin:34px 0 10px; }
+    h3{ font-size:18px; margin:20px 0 8px; }
+    p{ margin:10px 0; }
+    .subtitle{ color:var(--muted); margin:0 0 18px; }
+    .callout{
+      background:var(--card); border:1px solid var(--border); border-radius:14px;
+      padding:14px 14px; margin:14px 0;
+    }
+    .grid{ display:grid; gap:14px; grid-template-columns:1fr; }
+    @media (min-width: 900px){ .grid{ grid-template-columns:1fr 1fr; } }
+    pre{
+      background:var(--codebg); color:var(--codefg);
+      padding:14px 14px; border-radius:14px; overflow:auto; margin:12px 0;
+      border:1px solid rgba(255,255,255,0.08);
+    }
+    code{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 13.5px; }
+    .kbd{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; background:#eef2ff; border:1px solid #c7d2fe; padding:1px 6px; border-radius:8px; }
+    figure{
+      margin:14px 0; padding:12px; background:var(--card); border:1px solid var(--border); border-radius:14px;
+    }
+    figcaption{ color:var(--muted); font-size:13px; margin-top:8px; }
+    img{ max-width:100%; height:auto; display:block; border-radius:12px; border:1px solid var(--border); background:#fff; }
+    a{ color:var(--accent); text-decoration:none; }
+    a:hover{ text-decoration:underline; }
+    ul{ margin:8px 0 8px 18px; }
+    .hr{ height:1px; background:var(--border); margin:26px 0; }
+    .badge{ display:inline-block; font-size:12px; color:#1f2937; background:#eef2ff; border:1px solid #c7d2fe; padding:2px 10px; border-radius:999px; }
+  </style>
+
+  <!-- MathJax for equations -->
+  <script>
+    window.MathJax = { tex: { inlineMath: [['\\(','\\)'], ['$', '$']] } };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <link rel="stylesheet" href="../assets/css/book.css">
+</head>
+
+<body>
+  <main class="wrap">
+    <span class="badge">New section</span>
+    <h1>Recurrent Neural Networks (RNNs): one “cell” reused across time</h1>
+    <p class="subtitle">
+      A practical, code-oriented tutorial on <em>why</em> RNNs exist, <em>how</em> a basic RNN (Elman unit) computes outputs, and <em>how weight sharing saves huge numbers of parameters</em>.
+    </p>
+
+    <div class="callout">
+      <strong>Big idea:</strong> An RNN processes a sequence by applying the <em>same</em> small neural “cell” at every time step.
+      The cell carries a <em>hidden state</em> forward, so information can flow through time while using a tiny set of shared weights.
+    </div>
+
+    <h2>1) Why not just flatten sequence data into a giant vector?</h2>
+    <p>
+      You can flatten a sequence \(X \in \mathbb{R}^{T \times D}\) into a single vector of length \(T\cdot D\) and feed it to a regular MLP.
+      It works mechanically, but it’s usually a bad tradeoff:
+    </p>
+    <ul>
+      <li><strong>Parameter explosion:</strong> dense layers connect “everything to everything”, so weights scale with \((T\cdot D)\).</li>
+      <li><strong>Ignores sequential structure:</strong> treating time steps as just “features” discards the idea of incremental processing.</li>
+      <li><strong>Hard to generalize across time:</strong> you’re not explicitly reusing patterns across positions in the sequence.</li>
+    </ul>
+
+    <div class="callout">
+      RNNs exploit the structure: <strong>the same computation repeats at every time step</strong>, just like CNN filters repeat across image locations.
+    </div>
+
+    <h2>2) The simplest RNN unit (Elman unit): equations and intuition</h2>
+
+    <p>
+      At each time step \(t\), the RNN consumes an input vector \(x_t \in \mathbb{R}^{D}\) and updates a hidden state
+      \(h_t \in \mathbb{R}^{M}\). Then it optionally produces an output \(\hat{y}_t\).
+    </p>
+
+    <h3>Core equations</h3>
+    <p>
+      A standard “vanilla” RNN does:
+    </p>
+    <p>
+      \[
+        h_t = \phi(W_{xh}x_t + W_{hh}h_{t-1} + b_h)
+      \]
+      \[
+        \hat{y}_t = \psi(W_{ho}h_t + b_o)
+      \]
+    </p>
+    <p>
+      Where:
+    </p>
+    <ul>
+      <li>\(W_{xh}\in\mathbb{R}^{M\times D}\): input → hidden weights</li>
+      <li>\(W_{hh}\in\mathbb{R}^{M\times M}\): hidden → hidden (recurrent) weights</li>
+      <li>\(W_{ho}\in\mathbb{R}^{O\times M}\): hidden → output weights</li>
+      <li>\(\phi\): hidden activation (often \(\tanh\) or ReLU); \(\psi\): output activation depends on task</li>
+      <li>\(h_0\): initial hidden state (often zeros; sometimes learned)</li>
+    </ul>
+
+    <div class="grid">
+      <figure>
+        <img
+          alt="RNN unrolled through time"
+          src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Recurrent_neural_network_unfold.svg/960px-Recurrent_neural_network_unfold.svg.png"
+        />
+        <figcaption>
+          Unrolling an RNN across time (same cell repeated at each step). Source: Wikimedia Commons.  [oai_citation:0‡Wikimedia Commons](https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Recurrent_neural_network_unfold.svg/960px-Recurrent_neural_network_unfold.svg.png)
+        </figcaption>
+      </figure>
+
+      <figure>
+        <img
+          alt="Elman network diagram"
+          src="https://upload.wikimedia.org/wikipedia/commons/e/e4/DiagramElmanNet_english.png"
+        />
+        <figcaption>
+          The classic “Elman” recurrent network view. Source: Wikimedia Commons.  [oai_citation:1‡Wikimedia Commons](https://upload.wikimedia.org/wikipedia/commons/3/3b/DiagramElmanNet_english.png)
+        </figcaption>
+      </figure>
+    </div>
+
+    <h3>“Single unit is used”: what that really means</h3>
+    <p>
+      When people say “the same unit is used at each time step”, they mean:
+    </p>
+    <ul>
+      <li>You do <strong>not</strong> have a different \(W_{xh}\) for each \(t\).</li>
+      <li>You do <strong>not</strong> have a different \(W_{hh}\) for each \(t\).</li>
+      <li>You reuse the <strong>same</strong> weights and biases at every step: that’s <strong>parameter sharing through time</strong>.</li>
+    </ul>
+    <p>
+      The only thing that changes over time is the <em>data</em> (\(x_t\)) and the <em>state</em> (\(h_{t-1}\to h_t\)).
+      This is exactly why RNNs can be far cheaper than flattening.
+    </p>
+
+    <h2>3) Many-to-one vs many-to-many: why you might “ignore” most outputs</h2>
+    <p>
+      You can compute \(\hat{y}_t\) at every step, but whether you <em>use</em> them depends on the task:
+    </p>
+    <ul>
+      <li><strong>Many-to-one:</strong> sentiment of a sentence → use only \(\hat{y}_T\)</li>
+      <li><strong>Many-to-many:</strong> label each time step (e.g., tagging) → use all \(\hat{y}_t\)</li>
+      <li><strong>Seq2seq (translation):</strong> outputs are also a sequence → you need stepwise predictions</li>
+    </ul>
+
+    <h2>4) Pseudocode: forward pass through a sequence</h2>
+    <pre><code class="language-python"># Given:
+#   X: shape (T, D)
+#   h0: shape (M,)   (often zeros)
+#   weights: W_xh (M, D), W_hh (M, M), b_h (M,)
+#            W_ho (O, M), b_o (O,)
+# Returns:
+#   y_hats: list of length T, each element shape (O,)
+
+h = h0
+y_hats = []
+for t in range(T):
+    h = tanh(W_xh @ X[t] + W_hh @ h + b_h)   # hidden update
+    y = softmax(W_ho @ h + b_o)              # output (for classification)
+    y_hats.append(y)
+
+# For many-to-one tasks, you would use y_hats[-1] and ignore the rest.</code></pre>
+
+    <h2>5) Cost savings: RNN vs flattened ANN</h2>
+    <p>
+      Let:
+    </p>
+    <ul>
+      <li>\(T\) = sequence length</li>
+      <li>\(D\) = features per time step</li>
+      <li>\(M\) = hidden size</li>
+      <li>\(O\) = output size (e.g., \(O=1\) for binary classification/logit)</li>
+    </ul>
+
+    <h3>Flattened ANN (dense “everything-to-everything”)</h3>
+    <p>
+      If you flatten, input size is \(T\cdot D\). If you also keep a hidden representation for each time step
+      (as in the transcript’s comparison), hidden size becomes \(T\cdot M\).
+    </p>
+    <p>
+      Approx weights (ignoring biases):
+      \[
+        (T D)(T M) + (T M)O
+      \]
+    </p>
+
+    <h3>RNN (shared weights through time)</h3>
+    <p>
+      Weights are independent of \(T\):
+      \[
+        W_{xh}: M D,\quad W_{hh}: M^2,\quad W_{ho}: O M
+      \]
+      Total:
+      \[
+        MD + M^2 + OM
+      \]
+    </p>
+
+    <div class="callout">
+      <strong>Key win:</strong> RNN parameter count does <em>not</em> grow with sequence length \(T\) the way a flattened dense model does.
+    </div>
+
+    <h3>Concrete example + Python code (and a plot)</h3>
+    <p>
+      Example: \(T=100\), \(D=10\), \(M=15\), \(O=1\).
+    </p>
+
+    <pre><code class="language-python">import numpy as np
+import matplotlib.pyplot as plt
+
+def ann_params_flat(T, D, M, O):
+    # Transcript-style comparison: hidden size = T*M
+    return (T*D) * (T*M) + (T*M) * O
+
+def rnn_params(T, D, M, O):
+    # Shared through time
+    return (M*D) + (M*M) + (O*M)
+
+T, D, M, O = 100, 10, 15, 1
+p_ann = ann_params_flat(T, D, M, O)
+p_rnn = rnn_params(T, D, M, O)
+
+print("Flattened ANN params:", p_ann)
+print("RNN params:", p_rnn)
+print("ANN / RNN ratio:", p_ann / p_rnn)
+
+# Quick bar plot
+labels = ["Flattened ANN", "RNN (shared weights)"]
+values = [p_ann, p_rnn]
+
+plt.figure()
+plt.bar(labels, values)
+plt.yscale("log")  # so both bars are visible
+plt.title("Parameter count comparison (log scale)")
+plt.ylabel("Number of parameters")
+plt.show()</code></pre>
+
+    <p>
+      In this setup, you’ll see a huge ratio (thousands of times more parameters for the flattened ANN),
+      matching the intuition from the transcript.
+    </p>
+
+    <h2>6) Coding it in PyTorch: manual loop (to really see weight sharing)</h2>
+    <p>
+      The fastest way to “get” RNNs is to implement the loop yourself once.
+      Below is a minimal RNN cell you can train like any other module.
+    </p>
+
+    <pre><code class="language-python">import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+class TinyElmanRNN(nn.Module):
+    """
+    Vanilla RNN (Elman unit) implemented explicitly:
+      h_t = tanh(W_xh x_t + W_hh h_{t-1} + b_h)
+      y_t = W_ho h_t + b_o
+    """
+    def __init__(self, input_size: int, hidden_size: int, output_size: int):
+        super().__init__()
+        self.input_size = input_size
+        self.hidden_size = hidden_size
+        self.output_size = output_size
+
+        # These are the ONLY learned weights, reused for every t
+        self.W_xh = nn.Linear(input_size, hidden_size, bias=True)
+        self.W_hh = nn.Linear(hidden_size, hidden_size, bias=False)
+        self.W_ho = nn.Linear(hidden_size, output_size, bias=True)
+
+    def forward(self, x: torch.Tensor, h0: torch.Tensor | None = None):
+        """
+        x: (batch, T, D)  using batch_first layout here
+        h0: (batch, M) or None
+        Returns:
+          y_all: (batch, T, O)  (pred at every step)
+          h_last: (batch, M)
+        """
+        B, T, D = x.shape
+        if h0 is None:
+            h = torch.zeros(B, self.hidden_size, device=x.device, dtype=x.dtype)
+        else:
+            h = h0
+
+        y_steps = []
+        for t in range(T):
+            xt = x[:, t, :]  # (batch, D)
+            h = torch.tanh(self.W_xh(xt) + self.W_hh(h))
+            yt = self.W_ho(h)  # (batch, O)
+            y_steps.append(yt)
+
+        y_all = torch.stack(y_steps, dim=1)  # (batch, T, O)
+        return y_all, h
+
+# Example usage:
+B, T, D = 32, 100, 10
+M, O = 15, 1
+model = TinyElmanRNN(D, M, O)
+
+x = torch.randn(B, T, D)
+y_all, h_last = model(x)
+
+# Many-to-one binary classification: use only last step
+logits = y_all[:, -1, :]         # (B, 1)
+probs  = torch.sigmoid(logits)   # if binary classification</code></pre>
+
+    <div class="callout">
+      Notice how <code>self.W_xh</code> and <code>self.W_hh</code> are created <em>once</em> in <code>__init__</code>,
+      then used repeatedly inside the time loop. That’s the “single unit reused” idea in code.
+    </div>
+
+    <h2>7) Using PyTorch’s built-in <span class="kbd">nn.RNN</span> (recommended for real projects)</h2>
+    <p>
+      PyTorch provides <code>torch.nn.RNN</code> which handles the looping internally and exposes standardized weights
+      (e.g., <code>weight_ih_l0</code>, <code>weight_hh_l0</code>) and batch/sequence layouts. 
+    </p>
+
+    <pre><code class="language-python">import torch
+import torch.nn as nn
+
+D, M = 10, 15   # input_size, hidden_size
+rnn = nn.RNN(
+    input_size=D,
+    hidden_size=M,
+    num_layers=1,
+    nonlinearity="tanh",
+    batch_first=True,  # input is (batch, T, D)
+)
+
+B, T = 32, 100
+x = torch.randn(B, T, D)
+
+# output: (B, T, M)   h_n: (num_layers, B, M)
+out, h_n = rnn(x)
+
+# Many-to-one classifier head
+head = nn.Linear(M, 1)
+logits = head(out[:, -1, :])</code></pre>
+
+    <p>
+      If you’re ever unsure about shapes, inputs/outputs, or the exact meaning of those weight tensors,
+      the official docs are the source of truth. 
+    </p>
+
+    <div class="hr"></div>
+
+    <h2>8) Quick mental model recap</h2>
+    <ul>
+      <li><strong>RNN = MLP cell + memory.</strong> The “memory” is the hidden state \(h_t\).</li>
+      <li><strong>One cell reused at every time step.</strong> Same weights, new data + updated state.</li>
+      <li><strong>Outputs at every step are optional.</strong> Many tasks use only the last output.</li>
+      <li><strong>Cost savings come from sharing.</strong> Parameter count doesn’t blow up with \(T\).</li>
+    </ul>
+
+    <div class="callout">
+      Next steps (typical): training details, backprop through time (BPTT), and why vanilla RNNs struggle with long sequences
+      (vanishing/exploding gradients) — which motivates LSTMs/GRUs.
+    </div>
+  </main>
+  <script src="../assets/js/nav.js"></script>
+</body>
+</html>

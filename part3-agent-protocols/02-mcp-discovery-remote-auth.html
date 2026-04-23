@@ -1,0 +1,830 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>MCP Servers Tutorial: components, remote access, OpenAI analogy, and authentication</title>
+  <style>
+    :root{
+      --bg:#ffffff;
+      --fg:#0f172a;
+      --muted:#64748b;
+      --card:#f8fafc;
+      --line:#e2e8f0;
+      --accent:#2563eb;
+      --accent2:#16a34a;
+      --warn:#b45309;
+
+      /* Light, multi-color code theme */
+      --code-bg:#f6f8fa;
+      --code-border:#d0d7de;
+      --code-fg:#24292f;
+      --kw:#0550ae;      /* keywords */
+      --fn:#8250df;      /* function names */
+      --str:#0a3069;     /* strings */
+      --com:#6e7781;     /* comments */
+      --num:#116329;     /* numbers */
+      --typ:#953800;     /* types/classes */
+      --const:#cf222e;   /* important constants/errors */
+      --dim:#8b949e;     /* subtle punctuation */
+    }
+
+    html,body{
+      background:var(--bg);
+      color:var(--fg);
+      font:16px/1.7 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;
+      margin:0;
+    }
+    header{
+      border-bottom:1px solid var(--line);
+      background:linear-gradient(180deg,#ffffff,#fbfdff);
+    }
+    .wrap{max-width:1120px; margin:0 auto; padding:28px 20px;}
+    h1{font-size:32px; margin:0 0 8px;}
+    h2{font-size:24px; margin:30px 0 10px;}
+    h3{font-size:19px; margin:18px 0 8px;}
+    p{margin:10px 0;}
+    ul,ol{margin:10px 0 10px 22px;}
+    a{color:var(--accent); text-decoration:none;}
+    a:hover{text-decoration:underline;}
+    .muted{color:var(--muted);}
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      padding:14px 16px;
+      border-radius:14px;
+      margin:12px 0;
+    }
+    .callout{
+      border-left:4px solid var(--accent);
+      background:#eff6ff;
+      padding:12px 14px;
+      border-radius:12px;
+      margin:12px 0;
+    }
+    .callout.ok{border-left-color:var(--accent2); background:#f0fdf4;}
+    .callout.warn{border-left-color:var(--warn); background:#fffbeb;}
+    .toc{
+      background:var(--card);
+      border:1px solid var(--line);
+      padding:14px 16px;
+      border-radius:14px;
+      margin-top:12px;
+    }
+    .toc ul{margin:10px 0 0 22px;}
+    .hr{height:1px; background:var(--line); margin:22px 0;}
+
+    table{width:100%; border-collapse:collapse; margin:10px 0; font-size:14px;}
+    th,td{border:1px solid var(--line); padding:10px; text-align:left; vertical-align:top;}
+    th{background:#f1f5f9;}
+
+    .diagram{
+      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;
+      background:#ffffff;
+      border:1px dashed var(--line);
+      padding:10px 12px;
+      border-radius:14px;
+      color:#0f172a;
+    }
+
+    pre.code{
+      background:var(--code-bg);
+      border:1px solid var(--code-border);
+      padding:14px 16px;
+      border-radius:14px;
+      overflow:auto;
+      margin:10px 0;
+      color:var(--code-fg);
+    }
+    pre.code code{
+      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;
+      font-size:13px;
+      white-space:pre;
+    }
+    .kw{color:var(--kw); font-weight:600;}
+    .fn{color:var(--fn); font-weight:600;}
+    .str{color:var(--str);}
+    .com{color:var(--com); font-style:italic;}
+    .num{color:var(--num);}
+    .typ{color:var(--typ); font-weight:600;}
+    .const{color:var(--const); font-weight:700;}
+    .dim{color:var(--dim);}
+    .op{color:var(--dim);}
+
+    .badge{
+      display:inline-block;
+      font-size:12px;
+      padding:2px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      color:#0f172a;
+      margin-right:6px;
+      margin-bottom:6px;
+    }
+    code.inline{
+      background:#f1f5f9;
+      border:1px solid var(--line);
+      padding:2px 6px;
+      border-radius:8px;
+      font-size:0.95em;
+    }
+  </style>
+  <link rel="stylesheet" href="../assets/css/book.css">
+</head>
+
+<body>
+<header>
+  <div class="wrap">
+    <h1>MCP Servers — a complete tutorial</h1>
+    <p class="muted">
+      This single page covers: MCP basics (resources, prompts, tools), server+client code,
+      how remote MCP servers are used by LLMs (OpenAI-style analogy),
+      and how authentication fits in (self-hosted Identity Provider, Bearer tokens, PKCE, introspection vs JWKS).
+    </p>
+
+    <div class="toc">
+      <strong>Table of contents</strong>
+      <ul>
+        <li><a href="#what-is-mcp">1) What MCP is (and what it isn’t)</a></li>
+        <li><a href="#core-components">2) Core MCP components: resources, prompts, tools</a></li>
+        <li><a href="#discovery">3) Discovery: how a client finds resources/prompts/tools</a></li>
+        <li><a href="#local-server">4) Server tutorial: a simple MCP “shop” server in Python</a></li>
+        <li><a href="#local-client">5) Client tutorial: list resources/prompts/tools and call them</a></li>
+        <li><a href="#remote-server">6) Remote MCP servers and “mcp.shop” style analogy</a></li>
+        <li><a href="#openai-llm">7) Using a remote MCP server from an LLM (OpenAI analogy)</a></li>
+        <li><a href="#auth">8) Authentication & Identity Providers in MCP</a></li>
+        <li><a href="#auth-selfhosted">9) Self-hosted IdP + Bearer token + middleware validation</a></li>
+        <li><a href="#auth-get-token">10) How the client gets tokens (password/auth-key vs PKCE)</a></li>
+        <li><a href="#auth-validate">11) How the server validates tokens (introspection vs JWKS)</a></li>
+        <li><a href="#best-practices">12) Practical best practices (tool allow-list, least privilege, CORS)</a></li>
+        <li><a href="#troubleshooting">13) Beginner troubleshooting checklist</a></li>
+      </ul>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section id="what-is-mcp">
+    <h2>1) What MCP is (and what it isn’t)</h2>
+
+    <p>
+      MCP (Model Context Protocol) is a standard interface for connecting an AI host (the app that runs the model)
+      to external capabilities offered by servers. Those capabilities usually fall into three buckets:
+      <span class="badge">Resources</span><span class="badge">Prompts</span><span class="badge">Tools</span>.
+    </p>
+
+    <div class="card">
+      <div class="diagram">
+        User ↔ Host App (LLM) ↔ MCP Server(s)
+      </div>
+      <p class="muted">
+        The host app is in control: it decides what context to provide to the LLM and which tools the LLM is allowed to call.
+        The MCP server is “just” a capability provider.
+      </p>
+    </div>
+
+    <div class="callout warn">
+      <strong>Important:</strong> MCP is not “the LLM calling the Internet by itself.”
+      In well-designed systems, the LLM proposes actions, but the host executes calls and enforces policy.
+      That is exactly how you keep things safe and predictable.
+    </div>
+
+    <h3>1.1 Beginner mental model (the 3 roles)</h3>
+    <div class="card">
+      <div class="diagram">
+        (1) User asks a question
+          ↓
+        (2) Host app (your code) decides what to do
+          ↓
+        (3) Host talks to MCP server(s) for data/actions
+          ↓
+        (4) Host feeds results back to the LLM and the user
+      </div>
+      <p class="muted">
+        Beginners often think “the model calls the tool”. In reality, the <strong>host</strong> is the component that
+        makes network calls and enforces policy (allow-lists, rate limits, auth headers).
+      </p>
+    </div>
+
+    <h3>1.2 Key MCP terms (quick glossary)</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Term</th>
+          <th>Beginner explanation</th>
+          <th>Example</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Host</strong></td>
+          <td>Your app that runs the LLM and enforces policy.</td>
+          <td>A Python service using an LLM SDK.</td>
+        </tr>
+        <tr>
+          <td><strong>MCP Server</strong></td>
+          <td>A capability provider that exposes resources/prompts/tools.</td>
+          <td>A “shop” server exposing <code class="inline">inventory_check</code>.</td>
+        </tr>
+        <tr>
+          <td><strong>Transport</strong></td>
+          <td>How messages move between host and server (stdio or HTTP).</td>
+          <td>Streamable HTTP at <code class="inline">/mcp</code>.</td>
+        </tr>
+        <tr>
+          <td><strong>Discovery</strong></td>
+          <td>Listing what exists (tools/resources/prompts) before using them.</td>
+          <td><code class="inline">list_tools()</code> then <code class="inline">call_tool()</code>.</td>
+        </tr>
+        <tr>
+          <td><strong>Stateless vs stateful</strong></td>
+          <td>Whether the server expects a durable session per client.</td>
+          <td>Stateless HTTP is simplest to scale.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="core-components">
+    <h2>2) Core MCP components: resources, prompts, tools</h2>
+
+    <p>
+      Here’s a conceptual mapping that makes MCP intuitive:
+    </p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Component</th>
+          <th>What it is</th>
+          <th>What the host typically does with it</th>
+          <th>Example in a “shop” domain</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Resources</strong></td>
+          <td>Named/URI-addressed context objects (data you want the model to read).</td>
+          <td>Fetch and inject into the LLM’s context (or summarize first).</td>
+          <td><code class="inline">shop://catalog</code>, <code class="inline">shop://schema</code></td>
+        </tr>
+        <tr>
+          <td><strong>Prompts</strong></td>
+          <td>Reusable prompt templates or workflows published by the server.</td>
+          <td>Present to user or internally use as standard instructions.</td>
+          <td>“Write a purchase summary for SKU + quantity”</td>
+        </tr>
+        <tr>
+          <td><strong>Tools</strong></td>
+          <td>Callable functions with structured inputs/outputs. Can have side effects.</td>
+          <td>Allow the model to call them (with restrictions), then return results back to the model.</td>
+          <td><code class="inline">inventory_check(sku, qty)</code>, <code class="inline">create_order(sku, qty)</code></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout ok">
+      <strong>Quick rule:</strong>
+      If something is read-only or “context,” make it a Resource. If it’s a reusable instruction, make it a Prompt.
+      If it changes state (writes, creates, sends), make it a Tool.
+    </div>
+  </section>
+
+  <section id="discovery">
+    <h2>3) Discovery: how a client finds resources/prompts/tools</h2>
+
+    <p>
+      Discovery is the step that confused you earlier (“where is mcp_call? how does discovery happen?”).
+      The answer is: the host connects to the server and asks for the catalogs.
+    </p>
+
+    <div class="card">
+      <strong>Typical host flow (high-level):</strong>
+      <ol>
+        <li>Connect to MCP server transport (stdio, local HTTP, remote HTTP)</li>
+        <li>Initialize</li>
+        <li>List tools (names + input schema)</li>
+        <li>List prompts (names + args)</li>
+        <li>List resources (URIs + metadata)</li>
+      </ol>
+    </div>
+
+    <p>
+      After discovery, the host can do two important policy steps:
+    </p>
+    <ul>
+      <li><strong>Tool allow-list</strong>: choose which tools the model may call (e.g., only read-only tools in production).</li>
+      <li><strong>Context selection</strong>: decide which resources to inject (to avoid over-sharing or prompt bloat).</li>
+    </ul>
+
+    <div class="callout warn">
+      Discovery doesn’t mean the model automatically sees everything.
+      The host chooses what to show and what to enable.
+    </div>
+
+    <h3>3.1 Transports (how MCP messages travel)</h3>
+    <p>
+      MCP is a protocol. It can be carried over different transports.
+      Beginners usually start with <strong>Streamable HTTP</strong> (easy to deploy) or <strong>stdio</strong> (great for local tools).
+    </p>
+    <div class="card">
+      <strong>Common transports:</strong>
+      <ul>
+        <li><strong>stdio</strong>: host spawns the server process and communicates via stdin/stdout (local only).</li>
+        <li><strong>HTTP</strong>: server runs as a web app; host calls it over the network (local or remote).</li>
+      </ul>
+      <p class="muted">
+        Remote servers usually use HTTP because it works across machines and supports standard web controls (auth, rate limits, logs).
+      </p>
+    </div>
+
+    <h3>3.2 What “initialize” means</h3>
+    <p>
+      <code class="inline">initialize()</code> is the moment the host and server agree on protocol expectations.
+      After initialization, the host can safely call listing endpoints and tools.
+    </p>
+
+    <h3>3.3 Tool schemas: why structured inputs matter</h3>
+    <p>
+      Tools are not “free-form strings”. Each tool has a schema (think: a mini API contract).
+      That lets the host validate inputs before calling and gives the LLM a clear structure to follow.
+    </p>
+    <div class="callout ok">
+      <strong>Beginner rule:</strong> If you can’t describe a tool’s inputs/outputs as JSON, the tool is probably too vague.
+      Split it into smaller tools.
+    </div>
+  </section>
+
+  <div class="hr"></div>
+
+  <section id="local-server">
+    <h2>4) Server tutorial: a simple MCP “shop” server in Python</h2>
+
+    <p>
+      This server has:
+      <strong>2 resources</strong> (catalog and schema),
+      <strong>1 prompt</strong> (purchase summary prompt),
+      and <strong>2 tools</strong> (inventory check and create order).
+    </p>
+
+    <p class="muted">
+      This is a toy example but it demonstrates the full pattern: read context (resources), reuse instructions (prompt),
+      perform actions (tools).
+    </p>
+
+    <pre class="code"><code><span class="com"># server.py</span>
+<span class="kw">from</span> <span class="typ">typing</span> <span class="kw">import</span> <span class="typ">TypedDict</span>, <span class="typ">Optional</span>
+<span class="kw">from</span> <span class="typ">mcp.server.fastmcp</span> <span class="kw">import</span> <span class="typ">FastMCP</span>
+
+<span class="com"># Create the MCP server</span>
+mcp <span class="op">=</span> <span class="typ">FastMCP</span>(<span class="str">"MiniShop MCP"</span>, stateless_http<span class="op">=</span><span class="kw">True</span>)
+
+<span class="com"># In-memory demo data</span>
+CATALOG <span class="op">=</span> {
+  <span class="str">"SKU-APPLE"</span>: {<span class="str">"name"</span>: <span class="str">"Apple"</span>, <span class="str">"price"</span>: <span class="num">1.50</span>, <span class="str">"stock"</span>: <span class="num">12</span>},
+  <span class="str">"SKU-CHAIR"</span>: {<span class="str">"name"</span>: <span class="str">"Chair"</span>, <span class="str">"price"</span>: <span class="num">49.00</span>, <span class="str">"stock"</span>: <span class="num">0</span>},
+}
+
+<span class="com"># ----------------------</span>
+<span class="com"># RESOURCES</span>
+<span class="com"># ----------------------</span>
+@mcp.<span class="fn">resource</span>(<span class="str">"shop://catalog"</span>)
+<span class="kw">def</span> <span class="fn">catalog_snapshot</span>() <span class="op">-&gt;</span> <span class="typ">str</span>:
+    <span class="kw">import</span> <span class="typ">json</span>
+    <span class="kw">return</span> json.<span class="fn">dumps</span>(CATALOG, indent<span class="op">=</span><span class="num">2</span>)
+
+@mcp.<span class="fn">resource</span>(<span class="str">"shop://schema"</span>)
+<span class="kw">def</span> <span class="fn">schema_doc</span>() <span class="op">-&gt;</span> <span class="typ">str</span>:
+    <span class="kw">return</span> <span class="str">"""Data shapes:</span>
+<span class="str">- Catalog item: { name: string, price: number, stock: number }</span>
+<span class="str">- Order request: { sku: string, qty: number }</span>
+<span class="str">- Order result: { order_id: string, status: 'created'|'rejected', reason?: string }</span>
+<span class="str">"""</span>
+
+<span class="com"># ----------------------</span>
+<span class="com"># PROMPTS</span>
+<span class="com"># ----------------------</span>
+@mcp.<span class="fn">prompt</span>(title<span class="op">=</span><span class="str">"Purchase Summary"</span>)
+<span class="kw">def</span> <span class="fn">purchase_summary_prompt</span>(sku: <span class="typ">str</span>, qty: <span class="typ">int</span>) <span class="op">-&gt;</span> <span class="typ">str</span>:
+    item <span class="op">=</span> CATALOG.<span class="fn">get</span>(sku)
+    <span class="kw">if</span> <span class="kw">not</span> item:
+        <span class="kw">return</span> <span class="str">f"Write a polite message: SKU {sku} does not exist."</span>
+    <span class="kw">return</span> <span class="str">f"""Write a short purchase summary for the user.</span>
+<span class="str">Item: {item['name']} ({sku})</span>
+<span class="str">Quantity: {qty}</span>
+<span class="str">Unit price: ${item['price']}</span>
+<span class="str">Mention stock status and alternatives if stock is low/zero.</span>
+<span class="str">"""</span>
+
+<span class="com"># ----------------------</span>
+<span class="com"># TOOLS</span>
+<span class="com"># ----------------------</span>
+<span class="kw">class</span> <span class="typ">InventoryResult</span>(<span class="typ">TypedDict</span>):
+    sku: <span class="typ">str</span>
+    requested: <span class="typ">int</span>
+    available: <span class="typ">int</span>
+    can_fulfill: <span class="typ">bool</span>
+
+@mcp.<span class="fn">tool</span>()
+<span class="kw">def</span> <span class="fn">inventory_check</span>(sku: <span class="typ">str</span>, qty: <span class="typ">int</span>) <span class="op">-&gt;</span> <span class="typ">InventoryResult</span>:
+    item <span class="op">=</span> CATALOG.<span class="fn">get</span>(sku, {<span class="str">"stock"</span>: <span class="num">0</span>})
+    available <span class="op">=</span> <span class="typ">int</span>(item[<span class="str">"stock"</span>])
+    <span class="kw">return</span> {
+        <span class="str">"sku"</span>: sku,
+        <span class="str">"requested"</span>: qty,
+        <span class="str">"available"</span>: available,
+        <span class="str">"can_fulfill"</span>: available <span class="op">&gt;=</span> qty,
+    }
+
+<span class="kw">class</span> <span class="typ">OrderResult</span>(<span class="typ">TypedDict</span>, total<span class="op">=</span><span class="kw">False</span>):
+    order_id: <span class="typ">str</span>
+    status: <span class="typ">str</span>     <span class="com"># "created" | "rejected"</span>
+    reason: <span class="typ">Optional</span>[<span class="typ">str</span>]
+
+@mcp.<span class="fn">tool</span>()
+<span class="kw">def</span> <span class="fn">create_order</span>(sku: <span class="typ">str</span>, qty: <span class="typ">int</span>) <span class="op">-&gt;</span> <span class="typ">OrderResult</span>:
+    check <span class="op">=</span> inventory_check(sku, qty)
+    <span class="kw">if</span> <span class="kw">not</span> check[<span class="str">"can_fulfill"</span>]:
+        <span class="kw">return</span> {<span class="str">"status"</span>: <span class="str">"rejected"</span>, <span class="str">"reason"</span>: <span class="str">"Insufficient stock"</span>}
+    <span class="com"># Side effect: reserve stock</span>
+    CATALOG[sku][<span class="str">"stock"</span>] <span class="op">-=</span> qty
+    <span class="kw">import</span> <span class="typ">uuid</span>
+    <span class="kw">return</span> {<span class="str">"status"</span>: <span class="str">"created"</span>, <span class="str">"order_id"</span>: <span class="str">f"ord_{uuid.uuid4().hex[:8]}"</span>}
+
+<span class="com"># ----------------------</span>
+<span class="com"># Expose as a Streamable HTTP MCP app</span>
+<span class="com"># ----------------------</span>
+app <span class="op">=</span> mcp.<span class="fn">streamable_http_app</span>()
+
+<span class="com"># Run with: uvicorn server:app --host 127.0.0.1 --port 8000</span></code></pre>
+
+    <div class="card">
+      <strong>What you just built</strong>
+      <ul>
+        <li>Resources are readable by URI (catalog/schema)</li>
+        <li>Prompt provides a reusable instruction template</li>
+        <li>Tools enable actions (inventory check, create order)</li>
+      </ul>
+      <p class="muted">
+        In a real deployment, your resources might be “database schema”, “latest sales report”, “customer profile”.
+        Tools might be “run SQL”, “create ticket”, “approve order”.
+      </p>
+    </div>
+  </section>
+
+  <section id="local-client">
+    <h2>5) Client tutorial: list resources/prompts/tools and call them</h2>
+
+    <p>
+      The client is the “host brain” that:
+      (1) discovers what the server provides, and then
+      (2) reads resources or calls tools.
+    </p>
+
+    <p class="muted">
+      This client uses MCP’s streamable HTTP client transport.
+      You can adapt the same pattern for stdio or other supported transports.
+    </p>
+
+    <pre class="code"><code><span class="com"># client.py</span>
+<span class="kw">import</span> <span class="typ">asyncio</span>
+<span class="kw">from</span> <span class="typ">mcp.client.session</span> <span class="kw">import</span> <span class="typ">ClientSession</span>
+<span class="kw">from</span> <span class="typ">mcp.client.streamable_http</span> <span class="kw">import</span> <span class="typ">streamable_http_client</span>
+
+MCP_URL <span class="op">=</span> <span class="str">"http://127.0.0.1:8000/mcp"</span>
+
+<span class="kw">async def</span> <span class="fn">main</span>():
+    <span class="kw">async with</span> streamable_http_client(MCP_URL) <span class="kw">as</span> (read, write):
+        <span class="kw">async with</span> <span class="typ">ClientSession</span>(read, write) <span class="kw">as</span> session:
+            <span class="kw">await</span> session.<span class="fn">initialize</span>()
+
+            <span class="com"># 1) Discover tools</span>
+            tools <span class="op">=</span> <span class="kw">await</span> session.<span class="fn">list_tools</span>()
+            <span class="kw">print</span>(<span class="str">"\nTOOLS:"</span>)
+            <span class="kw">for</span> t <span class="kw">in</span> tools:
+                <span class="kw">print</span>(<span class="str">"-"</span>, t.name, <span class="str">":"</span>, t.description)
+
+            <span class="com"># 2) Discover resources</span>
+            resources <span class="op">=</span> <span class="kw">await</span> session.<span class="fn">list_resources</span>()
+            <span class="kw">print</span>(<span class="str">"\nRESOURCES:"</span>)
+            <span class="kw">for</span> r <span class="kw">in</span> resources:
+                <span class="kw">print</span>(<span class="str">"-"</span>, r.uri)
+
+            <span class="com"># 3) Read a resource</span>
+            catalog <span class="op">=</span> <span class="kw">await</span> session.<span class="fn">read_resource</span>(<span class="str">"shop://catalog"</span>)
+            <span class="kw">print</span>(<span class="str">"\nCATALOG RESOURCE CONTENT:\n"</span>, catalog.contents[<span class="num">0</span>].text)
+
+            <span class="com"># 4) Discover prompts</span>
+            prompts <span class="op">=</span> <span class="kw">await</span> session.<span class="fn">list_prompts</span>()
+            <span class="kw">print</span>(<span class="str">"\nPROMPTS:"</span>)
+            <span class="kw">for</span> p <span class="kw">in</span> prompts:
+                <span class="kw">print</span>(<span class="str">"-"</span>, p.name)
+
+            <span class="com"># 5) Call tools</span>
+            inv <span class="op">=</span> <span class="kw">await</span> session.<span class="fn">call_tool</span>(<span class="str">"inventory_check"</span>, {<span class="str">"sku"</span>: <span class="str">"SKU-APPLE"</span>, <span class="str">"qty"</span>: <span class="num">2</span>})
+            <span class="kw">print</span>(<span class="str">"\nINVENTORY CHECK RESULT:\n"</span>, inv.content[<span class="num">0</span>].text)
+
+            order <span class="op">=</span> <span class="kw">await</span> session.<span class="fn">call_tool</span>(<span class="str">"create_order"</span>, {<span class="str">"sku"</span>: <span class="str">"SKU-APPLE"</span>, <span class="str">"qty"</span>: <span class="num">2</span>})
+            <span class="kw">print</span>(<span class="str">"\nCREATE ORDER RESULT:\n"</span>, order.content[<span class="num">0</span>].text)
+
+      <span class="kw">if</span> __name__ <span class="op">==</span> <span class="str">"__main__"</span>:
+        <span class="typ">asyncio</span>.<span class="fn">run</span>(main())</code></pre>
+
+    <div class="card">
+      <strong>How to run the client</strong>
+      <pre class="code"><code><span class="com"># In another terminal (server already running):</span>
+python client.py</code></pre>
+      <p class="muted">
+        You should see the discovered TOOLS/RESOURCES/PROMPTS, the catalog resource content, and the JSON-ish tool results.
+      </p>
+    </div>
+
+    <h3>What you should notice in this client</h3>
+    <ul>
+      <li><strong>Discovery</strong> is explicit: you call <code class="inline">list_tools</code>, <code class="inline">list_resources</code>, <code class="inline">list_prompts</code>.</li>
+      <li><strong>Resources</strong> are read with <code class="inline">read_resource(uri)</code> and returned as content blocks.</li>
+      <li><strong>Tools</strong> are invoked with <code class="inline">call_tool(name, args_dict)</code>.</li>
+      <li><strong>Prompts</strong> appear in discovery; many hosts surface them to users as “recipes”.</li>
+    </ul>
+
+    <div class="callout ok">
+      <strong>Connection to what we discussed earlier:</strong><br/>
+      This is the MCP equivalent of “passing dictionaries” in LangChain: tool calls are structured dict inputs,
+      and tool results become structured outputs that the host can feed back to the LLM.
+    </div>
+  </section>
+
+  <div class="hr"></div>
+
+  <section id="remote-server">
+    <h2>6) Remote MCP servers and the “mcp.shop” analogy</h2>
+
+    <p>
+      Everything you did above works the same when the server is remote. The only differences are:
+    </p>
+    <ul>
+      <li>The MCP URL becomes something like <code class="inline">https://mcp.shop.example/mcp</code></li>
+      <li>You must add <strong>auth</strong> (almost always)</li>
+      <li>You should add operational controls: rate limits, logs, monitoring, timeouts</li>
+    </ul>
+
+    <div class="card">
+      <strong>Example “mcp.shop” capabilities</strong>
+      <ul>
+        <li><strong>Resources</strong>: <code class="inline">shop://catalog</code>, <code class="inline">shop://shipping_zones</code>, <code class="inline">shop://return_policy</code></li>
+        <li><strong>Tools</strong>: <code class="inline">search_products</code>, <code class="inline">inventory_check</code>, <code class="inline">create_order</code>, <code class="inline">track_order</code></li>
+        <li><strong>Prompts</strong>: “Recommend products”, “Write an invoice summary”, “Draft a customer confirmation message”</li>
+      </ul>
+    </div>
+
+    <div class="callout warn">
+      Remote MCP should be treated like a production API: authentication, authorization, and least-privilege tool exposure
+      become the main concerns.
+    </div>
+  </section>
+
+  <section id="openai-llm">
+    <h2>7) Using a remote MCP server from an LLM (OpenAI analogy)</h2>
+
+    <p>
+      You said: “I use OpenAI and my own client with an LLM — the LLM is actually invoking the server.”
+      The accurate picture is:
+    </p>
+
+    <div class="card">
+      <div class="diagram">
+        LLM proposes a tool call
+          ↓
+        Your host/client executes the tool call (HTTP request to MCP server)
+          ↓
+        MCP server returns tool result
+          ↓
+        Host/client sends tool result back to the LLM as context
+      </div>
+    </div>
+
+    <p>
+      So the LLM isn’t holding sockets or managing auth. Your host is.
+      The LLM “decides” which tool to use (within the boundaries you allow).
+    </p>
+
+    <h3>Conceptual OpenAI-style configuration</h3>
+    <p class="muted">
+      The exact API fields can differ by SDK/version, but the concept is always: configure an MCP tool with a URL, restrict tools, attach headers.
+    </p>
+
+    <pre class="code"><code><span class="com"># Conceptual OpenAI host wiring for a remote MCP server</span>
+tools <span class="op">=</span> [
+  {
+    <span class="str">"type"</span>: <span class="str">"mcp"</span>,
+    <span class="str">"server_label"</span>: <span class="str">"mcp.shop"</span>,
+    <span class="str">"server_url"</span>: <span class="str">"https://mcp.shop.example/mcp"</span>,
+    <span class="str">"allowed_tools"</span>: [<span class="str">"inventory_check"</span>, <span class="str">"create_order"</span>],
+    <span class="str">"headers"</span>: {<span class="str">"Authorization"</span>: <span class="str">"Bearer &lt;token&gt;"</span>}
+  }
+]</code></pre>
+
+    <div class="callout ok">
+      <strong>Safety levers you should always use:</strong>
+      <ul>
+        <li><strong>allowed_tools</strong>: start minimal (read-only), expand carefully.</li>
+        <li><strong>server-side authorization</strong>: don’t rely on “the model will behave”.</li>
+      </ul>
+    </div>
+  </section>
+
+  <div class="hr"></div>
+
+  <section id="auth">
+    <h2>8) Authentication & Identity Providers in MCP</h2>
+
+    <p>
+      MCP runs over HTTP. So authentication looks exactly like a typical API:
+    </p>
+    <ul>
+      <li><strong>Client</strong> obtains an access token from an Identity Provider (IdP)</li>
+      <li><strong>Client</strong> sends <code class="inline">Authorization: Bearer &lt;token&gt;</code> to the MCP server</li>
+      <li><strong>Server middleware</strong> validates token and attaches identity/scopes to request context</li>
+      <li><strong>Tools</strong> enforce authorization (scopes/roles) before doing side effects</li>
+    </ul>
+
+    <div class="callout warn">
+      “Authentication” answers <em>who are you?</em><br/>
+      “Authorization” answers <em>what are you allowed to do?</em><br/>
+      Middleware usually handles authentication; tool handlers should handle authorization.
+    </div>
+  </section>
+
+  <section id="auth-selfhosted">
+    <h2>9) Self-hosted IdP + Bearer token + middleware validation</h2>
+
+    <p>
+      This is the pattern you asked about: “client gets bearer token from auth server; server validates it.”
+      We’ll show two validation approaches:
+    </p>
+    <ul>
+      <li><strong>Opaque token</strong> validated by calling IdP introspection endpoint</li>
+      <li><strong>JWT</strong> validated locally using public keys fetched from IdP (JWKS)</li>
+    </ul>
+
+    <h3>9.1 Opaque token path (introspection)</h3>
+    <div class="card">
+      <div class="diagram">
+        Client → IdP: POST /token (username/password or auth-key) → access_token (opaque)<br/>
+        Client → MCP: Authorization: Bearer access_token<br/>
+        MCP → IdP: POST /introspect (token) → active? claims? scopes?<br/>
+        MCP → allow/deny
+      </div>
+    </div>
+
+    <h3>9.2 Server middleware example (introspection)</h3>
+    <p class="muted">
+      This middleware sits in front of <code class="inline">/mcp</code> and rejects requests without a valid token.
+    </p>
+
+    <pre class="code"><code><span class="com"># middleware_snippet.py (conceptual)</span>
+auth <span class="op">=</span> request.headers.<span class="fn">get</span>(<span class="str">"authorization"</span>, <span class="str">""</span>)
+<span class="kw">if</span> <span class="kw">not</span> auth.<span class="fn">startswith</span>(<span class="str">"Bearer "</span>):
+    <span class="kw">return</span> <span class="typ">JSONResponse</span>({<span class="str">"detail"</span>: <span class="str">"Missing Bearer token"</span>}, status_code<span class="op">=</span><span class="num">401</span>)
+
+token <span class="op">=</span> auth.<span class="fn">split</span>(<span class="str">" "</span>, <span class="num">1</span>)[<span class="num">1</span>].<span class="fn">strip</span>()
+
+r <span class="op">=</span> <span class="kw">await</span> client.<span class="fn">post</span>(IDP_INTROSPECT_URL, json<span class="op">=</span>{<span class="str">"token"</span>: token})
+data <span class="op">=</span> r.<span class="fn">json</span>()
+<span class="kw">if</span> <span class="kw">not</span> data.<span class="fn">get</span>(<span class="str">"active"</span>):
+    <span class="kw">return</span> <span class="typ">JSONResponse</span>({<span class="str">"detail"</span>: <span class="str">"Invalid token"</span>}, status_code<span class="op">=</span><span class="num">401</span>)
+
+request.state.sub <span class="op">=</span> data.<span class="fn">get</span>(<span class="str">"sub"</span>)
+request.state.scope <span class="op">=</span> data.<span class="fn">get</span>(<span class="str">"scope"</span>, <span class="str">""</span>)</code></pre>
+
+    <div class="callout ok">
+      Once identity is attached to <code class="inline">request.state</code>, your tools can enforce permissions:
+      e.g., <code class="inline">order:write</code> required to call <code class="inline">create_order</code>.
+    </div>
+  </section>
+
+  <section id="auth-get-token">
+    <h2>10) How clients get tokens: password/auth-key (local) vs PKCE (public)</h2>
+
+    <p>
+      You asked two key questions:
+    </p>
+    <ul>
+      <li>“In this case we don’t use an auth key just username/password — can we use an auth key and why?”</li>
+      <li>“Client has to access Google server to get bearer token still? Is this PKCE?”</li>
+    </ul>
+
+    <h3>10.1 Local services (can keep secrets): password OR auth-key exchange</h3>
+    <p>
+      If your client is a backend service, CLI, or trusted machine environment, it can keep secrets safely (vault/env vars).
+      You can obtain bearer tokens by:
+    </p>
+    <ul>
+      <li><strong>Username/password</strong> (user identity) → token (scoped to user)</li>
+      <li><strong>Auth key / client credential</strong> (service identity) → token (scoped to service)</li>
+    </ul>
+
+    <div class="callout">
+      <strong>Why use auth keys?</strong>
+      They help when you don’t want to store user passwords or you need machine-to-machine access.
+      They also simplify rotation and auditing at the service level.
+    </div>
+
+    <h3>10.2 Public clients (cannot keep secrets): PKCE</h3>
+    <p>
+      In browsers/mobile apps, secrets can be extracted. PKCE exists to secure the authorization code flow for these clients.
+      The client must talk to the IdP (Google or your IdP) to obtain the token—yes, that’s required.
+      The server keeping a public key does <em>not</em> remove the need for the client to obtain the token; it only makes server-side validation faster.
+    </p>
+
+    <div class="card">
+      <div class="diagram">
+        Public client (SPA/mobile) gets token from IdP via PKCE<br/>
+        → then calls MCP server with Authorization: Bearer token
+      </div>
+    </div>
+  </section>
+
+  <section id="auth-validate">
+    <h2>11) Server validation: introspection vs JWKS (public key retrieval at start)</h2>
+
+    <h3>11.1 Introspection (opaque tokens)</h3>
+    <p>
+      Opaque tokens are validated by calling the IdP (or cached results). This is simple and supports immediate revocation.
+    </p>
+
+    <h3>11.2 JWKS (JWT tokens)</h3>
+    <p>
+      If your IdP issues JWTs, your MCP server can validate locally. It needs public keys.
+      The usual pattern is:
+    </p>
+    <ol>
+      <li>On startup, fetch IdP discovery document (or configure JWKS URL directly)</li>
+      <li>Fetch JWKS and cache keys keyed by <code class="inline">kid</code></li>
+      <li>For each request, read the JWT header.kid and choose key to verify signature</li>
+      <li>Validate claims: issuer (iss), audience (aud), expiry (exp)</li>
+      <li>Refresh keys on cache expiration or unknown kid</li>
+    </ol>
+
+    <div class="callout warn">
+      <strong>Answering your earlier question:</strong>
+      “How server gets the public key at start?” — it fetches the JWKS from the IdP and caches it.
+      It may refresh periodically or when it sees an unknown key id (kid).
+    </div>
+  </section>
+
+  <section id="best-practices">
+    <h2>12) Best practices & troubleshooting</h2>
+
+    <h3>12.1 Always separate “tool selection” from “tool execution”</h3>
+    <p>
+      Let the model suggest which tool to call, but enforce policy in the host:
+      allowed tool list, argument validation, rate limits, and safe defaults.
+    </p>
+
+    <h3>12.2 Validate inputs server-side</h3>
+    <p>
+      Treat MCP tool calls like API requests. Validate types, lengths, SKU formats, and scope permissions.
+      Don’t trust that the model will always supply correct values.
+    </p>
+
+    <h3>12.3 Limit data exposure via resources</h3>
+    <p>
+      Just because a resource exists doesn’t mean it should be offered to all callers.
+      Consider per-user resource filtering (e.g., only their own catalog segment or their own orders).
+    </p>
+
+    <h3>12.4 CORS (browser hosts)</h3>
+    <p>
+      If a browser-based host calls your MCP server cross-origin, you must configure CORS properly.
+      Expect OPTIONS preflight if you use Authorization headers.
+    </p>
+
+    <div class="callout ok">
+      <strong>One-sentence summary:</strong><br/>
+      MCP defines how capabilities are exposed; your host decides what the model can use; authentication and middleware make remote access safe.
+    </div>
+  </section>
+
+  <div class="hr"></div>
+
+  <section>
+    <h2>Final end-to-end picture</h2>
+    <div class="card">
+      <div class="diagram">
+        1) Host connects to MCP server and discovers tools/resources/prompts<br/>
+        2) Host obtains bearer token from IdP (password/auth-key for local services; PKCE for public clients)<br/>
+        3) Host calls MCP server with Authorization: Bearer token<br/>
+        4) MCP middleware validates token (introspection or JWT+JWKS public key)<br/>
+        5) Host lets model call allow-listed tools; executes calls; returns results to model<br/>
+        6) Tools enforce scopes and perform actions (DB, APIs, etc.)
+      </div>
+    </div>
+  </section>
+
+</main>
+  <script src="../assets/js/nav.js"></script>
+</body>
+</html>

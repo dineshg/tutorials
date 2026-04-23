@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Forecasting Tutorial: Modeling Sequence Data (Time Series)</title>
+
+  <!-- Light theme styling -->
+  <style>
+    :root{
+      --bg:#ffffff; --text:#111827; --muted:#6b7280; --border:#e5e7eb;
+      --card:#ffffff; --codebg:#f6f8fa; --link:#2563eb;
+    }
+    html,body{background:var(--bg); color:var(--text); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial; line-height:1.6; margin:0;}
+    .wrap{max-width:980px; margin:0 auto; padding:32px 18px 60px;}
+    h1{font-size:2rem; margin:0 0 10px;}
+    h2{font-size:1.35rem; margin:28px 0 10px;}
+    h3{font-size:1.1rem; margin:22px 0 8px;}
+    p{margin:10px 0;}
+    .sub{color:var(--muted); margin:0 0 18px;}
+    .card{border:1px solid var(--border); border-radius:14px; background:var(--card); padding:16px 16px; margin:14px 0;}
+    .callout{border-left:4px solid #f59e0b; background:#fffbeb; padding:12px 14px; border-radius:10px; margin:14px 0;}
+    .ok{border-left:4px solid #10b981; background:#ecfdf5; padding:12px 14px; border-radius:10px; margin:14px 0;}
+    a{color:var(--link); text-decoration:none;}
+    a:hover{text-decoration:underline;}
+    ul{margin:8px 0 8px 22px;}
+    code{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;}
+    pre{background:var(--codebg); border:1px solid var(--border); border-radius:12px; padding:12px; overflow:auto; margin:12px 0;}
+    pre code{display:block; font-size:0.95rem;}
+    .grid{display:grid; grid-template-columns:1fr; gap:12px;}
+    @media (min-width: 900px){ .grid{grid-template-columns:1.2fr 0.8fr;} }
+    figure{margin:12px 0;}
+    figcaption{color:var(--muted); font-size:0.92rem; margin-top:6px;}
+    .kbd{border:1px solid var(--border); background:#f9fafb; border-radius:8px; padding:2px 8px; font-family:ui-monospace, monospace;}
+    .mini{font-size:0.95rem; color:var(--muted);}
+    .svgbox{border:1px solid var(--border); border-radius:14px; padding:10px; background:#ffffff;}
+    .tight p{margin:6px 0;}
+    .badge{display:inline-block; font-size:0.85rem; padding:2px 10px; border:1px solid var(--border); border-radius:999px; color:var(--muted);}
+  </style>
+
+  <!-- MathJax for equations -->
+  <script>
+    window.MathJax = { tex: { inlineMath: [['\\(','\\)'], ['$', '$']] } };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <link rel="stylesheet" href="../assets/css/book.css">
+</head>
+
+<body>
+  <main class="wrap">
+    <h1>Forecasting & Sequence Data (Time Series)</h1>
+    <p class="sub">
+      A standalone tutorial on: what sequence data is, how to shape it for ML, what “forecasting” really means,
+      and how to avoid the most common multi-step forecasting mistake (data leakage via future inputs).
+    </p>
+
+    <div class="card">
+      <span class="badge">Key idea</span>
+      <p>
+        Sequences aren’t just “lots of data.” They have <b>order</b>. The value at time \(t\) is usually related to values at
+        times \(t-1, t-2, \dots\). Forecasting is about exploiting that dependence to predict the future.
+      </p>
+    </div>
+
+    <h2>1) What counts as sequence data?</h2>
+    <div class="grid">
+      <div class="card">
+        <h3>Time series (continuous-valued sequences)</h3>
+        <ul>
+          <li><b>Finance:</b> prices / returns sampled every minute/day</li>
+          <li><b>Weather:</b> temperature, rain, wind over time</li>
+          <li><b>Audio:</b> a waveform is literally amplitude vs time</li>
+          <li><b>Sensor streams:</b> accelerometers, ECG, industrial sensors</li>
+        </ul>
+        <p class="mini">
+          The “sequence” part is the time axis: data points arrive in order and nearby points tend to be related.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>Example time series plot (online)</h3>
+        <figure>
+          <img
+            src="https://commons.wikimedia.org/wiki/Special:FilePath/COVID-19_Confirmed_Cases.svg?width=1100"
+            alt="Example time series plot"
+            style="width:100%; height:auto; border:1px solid var(--border); border-radius:12px;"
+          />
+          <figcaption>
+            Any “value vs time” curve is a time series. Source: Wikimedia Commons (inline image).
+          </figcaption>
+        </figure>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Text is also sequential (but not continuous-valued)</h3>
+      <p>
+        A sentence is a sequence of tokens. Historically, older ML often used <b>bag-of-words</b>:
+        convert a document into a word-count vector. That makes it easy to use standard classifiers, but it destroys word order.
+      </p>
+      <div class="callout tight">
+        <p><b>Why bag-of-words can fail:</b> “dog toy” vs “toy dog” have the same word counts but different meaning.</p>
+      </div>
+    </div>
+
+    <h2>2) How to represent sequence data: shape \(N \times T \times D\)</h2>
+    <div class="card">
+      <p>
+        For non-sequential data you’re used to \(X \in \mathbb{R}^{N \times D}\) (samples × features).
+        For sequences, we add a <b>time axis</b>:
+      </p>
+      <p style="font-size:1.05rem;">
+        \[
+          X \in \mathbb{R}^{N \times T \times D}
+        \]
+      </p>
+      <ul>
+        <li><b>\(N\)</b>: number of samples (each sample is one whole sequence)</li>
+        <li><b>\(T\)</b>: number of time steps per sequence</li>
+        <li><b>\(D\)</b>: features measured at each time step</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>Concrete examples (to stop mixing up \(N\), \(T\), \(D\))</h3>
+      <ul>
+        <li><b>GPS commute tracking:</b> each trip = one sample (\(N\)); each timestamp = one step (\(T\)); lat/long so \(D=2\).</li>
+        <li><b>Single stock price:</b> \(D=1\). If you slice into windows of length \(T\), then each window is one sample.</li>
+        <li><b>500 stocks:</b> \(D=500\). Each time step contains a 500-dimensional snapshot.</li>
+        <li><b>Brain electrodes:</b> \(D=\) #electrodes. With 1 kHz sampling for 1 second, \(T=1000\).</li>
+      </ul>
+      <p class="mini">
+        The axis order \(N \times T \times D\) is mostly convention in Python ML tooling.
+      </p>
+    </div>
+
+    <h2>3) What “forecasting” means (and what the horizon is)</h2>
+    <div class="card">
+      <p>
+        In this course-style definition, <b>forecasting</b> means: given a time series, predict the <b>next values</b>.
+        Usually we care about predicting <b>multiple steps</b> ahead.
+      </p>
+      <p style="font-size:1.05rem;">
+        <b>Horizon</b> \(H\): how far into the future you want predictions (in number of steps).
+      </p>
+      <ul>
+        <li>If steps are hours and you forecast 7 days hourly: \(H = 7 \times 24 = 168\).</li>
+        <li>If steps are days and you forecast next 5 days: \(H=5\).</li>
+      </ul>
+    </div>
+
+    <h2>4) A “dumb but great” baseline: Linear Regression as an AR model</h2>
+    <div class="card">
+      <p>
+        Before you reach for RNNs, use a simple baseline. For a 1D time series (\(D=1\)),
+        you can treat the previous \(p\) values as features and do linear regression.
+      </p>
+
+      <p style="font-size:1.05rem;">
+        \[
+          \hat{x}_t = w_0 + w_1 x_{t-1} + w_2 x_{t-2} + \dots + w_p x_{t-p}
+        \]
+      </p>
+
+      <p class="mini">
+        In statistics this is an <b>autoregressive (AR)</b> model: predict a series using its own past.
+      </p>
+    </div>
+
+    <div class="card">
+      <h3>Build training windows</h3>
+      <p>
+        If your full series has length \(L\) and you use a window length \(T\) to predict the next value,
+        the number of input windows is:
+      </p>
+      <p style="font-size:1.05rem;">
+        \[
+          \text{windows} = L - (T+1) + 1 = L - T
+        \]
+      </p>
+      <p class="mini">
+        Why \(T+1\)? Because you need \(T\) inputs plus 1 target step.
+      </p>
+
+      <pre><code class="language-python">import numpy as np
+
+def make_supervised_1d(series: np.ndarray, lookback: int):
+    """
+    Converts a 1D time series into supervised learning data:
+      X[i] = series[i : i+lookback]
+      y[i] = series[i+lookback]
+    """
+    series = np.asarray(series, dtype=np.float32)
+    L = len(series)
+    if L &lt;= lookback:
+        raise ValueError("series is too short for the chosen lookback")
+
+    X = []
+    y = []
+    for i in range(L - lookback):
+        X.append(series[i : i + lookback])
+        y.append(series[i + lookback])
+    return np.stack(X), np.asarray(y)
+
+# Example:
+x = np.arange(10, dtype=np.float32)  # [0..9]
+X, y = make_supervised_1d(x, lookback=3)
+print(X.shape, y.shape)  # (7, 3) (7,)</code></pre>
+    </div>
+
+    <h2>5) The most common forecasting mistake: leaking future inputs</h2>
+    <div class="callout">
+      <p><b>The wrong way (for multi-step forecasting):</b></p>
+      <p>
+        Predicting day 5 using inputs that include the <i>true</i> day 4 value, when day 4 is not known at forecast time.
+        This makes results look “nice” but it’s not a valid forecast.
+      </p>
+    </div>
+
+    <div class="ok">
+      <p><b>The correct way (recursive / rolling forecast):</b></p>
+      <p>
+        When you need multiple steps ahead, you must feed the model’s <b>own previous predictions</b> back as inputs.
+        This matches reality: once you step into the future, you no longer have ground-truth observations.
+      </p>
+    </div>
+
+    <div class="svgbox">
+      <h3 style="margin-top:0;">Recursive multi-step forecasting (diagram)</h3>
+      <!-- Self-contained inline SVG (no external dependency) -->
+      <svg viewBox="0 0 980 250" width="100%" height="auto" role="img" aria-label="Recursive forecasting diagram">
+        <rect x="0" y="0" width="980" height="250" fill="#ffffff"/>
+        <g font-family="ui-monospace, Menlo, Consolas, monospace" font-size="16" fill="#111827">
+          <text x="20" y="35">Known history:</text>
+          <text x="20" y="75">x(t-3), x(t-2), x(t-1)  --&gt;  predict  x̂(t)</text>
+          <text x="20" y="125">Now x̂(t) becomes part of the input:</text>
+          <text x="20" y="165">x(t-2), x(t-1), x̂(t)   --&gt;  predict  x̂(t+1)</text>
+          <text x="20" y="215">Repeat until horizon H is reached.</text>
+        </g>
+        <g stroke="#e5e7eb" stroke-width="2">
+          <line x1="20" y1="95" x2="960" y2="95"/>
+          <line x1="20" y1="185" x2="960" y2="185"/>
+        </g>
+      </svg>
+      <p class="mini" style="margin:10px 0 0;">
+        This is exactly what the transcript describes: to predict multiple steps ahead, you must use your own predictions as inputs.
+      </p>
+    </div>
+
+    <h2>6) Minimal, correct forecasting code (baseline AR with recursion)</h2>
+    <div class="card">
+      <h3>Train a linear model (scikit-learn style) + recursive forecast</h3>
+      <pre><code class="language-python">import numpy as np
+from sklearn.linear_model import LinearRegression
+
+def fit_ar_linear(train_series: np.ndarray, lookback: int) -&gt; LinearRegression:
+    X_train, y_train = make_supervised_1d(train_series, lookback)
+    model = LinearRegression()
+    model.fit(X_train, y_train)
+    return model
+
+def recursive_forecast_1d(model, history: np.ndarray, lookback: int, horizon: int):
+    """
+    history: last observed values (must be at least lookback long)
+    Returns: horizon predictions [x̂(t), x̂(t+1), ...]
+    """
+    hist = list(np.asarray(history, dtype=np.float32))
+    if len(hist) &lt; lookback:
+        raise ValueError("history must contain at least lookback values")
+
+    preds = []
+    for _ in range(horizon):
+        x_in = np.array(hist[-lookback:], dtype=np.float32).reshape(1, -1)
+        y_hat = float(model.predict(x_in)[0])
+        preds.append(y_hat)
+        hist.append(y_hat)  # &lt;-- key step: feed prediction back in
+    return np.array(preds, dtype=np.float32)
+
+# --- Example usage (toy) ---
+series = np.sin(np.linspace(0, 10*np.pi, 500)).astype(np.float32)
+train, test = series[:400], series[400:]  # naive split for demo
+
+lookback = 20
+H = 30
+
+ar = fit_ar_linear(train, lookback=lookback)
+history = train[-lookback:]
+preds = recursive_forecast_1d(ar, history, lookback=lookback, horizon=H)
+
+print("First 5 preds:", preds[:5])</code></pre>
+
+      <div class="callout tight">
+        <p><b>Important:</b> this evaluates a true “forecast”: after the split point, you do <i>not</i> feed the model real future values.</p>
+      </div>
+    </div>
+
+    <h2>7) Where RNNs fit (preview)</h2>
+    <div class="card">
+      <p>
+        This tutorial intentionally starts with the simplest correct approach: an autoregressive baseline.
+        RNNs (and later, modern sequence models) shine when relationships are nonlinear and depend on longer context,
+        but the data-shape thinking (\(N \times T \times D\)) and the “no future leakage” rule stay the same.
+      </p>
+      <p class="mini">
+        If your baseline is wrong (e.g., uses true future inputs), you can’t trust any advanced model results either.
+      </p>
+    </div>
+
+    <div class="card">
+      <h3>Checklist: a “correct” forecasting setup</h3>
+      <ul>
+        <li><b>Define horizon \(H\)</b> (predict multiple steps, not just 1).</li>
+        <li><b>Split by time</b> (train on past, test on future).</li>
+        <li><b>No leakage</b>: during multi-step forecasting, do not use true future values as inputs.</li>
+        <li><b>Start with a baseline</b> (AR/linear regression) before complex sequence models.</li>
+      </ul>
+    </div>
+
+    <p class="sub">End of tutorial.</p>
+  </main>
+  <script src="../assets/js/nav.js"></script>
+</body>
+</html>

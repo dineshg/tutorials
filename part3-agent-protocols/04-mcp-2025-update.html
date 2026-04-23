@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>MCP 2025 Update — Streamable HTTP, OAuth 2.1, Elicitation</title>
+  <link rel="stylesheet" href="../assets/css/book.css" />
+  <style>
+    .ch h1 { font-size: 2em; border-bottom: 3px solid #0969da; padding-bottom: .4em; }
+    .ch h2 { font-size: 1.4em; margin-top: 2em; border-left: 4px solid #0969da; padding-left: .6em; }
+    .ch h3 { font-size: 1.15em; margin-top: 1.4em; color: #24292f; }
+    .ch pre { background: #0d1117; color: #e6edf3; padding: 14px 16px; border-radius: 8px; overflow-x: auto; }
+    .ch code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.9em; }
+    .ch p, .ch li { line-height: 1.65; }
+    .ch table { border-collapse: collapse; margin: 12px 0; width: 100%; }
+    .ch th, .ch td { border: 1px solid #d0d7de; padding: 8px 10px; text-align: left; vertical-align: top; }
+    .ch th { background: #f6f8fa; }
+  </style>
+</head>
+<body>
+<div class="ch">
+
+<h1>MCP 2025 Update — Streamable HTTP, OAuth 2.1, Elicitation, Structured Output</h1>
+
+<div class="tr-update">
+  <strong>Why this chapter exists</strong>
+  Chapters 1–3 cover MCP from first principles using the original
+  <code>mcp[cli]</code> server and either stdio or HTTP+SSE transport. The MCP
+  spec versions <code>2025-03-26</code> and <code>2025-06-18</code> made several
+  important changes. This chapter is a focused diff so the rest of Part III
+  remains conceptually correct but you know what to use in production.
+</div>
+
+<h2>1) Transport: HTTP+SSE → Streamable HTTP</h2>
+
+<p>In the older spec, an MCP server over HTTP exposed two endpoints — a
+<code>POST /messages</code> for client‑to‑server requests and a parallel
+<code>GET /sse</code> Server‑Sent‑Events stream for server‑to‑client messages.
+This was hard to deploy behind enterprise load balancers (sticky sessions,
+two endpoints, idle‑timeout edge cases).</p>
+
+<p>The new <strong>Streamable HTTP</strong> transport collapses this into a single
+endpoint, typically <code>/mcp</code>. The semantics are:</p>
+<ul>
+  <li><strong>POST /mcp</strong> with a JSON‑RPC request: the server may respond
+      with a single JSON response <em>or</em> upgrade the response to an SSE
+      stream that delivers the response plus any progress notifications.</li>
+  <li><strong>GET /mcp</strong>: opens an SSE stream the server can use to push
+      messages independently of any in‑flight request (e.g. resource changes,
+      sampling, elicitation).</li>
+  <li>A <code>Mcp-Session-Id</code> header issued on initialize keeps the two
+      sides correlated through any proxy.</li>
+</ul>
+
+<h3>What this means for the code in Chapter 1</h3>
+<p>Practically nothing changes for the user — <code>FastMCP</code> already calls
+<code>mcp.run(transport="streamable-http")</code> in the example. The new
+transport is the default for HTTP servers in current MCP SDKs, and the old
+HTTP+SSE transport is deprecated.</p>
+
+<h2>2) Authorization: pinned to OAuth 2.1 + Protected Resource Metadata</h2>
+
+<p>Chapter 12.1 in the original tutorials sketched a “bearer + middleware”
+pattern. The 2025 spec formalizes this and is now an OAuth 2.1 profile:</p>
+
+<ul>
+  <li>The MCP <em>server</em> is a protected resource. It publishes
+      <code>/.well-known/oauth-protected-resource</code> (RFC 9728), pointing the
+      client at one or more authorization servers it trusts.</li>
+  <li>Clients use <strong>OAuth 2.1</strong> — Authorization Code + PKCE only,
+      no implicit, no password grant. (Same flow as Chapter 7, just the
+      newer consolidated spec.)</li>
+  <li>Tokens are validated as in Chapter 9: JWKS for JWTs, introspection
+      for opaque tokens.</li>
+  <li>The <strong>resource indicator</strong> (<code>resource=</code> parameter, RFC 8707)
+      is required, so a token issued for one MCP server cannot be silently
+      replayed at another.</li>
+  <li>For MCP servers that lack a built‑in IdP, the spec recommends
+      <strong>Dynamic Client Registration</strong> (RFC 7591) so clients can
+      register on the fly.</li>
+</ul>
+
+<div class="tr-tip">
+  <strong>Tie‑in to Part II</strong>
+  Combine this with <a href="../part2-backend-platform-security/15-modern-auth-additions.html">Chapter 15 — Modern auth additions</a>
+  to get sender‑constrained tokens at MCP boundaries: DPoP for browser/host
+  clients and mTLS for workload‑to‑MCP calls. Token exchange (RFC 8693) is
+  the cleanest way for a host service to forward end‑user identity to a
+  downstream MCP server.
+</div>
+
+<h2>3) Elicitation — server asks the user for input mid‑task</h2>
+
+<p>Previously, an MCP tool that needed extra info (a missing parameter, a
+confirmation, a clarification) had to either fail the call or guess. The
+new <code>elicitation/create</code> method lets the server ask the
+<em>user</em> for input via the host:</p>
+
+<pre><code># Server side (hypothetical FastMCP API; check your SDK's exact name)
+@mcp.tool()
+async def book_flight(ctx, origin: str, destination: str) -&gt; dict:
+    if not origin:
+        result = await ctx.elicit(
+            message="Which city should I book the flight from?",
+            schema={"type": "object",
+                    "properties": {"origin": {"type": "string"}},
+                    "required": ["origin"]},
+        )
+        if result.action != "accept":
+            return {"error": "user_declined"}
+        origin = result.content["origin"]
+    return await reserve(origin, destination)
+</code></pre>
+
+<p>The host displays the question, collects a structured response that
+matches the <code>schema</code>, and returns either <code>accept</code>,
+<code>decline</code>, or <code>cancel</code>. This is the cleanest pattern for
+human‑in‑the‑loop confirmations on destructive tools.</p>
+
+<h2>4) Structured tool output</h2>
+
+<p>In the original chapters, a tool returned text content and the LLM had to
+re‑parse it. The new spec lets a tool declare a JSON Schema for its return
+value and emit <em>both</em> a human‑readable rendering and a structured
+result:</p>
+
+<pre><code>@mcp.tool(
+    output_schema={"type":"object",
+                   "properties":{"price":{"type":"number"},
+                                 "currency":{"type":"string"}}},
+)
+def quote(symbol: str) -&gt; dict:
+    return {"price": 142.55, "currency": "USD"}
+</code></pre>
+
+<p>Clients receive <code>structuredContent</code> on the tool result, which the
+host application can render natively (charts, badges, JSON viewers) instead
+of round‑tripping through the LLM.</p>
+
+<h2>5) Resource links — tools can return references, not blobs</h2>
+
+<p>Long‑form data (PDFs, search results, table dumps) bloats the model's
+context window. Tools can now return <strong>resource links</strong> — typed
+URIs the host can fetch on demand or pass back to the model as needed:</p>
+
+<pre><code>{
+  "content": [
+    {"type": "text", "text": "I found 3 matching contracts."},
+    {"type": "resource_link",
+     "uri": "doc://contracts/2024-Q4/acme-msa.pdf",
+     "mimeType": "application/pdf",
+     "name": "Acme MSA (2024-Q4)"}
+  ]
+}
+</code></pre>
+
+<p>The model sees a small handle; only when the host (or the LLM via
+<code>resources/read</code>) fetches the link does the actual bytes enter
+the loop. This is the right primitive for RAG‑style answers.</p>
+
+<h2>6) Other notable changes you should know about</h2>
+<ul>
+  <li><strong>Tool annotations</strong> — read‑only / destructive / idempotent /
+      open‑world flags so hosts can decide which tools to require user
+      confirmation for.</li>
+  <li><strong>Progress notifications</strong> on long‑running tools, surfaced via
+      the SSE side of Streamable HTTP.</li>
+  <li><strong>Sampling</strong> — server‑initiated requests for the host to run
+      LLM completions on its behalf. Lets a server compose a multi‑step
+      reasoning chain without embedding a model.</li>
+  <li><strong>JSON‑RPC batching</strong> was <em>removed</em> in
+      <code>2025-06-18</code>. If your old client sent batched requests,
+      switch to one request per call.</li>
+</ul>
+
+<h2>7) Migration checklist</h2>
+<table>
+  <tr><th>From (older)</th><th>To (2025)</th></tr>
+  <tr><td>Two endpoints (<code>/messages</code> + <code>/sse</code>)</td><td>One Streamable HTTP endpoint (<code>/mcp</code>)</td></tr>
+  <tr><td>Custom bearer auth</td><td>OAuth 2.1 + Protected Resource Metadata + resource indicators</td></tr>
+  <tr><td>Tool returns plain text only</td><td>Tool declares <code>output_schema</code> and returns <code>structuredContent</code></td></tr>
+  <tr><td>Tool inlines large blobs</td><td>Tool returns <code>resource_link</code></td></tr>
+  <tr><td>Server fails on missing args</td><td>Server uses <code>elicitation/create</code></td></tr>
+  <tr><td>JSON‑RPC batched requests</td><td>One request per call</td></tr>
+</table>
+
+<div class="tr-note">
+  <strong>What to read next</strong>
+  Re‑read Chapters 1–3 with this diff in mind. The core mental model
+  (tools, resources, prompts) is unchanged — what changed is the wire
+  protocol, the auth profile, and the richness of the tool I/O contract.
+</div>
+
+</div>
+<script src="../assets/js/nav.js"></script>
+</body>
+</html>

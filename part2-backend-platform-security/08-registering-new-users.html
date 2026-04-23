@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registering a New User with Google OIDC and FastAPI</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.7;
+            color: #2c3e50;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+            background: linear-gradient(to bottom, #f8f9fa 0%, #ffffff 100%);
+        }
+        h1, h2, h3 {
+            color: #1a202c;
+            line-height: 1.3;
+            font-weight: 600;
+        }
+        h1 {
+            font-size: 2.5rem;
+            border-bottom: 3px solid #3b82f6;
+            padding-bottom: 0.75rem;
+            margin-bottom: 1.5rem;
+            color: #1e40af;
+        }
+        h2 {
+            font-size: 1.75rem;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 0.5rem;
+            margin-top: 3rem;
+            margin-bottom: 1.5rem;
+            color: #3b82f6;
+        }
+        hr {
+            border: none;
+            border-top: 2px solid #e5e7eb;
+            margin: 3rem 0;
+        }
+        .note {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border-left: 5px solid #f59e0b;
+            padding: 1.25rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .note::before {
+            content: "💡 ";
+            font-size: 1.2rem;
+        }
+        code {
+            font-family: "Fira Code", "Cascadia Code", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+            background-color: #e0e7ff;
+            color: #3730a3;
+            padding: 0.2em 0.5em;
+            border-radius: 4px;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+        pre {
+            background-color: #f5f5f5;
+            color: #000;
+            padding: 1.5rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border: 1px solid #ddd;
+            margin: 1.5rem 0;
+        }
+        pre code {
+            background-color: transparent;
+            color: #000;
+            padding: 0;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            display: block;
+        }
+        
+        ol, ul {
+            padding-left: 2rem;
+        }
+        li {
+            margin-bottom: 1rem;
+        }
+        li p {
+            margin: 0.5rem 0;
+        }
+        strong {
+            color: #1e40af;
+            font-weight: 600;
+        }
+        em {
+            color: #059669;
+            font-style: normal;
+            font-weight: 500;
+        }
+        ul li {
+            position: relative;
+        }
+        ul li::marker {
+            color: #3b82f6;
+        }
+        ol > li > strong {
+            font-size: 1.05rem;
+        }
+        p {
+            margin: 1rem 0;
+        }
+        .highlight-box {
+            background-color: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+    </style>
+  <link rel="stylesheet" href="../assets/css/book.css">
+</head>
+<body>
+
+    <h1>Registering a New User</h1>
+    <p class="note">Assume the organisation's Google Workspace policy already allows this user to authenticate with Google.</p>
+
+    <hr>
+
+    <h2>New User Sign-In Flow (React + Google OIDC + FastAPI)</h2>
+
+    <div class="highlight-box">
+        <strong>Key idea:</strong> The login page doesn't "register" the user with Google—Google already knows them. Your app "registers" the user by provisioning a record in your database the first time your backend sees a valid identity.
+    </div>
+    
+    <ol>
+        <li><strong>User clicks "Sign in with Google"</strong>
+            <p>React starts OIDC Authorization Code + PKCE by redirecting the browser to Google's authorization endpoint.</p>
+            <p><em>Outcome: user authenticates with Google (SSO).</em></p>
+        </li>
+        <li><strong>React receives tokens</strong>
+            <p>React exchanges the authorization code for tokens and gets an access token (this is what becomes the Bearer token for your API). React stores the token (commonly in memory) and uses it for API calls.</p>
+        </li>
+        <li><strong>React calls a bootstrap endpoint on your API</strong>
+            <p>Right after login, the frontend calls something like:</p>
+            <ul>
+                <li><code>GET /me</code> (common), or</li>
+                <li><code>POST /auth/bootstrap</code></li>
+            </ul>
+            <p>with:</p>
+            <pre><code>Authorization: Bearer &lt;access_token&gt;</code></pre>
+            <p><em>Purpose: let the backend validate the token and decide what to do with this identity.</em></p>
+        </li>
+        <li><strong>FastAPI validates token and extracts stable identity</strong>
+            <p>Backend verifies the token (signature + issuer/audience/expiry), then reads claims like:</p>
+            <ul>
+                <li><code>sub</code> → stable user identifier at this IdP</li>
+                <li><code>email</code> → commonly used for tenant mapping (e.g., domain) or allowlists</li>
+            </ul>
+        </li>
+        <li><strong>Backend checks if the user already exists in your DB</strong>
+            <p>Backend looks up by a stable key like <code>(issuer, sub)</code> (best practice), optionally storing email too.</p>
+            <p><strong>Case A: user exists</strong></p>
+            <ul>
+                <li>Return user profile + tenant info.</li>
+                <li>Frontend proceeds normally.</li>
+            </ul>
+            <p><strong>Case B: user is new</strong></p>
+            <ul>
+                <li>This is where "registration" happens (provisioning).</li>
+            </ul>
+        </li>
+    </ol>
+
+    <hr>
+
+    <h2>Example FastAPI Endpoint for User Provisioning</h2>
+    <p>This endpoint is the bootstrap call that validates the Bearer token, looks up the user, creates the DB row if missing, and returns user details.</p>
+    <pre><code><span style="color: #0000ff;">from</span> fastapi <span style="color: #0000ff;">import</span> FastAPI, Depends, HTTPException
+<span style="color: #0000ff;">from</span> fastapi.security <span style="color: #0000ff;">import</span> HTTPAuthorizationCredentials, HTTPBearer
+<span style="color: #0000ff;">from</span> pydantic <span style="color: #0000ff;">import</span> BaseModel
+<span style="color: #0000ff;">from</span> datetime <span style="color: #0000ff;">import</span> datetime
+
+app = FastAPI()
+bearer = HTTPBearer(auto_error=<span style="color: #0000ff;">True</span>)
+
+<span style="color: #0000ff;">class</span> <span style="color: #2b91af;">BootstrapResponse</span>(BaseModel):
+    user_id: str
+    tenant_id: str
+    is_new_user: bool
+
+<span style="color: #008000;"># --- Pretend DB (replace with Postgres later) ---</span>
+USERS_BY_ISS_SUB: dict[tuple[str, str], dict] = {}  <span style="color: #008000;"># key = (issuer, sub)</span>
+
+<span style="color: #008000;"># --- Token verification (placeholder) ---</span>
+<span style="color: #0000ff;">def</span> <span style="color: #795e26;">verify_and_decode_access_token</span>(token: str) -&gt; dict:
+    <span style="color: #a31515;">"""
+    Real implementation would:
+      - verify JWT signature using Google JWKS
+      - check issuer (iss), audience (aud), expiry (exp)
+    Here we return mock claims so you see where they come from.
+    """</span>
+    <span style="color: #0000ff;">if</span> token == <span style="color: #a31515;">"tokenA"</span>:
+        <span style="color: #0000ff;">return</span> {
+            <span style="color: #a31515;">"iss"</span>: <span style="color: #a31515;">"https://accounts.google.com"</span>,
+            <span style="color: #a31515;">"sub"</span>: <span style="color: #a31515;">"user-A-sub"</span>,
+            <span style="color: #a31515;">"email"</span>: <span style="color: #a31515;">"alice@acme.com"</span>,
+        }
+    <span style="color: #0000ff;">raise</span> HTTPException(status_code=<span style="color: #098658;">401</span>, detail=<span style="color: #a31515;">"Invalid/expired token"</span>)
+
+<span style="color: #0000ff;">def</span> <span style="color: #795e26;">map_email_to_tenant_id</span>(email: str) -&gt; str:
+    <span style="color: #a31515;">"""
+    Example tenant mapping policy: email domain -> tenant.
+    (Alternative policies: invite-only lookup, explicit claim, etc.)
+    """</span>
+    domain = email.split(<span style="color: #a31515;">"@"</span>)[<span style="color: #098658;">-1</span>].lower()
+    <span style="color: #0000ff;">if</span> domain == <span style="color: #a31515;">"acme.com"</span>:
+        <span style="color: #0000ff;">return</span> <span style="color: #a31515;">"tenant-acme"</span>
+    <span style="color: #0000ff;">raise</span> HTTPException(status_code=<span style="color: #098658;">403</span>, detail=<span style="color: #a31515;">"No tenant mapping for this user"</span>)
+
+@app.post(<span style="color: #a31515;">"/auth/bootstrap"</span>, response_model=BootstrapResponse)
+<span style="color: #0000ff;">def</span> <span style="color: #795e26;">auth_bootstrap</span>(creds: HTTPAuthorizationCredentials = Depends(bearer)):
+    <span style="color: #008000;"># 1) Extract raw token from "Authorization: Bearer &lt;token&gt;"</span>
+    token = creds.credentials
+
+    <span style="color: #008000;"># 2) Validate + decode -> claims (iss/sub/email)</span>
+    claims = verify_and_decode_access_token(token)
+    issuer = claims[<span style="color: #a31515;">"iss"</span>]
+    sub = claims[<span style="color: #a31515;">"sub"</span>]
+    email = claims.get(<span style="color: #a31515;">"email"</span>, <span style="color: #a31515;">""</span>)
+
+    <span style="color: #008000;"># 3) Look up user by stable key (issuer, sub)</span>
+    key = (issuer, sub)
+    existing = USERS_BY_ISS_SUB.get(key)
+
+    <span style="color: #0000ff;">if</span> existing:
+        <span style="color: #008000;"># User already provisioned</span>
+        <span style="color: #0000ff;">return</span> BootstrapResponse(
+            user_id=existing[<span style="color: #a31515;">"user_id"</span>],
+            tenant_id=existing[<span style="color: #a31515;">"tenant_id"</span>],
+            is_new_user=<span style="color: #0000ff;">False</span>,
+        )
+
+    <span style="color: #008000;"># 4) New user -> determine tenant_id (domain/invite/etc.)</span>
+    tenant_id = map_email_to_tenant_id(email)
+
+    <span style="color: #008000;"># 5) "Register" user in DB (provision)</span>
+    user_row = {
+        <span style="color: #a31515;">"user_id"</span>: <span style="color: #a31515;">f"db-user-<span style="color: #000;">{sub}</span>"</span>,  <span style="color: #008000;"># in real DB: UUID</span>
+        <span style="color: #a31515;">"tenant_id"</span>: tenant_id,
+        <span style="color: #a31515;">"issuer"</span>: issuer,
+        <span style="color: #a31515;">"sub"</span>: sub,
+        <span style="color: #a31515;">"email"</span>: email,
+        <span style="color: #a31515;">"created_at"</span>: datetime.utcnow().isoformat(),
+    }
+    USERS_BY_ISS_SUB[key] = user_row
+
+    <span style="color: #0000ff;">return</span> BootstrapResponse(
+        user_id=user_row[<span style="color: #a31515;">"user_id"</span>],
+        tenant_id=user_row[<span style="color: #a31515;">"tenant_id"</span>],
+        is_new_user=<span style="color: #0000ff;">True</span>,
+    )</code></pre>
+
+    <hr>
+
+    <ol start="6">
+        <li><strong>Provision the user (your app's "registration")</strong>
+            <p>The backend creates the required records:</p>
+            <ol>
+                <li><strong>Determine tenant_id</strong>
+                    <ul>
+                        <li>Domain mapping: <code>alice@acme.com</code> → tenant "acme"</li>
+                        <li>or invite-only: user must already be linked to a tenant</li>
+                        <li>or self-serve tenant creation (first user creates tenant)</li>
+                    </ul>
+                </li>
+                <li><strong>Create user row</strong>
+                    <ul>
+                        <li>Store: <code>issuer</code>, <code>sub</code>, <code>email</code>, <code>tenant_id</code>, timestamps</li>
+                    </ul>
+                </li>
+                <li><strong>Optional defaults</strong>
+                    <ul>
+                        <li>Preferences, empty workspace, default roles, etc.</li>
+                    </ul>
+                </li>
+            </ol>
+        </li>
+        <li><strong>Backend returns a bootstrap response</strong>
+            <p>Example:</p>
+            <pre><code>{
+  <span style="color: #a31515;">"user_id"</span>: <span style="color: #a31515;">"…"</span>,
+  <span style="color: #a31515;">"tenant_id"</span>: <span style="color: #a31515;">"…"</span>,
+  <span style="color: #a31515;">"is_new_user"</span>: <span style="color: #0000ff;">true</span>
+}</code></pre>
+            <p>React can now show an onboarding / "upload documents" screen.</p>
+        </li>
+    </ol>
+
+    <hr>
+
+    <h2>Where "Registration" Actually Lives</h2>
+    <ul>
+        <li>Google authenticates the user.</li>
+        <li>Your backend decides whether the identity is allowed and attaches it to a tenant.</li>
+        <li><strong>"Registration" = your DB provisioning, not creating credentials.</strong></li>
+    </ul>
+
+  <script src="../assets/js/nav.js"></script>
+</body>
+</html>

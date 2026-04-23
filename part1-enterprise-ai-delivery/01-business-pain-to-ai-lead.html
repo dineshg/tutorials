@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Enterprise AI Use-Case Flow: Pain Point → Lead AI Engineer (CBA/Virgin Style)</title>
+  <style>
+    :root{
+      /* Light theme (default) */
+      --bg:#f7f9fc;
+      --panel:rgba(2,6,23,.04);
+      --card:rgba(2,6,23,.03);
+      --border:rgba(2,6,23,.10);
+      --text:#0f172a;
+      --muted:#475569;
+
+      --h1:#0f172a;
+      --h2:#1d4ed8;
+      --h3:#0f766e;
+
+      --callout:rgba(15,118,110,.08);
+      --warn:rgba(225,29,72,.08);
+    }
+
+    @media (prefers-color-scheme: dark){
+      :root{
+        /* Original dark theme */
+        --bg:#0b1220;
+        --panel:rgba(255,255,255,.05);
+        --card:rgba(255,255,255,.06);
+        --border:rgba(255,255,255,.12);
+        --text:#e6eaf2;
+        --muted:#a8b3cf;
+
+        --h1:#eaf0ff;
+        --h2:#93c5fd;
+        --h3:#5eead4;
+
+        --callout:rgba(94,234,212,.10);
+        --warn:rgba(255,180,180,.12);
+      }
+    }
+
+    body{
+      margin:0;
+      padding:28px 18px;
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height:1.65;
+      color:var(--text);
+      background:
+        radial-gradient(1200px 600px at 20% -10%, rgba(37,99,235,.12), transparent 60%),
+        radial-gradient(900px 500px at 90% 10%, rgba(15,118,110,.10), transparent 55%),
+        var(--bg);
+    }
+
+    @media (prefers-color-scheme: dark){
+      body{
+        background:
+          radial-gradient(1200px 600px at 20% -10%, rgba(97,175,254,.18), transparent 60%),
+          radial-gradient(900px 500px at 90% 10%, rgba(94,234,212,.12), transparent 55%),
+          var(--bg);
+      }
+    }
+
+    .container{
+      max-width: 1040px;
+      margin:0 auto;
+      padding:44px;
+      border:1px solid var(--border);
+      border-radius:14px;
+      background: linear-gradient(180deg, rgba(255,255,255,.85), rgba(255,255,255,.70));
+      box-shadow: 0 10px 30px rgba(2,6,23,.10);
+    }
+
+    @media (prefers-color-scheme: dark){
+      .container{
+        background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+        box-shadow: 0 10px 30px rgba(0,0,0,.35);
+        backdrop-filter: blur(8px);
+      }
+    }
+
+    h1{
+      margin:0 0 10px;
+      color:var(--h1);
+      letter-spacing:-0.02em;
+      font-size:2.05rem;
+    }
+    .lead{
+      margin:0 0 18px;
+      color:var(--muted);
+      max-width: 95ch;
+    }
+    h2{
+      margin-top:44px;
+      padding-top:22px;
+      border-top:1px solid var(--border);
+      color:var(--h2);
+      letter-spacing:-0.01em;
+    }
+    h3{
+      margin:18px 0 10px;
+      color:var(--h3);
+      font-size:1.08rem;
+    }
+    p{ margin:0 0 14px; }
+    ul,ol{ margin:0 0 14px; padding-left:22px; }
+    li{ margin:0 0 8px; }
+
+    .toc{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin:14px 0 26px;
+      padding:0;
+      list-style:none;
+    }
+    .toc a{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      background: rgba(255,255,255,.70);
+      border:1px solid var(--border);
+      color:var(--text);
+      text-decoration:none;
+      font-size:.92rem;
+    }
+    .toc a:hover{ background: rgba(147,197,253,.12); border-color: rgba(147,197,253,.25); }
+
+    .card{
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px 18px 6px;
+      margin: 16px 0 20px;
+    }
+    .callout{
+      background: var(--callout);
+      border: 1px solid rgba(94,234,212,.22);
+      border-left: 5px solid var(--h3);
+      padding: 14px 16px;
+      border-radius: 12px;
+      margin: 18px 0;
+    }
+    .warn{
+      background: var(--warn);
+      border: 1px solid rgba(255,180,180,.25);
+      border-left: 5px solid rgba(255,180,180,.9);
+      padding: 14px 16px;
+      border-radius: 12px;
+      margin: 18px 0;
+    }
+
+    code{
+      background: rgba(2,6,23,.05);
+      padding: 2px 6px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      color: #0f172a;
+      font-size: .92em;
+    }
+
+    @media (prefers-color-scheme: dark){
+      code{
+        background: rgba(255,255,255,.07);
+        color: #ffd6ff;
+      }
+    }
+
+    table{
+      width:100%;
+      border-collapse: collapse;
+      margin: 10px 0 18px;
+      overflow:hidden;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.70);
+    }
+    th,td{
+      text-align:left;
+      padding:10px 12px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      vertical-align: top;
+    }
+    th{ color: var(--h1); font-size: .92rem; }
+    td{ color: var(--text); }
+    .small{ color: var(--muted); font-size: .95rem; }
+
+    .flow{
+      padding: 14px 16px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.65);
+      margin: 12px 0 18px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: .92rem;
+      color: var(--text);
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+
+    @media (prefers-color-scheme: dark){
+      table{ background: rgba(255,255,255,.04); }
+      .flow{ background: rgba(255,255,255,.04); color: #d4d4d4; }
+      .toc a{ background: rgba(255,255,255,.06); }
+    }
+
+    .footer-note{
+      margin-top: 34px;
+      color: var(--muted);
+      border-top: 1px dashed var(--border);
+      padding-top: 18px;
+    }
+  </style>
+  <link rel="stylesheet" href="../assets/css/book.css">
+</head>
+
+<body>
+  <div class="container">
+    <h1>From Pain Point → Lead AI Engineer</h1>
+    <p class="lead">
+      This is a practical, beginner-friendly guide to how an AI use case typically originates and travels through
+      a large enterprise (e.g., a bank like CBA or an airline like Virgin) until it lands with a <strong>Lead AI Engineer</strong>.
+      It also explains common roles: <strong>EA</strong>, <strong>Ops</strong>, <strong>EM</strong>, <strong>GM</strong>, and <strong>Business Units (BUs)</strong>.
+    </p>
+
+    <ul class="toc">
+      <li><a href="#big-picture">Big picture</a></li>
+      <li><a href="#roles">Roles glossary</a></li>
+      <li><a href="#bus">What a BU is</a></li>
+      <li><a href="#flow">The end-to-end flow</a></li>
+      <li><a href="#example">Concrete example</a></li>
+      <li><a href="#handoff">What arrives to the AI lead</a></li>
+      <li><a href="#first-day">What the AI lead does on day 1</a></li>
+    </ul>
+
+    <h2 id="big-picture">1) Big picture</h2>
+    <p>
+      In large enterprises, AI work rarely begins with “let’s build an LLM.” It begins with:
+      <strong>a business pain</strong> → <strong>a formal initiative</strong> → <strong>governance and triage</strong> → <strong>delivery ownership</strong>.
+    </p>
+
+    <div class="callout">
+      <strong>Key idea:</strong>
+      The “AI lead” is usually brought in once the problem needs cross-system design (identity, data access, retrieval, model, audit),
+      not when someone has a vague idea.
+    </div>
+
+    <h2 id="roles">2) Roles glossary (who is who)</h2>
+    <p class="small">Titles vary by company; these are typical meanings in Australia-based enterprises.</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Role</th>
+          <th>What they do</th>
+          <th>Why they matter to the AI project</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>EA (Executive Assistant)</strong></td>
+          <td>
+            Supports an executive: calendars, meetings, packs, minutes, action items, briefings.
+            Often the “workflow owner” for meeting artifacts and “what was decided.”
+          </td>
+          <td>
+            EAs are often power users who can define the top recurring questions and what “proof” looks like
+            (citations, links, timestamps). They validate whether the tool saves real time.
+          </td>
+        </tr>
+
+        <tr>
+          <td><strong>Ops (Operations)</strong></td>
+          <td>
+            “Run the business day-to-day.” In airlines, this can include operations control/disruption recovery.
+            In banks, business ops, service ops, incident/change, compliance operations, etc.
+          </td>
+          <td>
+            Ops stakeholders define urgency, failure tolerance, and what a “wrong answer” costs.
+            They will demand reliability, speed, and auditability.
+          </td>
+        </tr>
+
+        <tr>
+          <td><strong>SME (Subject Matter Expert)</strong></td>
+          <td>
+            Domain expert in policy/process/operations. Knows the right sources and interpretations.
+          </td>
+          <td>
+            Provides ground truth for evaluation sets, validation of answers, and “what’s allowed” guidance.
+          </td>
+        </tr>
+
+        <tr>
+          <td><strong>Business Owner</strong></td>
+          <td>
+            Accountable for business outcomes: scope, priorities, success metrics, adoption.
+            Often the person who “accepts” the product for business use.
+          </td>
+          <td>
+            Without a business owner, pilots often become demos with no adoption. This person drives change management.
+          </td>
+        </tr>
+
+        <tr>
+          <td><strong>Sponsor</strong></td>
+          <td>
+            Senior executive champion who removes blockers and provides authority (and often budget).
+          </td>
+          <td>
+            Helps secure access approvals, resolves conflicts, and unlocks resources.
+          </td>
+        </tr>
+
+        <tr>
+          <td><strong>EM (Engineering Manager)</strong></td>
+          <td>
+            Manages engineering team delivery: staffing, planning, quality, execution, career support.
+          </td>
+          <td>
+            Partner to the AI lead: ensures team capacity, delivery cadence, and operational readiness.
+          </td>
+        </tr>
+
+        <tr>
+          <td><strong>GM (General Manager)</strong></td>
+          <td>
+            Senior leader for a function or business line (e.g., GM Digital, GM Operations, GM Data/AI).
+            Owns strategy, budget, and high-level outcomes.
+          </td>
+          <td>
+            Often the decision-maker who approves the initiative and sets constraints (risk appetite, pilot group, timelines).
+          </td>
+        </tr>
+
+        <tr>
+          <td><strong>Security / IAM</strong></td>
+          <td>
+            Defines identity, access control, least privilege, secrets handling, network requirements.
+          </td>
+          <td>
+            AI projects fail without secure-by-design access to data sources and proper audit controls.
+          </td>
+        </tr>
+
+        <tr>
+          <td><strong>Privacy / Legal / Risk</strong></td>
+          <td>
+            Ensures compliance obligations are met (PII, retention, audit, customer data restrictions).
+          </td>
+          <td>
+            Defines what data the model can see and under what controls; reviews release readiness.
+          </td>
+        </tr>
+
+        <tr>
+          <td><strong>Data Owner</strong></td>
+          <td>
+            Accountable for a dataset/document corpus (approves access, usage, retention).
+          </td>
+          <td>
+            Approves what documents you can ingest and how you classify/store them.
+          </td>
+        </tr>
+
+        <tr>
+          <td><strong>Lead AI Engineer</strong></td>
+          <td>
+            Designs and delivers production AI systems end-to-end: data → retrieval → model → evaluation → ops.
+          </td>
+          <td>
+            Converts vague ideas into an executable plan with guardrails, metrics, and reliable delivery.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2 id="bus">3) What is a BU (Business Unit) and why does it matter?</h2>
+    <div class="card">
+      <p>
+        A <strong>Business Unit (BU)</strong> is a major organisational division that owns a slice of the business:
+        its goals, processes, teams, data, and budgets.
+      </p>
+      <p>
+        Examples (varies by company):
+      </p>
+      <ul>
+        <li><strong>Airline BU examples:</strong> Network Ops, Customer Experience, Digital, Loyalty, Revenue Management</li>
+        <li><strong>Bank BU examples:</strong> Retail Banking, Business Banking, Wealth, Risk, Technology, Operations</li>
+      </ul>
+      <p>
+        Why BUs matter for your tool:
+      </p>
+      <ul>
+        <li>BUs often have <strong>different data owners</strong> and <strong>different risk appetite</strong>.</li>
+        <li>They may require <strong>different access boundaries</strong> (who can see what documents).</li>
+        <li>Funding and sponsorship often comes from a specific BU.</li>
+      </ul>
+      <div class="callout">
+        <strong>Practical:</strong> Many initiatives start in one BU (pilot), then expand cross-BU if proven safe and valuable.
+      </div>
+    </div>
+
+    <h2 id="flow">4) The typical flow: pain point → AI lead</h2>
+    <p class="small">This is the “enterprise conveyor belt” a use case rides before it becomes a real build.</p>
+
+    <div class="flow">
+      Pain felt in BU → Quantified by EA/Ops/SME → BU manager/GM sponsorship → Brief written →
+      AI/Architecture intake gate → Security/Privacy triage → Routed to AI delivery team → Lead AI Engineer owns plan
+    </div>
+
+    <div class="card">
+      <h3>Step 1 — Pain point appears inside a BU</h3>
+      <p>It shows up as a workflow problem, not “AI”:</p>
+      <ul>
+        <li><strong>Time loss:</strong> execs/EAs searching meeting notes/packs/emails</li>
+        <li><strong>Decision friction:</strong> hard to reconstruct “who said what and when”</li>
+        <li><strong>Operational risk:</strong> staff can’t find latest approved guidance during incidents</li>
+        <li><strong>Customer impact:</strong> frontline teams can’t find policy answers quickly</li>
+      </ul>
+      <p class="small">The BU feels it because it directly impacts throughput and outcomes.</p>
+
+      <h3>Step 2 — Someone makes it real (EA/Ops/Compliance)</h3>
+      <p>
+        This is the trigger point. Typical voices:
+      </p>
+      <ul>
+        <li><strong>EA:</strong> “We spend 5–10 hours/week per exec chasing meeting artifacts and compiling answers.”</li>
+        <li><strong>Ops:</strong> “During disruptions/incidents, information retrieval is the bottleneck.”</li>
+        <li><strong>Risk/Compliance:</strong> “We spend days reconstructing evidence and decision trails.”</li>
+      </ul>
+      <div class="callout">
+        <strong>Why EAs matter:</strong> they live inside the executive workflow and define what “useful output” looks like.<br/>
+        <strong>Why Ops matters:</strong> they define urgency and what “wrong answer” costs.
+      </div>
+
+      <h3>Step 3 — The BU converts pain into an initiative</h3>
+      <p>
+        The BU manager or GM (often with a sponsor) decides: “this is worth pursuing.” It becomes:
+      </p>
+      <ul>
+        <li>a roadmap item (internal product)</li>
+        <li>a transformation initiative (knowledge management / AI uplift)</li>
+        <li>a risk/governance program (auditability)</li>
+        <li>an ops improvement effort (incident response)</li>
+      </ul>
+      <p class="small">
+        A short brief is drafted: problem, users, constraints, desired outcome, rough ROI.
+      </p>
+
+      <h3>Step 4 — AI intake / architecture / governance triage</h3>
+      <p>
+        Enterprises run gate checks before they invest:
+      </p>
+      <ul>
+        <li>Is it actually AI, or should we fix search/metadata/source systems first?</li>
+        <li>Do we have data access rights and clear data ownership?</li>
+        <li>What is the sensitivity classification (PII, strategy, HR)?</li>
+        <li>What’s the failure risk (wrong answers) and what controls are required?</li>
+        <li>Can success be measured?</li>
+      </ul>
+      <div class="warn">
+        <strong>Common outcome:</strong> “Pilot only” with a tightly approved corpus and strict access controls.
+      </div>
+
+      <h3>Step 5 — Work is routed to delivery (AI lead gets it)</h3>
+      <p>
+        Now it lands as an actionable request, usually with constraints like:
+      </p>
+      <ul>
+        <li>“We need citations and audit logs.”</li>
+        <li>“Access must be restricted by user / business unit / group membership.”</li>
+        <li>“We must meet security/privacy controls.”</li>
+      </ul>
+      <p class="small">
+        The AI lead gets it because it spans identity, ingestion, retrieval, model behavior, evaluation, and operations.
+      </p>
+    </div>
+
+    <h2 id="example">5) Concrete example (meeting-note Q&amp;A)</h2>
+    <div class="card">
+      <p><strong>Problem:</strong> Exec asks “What did Chandima mention about no meeting on 1 Dec?”</p>
+      <p><strong>Current state:</strong> EA manually searches packs/minutes/emails and compiles a reply.</p>
+      <p><strong>Desired state:</strong> tool returns:</p>
+      <ul>
+        <li>short answer</li>
+        <li>citation: exact snippet from the 1 Dec meeting note + link</li>
+        <li>safe behavior: if not found, say so and suggest next best query</li>
+      </ul>
+      <div class="callout">
+        <strong>EA success signal:</strong> “I can copy/paste this to the exec and it has evidence.”<br/>
+        <strong>Ops success signal:</strong> “It’s fast, reliable, and never guesses when evidence is missing.”
+      </div>
+    </div>
+
+    <h2 id="handoff">6) What arrives on the AI lead’s desk (typical package)</h2>
+    <div class="card">
+      <ul>
+        <li><strong>Brief:</strong> the business problem, users, constraints</li>
+        <li><strong>Sponsor:</strong> a GM or senior leader backing it</li>
+        <li><strong>Business owner:</strong> accountable for adoption and success metrics</li>
+        <li><strong>Data owners:</strong> who approves the corpus (meeting notes/packs)</li>
+        <li><strong>Security/privacy constraints:</strong> what must be enforced</li>
+      </ul>
+      <p class="small">
+        At this stage, the AI lead is expected to turn this into: scope, architecture, pilot plan, eval plan, and operating model.
+      </p>
+    </div>
+
+    <h2 id="first-day">7) What the Lead AI Engineer does on day 1</h2>
+    <div class="card">
+      <h3>Day 1 outputs (what “lead-level” looks like)</h3>
+      <ul>
+        <li><strong>Problem reframing:</strong> “Cited Q&amp;A over approved meeting corpus, scoped by identity.”</li>
+        <li><strong>MVP slice:</strong> one BU/corpus + top 1–2 question types</li>
+        <li><strong>Access model:</strong> who can see what (group gating + document corpus allowlist)</li>
+        <li><strong>Success metrics:</strong> citation correctness, groundedness, time saved</li>
+        <li><strong>Evaluation plan:</strong> a “golden set” of questions + release gates</li>
+        <li><strong>Delivery plan:</strong> team lanes + dependencies + timeline</li>
+      </ul>
+
+      <div class="callout">
+        <strong>Key lead move:</strong> co-design with EAs and Ops early. They define workflow reality and failure tolerance.
+      </div>
+    </div>
+
+    <p class="footer-note">
+      If you want, I can add:
+      (1) a stakeholder map (EA/Ops/Security/Privacy/Data Owner/GM) with what each cares about and common objections,
+      and (2) a sample intake brief + AI lead response doc tailored for this exact “meeting notes Q&amp;A” pilot.
+    </p>
+  </div>
+  <script src="../assets/js/nav.js"></script>
+</body>
+</html>

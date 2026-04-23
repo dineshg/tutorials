@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Enterprise AI, Agents &amp; Applied ML — Tutorial Refined</title>
+  <link rel="stylesheet" href="assets/css/book.css" />
+</head>
+<body>
+
+<section class="tr-hero">
+  <h1>Enterprise AI, Agents &amp; Applied ML</h1>
+  <p>A unified, GitHub‑style tutorial book that consolidates all the original
+     <code>pytorch/</code> and <code>Full_Stack/</code> material into a single
+     navigable structure — preserving the original content verbatim and adding
+     new chapters for the latest methods (Transformers/Attention, modern
+     authentication, the 2025 MCP transport &amp; auth model, and modern LLM
+     alignment such as ORPO/GRPO/KTO).</p>
+  <div class="tr-hero-meta">6 parts · 50+ chapters · last refreshed 2026-04-23</div>
+</section>
+
+<div class="tr-paths">
+  <a class="tr-chip" href="part1-enterprise-ai-delivery/index.html">📘 Delivery / Lead path</a>
+  <a class="tr-chip" href="part2-backend-platform-security/index.html">⚙️ Backend &amp; platform path</a>
+  <a class="tr-chip" href="part3-agent-protocols/index.html">🤖 Agent systems path</a>
+  <a class="tr-chip" href="part4-ml-foundations/index.html">📐 ML foundations path</a>
+  <a class="tr-chip" href="part5-deep-learning-and-llms/index.html">🧠 Deep learning &amp; LLM path</a>
+  <a class="tr-chip" href="part6-appendices/index.html">📎 Appendices</a>
+</div>
+
+<div class="tr-toc-grid">
+
+  <article class="tr-card">
+    <span class="tr-card-tag">part-i · delivery-leadership</span>
+    <h3><a href="part1-enterprise-ai-delivery/index.html">Part I — Enterprise AI Delivery Lifecycle</a></h3>
+    <p>From a business pain point to a shipped pilot: intake, response,
+       kickoff, HLD/LLD, architecture review, provisioning, and scale.</p>
+    <ol>
+      <li><a href="part1-enterprise-ai-delivery/01-business-pain-to-ai-lead.html">From business pain to AI lead</a></li>
+      <li><a href="part1-enterprise-ai-delivery/02-intake-package.html">The intake package</a></li>
+      <li><a href="part1-enterprise-ai-delivery/03-ai-lead-response.html">AI lead response document</a></li>
+      <li><a href="part1-enterprise-ai-delivery/04-kickoff-meeting.html">Pilot kickoff meeting</a></li>
+      <li><a href="part1-enterprise-ai-delivery/05-seven-days-after-kickoff.html">Seven days after kickoff</a></li>
+      <li><a href="part1-enterprise-ai-delivery/06-architecture-reference-design.html">Architecture reference design</a></li>
+      <li><a href="part1-enterprise-ai-delivery/07-hld-service-selection.html">HLD and service selection</a></li>
+      <li><a href="part1-enterprise-ai-delivery/08-after-hld-next-steps.html">After HLD: next steps</a></li>
+      <li><a href="part1-enterprise-ai-delivery/09-architecture-review.html">Architecture review</a></li>
+      <li><a href="part1-enterprise-ai-delivery/10-hld-to-lld-sprint-plan.html">HLD → LLD &amp; sprint plan</a></li>
+      <li><a href="part1-enterprise-ai-delivery/11-provisioning-services-scale.html">Provisioning, services, scale</a></li>
+    </ol>
+  </article>
+
+  <article class="tr-card">
+    <span class="tr-card-tag">part-ii · platform-engineering</span>
+    <h3><a href="part2-backend-platform-security/index.html">Part II — Backend, Platform &amp; Security</a></h3>
+    <p>FastAPI fundamentals, concurrency &amp; user isolation, background
+       work, the full auth stack (OIDC/OAuth2/PKCE/JWT), workload identity,
+       multi‑tenancy, external integrations, GitHub governance, and
+       <em>modern auth additions</em> (Passkeys/WebAuthn, DPoP, mTLS).</p>
+    <ol>
+      <li><a href="part2-backend-platform-security/01-fastapi-uvicorn-basics.html">FastAPI &amp; Uvicorn basics</a></li>
+      <li><a href="part2-backend-platform-security/02-http-methods.html">HTTP methods</a></li>
+      <li><a href="part2-backend-platform-security/03-fastapi-request-mapping.html">FastAPI request mapping</a></li>
+      <li><a href="part2-backend-platform-security/04-concurrency-user-isolation.html">Concurrency &amp; user isolation</a></li>
+      <li><a href="part2-backend-platform-security/05-background-tasks-and-retries.html">Background tasks &amp; retries</a></li>
+      <li><a href="part2-backend-platform-security/06-sso-oauth2-oidc-primer.html">SSO / OAuth2 / OIDC primer</a></li>
+      <li><a href="part2-backend-platform-security/07-oidc-oauth2-pkce-fastapi.html">OIDC + OAuth2 + PKCE in FastAPI</a></li>
+      <li><a href="part2-backend-platform-security/08-registering-new-users.html">Registering new users</a></li>
+      <li><a href="part2-backend-platform-security/09-authentication-deep-dive.html">Authentication deep dive</a></li>
+      <li><a href="part2-backend-platform-security/10-enduser-vs-workload-identity.html">End‑user vs workload identity</a></li>
+      <li><a href="part2-backend-platform-security/11-gcp-workload-identity.html">GCP workload identity</a></li>
+      <li><a href="part2-backend-platform-security/12-tenant-iam-ad-groups.html">Tenant isolation, IAM &amp; AD groups</a></li>
+      <li><a href="part2-backend-platform-security/13-external-service-integration.html">External service integration</a></li>
+      <li><a href="part2-backend-platform-security/14-github-governance.html">GitHub governance &amp; CI</a></li>
+      <li><a href="part2-backend-platform-security/15-modern-auth-additions.html">Modern auth additions (Passkeys, DPoP, mTLS) <em>(NEW)</em></a></li>
+    </ol>
+  </article>
+
+  <article class="tr-card">
+    <span class="tr-card-tag">part-iii · agents-mcp-a2a</span>
+    <h3><a href="part3-agent-protocols/index.html">Part III — Agent Protocols &amp; Integration</a></h3>
+    <p>MCP from first principles to the enterprise pattern, the A2A protocol
+       for multi‑agent collaboration, plus a JS/TS primer and the
+       LangChain → LangGraph → Flowise journey. Includes a new chapter on
+       the 2025 MCP changes (Streamable HTTP, OAuth, elicitation).</p>
+    <ol>
+      <li><a href="part3-agent-protocols/01-mcp-fundamentals.html">MCP fundamentals</a></li>
+      <li><a href="part3-agent-protocols/02-mcp-discovery-remote-auth.html">MCP discovery, remote &amp; auth</a></li>
+      <li><a href="part3-agent-protocols/03-mcp-enterprise-pattern.html">MCP enterprise pattern</a></li>
+      <li><a href="part3-agent-protocols/04-mcp-2025-update.html">MCP 2025 update <em>(NEW)</em></a></li>
+      <li><a href="part3-agent-protocols/05-a2a-protocol.html">A2A protocol</a></li>
+      <li><a href="part3-agent-protocols/06-javascript-typescript-primer.html">JavaScript &amp; TypeScript primer</a></li>
+      <li><a href="part3-agent-protocols/07-langchain-langgraph-flowise.html">LangChain → LangGraph → Flowise</a></li>
+    </ol>
+  </article>
+
+  <article class="tr-card">
+    <span class="tr-card-tag">part-iv · classical-ml</span>
+    <h3><a href="part4-ml-foundations/index.html">Part IV — ML Foundations</a></h3>
+    <p>The geometric view of ML, linear regression and classification in
+       PyTorch, and the tree/ensemble family (Random Forest, AdaBoost,
+       Gradient Boosting, XGBoost).</p>
+    <ol>
+      <li><a href="part4-ml-foundations/01-introduction-pytorch.html">Introduction to PyTorch</a></li>
+      <li><a href="part4-ml-foundations/02-ml-as-geometry.html">ML as geometry</a></li>
+      <li><a href="part4-ml-foundations/03-linear-regression.html">Linear regression</a></li>
+      <li><a href="part4-ml-foundations/04-linear-classification.html">Linear classification</a></li>
+      <li><a href="part4-ml-foundations/05-trees-bagging-boosting.html">Trees, bagging &amp; boosting</a></li>
+    </ol>
+  </article>
+
+  <article class="tr-card">
+    <span class="tr-card-tag">part-v · neural-nets-llms</span>
+    <h3><a href="part5-deep-learning-and-llms/index.html">Part V — Deep Learning &amp; LLMs</a></h3>
+    <p>From the single neuron to feed‑forward nets, CNNs, sequence models,
+       and into Transformers (new), LLM fine‑tuning and modern alignment
+       (ORPO, GRPO, KTO — new).</p>
+    <ol>
+      <li><a href="part5-deep-learning-and-llms/01-ffn-concepts.html">FFN concepts</a></li>
+      <li><a href="part5-deep-learning-and-llms/02-ffn-training-debugging.html">FFN training &amp; debugging</a></li>
+      <li><a href="part5-deep-learning-and-llms/03-ffn-canonical-merged.html">FFN canonical (merged)</a></li>
+      <li><a href="part5-deep-learning-and-llms/04-cnn-convolution.html">CNN — convolution</a></li>
+      <li><a href="part5-deep-learning-and-llms/05-cnn-architecture.html">CNN — architecture</a></li>
+      <li><a href="part5-deep-learning-and-llms/06-cnn-pytorch-implementation.html">CNN — PyTorch implementation</a></li>
+      <li><a href="part5-deep-learning-and-llms/07-cnn-dropout-train-eval.html">CNN — dropout &amp; train/eval</a></li>
+      <li><a href="part5-deep-learning-and-llms/08-forecasting-sequence-data.html">Forecasting &amp; sequence data</a></li>
+      <li><a href="part5-deep-learning-and-llms/09-autoregressive-linear-model.html">Autoregressive linear model</a></li>
+      <li><a href="part5-deep-learning-and-llms/10-recurrent-neural-networks.html">Recurrent neural networks</a></li>
+      <li><a href="part5-deep-learning-and-llms/11-transformers-and-attention.html">Transformers &amp; attention <em>(NEW)</em></a></li>
+      <li><a href="part5-deep-learning-and-llms/12-llm-fine-tuning.html">LLM fine‑tuning</a></li>
+      <li><a href="part5-deep-learning-and-llms/13-modern-llm-alignment-orpo-grpo.html">Modern LLM alignment: ORPO, GRPO, KTO <em>(NEW)</em></a></li>
+    </ol>
+  </article>
+
+  <article class="tr-card">
+    <span class="tr-card-tag">part-vi · reference</span>
+    <h3><a href="part6-appendices/index.html">Part VI — Appendices</a></h3>
+    <p>Lead Data Science interview talk track and the LaTeX print edition
+       of the classification chapter.</p>
+    <ol>
+      <li><a href="part6-appendices/01-lead-ds-interview-talk-track.md">Lead DS interview talk track</a></li>
+      <li><a href="part6-appendices/02-classification-latex-print.tex">Classification (LaTeX print)</a></li>
+    </ol>
+  </article>
+
+</div>
+
+<script src="assets/js/nav.js"></script>
+</body>
+</html>

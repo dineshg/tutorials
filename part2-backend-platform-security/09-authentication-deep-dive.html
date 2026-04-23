@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Authentication Tutorial: API keys, Bearer tokens, OAuth/OIDC (PKCE), JWT vs opaque, MCP & SQL Server</title>
+  <style>
+    :root{
+      --bg:#ffffff; --fg:#111827; --muted:#6b7280; --card:#f9fafb; --line:#e5e7eb;
+      --codebg:#0b1020; --codefg:#e5e7eb; --accent:#2563eb; --ok:#16a34a; --warn:#b45309;
+    }
+    html,body{background:var(--bg); color:var(--fg); font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif; margin:0;}
+    header{border-bottom:1px solid var(--line); background:linear-gradient(180deg,#ffffff,#fbfdff);}
+    .wrap{max-width:1050px; margin:0 auto; padding:28px 20px;}
+    h1{font-size:30px; margin:0 0 8px;}
+    h2{font-size:22px; margin:26px 0 10px;}
+    h3{font-size:18px; margin:18px 0 8px;}
+    p{margin:10px 0;}
+    .muted{color:var(--muted);}
+    .card{background:var(--card); border:1px solid var(--line); padding:14px 16px; border-radius:12px; margin:12px 0;}
+    .callout{border-left:4px solid var(--accent); background:#eff6ff; padding:12px 14px; border-radius:10px; margin:12px 0;}
+    .ok{border-left-color:var(--ok); background:#f0fdf4;}
+    .warn{border-left-color:var(--warn); background:#fffbeb;}
+    .toc{background:var(--card); border:1px solid var(--line); padding:14px 16px; border-radius:12px;}
+    .toc ul{margin:10px 0 0 20px;}
+    code.inline{background:#f3f4f6; padding:2px 6px; border-radius:6px; border:1px solid var(--line);}
+    pre{background:var(--codebg); color:var(--codefg); padding:14px 16px; border-radius:12px; overflow:auto; border:1px solid #0f172a; margin:10px 0;}
+    pre code{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,Liberation Mono,monospace; font-size:13px;}
+    table{width:100%; border-collapse:collapse; margin:10px 0; font-size:14px;}
+    th,td{border:1px solid var(--line); padding:10px; text-align:left; vertical-align:top;}
+    th{background:#f3f4f6;}
+    .diagram{font-family:ui-monospace,Menlo,Consolas,monospace; background:#fff; border:1px dashed var(--line); padding:10px 12px; border-radius:12px;}
+    .hr{height:1px; background:var(--line); margin:18px 0;}
+    a{color:var(--accent); text-decoration:none;}
+    a:hover{text-decoration:underline;}
+    .ref{font-size:13px; color:var(--muted); margin-top:6px;}
+  </style>
+  <link rel="stylesheet" href="../assets/css/book.css">
+</head>
+
+<body>
+<header>
+  <div class="wrap">
+    <h1>Authentication Tutorial</h1>
+    <p class="muted">
+      A practical, end-to-end guide to: API keys, Bearer tokens, OAuth/OIDC (PKCE), JWT vs opaque tokens (introspection),
+      Google (Gmail) login verification with JWKS, and how this ties into MCP servers and SQL Server access.
+    </p>
+
+    <div class="toc">
+      <strong>Contents</strong>
+      <ul>
+        <li><a href="#big-picture">1) Big picture: who talks to whom?</a></li>
+        <li><a href="#bearer">2) Bearer tokens (Authorization: Bearer ...)</a></li>
+        <li><a href="#api-keys">3) API keys: when they fit (and when they don’t)</a></li>
+        <li><a href="#opaque-vs-jwt">4) Opaque vs JWT access tokens</a></li>
+        <li><a href="#introspection">5) Opaque tokens: introspection flow</a></li>
+        <li><a href="#jwks">6) JWT tokens: JWKS + public key caching</a></li>
+        <li><a href="#google-oidc">7) “Gmail authenticator”: Google OIDC login</a></li>
+        <li><a href="#pkce">8) PKCE: why it exists and when you use it</a></li>
+        <li><a href="#authorize-post">9) Why an /authorize endpoint might be POST</a></li>
+        <li><a href="#mcp">10) MCP: authenticating MCP servers and forwarding headers</a></li>
+        <li><a href="#sql-auth">11) SQL Server auth: username/password vs Windows/SSO</a></li>
+        <li><a href="#security">12) Practical security checklist</a></li>
+      </ul>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section id="big-picture">
+    <h2>1) Big picture: who talks to whom?</h2>
+    <p>
+      Almost every authentication setup can be described with three roles:
+    </p>
+    <ul>
+      <li><strong>Client</strong>: your app, script, frontend, or service making requests</li>
+      <li><strong>Resource Server</strong>: the API you want to call (your MCP server, your web API, etc.)</li>
+      <li><strong>Authorization Server / Identity Provider</strong>: issues tokens (your auth server, Google, Entra ID, etc.)</li>
+    </ul>
+
+    <div class="card">
+      <div class="diagram">
+        (A) Client authenticates with Auth Server  →  gets token<br/>
+        (B) Client calls Resource Server           →  sends token in headers<br/>
+        (C) Resource Server validates token        →  grants/denies access
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <strong>Critical idea:</strong> A <em>bearer</em> token is like a “keycard”. Whoever holds it can use it.
+      So you must protect it in transit and at rest (HTTPS, secure storage). (RFC 6750) 
+      <span class="ref">Reference: RFC 6750 Bearer Token Usage.</span>
+    </div>
+    <div class="ref">Sources: RFC 6750 (Bearer tokens) and general OAuth usage.  [oai_citation:0‡IETF Datatracker](https://datatracker.ietf.org/doc/html/rfc6750?utm_source=chatgpt.com)</div>
+  </section>
+
+  <section id="bearer">
+    <h2>2) Bearer tokens (Authorization: Bearer ...)</h2>
+
+    <p>
+      A bearer token is sent on every request to a protected API using an HTTP header:
+      <code class="inline">Authorization: Bearer &lt;token&gt;</code>.
+    </p>
+    <div class="ref">Source: RFC 6750 bearer token scheme.  [oai_citation:1‡IETF Datatracker](https://datatracker.ietf.org/doc/html/rfc6750?utm_source=chatgpt.com)</div>
+
+    <div class="card">
+      <strong>What the server does with a bearer token</strong>
+      <ol>
+        <li>Extract token from the <code class="inline">Authorization</code> header</li>
+        <li>Validate it (either by introspection call or signature verification)</li>
+        <li>Check claims/scopes/roles (authorization)</li>
+        <li>Allow or deny the request</li>
+      </ol>
+    </div>
+
+    <div class="callout ok">
+      <strong>Why this is common:</strong> it works the same for browsers, mobile, services, and “agent” calls.
+    </div>
+  </section>
+
+  <section id="api-keys">
+    <h2>3) API keys: when they fit (and when they don’t)</h2>
+
+    <p>
+      An “auth key” often means an <strong>API key</strong>: a static secret like <code class="inline">X-API-Key: ...</code>.
+      It’s simple, but it’s usually a <em>service identity</em>, not a <em>user identity</em>.
+    </p>
+
+    <table>
+      <thead>
+        <tr><th>Approach</th><th>Good for</th><th>Weakness</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>API key (static)</strong></td>
+          <td>Internal service-to-service, quick prototypes</td>
+          <td>Often long-lived; hard per-user auth; higher blast radius if leaked</td>
+        </tr>
+        <tr>
+          <td><strong>Token (short-lived)</strong></td>
+          <td>User-level identity, scopes, auditability, safer rotation</td>
+          <td>More moving parts (issuer + validation)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout">
+      <strong>Common hybrid pattern:</strong> use an API key to authenticate to an auth server, then exchange it for a short-lived bearer token.
+    </div>
+  </section>
+
+  <section id="opaque-vs-jwt">
+    <h2>4) Opaque vs JWT access tokens</h2>
+
+    <p>
+      Bearer tokens can be:
+      <strong>opaque strings</strong> (random-looking) or <strong>structured JWTs</strong>.
+      The difference is how the resource server validates them.
+    </p>
+
+    <table>
+      <thead>
+        <tr><th>Token type</th><th>What it looks like</th><th>How server validates</th><th>Tradeoff</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Opaque token</strong></td>
+          <td>Random string</td>
+          <td>Call auth server (introspection)</td>
+          <td>Easy revocation, but adds network hop</td>
+        </tr>
+        <tr>
+          <td><strong>JWT</strong></td>
+          <td><code class="inline">header.payload.signature</code></td>
+          <td>Verify signature locally using public key</td>
+          <td>No hop per request, but revocation is harder (use short expiry/rotation)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="ref">
+      Sources: bearer tokens can be opaque or structured; introspection defined by RFC 7662.  [oai_citation:2‡OAuth Community Site](https://oauth.net/2/bearer-tokens/?utm_source=chatgpt.com)
+    </div>
+  </section>
+
+  <section id="introspection">
+    <h2>5) Opaque tokens: introspection flow (client + server both talk to auth server)</h2>
+
+    <p>
+      This is the “both client and server access auth server” pattern you asked about:
+    </p>
+
+    <div class="card">
+      <div class="diagram">
+        1) Client → Auth Server: POST /token (login / credentials) → gets opaque access_token<br/>
+        2) Client → Resource Server: Authorization: Bearer access_token<br/>
+        3) Resource Server → Auth Server: POST /introspect (is token active? scopes?)<br/>
+        4) Resource Server → Client: allow/deny
+      </div>
+    </div>
+
+    <div class="ref">Token introspection spec: resource server queries auth server about token state.  [oai_citation:3‡IETF Datatracker](https://datatracker.ietf.org/doc/html/rfc7662?utm_source=chatgpt.com)</div>
+
+    <h3>Example endpoints (like our demo)</h3>
+    <pre><code># Auth server:
+POST /token        -> returns {"access_token": "...", "expires_in": 3600}
+POST /introspect   -> returns {"active": true, "sub": "demo", "scope": "sql:read"}</code></pre>
+
+    <div class="callout ok">
+      <strong>Why people choose this:</strong> easy centralized revocation and policy checks (auth server is source of truth).
+    </div>
+
+    <div class="callout warn">
+      <strong>Production tip:</strong> add caching at the resource server (cache introspection results briefly) to reduce auth server load.
+    </div>
+  </section>
+
+  <section id="jwks">
+    <h2>6) JWT tokens: JWKS + public key caching (server “keeps the public key”)</h2>
+
+    <p>
+      When the access token is a JWT, the server can validate it locally using a public key.
+      But the key might rotate, so the server usually downloads keys from a JWKS endpoint.
+    </p>
+
+    <div class="card">
+      <div class="diagram">
+        Startup (or periodic):<br/>
+        1) GET /.well-known/openid-configuration  → find jwks_uri<br/>
+        2) GET jwks_uri                          → cache public keys keyed by "kid"<br/><br/>
+        Per request:<br/>
+        3) Read JWT header.kid → pick matching public key<br/>
+        4) Verify signature + validate claims (iss, aud, exp)
+      </div>
+    </div>
+
+    <div class="ref">
+      OIDC Discovery defines the well-known configuration and includes jwks_uri; verification relies on keys.  [oai_citation:4‡OpenID Foundation](https://openid.net/specs/openid-connect-discovery-1_0.html?utm_source=chatgpt.com)
+    </div>
+
+    <h3>Why this is faster than introspection</h3>
+    <ul>
+      <li>No network call to auth server per request (after keys are cached)</li>
+      <li>Works even if auth server is temporarily down (until keys expire/rotate)</li>
+    </ul>
+
+    <div class="callout warn">
+      <strong>Tradeoff:</strong> immediate revocation is harder. Typical mitigations: short token lifetimes + key rotation + occasional back-channel checks.
+    </div>
+  </section>
+
+  <section id="google-oidc">
+    <h2>7) “Gmail authenticator”: Google OIDC login (client still talks to Google)</h2>
+
+    <p>
+      If “auth server is Gmail” means “users sign in with their Google account”, you’re using
+      <strong>OpenID Connect (OIDC) on top of OAuth 2.0</strong>. Google issues an <strong>ID token</strong> (a signed JWT) and optionally access tokens.
+    </p>
+
+    <div class="ref">Google’s OpenID Connect implementation and server-side token verification guidance.  [oai_citation:5‡Google for Developers](https://developers.google.com/identity/openid-connect/openid-connect?utm_source=chatgpt.com)</div>
+
+    <div class="callout">
+      <strong>Key point you asked:</strong> even if your server caches Google’s public keys, the <em>client still must talk to Google</em> to obtain the token (login/consent).
+      Caching keys only removes server→Google calls on each request.
+    </div>
+
+    <h3>What your resource server validates (minimum)</h3>
+    <ul>
+      <li><code class="inline">iss</code> (issuer) is Google</li>
+      <li><code class="inline">aud</code> (audience) matches your Google OAuth client ID</li>
+      <li><code class="inline">exp</code> not expired</li>
+      <li>signature matches a Google public key from JWKS</li>
+    </ul>
+
+    <div class="ref">OIDC core (claims like iss/aud/exp) and Google’s verification guidance.  [oai_citation:6‡OpenID Foundation](https://openid.net/specs/openid-connect-core-1_0.html?utm_source=chatgpt.com)</div>
+  </section>
+
+  <section id="pkce">
+    <h2>8) PKCE: why it exists and when you use it</h2>
+
+    <p>
+      <strong>PKCE</strong> (Proof Key for Code Exchange) protects the OAuth authorization code flow against code interception attacks
+      for <em>public clients</em> (mobile apps, SPAs, desktop apps). (RFC 7636)
+    </p>
+    <div class="ref">PKCE is defined in RFC 7636.  [oai_citation:7‡IETF Datatracker](https://datatracker.ietf.org/doc/html/rfc7636?utm_source=chatgpt.com)</div>
+
+    <div class="card">
+      <div class="diagram">
+        1) Client generates code_verifier (secret) and code_challenge (hash)<br/>
+        2) Client → /authorize includes code_challenge<br/>
+        3) Client receives authorization code<br/>
+        4) Client → /token sends authorization code + code_verifier<br/>
+        5) Auth server checks verifier matches challenge, then issues tokens
+      </div>
+    </div>
+
+    <div class="callout ok">
+      <strong>Modern direction:</strong> OAuth 2.1 requires PKCE for authorization code flow clients.
+    </div>
+    <div class="ref">OAuth 2.1 requirement summary and draft.  [oai_citation:8‡OAuth Community Site](https://oauth.net/2.1/?utm_source=chatgpt.com)</div>
+  </section>
+
+  <section id="authorize-post">
+    <h2>9) Why an <code class="inline">/authorize</code> endpoint might be POST</h2>
+
+    <p>
+      In the classic OAuth/OIDC web flow, <code class="inline">/authorize</code> is often reached via a browser navigation
+      (commonly a GET with query parameters). But you may see POST in practice because:
+    </p>
+
+    <ul>
+      <li><strong>Form submissions</strong>: login pages submit credentials and consent forms via POST, and then the server continues the authorization flow.</li>
+      <li><strong>Reducing sensitive data in URLs</strong>: some systems avoid putting large or sensitive request data in query strings.</li>
+      <li><strong>OIDC response mode “form_post”</strong>: the authorization response can be returned to the client via an HTTP form POST.</li>
+    </ul>
+
+    <div class="ref">OIDC core defines response modes/flows and the overall authorization behavior in OIDC.  [oai_citation:9‡OpenID Foundation](https://openid.net/specs/openid-connect-core-1_0.html?utm_source=chatgpt.com)</div>
+
+    <div class="callout warn">
+      <strong>Important:</strong> Whether your <code class="inline">/authorize</code> is GET or POST is a design choice / framework detail.
+      The security requirements (PKCE, redirect URI validation, HTTPS, etc.) matter much more than the verb itself.
+    </div>
+  </section>
+
+  <section id="mcp">
+    <h2>10) MCP: authenticating MCP servers and forwarding headers</h2>
+
+    <p>
+      For MCP, the same authentication patterns apply: protect your MCP server and require a token (or API key) on its HTTP endpoint.
+      When an LLM (via OpenAI’s tool integration) calls your remote MCP server, you typically pass credentials in HTTP headers.
+    </p>
+
+    <div class="card">
+      <strong>What you do in practice</strong>
+      <ol>
+        <li>Your client obtains a token (from your auth server, Google OIDC, etc.)</li>
+        <li>Your client configures the MCP tool with <strong>headers</strong> containing that token</li>
+        <li>The MCP server middleware checks <code class="inline">Authorization: Bearer ...</code> on every request</li>
+      </ol>
+    </div>
+
+    <div class="ref">
+      OpenAI docs cover MCP integration, tool filtering with <code class="inline">allowed_tools</code>, and MCP tool usage via Responses API.
+       [oai_citation:10‡OpenAI Platform](https://platform.openai.com/docs/mcp?utm_source=chatgpt.com)
+    </div>
+
+    <h3>Example: bearer token on MCP calls</h3>
+    <pre><code># Client sets headers when connecting:
+headers = {"Authorization": f"Bearer {token}"}
+
+# MCP server checks Authorization header for every /mcp request
+# (then validates via introspection or JWT verification)</code></pre>
+
+    <div class="callout ok">
+      <strong>Safety practice you discussed:</strong> avoid passing secrets as tool arguments; prefer headers or OAuth.
+      Also restrict which tools the model can use (e.g., read-only) with <code class="inline">allowed_tools</code>.
+    </div>
+    <div class="ref">OpenAI MCP tool guidance on filtering tools (allowed_tools).  [oai_citation:11‡OpenAI Developers](https://developers.openai.com/cookbook/examples/mcp/mcp_tool_guide/?utm_source=chatgpt.com)</div>
+  </section>
+
+  <section id="sql-auth">
+    <h2>11) SQL Server auth: username/password vs Windows/SSO</h2>
+
+    <p>
+      This is separate from your API/MCP authentication. This is how your software authenticates to the database itself.
+      SQL Server commonly supports:
+    </p>
+
+    <ul>
+      <li><strong>Windows Authentication</strong> (Integrated / Active Directory): the OS/AD vouches for the identity; SQL Server doesn’t handle passwords directly.</li>
+      <li><strong>SQL Server Authentication</strong>: database-level username/password (“SQL login”).</li>
+    </ul>
+
+    <div class="ref">Microsoft SQL Server guidance on choosing auth mode and how Windows auth works.  [oai_citation:12‡Microsoft Learn](https://learn.microsoft.com/en-us/sql/relational-databases/security/choose-an-authentication-mode?view=sql-server-ver17&utm_source=chatgpt.com)</div>
+
+    <h3>How it looks in connection configuration</h3>
+    <pre><code># SQL authentication (username/password in connection string)
+DRIVER={ODBC Driver 18 for SQL Server};
+SERVER=host,1433;
+DATABASE=MyDb;
+UID=myuser;
+PWD=mypassword;
+TrustServerCertificate=yes;
+
+# Windows integrated authentication (varies by environment)
+# Often includes Integrated Security / Trusted_Connection
+# DRIVER=...;SERVER=...;DATABASE=...;Trusted_Connection=yes;</code></pre>
+
+    <div class="callout warn">
+      <strong>Don’t confuse the layers:</strong><br/>
+      Your API/MCP auth controls “who can call the server”. DB auth controls “what the server process is allowed to do in the database”.
+      In production, you usually use a service identity with least privilege for DB access.
+    </div>
+  </section>
+
+  <section id="security">
+    <h2>12) Practical security checklist</h2>
+
+    <div class="card">
+      <strong>Transport & storage</strong>
+      <ul>
+        <li>Always use HTTPS/TLS for bearer tokens (possession = access). (RFC 6750)</li>
+        <li>Don’t log tokens; avoid putting them in URLs; store securely.</li>
+      </ul>
+      <div class="ref">Bearer token security considerations.  [oai_citation:13‡IETF Datatracker](https://datatracker.ietf.org/doc/html/rfc6750?utm_source=chatgpt.com)</div>
+    </div>
+
+    <div class="card">
+      <strong>Token validation</strong>
+      <ul>
+        <li>Opaque tokens: implement introspection (RFC 7662) and consider caching.</li>
+        <li>JWT tokens: verify signature + claims; fetch JWKS via OIDC discovery; refresh on unknown <code class="inline">kid</code>.</li>
+        <li>Always validate <code class="inline">aud</code> and <code class="inline">iss</code> for OIDC tokens.</li>
+      </ul>
+      <div class="ref">Token introspection (RFC 7662) and OIDC discovery/core.  [oai_citation:14‡IETF Datatracker](https://datatracker.ietf.org/doc/html/rfc7662?utm_source=chatgpt.com)</div>
+    </div>
+
+    <div class="card">
+      <strong>OAuth/OIDC hygiene</strong>
+      <ul>
+        <li>Use PKCE for public clients; OAuth 2.1 direction makes it required for code flow. (RFC 7636)</li>
+        <li>Use exact redirect URI matching and avoid legacy implicit flows (OAuth 2.1 direction).</li>
+      </ul>
+      <div class="ref">PKCE (RFC 7636) and OAuth 2.1 direction.  [oai_citation:15‡IETF Datatracker](https://datatracker.ietf.org/doc/html/rfc7636?utm_source=chatgpt.com)</div>
+    </div>
+
+    <div class="card">
+      <strong>MCP-specific hygiene</strong>
+      <ul>
+        <li>Use least-privilege tool exposure (e.g., read-only tools) via <code class="inline">allowed_tools</code>.</li>
+        <li>Prefer headers/OAuth rather than passing secrets in tool arguments.</li>
+      </ul>
+      <div class="ref">OpenAI MCP docs on tool filtering and MCP tool usage.  [oai_citation:16‡OpenAI Developers](https://developers.openai.com/cookbook/examples/mcp/mcp_tool_guide/?utm_source=chatgpt.com)</div>
+    </div>
+  </section>
+
+  <div class="hr"></div>
+  <section>
+    <h2>Putting it all together (one-page mental model)</h2>
+
+    <div class="card">
+      <div class="diagram">
+        Your user logs in (or your service authenticates) → gets a token (Bearer)<br/>
+        Your app calls your protected API/MCP server with Authorization: Bearer ...<br/>
+        Your API validates token either via RFC 7662 introspection (opaque) or JWT verification (JWKS)<br/>
+        Your API uses DB credentials (separate layer) to query SQL Server<br/>
+        Your API returns response
+      </div>
+    </div>
+
+    <p class="muted">
+      If you want, tell me which exact scenario you want to implement end-to-end:
+      (A) opaque + introspection, (B) JWT + JWKS, or (C) Google OIDC + JWT verification,
+      and whether the caller is (1) a browser, (2) a mobile app, or (3) a backend service.
+      I can then tailor the code sample and the recommended flow precisely.
+    </p>
+  </section>
+
+</main>
+  <script src="../assets/js/nav.js"></script>
+</body>
+</html>

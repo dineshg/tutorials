@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>HLD Service Selection (GCP): Exec Document Q&A Pilot — Choices, Alternatives, Enterprise Delays</title>
+  <style>
+    :root{
+      /* Light theme (default) */
+      --bg:#f7f9fc;
+      --card:rgba(2,6,23,.03);
+      --border:rgba(2,6,23,.10);
+      --text:#0f172a;
+      --muted:#475569;
+
+      --h1:#0f172a;
+      --h2:#1d4ed8;
+      --h3:#0f766e;
+
+      --callout:rgba(15,118,110,.08);
+      --warn:rgba(225,29,72,.08);
+      --ok:rgba(29,78,216,.08);
+
+      --codebg:#f6f8fa;
+      --codeborder:#d0d7de;
+    }
+
+    @media (prefers-color-scheme: dark){
+      :root{
+        --bg:#0b1220;
+        --card:rgba(255,255,255,.06);
+        --border:rgba(255,255,255,.12);
+        --text:#e6eaf2;
+        --muted:#a8b3cf;
+
+        --h1:#eaf0ff;
+        --h2:#93c5fd;
+        --h3:#5eead4;
+
+        --callout:rgba(94,234,212,.10);
+        --warn:rgba(255,180,180,.12);
+        --ok:rgba(147,197,253,.12);
+
+        --codebg:#1e1e1e;
+        --codeborder:#2d2d2d;
+      }
+    }
+
+    body{
+      margin:0;
+      padding:28px 18px;
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height:1.65;
+      color:var(--text);
+      background:
+        radial-gradient(1200px 600px at 20% -10%, rgba(37,99,235,.12), transparent 60%),
+        radial-gradient(900px 500px at 90% 10%, rgba(15,118,110,.10), transparent 55%),
+        var(--bg);
+    }
+
+    @media (prefers-color-scheme: dark){
+      body{
+        background:
+          radial-gradient(1200px 600px at 20% -10%, rgba(97,175,254,.18), transparent 60%),
+          radial-gradient(900px 500px at 90% 10%, rgba(94,234,212,.12), transparent 55%),
+          var(--bg);
+      }
+    }
+
+    .container{
+      max-width: 1120px;
+      margin:0 auto;
+      padding:44px;
+      border:1px solid var(--border);
+      border-radius:14px;
+      background: linear-gradient(180deg, rgba(255,255,255,.85), rgba(255,255,255,.70));
+      box-shadow: 0 10px 30px rgba(2,6,23,.10);
+    }
+
+    @media (prefers-color-scheme: dark){
+      .container{
+        background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+        box-shadow: 0 10px 30px rgba(0,0,0,.35);
+        backdrop-filter: blur(8px);
+      }
+    }
+
+    h1{
+      margin:0 0 10px;
+      color:var(--h1);
+      letter-spacing:-0.02em;
+      font-size:2.05rem;
+    }
+    .lead{
+      margin:0 0 18px;
+      color:var(--muted);
+      max-width: 105ch;
+    }
+
+    .toc{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin:14px 0 26px;
+      padding:0;
+      list-style:none;
+    }
+    .toc a{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      background:rgba(255,255,255,.06);
+      border:1px solid var(--border);
+      color:var(--text);
+      text-decoration:none;
+      font-size:.92rem;
+    }
+    .toc a:hover{ background: rgba(147,197,253,.12); border-color: rgba(147,197,253,.25); }
+
+    h2{
+      margin-top:44px;
+      padding-top:22px;
+      border-top:1px solid var(--border);
+      color:var(--h2);
+      letter-spacing:-0.01em;
+    }
+    h3{
+      margin:18px 0 10px;
+      color:var(--h3);
+      font-size:1.08rem;
+    }
+
+    p{ margin:0 0 14px; }
+    ul,ol{ margin:0 0 14px; padding-left:22px; }
+    li{ margin:0 0 8px; }
+
+    .card{
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px 18px 6px;
+      margin: 16px 0 20px;
+    }
+
+    .callout{
+      background: var(--callout);
+      border: 1px solid rgba(94,234,212,.22);
+      border-left: 5px solid var(--h3);
+      padding: 14px 16px;
+      border-radius: 12px;
+      margin: 18px 0;
+    }
+    .warn{
+      background: var(--warn);
+      border: 1px solid rgba(255,180,180,.25);
+      border-left: 5px solid rgba(255,180,180,.9);
+      padding: 14px 16px;
+      border-radius: 12px;
+      margin: 18px 0;
+    }
+    .ok{
+      background: var(--ok);
+      border: 1px solid rgba(147,197,253,.20);
+      border-left: 5px solid rgba(147,197,253,.85);
+      padding: 14px 16px;
+      border-radius: 12px;
+      margin: 18px 0;
+    }
+
+    code{
+      background: rgba(2,6,23,.05);
+      padding: 2px 6px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      color: var(--text);
+      font-size: .92em;
+    }
+
+    @media (prefers-color-scheme: dark){
+      code{
+        background: rgba(255,255,255,.07);
+        color: #ffd6ff;
+      }
+    }
+
+    table{
+      width:100%;
+      border-collapse: collapse;
+      margin: 10px 0 18px;
+      overflow:hidden;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.04);
+    }
+    th,td{
+      text-align:left;
+      padding:10px 12px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      vertical-align: top;
+    }
+    th{ color: var(--h1); font-size: .92rem; }
+    td{ color: var(--text); }
+
+    .grid2{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 10px 0 18px;
+    }
+    @media (max-width: 900px){ .grid2{ grid-template-columns: 1fr; } }
+
+    .box{
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+    }
+    .box .k{
+      color: var(--muted);
+      font-size: .82rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 6px;
+    }
+
+    .footer-note{
+      margin-top: 34px;
+      color: var(--muted);
+      border-top: 1px dashed var(--border);
+      padding-top: 18px;
+    }
+  </style>
+  <link rel="stylesheet" href="../assets/css/book.css">
+</head>
+
+<body>
+  <div class="container">
+    <h1>HLD Service Selection (GCP): Exec Document Q&amp;A Pilot</h1>
+    <p class="lead">
+      This tutorial converts our service-selection discussion into a <strong>High-Level Design</strong> section you can drop into
+      an Architecture Review Pack. It uses concrete <strong>GCP services</strong>, includes <strong>alternatives considered</strong>,
+      and highlights <strong>enterprise/internal delays</strong> (approvals, patterns, gates) that often dominate timelines.
+    </p>
+
+    <ul class="toc">
+      <li><a href="#principles">HLD decision principles</a></li>
+      <li><a href="#architecture">Reference architecture</a></li>
+      <li><a href="#services">Service choices (with alternatives)</a></li>
+      <li><a href="#delays">Enterprise delays &amp; critical path</a></li>
+      <li><a href="#howtopresent">How to present in review</a></li>
+    </ul>
+
+    <h2 id="principles">1) HLD decision principles (what we decide now vs later)</h2>
+    <div class="card">
+      <div class="grid2">
+        <div class="box">
+          <div class="k">Decide at HLD</div>
+          <ul>
+            <li>Major components and trust boundaries</li>
+            <li>Security posture (identity, access enforcement, secrets)</li>
+            <li>Data boundary: what can go to the LLM</li>
+            <li>Core services that create long lead-time dependencies</li>
+            <li>Audit/observability requirements</li>
+          </ul>
+        </div>
+        <div class="box">
+          <div class="k">Defer to LLD</div>
+          <ul>
+            <li>Exact schemas, chunk sizing, prompt templates</li>
+            <li>Fine-grained retry/backoff parameters</li>
+            <li>Exact IAM role bindings per resource (unless forced)</li>
+            <li>Exact SLOs (propose targets at HLD, finalize later)</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="ok">
+        <strong>Rule of thumb:</strong> if it affects security/privacy, cost materially, operability, or requires another team’s provisioning,
+        it must be decided (or at least bounded) at HLD.
+      </div>
+    </div>
+
+    <h2 id="architecture">2) Reference architecture (GCP-aligned)</h2>
+    <div class="card">
+      <h3>Request path (query time)</h3>
+      <ol>
+        <li>User signs in via Google Workspace (OIDC) → SPA gets <code>access_token</code>.</li>
+        <li>SPA calls backend API with <code>Authorization: Bearer ...</code>.</li>
+        <li>Backend validates JWT, maps to <code>user_id</code>/<code>tenant_id</code>, enforces group/corpus gates.</li>
+        <li>Backend retrieves chunks (strict filters) → packs context → calls LLM → returns answer with citations.</li>
+        <li>Backend writes audit logs (user, tenant, docs cited, timings).</li>
+      </ol>
+
+      <h3>Ingestion path (offline)</h3>
+      <ol>
+        <li>Document discovered/uploaded → event published.</li>
+        <li>Worker extracts text + metadata → stores canonical record.</li>
+        <li>Embeddings/index written to retrieval system with tenant/corpus metadata.</li>
+      </ol>
+
+      <div class="callout">
+        <strong>Core HLD principle:</strong> access control is enforced in the backend and data layers, not in the browser.
+      </div>
+    </div>
+
+    <h2 id="services">3) GCP service choices (what we pick, why, alternatives, and constraints)</h2>
+
+    <div class="card">
+      <h3>3.1 End-user Identity (Google Workspace SSO)</h3>
+      <!--
+  UPDATED snippet: Org allowlist explanation + where it happens
+  (Insert this inside section 3.1, right after:
+    <h3>3.1 End-user Identity (Google Workspace SSO)</h3>
+   and before the table.)
+-->
+
+<div class="card" id="org-allowlist-explainer">
+  <h3>Quick concept: What is an “Org allowlist”?</h3>
+
+  <p>
+    An <strong>Org allowlist</strong> is a “front door” rule that answers:
+    <strong>“Is this person allowed to use our application at all?”</strong>
+    This is separate from tenant isolation (“what data can you access once inside?”).
+  </p>
+
+  <div class="ok">
+    <strong>Authentication</strong> (Google login) proves <em>who you are</em>.<br />
+    <strong>Org allowlist</strong> decides <em>whether you’re allowed to enter</em>.<br />
+    <strong>Tenant isolation</strong> decides <em>what you can see after you enter</em>.
+  </div>
+
+  <h3>Where it happens (two common places)</h3>
+  <p>
+    In enterprises, you usually implement the allowlist in one of these places:
+  </p>
+
+  <div class="grid2">
+    <div class="box">
+      <div class="k">Option A — At the IdP (preferred when available)</div>
+      <p>
+        You configure access rules at the <strong>Identity Provider</strong> (Google Workspace / your IdP) so only approved users
+        can complete login for this application.
+      </p>
+      <ul>
+        <li><strong>How:</strong> use Google/IdP app access controls or group-based assignment (only members can use the app).</li>
+        <li><strong>Effect:</strong> users outside the group often cannot complete sign-in for this app (blocked earlier).</li>
+        <li><strong>Benefit:</strong> “blocked at the door” before tokens are issued for your app.</li>
+      </ul>
+    </div>
+
+    <div class="box">
+      <div class="k">Option B — In your application server (common and reliable)</div>
+      <p>
+        Your backend (FastAPI) enforces the allowlist on <strong>every request</strong> by checking group membership (or a local allowlist)
+        after validating the JWT.
+      </p>
+      <ul>
+        <li><strong>How:</strong> verify token → read identity → check “is user in approved org group?”</li>
+        <li><strong>Effect:</strong> user can log in, but your API returns <code>403 Forbidden</code> if not allowed.</li>
+        <li><strong>Benefit:</strong> uniform enforcement even if IdP-side restrictions are incomplete.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout">
+    <strong>Enterprise best practice:</strong> use <em>both</em> when possible.
+    <br />
+    <span style="color: var(--muted);">
+      IdP-side gating reduces exposure and noise; app-side gating guarantees enforcement and supports richer rules (e.g., per-tenant mapping).
+    </span>
+  </div>
+
+  <h3>How it looks in our project (Google Workspace group)</h3>
+  <p>
+    We define a Google Group like <code>docqa-users@company.com</code>.
+    Only members are allowed to use the product.
+  </p>
+
+  <pre>
+Policy (conceptual):
+1) Verify JWT (signature, issuer, audience, expiry)
+2) Extract stable identity (issuer + sub, and email if present)
+3) Check org allowlist:
+   - if NOT in docqa-users@company.com → 403 "not allowed"
+   - if IN group → continue
+4) Map user → tenant_id (domain or DB lookup)
+5) Enforce tenant/corpus filters on retrieval + data access
+  </pre>
+
+  <h3>Why it exists (common reasons)</h3>
+  <ul>
+    <li><strong>Security &amp; governance:</strong> limit exposure to approved users only.</li>
+    <li><strong>Privacy:</strong> reduce risk by restricting who can query sensitive corpora.</li>
+    <li><strong>Pilot control:</strong> roll out to a small cohort first (execs + EAs), then expand.</li>
+    <li><strong>Cost control:</strong> LLM usage is expensive—control who can generate traffic.</li>
+  </ul>
+
+  <h3>Don’t confuse this with GCP IAM</h3>
+  <div class="warn">
+    End users typically do <em>not</em> need GCP IAM permissions. They access documents through the application.
+    The backend uses its own <strong>service identity</strong> (service account / workload identity) to access GCS, DB, secrets, etc.
+    <br /><br />
+    <strong>Org allowlist</strong> = “Can this user use the app?”
+    <br />
+    <strong>Cloud IAM</strong> = “Can this principal access GCP resources (buckets, secrets, projects)?”
+  </div>
+</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Capability</th>
+            <th>Chosen (HLD)</th>
+            <th>Why</th>
+            <th>Alternatives considered</th>
+            <th>Enterprise constraints / delays</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Login + tokens</td>
+            <td>Google Workspace OIDC (Auth Code + PKCE in SPA)</td>
+            <td>Standard enterprise SSO; stateless API validation</td>
+            <td>Identity Platform; custom IdP; IAP in front of app</td>
+            <td>Token audience/issuer alignment; group claim policy; approval for group gating approach</td>
+          </tr>
+          <tr>
+            <td>Org allowlist</td>
+            <td>Google Groups gating (e.g., <code>docqa-users@company.com</code>)</td>
+            <td>Simple “allowed to use product” control</td>
+            <td>App-local allowlist; IAP access policy</td>
+            <td>Group ownership, membership governance, and audit rules</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="warn">
+        <strong>HLD note:</strong> group gating answers “who can use the app”; tenant isolation answers “what data can they access.”
+        They are related but not the same.
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>3.2 Frontend hosting (React)</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Chosen (HLD)</th>
+            <th>Why</th>
+            <th>Alternatives</th>
+            <th>Delays / internal patterns</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Cloud Run (frontend service)</td>
+            <td>Easy rollout; supports rewrites/headers and enterprise networking patterns if needed</td>
+            <td>Cloud Storage + Cloud CDN (static); Firebase Hosting</td>
+            <td>DNS/cert/WAF approvals can be longer than development</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3>3.3 Backend compute (FastAPI)</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Chosen (HLD)</th>
+            <th>Why</th>
+            <th>Alternatives</th>
+            <th>Delays / internal patterns</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>GKE (Kubernetes)</td>
+            <td>Enterprise standard for regulated workloads; consistent policy enforcement; supports internal services</td>
+            <td>Cloud Run (faster to ship); MIG on GCE</td>
+            <td>Landing zone onboarding, hardened node pools, image scanning gates, network policies, mesh requirements</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout">
+        <strong>HLD articulation:</strong> “GKE is chosen not because it’s trendy, but because it matches enterprise platform patterns and controls.”
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>3.4 Canonical store (metadata + system of record)</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Chosen (HLD)</th>
+            <th>Why</th>
+            <th>Alternatives</th>
+            <th>Delays / internal patterns</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Cloud SQL (PostgreSQL)</td>
+            <td>Clear system-of-record; relational metadata; supports backstop controls (e.g., RLS) if needed</td>
+            <td>AlloyDB (scale/perf); Firestore (not ideal for relational workloads)</td>
+            <td>Private IP setup; KMS key approvals; DBA access model; backups/retention policies</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3>3.5 Object storage (raw docs + extracted artifacts)</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Chosen (HLD)</th>
+            <th>Why</th>
+            <th>Alternatives</th>
+            <th>Delays / internal patterns</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Cloud Storage (GCS)</td>
+            <td>Durable, cheap, standard; fits ingestion pipeline and artifact storage</td>
+            <td>Filestore (rare); third-party storage (vendor risk)</td>
+            <td>Uniform bucket-level access, retention policies, VPC-SC restrictions, data residency constraints</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3>3.6 Retrieval / Semantic Search (vector + strict metadata filters)</h3>
+      <p>
+        At HLD, you choose one path for the pilot and document the fallback/phase-2 alternative.
+        The key requirement is <strong>strict filtering</strong> (tenant/corpus) to avoid leakage.
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Option</th>
+            <th>When we choose it</th>
+            <th>Why</th>
+            <th>Tradeoffs</th>
+            <th>Delays / internal patterns</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Option A: Vertex AI Search / Agent Builder</strong></td>
+            <td>Pilot needs speed and managed operations</td>
+            <td>Managed retrieval; fast path; less ops burden</td>
+            <td>Less low-level control; feature fit must be validated</td>
+            <td>Service enablement approvals; data classification rules; integration reviews</td>
+          </tr>
+          <tr>
+            <td><strong>Option B: OpenSearch/Elasticsearch on GKE</strong></td>
+            <td>Need maximum control or org already runs search platform</td>
+            <td>Full control: hybrid search, filters, scoring, tuning</td>
+            <td>Higher ops cost; patching/backups/sizing required</td>
+            <td>Platform onboarding queue; cluster hardening; storage class decisions; backup standards</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="ok">
+        <strong>HLD best practice:</strong> choose the simplest option that satisfies strict filtering and governance.
+        “Perfect retrieval” is not required for pilot, but “safe retrieval” is.
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>3.7 Async ingestion orchestration (durable retries)</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Chosen (HLD)</th>
+            <th>Why</th>
+            <th>Alternatives</th>
+            <th>Delays / internal patterns</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Pub/Sub + Cloud Tasks (or Workflows if needed)</td>
+            <td>Durable eventing + retries; survives restarts; rate limiting</td>
+            <td>GKE-native queues; scheduler jobs; best-effort background tasks</td>
+            <td>IAM approvals for topics/subscriptions; DLQ standards; audit logging for processing events</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="warn">
+        <strong>HLD note:</strong> FastAPI background tasks are fine for light best-effort work, but ingestion needs persistence and retries.
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>3.8 Secrets and keys</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Chosen (HLD)</th>
+            <th>Why</th>
+            <th>Alternatives</th>
+            <th>Delays / internal patterns</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Secret Manager + Cloud KMS (policy-driven)</td>
+            <td>Rotation, audit, separation of duties; enterprise standard</td>
+            <td>Kubernetes secrets (often restricted); third-party vault</td>
+            <td>Access approval queue; rotation policy alignment; KMS key provisioning in approved region/project</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3>3.9 LLM boundary (external provider calls)</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Chosen (HLD)</th>
+            <th>Why</th>
+            <th>Alternatives</th>
+            <th>Delays / internal patterns</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Backend on GKE calls external LLM via HTTPS (data minimised)</td>
+            <td>Supports chosen model; keeps enforcement central; can redact/pack context</td>
+            <td>Vertex AI (Gemini) to keep boundary within GCP; multi-provider routing</td>
+            <td>Egress allowlisting/proxy; legal/compliance review of provider; data residency policy checks</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="ok">
+        <strong>HLD statement to include:</strong> “Only retrieved snippets are sent to the model. No raw document dumps. Logs never include full snippets.”
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>3.10 Observability and audit</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Chosen (HLD)</th>
+            <th>Why</th>
+            <th>Alternatives</th>
+            <th>Delays / internal patterns</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Cloud Logging + Cloud Monitoring + Cloud Trace (optional: BigQuery for long-term audit analytics)</td>
+            <td>Required for enterprise support and governance; standard GCP tooling</td>
+            <td>Splunk/Datadog (if org standard); custom ELK</td>
+            <td>Retention policy approvals; sensitive logging rules; SIEM integration lead time</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout">
+        <strong>Audit minimum (per request):</strong> who asked, which tenant, what sources were cited, timings, and outcome (answer/refusal).
+      </div>
+    </div>
+
+    <h2 id="delays">4) Enterprise delays &amp; critical path (what usually takes longest)</h2>
+    <div class="card">
+      <p>
+        In banks/airlines, “time to pilot” is often gated by approvals and provisioning, not coding.
+        HLD should explicitly call out the critical path so stakeholders understand sequencing.
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Workstream</th>
+            <th>What causes delay</th>
+            <th>How the AI lead reduces risk</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Landing zone / projects</td>
+            <td>Dev/stage/prod project creation, org policies, shared VPC attachment</td>
+            <td>Request early; align with platform team templates; keep pilot in one approved project if allowed</td>
+          </tr>
+          <tr>
+            <td>Networking</td>
+            <td>Private egress, DNS, firewall rules, proxy requirements</td>
+            <td>Document endpoints early; ask for a standard pattern; avoid custom exceptions</td>
+          </tr>
+          <tr>
+            <td>IAM / service identities</td>
+            <td>Least-privilege reviews, approvals, periodic reviews</td>
+            <td>Provide role matrix; use standard roles; limit resources touched in pilot</td>
+          </tr>
+          <tr>
+            <td>Data owner approval</td>
+            <td>Corpus sign-off, classification review, explicit exclusions</td>
+            <td>Propose a bounded corpus; provide an exclusion list; show audit controls</td>
+          </tr>
+          <tr>
+            <td>Security/privacy review</td>
+            <td>Threat model, logging policy, model boundary policy</td>
+            <td>Bring a short threat model + mitigations; demonstrate “cite or refuse”; propose redaction policy</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="warn">
+        <strong>HLD maturity signal:</strong> You’re not surprised by these delays — you plan around them and assign owners.
+      </div>
+    </div>
+
+    <h2 id="howtopresent">5) How to present this in an architecture review</h2>
+    <div class="card">
+      <h3>Recommended presentation structure</h3>
+      <ol>
+        <li><strong>Start with trust boundaries</strong> (what data leaves the boundary to the model)</li>
+        <li><strong>Show identity and access enforcement</strong> (group gate + tenant/corpus gates)</li>
+        <li><strong>Declare the chosen services</strong> with 1–2 sentences of why</li>
+        <li><strong>List alternatives considered</strong> and why not now</li>
+        <li><strong>End with risks + mitigations</strong> and the approval asks</li>
+      </ol>
+
+      <div class="ok">
+        <strong>Reviewer-friendly line:</strong> “We are optimising for a safe pilot. Where a managed service reduces operational risk, we choose it.
+        Where strict filtering and control are essential, we use a search platform that enforces metadata filters.”
+      </div>
+
+      <h3>Example “Decision statement” format (copy/paste)</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Decision</th>
+            <th>Chosen</th>
+            <th>Why</th>
+            <th>Alternatives</th>
+            <th>Phase-2 note</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Retrieval layer</td>
+            <td>Vertex AI Search (pilot)</td>
+            <td>Fast to ship; managed ops; meets strict filtering needs (to be validated)</td>
+            <td>OpenSearch on GKE</td>
+            <td>Move to OpenSearch if advanced tuning is required</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="footer-note">
+      Want this turned into an actual <strong>Architecture Review Pack</strong> (sections + diagrams + example tables) for your pilot?
+      I can generate a full HLD document skeleton in this same style.
+    </p>
+  </div>
+  <script src="../assets/js/nav.js"></script>
+</body>
+</html>

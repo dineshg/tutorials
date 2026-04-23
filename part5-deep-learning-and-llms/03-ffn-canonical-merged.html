@@ -1,0 +1,1093 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Neural Networks (ANNs): From a Single Neuron to Multiclass Image Classification</title>
+
+  <!-- Math rendering -->
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+        processEscapes: true
+      },
+      options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <!-- Syntax highlighting (VS Code-ish, light) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+  <script defer>
+    window.addEventListener('DOMContentLoaded', () => hljs.highlightAll());
+  </script>
+
+  <style>
+    :root{
+      --bg: #ffffff;
+      --paper: #ffffff;
+      --ink: #111827;         /* slate-900 */
+      --muted: #4b5563;       /* gray-600 */
+      --line: #e5e7eb;        /* gray-200 */
+      --soft: #f9fafb;        /* gray-50 */
+      --soft2:#f3f4f6;        /* gray-100 */
+      --blue:#2563eb;         /* blue-600 */
+      --indigo:#4f46e5;       /* indigo-600 */
+      --green:#16a34a;        /* green-600 */
+      --orange:#ea580c;       /* orange-600 */
+      --red:#dc2626;          /* red-600 */
+      --purple:#7c3aed;       /* violet-600 */
+      --shadow: 0 12px 30px rgba(17,24,39,.08);
+      --radius: 16px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    }
+    html, body { background: var(--bg); color: var(--ink); font-family: var(--sans); }
+    body { margin: 0; line-height: 1.65; }
+    .wrap { max-width: 1060px; margin: 0 auto; padding: 28px 18px 80px; }
+    header.hero{
+      background: linear-gradient(180deg, #eff6ff 0%, #ffffff 65%);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      border-radius: 22px;
+      padding: 26px 26px 20px;
+    }
+    h1{ margin: 0 0 6px; font-size: 32px; letter-spacing: -0.02em; }
+    .subtitle{ color: var(--muted); margin: 0 0 14px; font-size: 16px; }
+    .badge-row{ display:flex; flex-wrap:wrap; gap:8px; margin-top: 10px; }
+    .badge{
+      font-size: 12px; padding: 6px 10px; border-radius: 999px;
+      border: 1px solid var(--line); background: #fff; color: var(--muted);
+    }
+    .badge b{ color: var(--ink); }
+    nav.toc{
+      margin-top: 18px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px 14px 10px;
+    }
+    nav.toc .toc-title{ font-weight: 700; font-size: 14px; color: var(--muted); margin: 0 0 8px; }
+    nav.toc ul{ margin: 0; padding-left: 18px; }
+    nav.toc a{ color: var(--blue); text-decoration: none; }
+    nav.toc a:hover{ text-decoration: underline; }
+    section{
+      margin-top: 22px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 22px 22px 18px;
+    }
+    section h2{
+      margin: 0 0 8px;
+      font-size: 22px;
+      letter-spacing: -0.01em;
+    }
+    section h3{
+      margin: 16px 0 6px;
+      font-size: 18px;
+    }
+    p{ margin: 10px 0; }
+    .muted{ color: var(--muted); }
+    .grid2{ display:grid; grid-template-columns: 1.2fr .8fr; gap: 16px; align-items:start; }
+    @media (max-width: 980px){ .grid2{ grid-template-columns: 1fr; } }
+    .callout{
+      border: 1px solid var(--line);
+      background: var(--soft);
+      border-radius: 14px;
+      padding: 12px 14px;
+    }
+    .callout .title{ font-weight: 800; margin-bottom: 4px; font-size: 13px; letter-spacing:.01em; }
+    .callout.info{ border-left: 6px solid var(--blue); }
+    .callout.ok{ border-left: 6px solid var(--green); }
+    .callout.warn{ border-left: 6px solid var(--orange); }
+    .callout.danger{ border-left: 6px solid var(--red); }
+    .callout.purple{ border-left: 6px solid var(--purple); }
+    .kpi{
+      display:flex; flex-wrap:wrap; gap:10px; margin-top: 10px;
+    }
+    .pill{
+      background: #fff; border: 1px solid var(--line);
+      border-radius: 999px; padding: 8px 10px; font-size: 13px;
+    }
+    .pill b{ color: var(--ink); }
+    figure{
+      margin: 0;
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    figure img{ width: 100%; display:block; background:#fff; }
+    figcaption{
+      font-size: 12px;
+      color: var(--muted);
+      padding: 10px 12px;
+      border-top: 1px solid var(--line);
+    }
+    figcaption a{ color: var(--blue); text-decoration: none; }
+    figcaption a:hover{ text-decoration: underline; }
+    code, pre{ font-family: var(--mono); }
+    pre{
+      background: #ffffff;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px;
+      overflow:auto;
+    }
+    /* soften highlight.js */
+    .hljs{
+      background: #fbfbfd;
+      border-radius: 12px;
+    }
+    .math{
+      background: #fff;
+      border: 1px dashed #cbd5e1;
+      border-radius: 14px;
+      padding: 12px 14px;
+      overflow-x:auto;
+      margin: 12px 0;
+    }
+    .eq-label{
+      display:inline-block;
+      font-size: 12px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: var(--soft2);
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .hr{
+      height:1px; background: var(--line); margin: 16px 0;
+    }
+    .mini{
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .checklist{ margin: 10px 0 0; padding-left: 18px; }
+    .checklist li{ margin: 6px 0; }
+    .footer{
+      margin-top: 22px;
+      color: var(--muted);
+      font-size: 12px;
+      text-align:center;
+    }
+    .kbd{
+      font-family: var(--mono);
+      font-size: 12px;
+      padding: 2px 6px;
+      border: 1px solid var(--line);
+      border-bottom-color: #cbd5e1;
+      border-radius: 6px;
+      background: #fff;
+      color: var(--ink);
+    }
+    .inline-hi{
+      padding: 1px 6px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: #fff;
+    }
+    .inline-hi.blue{ color: var(--blue); }
+    .inline-hi.green{ color: var(--green); }
+    .inline-hi.orange{ color: var(--orange); }
+    .inline-hi.purple{ color: var(--purple); }
+  
+    /* Mini matrix / tensor visuals */
+    .matrix { border-collapse: collapse; margin: 0.25rem 0; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    .matrix td, .matrix th { border: 1px solid #e5e7eb; padding: 0.45rem 0.55rem; text-align: center; min-width: 2.2rem; }
+    .matrix caption { caption-side: top; text-align: left; font-weight: 700; margin-bottom: 0.35rem; font-family: var(--sans); }
+    .note { color: var(--muted); font-size: 0.95rem; }
+    .svgbox { background: #fff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 0.75rem; }
+
+  </style>
+  <link rel="stylesheet" href="../assets/css/book.css">
+</head>
+
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <h1>Artificial Neural Networks (ANNs): from “one neuron” to multiclass models</h1>
+    <p class="subtitle">
+      A student-friendly tutorial that reconstructs the lecture ideas: <b>why neural networks exist</b>, how they generalize
+      linear models, why activation functions matter, how <b>backpropagation</b> works (chain rule!), and how this connects
+      to practical PyTorch code for <b>multiclass image classification</b>.
+    </p>
+    <div class="badge-row">
+      <span class="badge"><b>Task types</b>: regression · binary class · multiclass class</span>
+      <span class="badge"><b>Core math</b>: logits · sigmoid · softmax · cross-entropy · chain rule</span>
+      <span class="badge"><b>Practical</b>: batching · DataLoader · GPU device · confusion matrix</span>
+      <span class="badge"><b>Theme</b>: readable light-mode, VS Code-ish code colors</span>
+    </div>
+
+    <nav class="toc">
+      <div class="toc-title">Contents</div>
+      <ul>
+        <li><a href="#why-how">Why &amp; How: “can we build a brain?”</a></li>
+        <li><a href="#single-neuron">From logistic regression to a neuron</a></li>
+        <li><a href="#networks">From one neuron to layers to deep networks</a></li>
+        <li><a href="#geometry">Neural nets as geometry solvers: linear vs nonlinear boundaries</a></li>
+        <li><a href="#activations">Activation functions: sigmoid, tanh, ReLU, and friends</a></li>
+        <li><a href="#backprop">How models learn: gradients, chain rule, backprop, vanishing gradients</a></li>
+        <li><a href="#tasks">Three tasks &amp; their final-layer activations (incl. multiclass)</a></li>
+        <li><a href="#softmax-ce">Multiclass classification: softmax + cross-entropy (and numerical stability)</a></li>
+        <li><a href="#images">How images are represented (RGB, grayscale, quantization, flattening)</a></li>
+        <li><a href="#mnist">MNIST tutorial: DataLoader, mini-batches, GPU, accuracy, confusion matrix</a></li>
+        <li><a href="#synthetic">Synthetic regression example (why visualization matters)</a></li>
+        <li><a href="#experimentation">Hyperparameters &amp; the “experimentation, not philosophy” rule</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- WHY / HOW -->
+  <section id="why-how">
+    <h2>Why? How? Why this topic is so interesting</h2>
+
+    <div class="grid2">
+      <div>
+        <p>
+          The phrase <span class="inline-hi blue"><b>artificial neural network</b></span> comes from a big idea:
+          biological brains are made of neurons that communicate using electrical and chemical signals.
+          Once you accept that a brain is a <i>physical</i> information-processing system, a natural question appears:
+        </p>
+
+        <div class="callout info">
+          <div class="title">The motivating question</div>
+          <p style="margin:0;">
+            If a brain is “a kind of computer”, can we simulate networks of neurons on a computer to create
+            <b>artificial intelligence</b>?
+          </p>
+        </div>
+
+        <p>
+          Of course this is a simplification—real brains are messy: many kinds of neurons, many regions,
+          and connections that crisscross in complex ways. But for a computational model, we start with a
+          deliberately simplified neuron, connect many of them, and see what the system can learn.
+        </p>
+
+        <div class="callout warn">
+          <div class="title">Two network “wiring” patterns</div>
+          <ul class="checklist">
+            <li><b>Feedforward</b>: information flows layer by layer from input to output.</li>
+            <li><b>Recurrent / feedback</b>: connections go from a later layer back to an earlier layer (a “loop”).</li>
+          </ul>
+          <p class="mini" style="margin:8px 0 0;">
+            This tutorial focuses on <b>feedforward</b> networks (also called “MLPs”).
+          </p>
+        </div>
+      </div>
+
+      <figure>
+        <img loading="lazy" alt="Activation functions overview"
+             src="https://commons.wikimedia.org/wiki/Special:FilePath/ActivationFunctions.svg" />
+        <figcaption>
+          A compact overview of classic and modern activation functions (sigmoid, tanh, ReLU, leaky ReLU, …).
+          Source: <a href="https://commons.wikimedia.org/wiki/File:ActivationFunctions.svg">Wikimedia Commons</a>.
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- SINGLE NEURON -->
+  <section id="single-neuron">
+    <h2>From logistic regression to a “neuron”</h2>
+
+    <p>
+      The lecture connects a <b>single logistic regression model</b> to a simplified neuron:
+      the model computes a weighted sum, adds a bias (threshold), then passes it through a squashing nonlinearity
+      (sigmoid) and finally makes a binary decision.
+    </p>
+
+    <div class="math">
+      <div class="eq-label">Single neuron (binary classification)</div>
+      $$a = \mathbf{w}^\top \mathbf{x} + b \quad\text{(activation / logit)}$$
+      $$\hat{p} = \sigma(a) = \frac{1}{1 + e^{-a}} \quad\text{(probability of class 1)}$$
+      $$\hat{y} = \mathbb{1}[\hat{p} \ge 0.5] \quad\text{(predict 1 if prob ≥ 0.5)}$$
+    </div>
+
+    <div class="grid2">
+      <div>
+        <div class="callout ok">
+          <div class="title">Interpretation</div>
+          <p style="margin:0;">
+            $\mathbf{w}$ controls how strongly each input feature influences the decision.
+            $b$ shifts the decision threshold.
+          </p>
+        </div>
+
+        <p>
+          In biology, neurons sum incoming signals through synapses. Some synapses are “strong” (large magnitude weight),
+          others “weak” (small weight). Some are excitatory (positive weight), others inhibitory (negative weight).
+          A neuron either “fires” or does not (an all-or-nothing spike), which resembles a binary decision.
+        </p>
+      </div>
+
+      <figure>
+        <img loading="lazy" alt="Logistic sigmoid curve"
+             src="https://commons.wikimedia.org/wiki/Special:FilePath/Logistic-curve.svg" />
+        <figcaption>
+          The logistic sigmoid $\sigma(x)$. Source: <a href="https://commons.wikimedia.org/wiki/File:Logistic-curve.svg">Wikimedia Commons</a>.
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- NETWORKS -->
+  <section id="networks">
+    <h2>From one neuron to layers to deep networks</h2>
+
+    <p>
+      One neuron can only compute one feature. The next step is to use <b>many neurons in parallel</b>.
+      A whole layer can learn many different features from the same input.
+    </p>
+
+    <div class="math">
+      <div class="eq-label">One hidden layer (vectorized)</div>
+      $$\mathbf{a}^{(1)} = \mathbf{W}^{(1)}\mathbf{x} + \mathbf{b}^{(1)}$$
+      $$\mathbf{z}^{(1)} = \phi\!\left(\mathbf{a}^{(1)}\right) \quad\text{(apply activation element-wise)}$$
+      $$\mathbf{a}^{(2)} = \mathbf{W}^{(2)}\mathbf{z}^{(1)} + \mathbf{b}^{(2)}$$
+    </div>
+
+    <p class="muted">
+      Notation note: the lecture uses superscripts $(1),(2),\dots,(L)$ for layer index,
+      and often uses $L$ for the total number of layers.
+    </p>
+
+    <div class="callout info">
+      <div class="title">Why matrices?</div>
+      <p style="margin:0;">
+        With multiple neurons per layer, writing sums like $w_1x_1 + \dots + w_Dx_D$ becomes unreadable.
+        Matrices let us compute all neurons’ weighted sums efficiently in one operation.
+      </p>
+    </div>
+
+    <div class="hr"></div>
+
+    <h3>A helpful perspective: “a sequence of feature transformations”</h3>
+    <p>
+      A modern way to think about a deep network:
+      each layer transforms the representation (features) into a new representation.
+      Early layers learn simple patterns; later layers can combine them into more complex ones.
+      This “feature hierarchy” is part of why the field is called <b>deep learning</b>.
+    </p>
+
+    <div class="callout purple">
+      <div class="title">Classic example (as discussed)</div>
+      <p style="margin:0;">
+        In face recognition visualizations: early layers resemble edge detectors, mid layers detect parts (eyes, nose, mouth),
+        and later layers represent entire faces.
+      </p>
+    </div>
+  </section>
+
+  <!-- GEOMETRY -->
+  <section id="geometry">
+    <h2>Neural nets as geometry solvers: why linear models aren’t enough</h2>
+
+    <p>
+      The lecture repeatedly emphasizes: machine learning is a geometry problem.
+      A linear classifier draws a hyperplane; points on different sides get different labels.
+      But many real problems require <b>curved</b> decision boundaries.
+    </p>
+
+    <div class="callout warn">
+      <div class="title">Two ways to make models “more powerful”</div>
+      <ul class="checklist">
+        <li>Add <b>more input features</b> (feature engineering).</li>
+        <li>Add <b>nonlinearity + layers</b> (neural networks) to create curved boundaries automatically.</li>
+      </ul>
+      <p class="mini" style="margin:8px 0 0;">
+        Deep learning reduces the need for manual feature engineering—especially for unstructured data like images, audio, and text.
+      </p>
+    </div>
+
+    <p>
+      If you remove activation functions, a deep “network” collapses into a linear map (a key lecture point):
+      composing linear functions yields another linear function. Nonlinear activations are what make deep nets able to model
+      more complex geometry.
+    </p>
+  </section>
+
+  <!-- ACTIVATIONS -->
+  <section id="activations">
+    <h2>Activation functions: sigmoid → tanh → ReLU (and why)</h2>
+
+    <div class="grid2">
+      <div>
+        <h3>Sigmoid</h3>
+        <p>
+          Sigmoid maps real numbers to $(0,1)$. It is natural for <b>binary outputs</b> interpreted as probabilities.
+          But hidden layers want their activations to be well-behaved for learning.
+        </p>
+
+        <h3>Tanh (hyperbolic tangent)</h3>
+        <p>
+          Tanh is “sigmoid-like” but centered around $0$, producing outputs in $(-1,1)$.
+          This better matches the idea of keeping layer inputs roughly centered (the lecture connects this to standardization).
+        </p>
+
+        <div class="math">
+          <div class="eq-label">Key formulas</div>
+          $$\sigma(x) = \frac{1}{1+e^{-x}}$$
+          $$\tanh(x) = \frac{e^x - e^{-x}}{e^x + e^{-x}}$$
+          <p class="mini" style="margin:6px 0 0;">
+            Exercise idea from the lecture: show $\tanh$ is a scaled/shifted version of sigmoid.
+          </p>
+        </div>
+
+        <h3>ReLU and modern activations</h3>
+        <p>
+          Sigmoid/tanh are smooth, but deep networks historically struggled with them because of
+          <span class="inline-hi orange"><b>vanishing gradients</b></span>.
+          ReLU is not perfectly smooth at $0$, but empirically trains deep nets much better.
+        </p>
+
+        <div class="math">
+          <div class="eq-label">ReLU</div>
+          $$\mathrm{ReLU}(x) = \max(0, x)$$
+        </div>
+
+        <p class="muted">
+          The lecture mentions common variants: <b>Leaky ReLU</b> (small slope for $x&lt;0$),
+          <b>ELU</b>, and <b>Softplus</b>. In practice, many people still use ReLU as a strong default.
+        </p>
+      </div>
+
+      <div>
+        <figure style="margin-bottom: 14px;">
+          <img loading="lazy" alt="Hyperbolic tangent"
+               src="https://commons.wikimedia.org/wiki/Special:FilePath/Hyperbolic_Tangent.svg" />
+          <figcaption>
+            $\tanh(x)$ plot. Source: <a href="https://commons.wikimedia.org/wiki/File:Hyperbolic_Tangent.svg">Wikimedia Commons</a>.
+          </figcaption>
+        </figure>
+
+        <figure>
+          <img loading="lazy" alt="ReLU plot"
+               src="https://commons.wikimedia.org/wiki/Special:FilePath/Activation_rectified_linear.svg" />
+          <figcaption>
+            ReLU “hockey stick” shape. Source: <a href="https://commons.wikimedia.org/wiki/File:Activation_rectified_linear.svg">Wikimedia Commons</a>.
+          </figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- BACKPROP / CHAIN RULE -->
+  <section id="backprop">
+    <h2>How models learn: gradients, chain rule, backprop, and vanishing gradients</h2>
+
+    <p>
+      Training is still “minimize a loss with gradient descent,” but neural networks are compositions of many functions.
+      Backpropagation is essentially the <b>chain rule</b> applied efficiently.
+    </p>
+
+    <div class="grid2">
+      <div>
+        <h3>Gradient descent (high level)</h3>
+        <div class="math">
+          <div class="eq-label">Parameter update</div>
+          $$\theta \leftarrow \theta - \eta \nabla_\theta \mathcal{L}$$
+          <p class="mini" style="margin:6px 0 0;">
+            $\eta$ is the learning rate (a hyperparameter). Too large: divergence. Too small: painfully slow.
+          </p>
+        </div>
+
+        <h3>Chain rule (the key math for backprop)</h3>
+        <p>
+          If $y = f(g(x))$, then
+          $$\frac{dy}{dx} = \frac{dy}{dg}\cdot \frac{dg}{dx}.$$
+          For deeper compositions $f_1(f_2(\dots f_L(x)\dots))$ you multiply many derivatives.
+          This multiplication is exactly what can cause gradients to shrink (vanish).
+        </p>
+
+        <div class="callout danger">
+          <div class="title">Vanishing gradients (as described)</div>
+          <p style="margin:0;">
+            For sigmoid, the derivative is at most $0.25$. Multiplying numbers ≤ $0.25$ many times makes the result tiny,
+            so early layers receive almost no learning signal.
+          </p>
+        </div>
+
+        <div class="math">
+          <div class="eq-label">Sigmoid derivative and the “0.25” fact</div>
+          $$\sigma'(x) = \sigma(x)\left(1-\sigma(x)\right) \le 0.25$$
+          $$0.25^5 \approx 0.00098,\qquad 0.1^5 = 0.00001$$
+        </div>
+
+        <p class="muted">
+          The lecture also mentions an older workaround: layer-wise pretraining (associated with Geoffrey Hinton and students),
+          where layers were trained one at a time. Modern practice usually avoids this by using better activations (like ReLU)
+          and other techniques.
+        </p>
+      </div>
+
+      <figure>
+        <img loading="lazy" alt="Chain rule diagram"
+             src="https://commons.wikimedia.org/wiki/Special:FilePath/Prospects_of_Chain_Rule_of_Differentiations_and_Inverse_of_Multiple_Functions.png" />
+        <figcaption>
+          A diagram related to the chain rule for composite functions.
+          Source: <a href="https://commons.wikimedia.org/wiki/File:Prospects_of_Chain_Rule_of_Differentiations_and_Inverse_of_Multiple_Functions.png">Wikimedia Commons</a>.
+        </figcaption>
+      </figure>
+    </div>
+
+    <div class="callout info">
+      <div class="title">PyTorch connection (important practical note)</div>
+      <p style="margin:0;">
+        You typically do not compute derivatives by hand. PyTorch uses automatic differentiation.
+        Your job is to build the computation graph and call <span class="kbd">loss.backward()</span>.
+      </p>
+    </div>
+  </section>
+
+  <!-- TASKS -->
+  <section id="tasks">
+    <h2>Three tasks &amp; their final-layer activations</h2>
+
+    <p>
+      A key summary from the lecture: regardless of whether the “body” of your network is a linear model, MLP, CNN, or RNN,
+      the <b>final layer</b> follows the task type.
+    </p>
+
+    <div class="kpi">
+      <span class="pill"><b>Regression</b>: identity (no activation)</span>
+      <span class="pill"><b>Binary classification</b>: sigmoid</span>
+      <span class="pill"><b>Multiclass classification</b>: softmax</span>
+    </div>
+
+    <div class="math">
+      <div class="eq-label">Final layer patterns</div>
+      <p class="mini" style="margin:0 0 8px;">(Let $\mathbf{a}$ be the final layer’s <b>logits</b>.)</p>
+      $$\textbf{Regression:}\quad \hat{y} = a$$
+      $$\textbf{Binary:}\quad \hat{p} = \sigma(a)$$
+      $$\textbf{Multiclass:}\quad \hat{\mathbf{p}} = \mathrm{softmax}(\mathbf{a})$$
+    </div>
+
+    <div class="callout warn">
+      <div class="title">“Softmax is more general” (lecture note)</div>
+      <p style="margin:0;">
+        Softmax can handle $K$ classes including $K=2$, but for binary classification sigmoid is simpler and avoids redundancy.
+      </p>
+    </div>
+  </section>
+
+  <!-- SOFTMAX + CE -->
+  <section id="softmax-ce">
+    <h2>Multiclass classification: softmax + cross-entropy (and stability)</h2>
+
+    <div class="grid2">
+      <div>
+        <p>
+          For $K$ classes, the final layer outputs a vector of logits $\mathbf{a}\in\mathbb{R}^K$.
+          We want probabilities: each is nonnegative and they sum to 1. Softmax does exactly that:
+        </p>
+
+        <div class="math">
+          <div class="eq-label">Softmax</div>
+          $$\mathrm{softmax}(\mathbf{a})_k = \frac{e^{a_k}}{\sum_{j=1}^{K} e^{a_j}}.$$
+          <p class="mini" style="margin:6px 0 0;">
+            Numerator is always positive. Denominator sums all numerators, so probabilities sum to 1.
+          </p>
+        </div>
+
+        <p>
+          Training uses <b>cross-entropy loss</b>. A crucial numerical stability tip (mirroring the BCE-with-logits story):
+          you usually don’t apply softmax “manually” before the loss. Frameworks combine these steps to avoid overflow/underflow.
+        </p>
+
+        <div class="callout ok">
+          <div class="title">PyTorch rule of thumb</div>
+          <p style="margin:0;">
+            Use <span class="kbd">nn.CrossEntropyLoss</span> with raw logits (no softmax layer).
+            It internally computes a stable log-softmax + negative log-likelihood.
+          </p>
+        </div>
+
+        <div class="math">
+          <div class="eq-label">Cross-entropy (one-hot target)</div>
+          $$\mathcal{L} = -\sum_{k=1}^{K} y_k \log(\hat{p}_k).$$
+        </div>
+
+        <p>
+          For prediction, you do not need probabilities either: the class with maximum logit is the same class with maximum softmax probability.
+          So prediction is:
+        </p>
+
+        <div class="math">
+          <div class="eq-label">Prediction</div>
+          $$\hat{y}=\arg\max_k a_k.$$
+        </div>
+      </div>
+
+      <div>
+        <figure style="margin-bottom: 14px;">
+          <img loading="lazy" alt="Softmax diagram"
+               src="https://commons.wikimedia.org/wiki/Special:FilePath/Softmax_en.svg" />
+          <figcaption>
+            Softmax maps logits to probabilities. Source: <a href="https://commons.wikimedia.org/wiki/File:Softmax_en.svg">Wikimedia Commons</a>.
+          </figcaption>
+        </figure>
+        <figure>
+          <img loading="lazy" alt="Confusion matrix example"
+               src="https://commons.wikimedia.org/wiki/Special:FilePath/ConfusionMatrixRedBlue.png" />
+          <figcaption>
+            Confusion matrix (binary example). We’ll use the same idea for multiclass (MNIST).
+            Source: <a href="https://commons.wikimedia.org/wiki/File:ConfusionMatrixRedBlue.png">Wikimedia Commons</a>.
+          </figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- IMAGES -->
+  <section id="images">
+    <h2>How images are represented in a computer (RGB, grayscale, quantization, flattening)</h2>
+
+    <p>
+      The lecture transitions from “model” topics to “data” topics: deep learning shines on <b>unstructured data</b>
+      like images, sound, and text. But how does an image become an input vector?
+    </p>
+
+    <h3>RGB: three numbers per pixel</h3>
+    <div class="grid2">
+      <div>
+        <p>
+          A color image has <b>height</b> and <b>width</b>, but each pixel also has color.
+          A common representation is <span class="inline-hi green"><b>RGB</b></span> (Red, Green, Blue).
+          Each pixel stores how much red, green, and blue it contains.
+        </p>
+        <p>
+          So a color image is naturally a 3D tensor:
+          $$A[i,j,k],\quad k\in\{R,G,B\}.$$
+          A dataset of $N$ images becomes a 4D tensor:
+          $$A[n,i,j,k].$$
+        </p>
+
+        <div class="callout info">
+          <div class="title">Quantization (0 to 255)</div>
+          <p style="margin:0;">
+            Pixel intensities are often stored as integers in $\{0,\dots,255\}$ (8 bits per channel).
+            That’s $256^3 \approx 16.8$ million possible RGB colors.
+          </p>
+        </div>
+
+        <p>
+          A quick size estimate from the lecture: a raw $500\times 500$ RGB image stores
+          $500\cdot 500\cdot 3 = 750{,}000$ bytes $\approx 732$ KB. Compression (JPEG/PNG) reduces this significantly.
+        </p>
+
+        <div class="callout warn">
+          <div class="title">Hex colors (web dev connection)</div>
+          <p style="margin:0;">
+            Hex colors like <span class="kbd">#RRGGBB</span> are just the same 8-bit values written in base-16.
+          </p>
+        </div>
+      </div>
+
+      <figure>
+        <img loading="lazy" alt="RGB cube"
+             src="https://commons.wikimedia.org/wiki/Special:FilePath/RGB_color_cube.svg" />
+        <figcaption>
+          RGB color cube visualization. Source: <a href="https://commons.wikimedia.org/wiki/File:RGB_color_cube.svg">Wikimedia Commons</a>.
+        </figcaption>
+      </figure>
+    </div>
+
+    <h3>Grayscale images</h3>
+    <p>
+      If an image has no color channels, you only store one intensity per pixel. Then an image is a 2D array (height × width).
+      MNIST digits are grayscale, so each image is $28\times 28$.
+    </p>
+
+    <h3>Scaling to $[0,1]$ for neural networks</h3>
+    <p>
+      The lecture notes a common preprocessing step: convert uint8 pixel values in $[0,255]$ to floating point values in $[0,1]$.
+      This keeps inputs small and numerically convenient.
+    </p>
+
+    <h3>Flattening: the “dumb but simple” trick</h3>
+    <p>
+      A fully-connected network expects a 2D array of shape $(N, D)$.
+      The lecture’s simple solution: <b>flatten</b> each $28\times 28$ image into a length-$784$ vector
+      (scan pixels left-to-right, top-to-bottom).
+    </p>
+
+    <div class="callout warn">
+      <div class="title">Important practical note</div>
+      <p style="margin:0;">
+        Flattening ignores spatial structure. Convolutional neural networks (CNNs) usually perform better for vision,
+        but flattening is a great first step to learn the training pipeline.
+      </p>
+    </div>
+
+    <div class="grid2" style="margin-top: 1rem;">
+      <div>
+        <h4>Mini example: a $3\times 3$ grayscale image</h4>
+        <p class="note">
+          Think of the image as a matrix $I\in\mathbb{R}^{3\times 3}$.
+          Flattening (also called <i>vectorization</i>) stacks pixels into a vector $x\in\mathbb{R}^{9}$.
+        </p>
+
+        <table class="matrix" aria-label="3 by 3 image matrix">
+          <caption>Image matrix $I$ (each entry is one pixel intensity)</caption>
+          <tbody>
+            <tr><td>$I_{11}$</td><td>$I_{12}$</td><td>$I_{13}$</td></tr>
+            <tr><td>$I_{21}$</td><td>$I_{22}$</td><td>$I_{23}$</td></tr>
+            <tr><td>$I_{31}$</td><td>$I_{32}$</td><td>$I_{33}$</td></tr>
+          </tbody>
+        </table>
+
+        <p class="note" style="margin-top:0.6rem;">
+          A common convention (used in the lecture) is row-major order:
+          $$x = \mathrm{vec}(I) = [I_{11}, I_{12}, I_{13}, I_{21}, I_{22}, I_{23}, I_{31}, I_{32}, I_{33}]^\top.$$
+          In general, for a $H\times W$ grayscale image:
+          $$x_{(i-1)W + j} = I_{ij},\quad 1\le i\le H,\; 1\le j\le W.$$
+        </p>
+      </div>
+
+      <div>
+        <h4>For MNIST: $28\times 28 \to 784$</h4>
+        <p class="note">
+          MNIST is grayscale, so $C=1$. Each sample arrives as a tensor of shape $[B, 28, 28]$ (or sometimes $[B,1,28,28]$),
+          and we reshape it into $[B, 784]$ before sending it into a fully-connected layer.
+        </p>
+
+        <pre><code class="language-python"># x: [B, 28, 28]
+x = x.view(x.size(0), -1)   # [B, 784]  (the “dumb but simple” trick)</code></pre>
+
+        <div class="svgbox" style="margin-top:0.9rem;">
+          <svg viewBox="0 0 640 220" width="100%" role="img" aria-label="Flatten diagram">
+            <defs>
+              <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+                <path d="M0,0 L12,6 L0,12 Z" fill="#6b7280"></path>
+              </marker>
+            </defs>
+
+            <!-- Left grid -->
+            <rect x="20" y="35" width="180" height="150" rx="12" fill="#ffffff" stroke="#d1d5db"/>
+            <text x="110" y="25" text-anchor="middle" font-size="14" fill="#374151">image I</text>
+
+            <!-- 3x3 cells -->
+            <g stroke="#e5e7eb">
+              <line x1="80" y1="35" x2="80" y2="185"/>
+              <line x1="140" y1="35" x2="140" y2="185"/>
+              <line x1="20" y1="85" x2="200" y2="85"/>
+              <line x1="20" y1="135" x2="200" y2="135"/>
+            </g>
+            <g font-size="12" fill="#111827" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace">
+              <text x="50" y="68" text-anchor="middle">p1</text>
+              <text x="110" y="68" text-anchor="middle">p2</text>
+              <text x="170" y="68" text-anchor="middle">p3</text>
+              <text x="50" y="118" text-anchor="middle">p4</text>
+              <text x="110" y="118" text-anchor="middle">p5</text>
+              <text x="170" y="118" text-anchor="middle">p6</text>
+              <text x="50" y="168" text-anchor="middle">p7</text>
+              <text x="110" y="168" text-anchor="middle">p8</text>
+              <text x="170" y="168" text-anchor="middle">p9</text>
+            </g>
+
+            <!-- Arrow -->
+            <line x1="220" y1="110" x2="390" y2="110" stroke="#6b7280" stroke-width="3" marker-end="url(#arrow)"/>
+            <text x="305" y="95" text-anchor="middle" font-size="14" fill="#374151">flatten / reshape</text>
+
+            <!-- Right vector -->
+            <rect x="410" y="35" width="210" height="150" rx="12" fill="#ffffff" stroke="#d1d5db"/>
+            <text x="515" y="25" text-anchor="middle" font-size="14" fill="#374151">vector x = vec(I)</text>
+
+            <!-- Vector slots -->
+            <g stroke="#e5e7eb">
+              <line x1="410" y1="65" x2="620" y2="65"/>
+              <line x1="410" y1="95" x2="620" y2="95"/>
+              <line x1="410" y1="125" x2="620" y2="125"/>
+              <line x1="410" y1="155" x2="620" y2="155"/>
+            </g>
+            <g font-size="12" fill="#111827" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace">
+              <text x="435" y="55">[p1, p2, p3, p4, p5, p6, p7, p8, p9]</text>
+            </g>
+          </svg>
+          <div class="note" style="margin-top:0.5rem;">
+            This is not “feature engineering”—it’s only changing the <i>shape</i> of the data so a dense layer can consume it.
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- MNIST -->
+  
+  <section id="mnist">
+    <h2>MNIST tutorial: multiclass ANN with DataLoader, mini-batches, GPU</h2>
+
+    <figure class="figure" style="margin-top:0.75rem;">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/2/27/MnistExamples.png" alt="Samples from the MNIST handwritten digit dataset">
+      <figcaption>
+        Samples from the MNIST test dataset (each digit is a $28\times 28$ grayscale image). Source: Wikimedia Commons (CC BY-SA 4.0).
+      </figcaption>
+    </figure>
+
+    <div class="grid2">
+
+      <div>
+        <p>
+          MNIST is a classic dataset of handwritten digits (0–9). This is a <b>multiclass classification</b> problem
+          with $K=10$ classes. The training set has $60{,}000$ images and the test set has $10{,}000$ images.
+        </p>
+
+        <div class="callout info">
+          <div class="title">Why mini-batches?</div>
+          <p style="margin:0;">
+            Large datasets may not fit in memory. So we compute loss/gradients on small batches.
+            A batch is a random sample—its gradient is a noisy but useful estimate of the full gradient.
+          </p>
+        </div>
+      </div>
+
+      <figure>
+        <img loading="lazy" alt="MNIST example"
+             src="https://commons.wikimedia.org/wiki/Special:FilePath/MnistExamples.png" />
+        <figcaption>
+          MNIST samples. Source: <a href="https://commons.wikimedia.org/wiki/File:MnistExamples.png">Wikimedia Commons</a>.
+        </figcaption>
+      </figure>
+    </div>
+
+    <h3>PyTorch code: end-to-end (clean baseline)</h3>
+    <p class="muted">
+      This code matches the lecture flow: load MNIST from <span class="kbd">torchvision</span>, scale to $[0,1]$ via <span class="kbd">ToTensor()</span>,
+      flatten to 784 features, build a small feedforward net, train with mini-batches, evaluate with accuracy and confusion matrix.
+    </p>
+
+<pre><code class="language-python">import torch
+import torch.nn as nn
+from torch.utils.data import DataLoader
+from torchvision import datasets, transforms
+
+# -------------------------
+# 1) Data
+# -------------------------
+transform = transforms.ToTensor()  # converts uint8 [0..255] to float32 [0..1]
+
+train_ds = datasets.MNIST(root=".", train=True, transform=transform, download=True)
+test_ds  = datasets.MNIST(root=".", train=False, transform=transform, download=True)
+
+batch_size = 128
+train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
+test_loader  = DataLoader(test_ds, batch_size=batch_size, shuffle=False)
+
+# -------------------------
+# 2) Model (flatten -> FC -> ReLU -> FC)
+# -------------------------
+model = nn.Sequential(
+    nn.Linear(28 * 28, 128),
+    nn.ReLU(),
+    nn.Linear(128, 10)  # logits for 10 classes
+)
+
+# -------------------------
+# 3) Device (GPU if available)
+# -------------------------
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+model.to(device)
+
+# -------------------------
+# 4) Loss + Optimizer
+# -------------------------
+criterion = nn.CrossEntropyLoss()  # expects logits, applies stable log-softmax internally
+optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+
+# -------------------------
+# 5) Train / Eval helpers
+# -------------------------
+def accuracy_from_logits(logits, y):
+    # logits: [B, 10], y: [B]
+    preds = torch.argmax(logits, dim=1)
+    return (preds == y).float().mean().item()
+
+def run_epoch(loader, training: bool):
+    total_loss = 0.0
+    total_correct = 0
+    total_seen = 0
+
+    if training:
+        model.train()
+    else:
+        model.eval()
+
+    for x, y in loader:
+        x = x.to(device)          # [B, 1, 28, 28]
+        y = y.to(device)          # [B]
+
+        x = x.view(x.size(0), -1) # flatten -> [B, 784]
+
+        if training:
+            optimizer.zero_grad()
+
+        with torch.set_grad_enabled(training):
+            logits = model(x)               # [B, 10]
+            loss = criterion(logits, y)
+
+            if training:
+                loss.backward()
+                optimizer.step()
+
+        total_loss += loss.item() * x.size(0)
+        total_correct += (torch.argmax(logits, dim=1) == y).sum().item()
+        total_seen += x.size(0)
+
+    avg_loss = total_loss / total_seen
+    acc = total_correct / total_seen
+    return avg_loss, acc
+
+# -------------------------
+# 6) Training loop
+# -------------------------
+epochs = 10
+for ep in range(1, epochs + 1):
+    train_loss, train_acc = run_epoch(train_loader, training=True)
+    test_loss,  test_acc  = run_epoch(test_loader, training=False)
+    print(f"Epoch {ep:02d} | train loss {train_loss:.4f} acc {train_acc:.4f} | "
+          f"test loss {test_loss:.4f} acc {test_acc:.4f}")
+</code></pre>
+
+    <h3>Confusion matrix and “what does the model confuse?”</h3>
+    <p>
+      The lecture suggests going beyond accuracy: find which digits are confused.
+      A confusion matrix counts how often each true label is predicted as each label.
+      (You often expect large values on the diagonal.)
+    </p>
+
+<pre><code class="language-python">import numpy as np
+from sklearn.metrics import confusion_matrix
+
+model.eval()
+all_preds = []
+all_true = []
+
+with torch.no_grad():
+    for x, y in test_loader:
+        x = x.to(device).view(x.size(0), -1)
+        logits = model(x)
+        preds = torch.argmax(logits, dim=1).cpu().numpy()
+        all_preds.append(preds)
+        all_true.append(y.numpy())
+
+y_pred = np.concatenate(all_preds)
+y_true = np.concatenate(all_true)
+
+cm = confusion_matrix(y_true, y_pred)
+print(cm)  # rows=true labels, cols=pred labels
+</code></pre>
+
+    <div class="callout ok">
+      <div class="title">Lecture-style interpretation idea</div>
+      <p style="margin:0;">
+        If the matrix shows “4 is often predicted as 9”, look at example images:
+        some handwritten 4s really do resemble 9s.
+      </p>
+    </div>
+
+    <p class="mini">
+      Also mentioned: the dataset pipeline uses <span class="kbd">transform=ToTensor()</span>.
+      That’s why printing raw <span class="kbd">train_ds.data</span> shows integers 0–255,
+      but batches from the DataLoader are floats in 0–1.
+    </p>
+  </section>
+
+  <!-- SYNTHETIC -->
+  <section id="synthetic">
+    <h2>Synthetic regression example: why visualization matters (conceptually)</h2>
+
+    <p>
+      The lecture argues that synthetic datasets are valuable because you can <b>see</b> where a model succeeds or fails.
+      For a 2D input $(x_1, x_2)$ you can even visualize the target function as a 3D surface.
+    </p>
+
+    <div class="callout warn">
+      <div class="title">Note about plots</div>
+      <p style="margin:0;">
+        This page avoids generating custom plots (per your request). The code below shows the standard approach,
+        but we do not embed a plot image unless we have a reliable reference image for that exact function.
+      </p>
+    </div>
+
+<pre><code class="language-python">import numpy as np
+import torch
+import torch.nn as nn
+
+# Synthetic data: x in [-3, 3]^2, y = cos(2*x1) + cos(3*x2)
+N = 10_000
+X = (np.random.rand(N, 2) * 6.0) - 3.0
+y = np.cos(2 * X[:, 0]) + np.cos(3 * X[:, 1])
+
+X_t = torch.tensor(X, dtype=torch.float32)
+y_t = torch.tensor(y, dtype=torch.float32).view(-1, 1)
+
+model = nn.Sequential(
+    nn.Linear(2, 128),
+    nn.ReLU(),
+    nn.Linear(128, 1)  # regression: no activation
+)
+
+opt = torch.optim.Adam(model.parameters(), lr=3e-2)
+loss_fn = nn.MSELoss()
+
+for ep in range(200):
+    opt.zero_grad()
+    preds = model(X_t)
+    loss = loss_fn(preds, y_t)
+    loss.backward()
+    opt.step()
+</code></pre>
+  </section>
+
+  <!-- EXPERIMENTATION -->
+  <section id="experimentation">
+    <h2>Hyperparameters: “experimentation, not philosophy”</h2>
+
+    <p>
+      The transcript ends with an important mindset: there is no universal formula for choosing learning rates,
+      number of layers, hidden units, activations, optimizers, etc. These are <b>hyperparameters</b>.
+      You discover what works by testing and observing.
+    </p>
+
+    <div class="callout info">
+      <div class="title">Practical strategy (matches the lecture)</div>
+      <ul class="checklist">
+        <li>Start with common defaults (Adam, ReLU, learning rates like $10^{-3}$).</li>
+        <li>Run experiments; plot loss/accuracy curves; watch for divergence or slow learning.</li>
+        <li>Use literature in your domain as a guide for reasonable ranges.</li>
+        <li>Remember: rules of thumb change; results are empirical.</li>
+      </ul>
+    </div>
+
+    <p class="muted">
+      The “don’t predict the outcome with your mind—run the program” theme is a reminder that deep learning is an experimental science.
+      When you can test an idea quickly, testing beats guessing.
+    </p>
+
+    <div class="callout purple">
+      <div class="title">Optional playground (mentioned in spirit)</div>
+      <p style="margin:0;">
+        Interactive intuition builder: <a href="https://playground.tensorflow.org/" target="_blank" rel="noopener">TensorFlow Playground</a>.
+        Try changing the number of layers/units and watch nonlinear decision boundaries appear.
+      </p>
+    </div>
+  </section>
+
+  <div class="footer">
+    Built as a clean, light-mode HTML tutorial with MathJax and code highlighting. Images embedded from Wikimedia Commons.
+  </div>
+
+</div>
+  <script src="../assets/js/nav.js"></script>
+</body>
+</html>

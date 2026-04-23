@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Part III — Agent Protocols &amp; Integration</title>
+  <link rel="stylesheet" href="../assets/css/book.css" />
+</head>
+<body>
+
+<h1>Part III — Agent Protocols &amp; Integration</h1>
+<p>How modern AI applications connect to tools, data, and other agents.
+Chapters 1–4 are the <strong>MCP track</strong>: from first principles, through
+discovery + remote + auth, into a concrete enterprise pattern, and finally
+the 2025 spec update. Chapter 5 covers Google's <strong>A2A</strong> protocol for
+multi‑agent collaboration. Chapter 6 is a self‑contained JavaScript/TypeScript
+primer used by Chapter 7's LangChain → LangGraph → Flowise journey.</p>
+
+<div class="tr-tip">
+  <strong>Prerequisites</strong>
+  Comfortable with Python and HTTP basics. Part II Chapters 1–3 (FastAPI &amp;
+  Uvicorn, HTTP methods, request mapping) are recommended before the MCP
+  track. The auth deep‑dive (Part II Ch. 6–9, 15) makes Chapters 2 and 4
+  easier to follow.
+</div>
+
+<div class="tr-update">
+  <strong>What changed in 2025</strong>
+  MCP moved from HTTP+SSE to <em>Streamable HTTP</em>, formalized
+  authorization on top of OAuth 2.1, introduced <em>elicitation</em>
+  (server‑initiated input requests), <em>structured tool output</em>,
+  and <em>resource links</em>. Chapter 4 is the focused recap; read it right
+  after the original three MCP chapters.
+</div>
+
+<h2>Chapters in order</h2>
+<ol>
+  <li><a href="01-mcp-fundamentals.html">MCP fundamentals — tools, resources, prompts (DB example)</a></li>
+  <li><a href="02-mcp-discovery-remote-auth.html">MCP discovery, remote servers, authentication</a></li>
+  <li><a href="03-mcp-enterprise-pattern.html">MCP enterprise pattern (FastAPI host → MCP → Salesforce)</a></li>
+  <li><a href="04-mcp-2025-update.html">MCP 2025 update — Streamable HTTP, OAuth 2.1, elicitation <em>(NEW)</em></a></li>
+  <li><a href="05-a2a-protocol.html">A2A — agent‑to‑agent collaboration</a></li>
+  <li><a href="06-javascript-typescript-primer.html">JavaScript &amp; TypeScript primer</a></li>
+  <li><a href="07-langchain-langgraph-flowise.html">LangChain → LangGraph → Flowise</a></li>
+</ol>
+
+<script src="../assets/js/nav.js"></script>
+</body>
+</html>

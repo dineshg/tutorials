@@ -1,0 +1,784 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>CNNs Tutorial — Part 1: Convolution (Mechanics, Padding, Correlation View, Dot-Product View)</title>
+
+  <!-- Light theme + high-contrast code blocks -->
+  <style>
+    :root{
+      --bg:#ffffff;
+      --panel:#f6f8fa;
+      --text:#111827;
+      --muted:#4b5563;
+      --border:#e5e7eb;
+      --accent:#2563eb;
+      --shadow: 0 10px 30px rgba(0,0,0,.06);
+      --radius: 14px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+
+      /* Code blocks (light, readable) */
+      --code-bg: #f8fafc;
+      --code-border: #e2e8f0;
+      --code-text: #0f172a;
+      --code-muted: #475569;
+
+      --btn-bg: #ffffff;
+      --btn-border: #cbd5e1;
+      --btn-text: #0f172a;
+    }
+    html,body{background:var(--bg); color:var(--text); font-family:var(--sans); margin:0;}
+    a{color:var(--accent); text-decoration:none;}
+    a:hover{text-decoration:underline;}
+
+    .wrap{max-width:1100px; margin:0 auto; padding:28px 18px 80px;}
+    header{
+      border:1px solid var(--border);
+      background: linear-gradient(180deg, #ffffff, #fbfdff);
+      box-shadow: var(--shadow);
+      border-radius: var(--radius);
+      padding: 22px 22px 16px;
+    }
+    header h1{margin:0 0 6px; font-size: 28px; letter-spacing:-0.02em;}
+    header p{margin:0; color:var(--muted); line-height:1.55;}
+
+    .chips{margin-top:14px; display:flex; flex-wrap:wrap; gap:8px;}
+    .chip{
+      font-size:13px; color:#0f172a;
+      border:1px solid var(--border);
+      background: #fff;
+      padding:6px 10px;
+      border-radius: 999px;
+    }
+
+    nav{
+      margin-top:18px;
+      padding-top:14px;
+      border-top:1px solid var(--border);
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px 14px;
+      font-size:14px;
+    }
+    nav a{color:#0f172a;}
+
+    section{
+      margin-top:18px;
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      background:#fff;
+      box-shadow: var(--shadow);
+      padding: 18px 18px 10px;
+    }
+    section h2{margin:0 0 10px; font-size:20px; letter-spacing:-0.01em;}
+    section h3{margin:16px 0 8px; font-size:16px;}
+    p,li{line-height:1.7; color:#111827;}
+    .muted{color:var(--muted);}
+    .callout{
+      background: var(--panel);
+      border:1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 12px;
+      margin: 12px 0;
+    }
+
+    .grid{display:grid; grid-template-columns: 1fr; gap: 12px;}
+    @media(min-width: 980px){
+      .grid.two{grid-template-columns: 1fr 1fr;}
+      .grid.three{grid-template-columns: 1fr 1fr 1fr;}
+    }
+
+    figure{
+      margin: 12px 0;
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius: 14px;
+      overflow:hidden;
+    }
+    figure img{width:100%; height:auto; display:block; background:#fff;}
+    figcaption{
+      padding: 10px 12px;
+      font-size: 13px;
+      color: var(--muted);
+      border-top:1px solid var(--border);
+    }
+
+    .pill{
+      display:inline-block;
+      background:#eef2ff;
+      color:#1e3a8a;
+      border:1px solid #e0e7ff;
+      padding:2px 8px;
+      border-radius:999px;
+      font-size:12px;
+      vertical-align:middle;
+    }
+    .hr{height:1px; background:var(--border); margin:12px 0;}
+    .small{font-size:13px;}
+
+    /* Inline code */
+    :not(pre) > code{
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      padding: 2px 6px;
+      border-radius: 8px;
+      font-family: var(--mono);
+      font-size: 0.95em;
+      color: #0f172a;
+      white-space: nowrap;
+    }
+
+    /* Code blocks with header + copy button */
+    .codewrap{
+      border: 1px solid var(--code-border);
+      border-radius: 14px;
+      overflow: hidden;
+      background: var(--code-bg);
+      margin: 12px 0;
+    }
+    .codebar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--code-border);
+      background: #ffffff;
+    }
+    .codebar .label{
+      font-size: 12px;
+      color: var(--code-muted);
+      font-family: var(--mono);
+    }
+    .codebar button{
+      font-size:12px;
+      border: 1px solid var(--btn-border);
+      background: var(--btn-bg);
+      color: var(--btn-text);
+      padding: 6px 10px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    .codebar button:hover{border-color:#94a3b8;}
+
+    pre[class*="language-"]{
+      margin:0;
+      background: var(--code-bg) !important;
+      color: var(--code-text) !important;
+      padding: 14px 14px;
+      overflow:auto;
+      line-height: 1.65;
+      font-size: 13px;
+    }
+    code[class*="language-"]{
+      font-family: var(--mono);
+      color: var(--code-text) !important;
+      text-shadow: none !important;
+    }
+
+    /* Small table for hand-worked example */
+    table{
+      width:100%;
+      border-collapse:collapse;
+      margin:10px 0 14px;
+      font-size:14px;
+    }
+    th,td{
+      border:1px solid var(--border);
+      padding:8px 10px;
+      text-align:center;
+    }
+    th{background:#f8fafc;}
+  </style>
+
+  <!-- Prism syntax highlighting (light) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-python.min.js"></script>
+
+  <!-- MathJax for equations -->
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['\\(','\\)'], ['$', '$']],
+        displayMath: [['\\[','\\]']]
+      },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+  <!-- Copy buttons -->
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      document.querySelectorAll(".codewrap").forEach(wrap => {
+        const btn = wrap.querySelector("button[data-copy]");
+        const pre = wrap.querySelector("pre");
+        if (!btn || !pre) return;
+        btn.addEventListener("click", async () => {
+          try{
+            await navigator.clipboard.writeText(pre.innerText);
+            const old = btn.textContent;
+            btn.textContent = "Copied!";
+            setTimeout(()=>btn.textContent = old, 900);
+          }catch(e){
+            btn.textContent = "Copy failed";
+            setTimeout(()=>btn.textContent = "Copy", 900);
+          }
+        });
+      });
+    });
+  </script>
+  <link rel="stylesheet" href="../assets/css/book.css">
+</head>
+
+<body>
+  <div class="wrap">
+    <header>
+      <h1>CNNs — Part 1: Convolution</h1>
+      <p>
+        A self-contained, practical introduction to convolution as the core operation behind convolutional neural networks (CNNs).
+        You’ll learn the mechanics (just multiply + add), output sizing, padding modes, and why deep-learning “convolution” is really
+        <b>cross-correlation</b>. Online visuals are embedded inline.
+      </p>
+
+      <div class="chips">
+        <span class="chip">Input ⊛ Kernel → Output</span>
+        <span class="chip">Multiply + Add</span>
+        <span class="chip">Valid vs Same vs Full</span>
+        <span class="chip">Cross-correlation vs convolution</span>
+        <span class="chip">Dot product = similarity</span>
+        <span class="chip">Sliding pattern finder</span>
+      </div>
+
+      <nav>
+        <a href="#intuition">Qualitative intuition</a>
+        <a href="#mechanics">Hand-worked example</a>
+        <a href="#size">Output size & modes</a>
+        <a href="#pseudocode">Pseudocode & direct implementation</a>
+        <a href="#equation">Convolution equation</a>
+        <a href="#corr">Cross-correlation vs convolution</a>
+        <a href="#dot">Dot product / cosine similarity view</a>
+        <a href="#matrix">Convolution as matrix multiplication</a>
+        <a href="#torch">PyTorch conv2d quickstart</a>
+        <a href="#credits">Online plots used</a>
+      </nav>
+    </header>
+
+    <section id="intuition">
+      <h2>1) Convolution as an image modifier</h2>
+      <p>
+        Convolution takes an <b>input image</b> and a small <b>filter</b> (also called a <b>kernel</b>) and produces an <b>output image</b>.
+        We write this conceptually as:
+      </p>
+      <p>
+        \[
+          \text{output} = \text{input} \;\star\; \text{kernel}
+        \]
+      </p>
+      <p class="muted">
+        In math you often see a star/asterisk for convolution. In code, convolution is not written with <code>*</code> because <code>*</code>
+        already means multiplication.
+      </p>
+
+      <div class="grid two">
+        <div class="callout">
+          <p style="margin:0;">
+            <b>Example A: blurring</b><br/>
+            Using a blur kernel (like Gaussian blur) produces a softened image.
+          </p>
+        </div>
+        <div class="callout">
+          <p style="margin:0;">
+            <b>Example B: edge detection</b><br/>
+            Using an edge kernel produces strong responses at boundaries (edges) and low responses elsewhere.
+          </p>
+        </div>
+      </div>
+
+      <figure>
+        <img alt="Gaussian blur demonstration" src="https://upload.wikimedia.org/wikipedia/commons/5/55/Gaussian_blur_effect.png">
+        <figcaption>
+          Blur as a convolution effect (Wikimedia Commons):
+          <a href="https://commons.wikimedia.org/wiki/File:Gaussian_blur_effect.png" target="_blank" rel="noopener">Gaussian_blur_effect.png</a>
+        </figcaption>
+      </figure>
+
+      <figure>
+        <img alt="Sobel operator result on an image (edge detection)" src="https://upload.wikimedia.org/wikipedia/commons/9/9b/Sobel_operator_result_on_gray_image.png">
+        <figcaption>
+          Edge detection via convolution-like filtering (Sobel) (Wikimedia Commons):
+          <a href="https://commons.wikimedia.org/wiki/File:Sobel_operator_result_on_gray_image.png" target="_blank" rel="noopener">Sobel_operator_result_on_gray_image.png</a>
+        </figcaption>
+      </figure>
+
+      <div class="callout">
+        <p style="margin:0;">
+          <b>Why filters matter:</b> the kernel determines what transformation happens. Change the kernel → you change the effect.
+          CNNs learn these kernels automatically from data using gradient-based optimization.
+        </p>
+      </div>
+    </section>
+
+    <section id="mechanics">
+      <h2>2) Convolution mechanics: just multiply + add</h2>
+
+      <p>
+        Convolution “slides” the kernel over the image. At each position, it performs element-wise multiplication
+        and sums the result. That single number becomes one pixel in the output.
+      </p>
+
+      <h3>Tiny worked example</h3>
+      <p class="muted">
+        We’ll use a 4×4 input and a 2×2 kernel. (Small on purpose so you can verify by hand.)
+      </p>
+
+      <div class="grid two">
+        <div>
+          <p><b>Input image</b> \(A\)</p>
+          <table aria-label="Input 4x4 matrix">
+            <tr><td>0</td><td>10</td><td>10</td><td>0</td></tr>
+            <tr><td>20</td><td>30</td><td>30</td><td>20</td></tr>
+            <tr><td>10</td><td>20</td><td>20</td><td>10</td></tr>
+            <tr><td>0</td><td>5</td><td>5</td><td>0</td></tr>
+          </table>
+        </div>
+        <div>
+          <p><b>Kernel</b> \(W\)</p>
+          <table aria-label="Kernel 2x2 matrix">
+            <tr><td>1</td><td>0</td></tr>
+            <tr><td>0</td><td>2</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <p><b>First output (top-left):</b> place the kernel at the top-left 2×2 patch of the image:</p>
+      <p>
+        \[
+          1\cdot 0 + 0\cdot 10 + 0\cdot 20 + 2\cdot 30 = 60
+        \]
+      </p>
+
+      <p><b>Next output (shift right by 1):</b></p>
+      <p>
+        \[
+          1\cdot 10 + 0\cdot 10 + 0\cdot 30 + 2\cdot 30 = 70
+        \]
+      </p>
+
+      <p><b>Next output (shift right again):</b></p>
+      <p>
+        \[
+          1\cdot 10 + 0\cdot 0 + 0\cdot 30 + 2\cdot 20 = 50
+        \]
+      </p>
+
+      <p class="muted">
+        Keep sliding until you can’t move right anymore, then move down one row and repeat. The output values stated in the transcript:
+        \( \begin{bmatrix} 60 & 70 & 50 \\ 60 & 70 & 50 \\ 20 & 30 & 20 \end{bmatrix} \).
+      </p>
+
+      <div class="callout">
+        <p style="margin:0;">
+          <b>Practice:</b> compute the remaining outputs by hand once. If you can do that, you fully understand the mechanics.
+        </p>
+      </div>
+
+      <figure>
+        <img alt="Convolution animation showing a kernel sliding over an image" src="https://upload.wikimedia.org/wikipedia/commons/1/19/2D_Convolution_Animation.gif">
+        <figcaption>
+          Sliding-window convolution visualization (Wikimedia Commons):
+          <a href="https://commons.wikimedia.org/wiki/File:2D_Convolution_Animation.gif" target="_blank" rel="noopener">2D_Convolution_Animation.gif</a>
+        </figcaption>
+      </figure>
+    </section>
+
+    <section id="size">
+      <h2>3) Output size and convolution “modes” (Valid / Same / Full)</h2>
+
+      <p>
+        If the input has height \(H\), width \(W\), and the kernel has height \(K_H\), width \(K_W\),
+        then with <b>no padding</b> and stride 1, the output size is:
+      </p>
+
+      <p>
+        \[
+          H_{\text{out}} = H - K_H + 1,\quad W_{\text{out}} = W - K_W + 1
+        \]
+      </p>
+
+      <p class="muted">
+        This is the “valid” mode: you only place the kernel where it fully fits inside the input.
+      </p>
+
+      <h3>Padding: making output the same size</h3>
+      <p>
+        If you pad the input with zeros around the border, you allow the kernel to slide beyond the original edges.
+        With padding \(P_H, P_W\) and stride 1:
+      </p>
+      <p>
+        \[
+          H_{\text{out}} = H + 2P_H - K_H + 1,\quad W_{\text{out}} = W + 2P_W - K_W + 1
+        \]
+      </p>
+
+      <p>
+        To get <b>same</b> output size (i.e., \(H_{\text{out}}=H\), \(W_{\text{out}}=W\)) with odd square kernels
+        (like \(3\times 3\), \(5\times 5\)), choose:
+      </p>
+      <p>
+        \[
+          P = \frac{K-1}{2}
+        \]
+      </p>
+
+      <h3>Full mode: “catch everything”</h3>
+      <p class="muted">
+        If you keep padding so the kernel can slide over every partial overlap, the 1D output length becomes:
+        \[
+          n_{\text{out}} = n + k - 1
+        \]
+        (and similarly in 2D). This is the classic “full” convolution size.
+      </p>
+
+      <figure>
+        <img alt="Convolution padding illustration" src="https://upload.wikimedia.org/wikipedia/commons/3/3b/Convolution_arithmetic_padding_strides.png">
+        <figcaption>
+          Padding/stride output arithmetic illustration (Wikimedia Commons):
+          <a href="https://commons.wikimedia.org/wiki/File:Convolution_arithmetic_padding_strides.png" target="_blank" rel="noopener">
+            Convolution_arithmetic_padding_strides.png
+          </a>
+        </figcaption>
+      </figure>
+
+      <div class="callout">
+        <p style="margin:0;">
+          <b>Practical note:</b> images “in the wild” are often rectangular, but kernels are usually square by convention
+          (e.g., 3×3, 5×5).
+        </p>
+      </div>
+    </section>
+
+    <section id="pseudocode">
+      <h2>4) Pseudocode and a direct implementation</h2>
+
+      <p>
+        A straightforward 2D convolution (valid, stride 1) can be written with four loops:
+        two for output position \((i,j)\) and two for kernel position \((i',j')\).
+      </p>
+
+      <div class="codewrap">
+        <div class="codebar">
+          <span class="label">python • naive 2D “deep learning style” convolution (cross-correlation), valid mode</span>
+          <button data-copy type="button" data-copy>Copy</button>
+        </div>
+<pre class="language-python"><code>import numpy as np
+
+def corr2d_valid(A, W):
+    """
+    Cross-correlation (deep-learning 'convolution') in 2D, valid mode, stride=1.
+    A: (H, W) input
+    W: (Kh, Kw) kernel
+    returns: (H-Kh+1, W-Kw+1)
+    """
+    H, W_in = A.shape
+    Kh, Kw = W.shape
+    H_out = H - Kh + 1
+    W_out = W_in - Kw + 1
+    out = np.zeros((H_out, W_out), dtype=float)
+
+    for i in range(H_out):
+        for j in range(W_out):
+            s = 0.0
+            for ii in range(Kh):
+                for jj in range(Kw):
+                    s += A[i + ii, j + jj] * W[ii, jj]
+            out[i, j] = s
+    return out
+
+A = np.array([[0,10,10,0],
+              [20,30,30,20],
+              [10,20,20,10],
+              [0, 5, 5, 0]], dtype=float)
+
+W = np.array([[1,0],
+              [0,2]], dtype=float)
+
+print(corr2d_valid(A, W))</code></pre>
+      </div>
+
+      <p class="muted">
+        This code matches the lecture’s “multiply + add” definition and produces the 3×3 output for the 4×4 input with a 2×2 kernel.
+      </p>
+    </section>
+
+    <section id="equation">
+      <h2>5) The defining equation (2D)</h2>
+
+      <p>
+        The 2D deep-learning version (cross-correlation) at output location \((i,j)\) is:
+      </p>
+
+      <p>
+        \[
+          (A \star W)_{i,j} = \sum_{i'=0}^{K_H-1}\sum_{j'=0}^{K_W-1} A_{i+i',\, j+j'} \, W_{i',\, j'}
+        \]
+      </p>
+
+      <p class="muted">
+        This equation is exactly what the nested loops compute.
+      </p>
+    </section>
+
+    <section id="corr">
+      <h2>6) “Convolution” vs cross-correlation (and why deep learning uses the latter)</h2>
+
+      <p>
+        In classic signal processing, convolution flips the kernel (reverses its orientation). In deep learning libraries,
+        the operation called “convolution” typically does <b>not</b> flip the kernel.
+      </p>
+
+      <div class="grid two">
+        <div class="callout">
+          <p style="margin:0;">
+            <b>Cross-correlation (deep learning style):</b><br/>
+            slide the kernel as-is
+          </p>
+        </div>
+        <div class="callout">
+          <p style="margin:0;">
+            <b>Convolution (signal processing):</b><br/>
+            slide a flipped kernel
+          </p>
+        </div>
+      </div>
+
+      <p>
+        If the kernel is learned automatically (as in CNN training), the flip convention doesn’t change what the model can learn:
+        the optimizer can learn flipped patterns just as easily.
+      </p>
+
+      <figure>
+        <img alt="Cross-correlation illustration" src="https://upload.wikimedia.org/wikipedia/commons/1/1b/Cross-correlation_animation.gif">
+        <figcaption>
+          Cross-correlation sliding visualization (Wikimedia Commons):
+          <a href="https://commons.wikimedia.org/wiki/File:Cross-correlation_animation.gif" target="_blank" rel="noopener">Cross-correlation_animation.gif</a>
+        </figcaption>
+      </figure>
+
+      <div class="callout">
+        <p style="margin:0;">
+          <b>Takeaway:</b> it’s helpful to think of CNN kernels as <b>patterns</b> and the operation as a sliding
+          <b>pattern matcher</b>.
+        </p>
+      </div>
+    </section>
+
+    <section id="dot">
+      <h2>7) Convolution as a sliding dot product (similarity / correlation view)</h2>
+
+      <p>
+        A dot product between vectors \(a\) and \(b\) can be written in two equivalent ways:
+      </p>
+
+      <p>
+        \[
+          a \cdot b = \sum_{i=1}^d a_i b_i
+        \]
+      </p>
+      <p>
+        \[
+          a \cdot b = \|a\| \, \|b\| \cos(\theta)
+        \]
+      </p>
+
+      <p>
+        The cosine term \(\cos(\theta)\) is a similarity measure:
+      </p>
+      <ul>
+        <li>\(\theta=0^\circ \Rightarrow \cos(\theta)=1\) (most similar)</li>
+        <li>\(\theta=90^\circ \Rightarrow \cos(\theta)=0\) (orthogonal / unrelated)</li>
+        <li>\(\theta=180^\circ \Rightarrow \cos(\theta)=-1\) (opposite)</li>
+      </ul>
+
+      <figure>
+        <img alt="Dot product geometric interpretation" src="https://upload.wikimedia.org/wikipedia/commons/3/3e/Dot_Product.svg">
+        <figcaption>
+          Geometric view of dot product (Wikimedia Commons):
+          <a href="https://commons.wikimedia.org/wiki/File:Dot_Product.svg" target="_blank" rel="noopener">Dot_Product.svg</a>
+        </figcaption>
+      </figure>
+
+      <p>
+        Convolution/correlation is essentially the same dot-product idea, but repeated over all image locations:
+      </p>
+      <ol>
+        <li>take a local patch of the image (same shape as kernel)</li>
+        <li>compute dot product with the kernel</li>
+        <li>store result in output at that location</li>
+      </ol>
+
+      <div class="callout">
+        <p style="margin:0;">
+          <b>Pattern-finder interpretation:</b> the kernel encodes a pattern.
+          Sliding it across the image asks: “how similar is this patch to my pattern?” High response → pattern present.
+        </p>
+      </div>
+
+      <h3>Cosine similarity vs Pearson correlation (conceptual link)</h3>
+      <p class="muted">
+        Pearson correlation looks like cosine similarity but with mean subtraction. That’s another reason the word “correlation”
+        is a helpful mental model for what CNN filters do.
+      </p>
+    </section>
+
+    <section id="matrix">
+      <h2>8) Convolution as matrix multiplication (1D “Toeplitz” view)</h2>
+
+      <p>
+        In 1D, a length-\(n\) input \(a=[a_1,a_2,\dots,a_n]\) convolved (in deep-learning style) with a length-\(k\) kernel
+        \(w=[w_1,\dots,w_k]\) produces:
+      </p>
+
+      <p>
+        \[
+          b_i = \sum_{i'=1}^{k} a_{i+i'-1}\, w_{i'} \quad \text{for } i=1,\dots,n-k+1
+        \]
+      </p>
+
+      <p>
+        You can implement the same operation by building a matrix that repeats and shifts the kernel across rows
+        (a Toeplitz-like matrix), then multiplying by the input vector. This shows convolution is a <b>linear operation</b>.
+      </p>
+
+      <div class="callout">
+        <p style="margin:0;">
+          <b>Why we don’t do this in practice:</b> the equivalent matrix is huge because it repeats kernel parameters many times.
+          CNNs avoid this by storing the small kernel once and reusing it everywhere (parameter sharing).
+        </p>
+      </div>
+
+      <div class="codewrap">
+        <div class="codebar">
+          <span class="label">python • 1D convolution via explicit matrix multiplication (teaching only)</span>
+          <button data-copy type="button" data-copy>Copy</button>
+        </div>
+<pre class="language-python"><code>import numpy as np
+
+def conv1d_via_matrix(a, w):
+    a = np.asarray(a, dtype=float)
+    w = np.asarray(w, dtype=float)
+    n = a.size
+    k = w.size
+    out_len = n - k + 1
+
+    # Build "convolution matrix" M of shape (out_len, n)
+    M = np.zeros((out_len, n), dtype=float)
+    for i in range(out_len):
+        M[i, i:i+k] = w  # place kernel in row i, shifted right by i
+
+    b = M @ a
+    return b, M
+
+a = [1, 2, 3, 4]
+w = [10, 100]
+b, M = conv1d_via_matrix(a, w)
+
+print("M=\n", M)
+print("b=", b)</code></pre>
+      </div>
+    </section>
+
+    <section id="torch">
+      <h2>9) PyTorch conv2d quickstart (what CNN layers actually do)</h2>
+
+      <p>
+        A CNN layer applies many kernels to an input. In PyTorch:
+      </p>
+      <ul>
+        <li>input tensor shape: \((N, C_{\text{in}}, H, W)\)</li>
+        <li>output tensor shape: \((N, C_{\text{out}}, H_{\text{out}}, W_{\text{out}})\)</li>
+        <li>weights shape: \((C_{\text{out}}, C_{\text{in}}, K_H, K_W)\)</li>
+      </ul>
+
+      <div class="callout">
+        <p style="margin:0;">
+          <b>Important:</b> this is still “multiply + add”, just extended across channels and many filters.
+        </p>
+      </div>
+
+      <figure>
+        <img alt="Conv layer with multiple channels illustration" src="https://upload.wikimedia.org/wikipedia/commons/6/63/Typical_cnn.png">
+        <figcaption>
+          CNN concept diagram (Wikimedia Commons):
+          <a href="https://commons.wikimedia.org/wiki/File:Typical_cnn.png" target="_blank" rel="noopener">Typical_cnn.png</a>
+        </figcaption>
+      </figure>
+
+      <div class="codewrap">
+        <div class="codebar">
+          <span class="label">python • minimal conv2d example (demonstrates shapes, padding, valid vs same-like)</span>
+          <button data-copy type="button" data-copy>Copy</button>
+        </div>
+<pre class="language-python"><code>import torch
+import torch.nn as nn
+
+# N=1 image, Cin=1 channel, H=W=4
+x = torch.tensor([[[[0., 10., 10., 0.],
+                    [20., 30., 30., 20.],
+                    [10., 20., 20., 10.],
+                    [0.,  5.,  5.,  0.]]]])
+
+# One output channel, one input channel, kernel 2x2
+conv = nn.Conv2d(in_channels=1, out_channels=1, kernel_size=2, bias=False)
+
+# Manually set weights to match the earlier kernel [[1,0],[0,2]]
+with torch.no_grad():
+    conv.weight[:] = torch.tensor([[[[1., 0.],
+                                     [0., 2.]]]])
+
+y_valid = conv(x)              # padding=0 by default -> "valid"
+print("valid out shape:", y_valid.shape)
+print(y_valid[0,0])
+
+# If you want "same" output size, you typically pad (for odd kernels).
+# Here kernel is 2x2; "same" is less symmetric. We'll show padding=1 anyway:
+conv_pad = nn.Conv2d(1, 1, kernel_size=2, padding=1, bias=False)
+with torch.no_grad():
+    conv_pad.weight[:] = conv.weight
+
+y_padded = conv_pad(x)
+print("padded out shape:", y_padded.shape)
+print(y_padded[0,0])</code></pre>
+      </div>
+
+      <p class="muted">
+        This example uses PyTorch’s deep-learning “convolution” (cross-correlation). The values match the hand computation for valid mode.
+      </p>
+    </section>
+
+    <section id="credits">
+      <h2>Online visuals used (inline)</h2>
+      <ul class="small">
+        <li>Gaussian blur effect: <a href="https://commons.wikimedia.org/wiki/File:Gaussian_blur_effect.png" target="_blank" rel="noopener">Gaussian_blur_effect.png</a></li>
+        <li>Sobel edge result: <a href="https://commons.wikimedia.org/wiki/File:Sobel_operator_result_on_gray_image.png" target="_blank" rel="noopener">Sobel_operator_result_on_gray_image.png</a></li>
+        <li>2D convolution animation: <a href="https://commons.wikimedia.org/wiki/File:2D_Convolution_Animation.gif" target="_blank" rel="noopener">2D_Convolution_Animation.gif</a></li>
+        <li>Padding/stride arithmetic: <a href="https://commons.wikimedia.org/wiki/File:Convolution_arithmetic_padding_strides.png" target="_blank" rel="noopener">Convolution_arithmetic_padding_strides.png</a></li>
+        <li>Cross-correlation animation: <a href="https://commons.wikimedia.org/wiki/File:Cross-correlation_animation.gif" target="_blank" rel="noopener">Cross-correlation_animation.gif</a></li>
+        <li>Dot product geometry: <a href="https://commons.wikimedia.org/wiki/File:Dot_Product.svg" target="_blank" rel="noopener">Dot_Product.svg</a></li>
+        <li>CNN diagram: <a href="https://commons.wikimedia.org/wiki/File:Typical_cnn.png" target="_blank" rel="noopener">Typical_cnn.png</a></li>
+      </ul>
+
+      <div class="hr"></div>
+      <p class="muted small">
+        This HTML is designed to be self-sufficient: equations render via MathJax CDN, code blocks are high-contrast with copy buttons,
+        and plots/animations are embedded from online sources.
+      </p>
+    </section>
+
+  </div>
+  <script src="../assets/js/nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tutorial: Stop confusing Tenant Isolation vs IAM vs AD Groups</title>
+    <!-- Highlight.js for multi-colored code blocks -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background-color: #f9f9f9;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        h1 { color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 30px; }
+        h2 { color: #34495e; margin-top: 50px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        h3 { color: #455a64; margin-top: 30px; font-weight: 600; }
+        h4 { color: #546e7a; margin-top: 20px; font-weight: 600; }
+        
+        ul, ol { margin-bottom: 20px; padding-left: 25px; }
+        li { margin-bottom: 8px; }
+        
+        /* Inline code styling */
+        code:not(pre code) {
+            background-color: #f0f0f0;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+            font-size: 0.9em;
+            color: #d63384;
+        }
+        
+        /* Block code styling */
+        pre {
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 20px 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .status-check { list-style-type: none; padding-left: 0; }
+        .status-check li { margin-bottom: 10px; }
+        .success { color: #2e7d32; font-weight: bold; }
+        .error { color: #c62828; font-weight: bold; }
+        
+        hr { border: 0; border-top: 1px solid #e0e0e0; margin: 50px 0; }
+        
+        .mental-model {
+            background-color: #e3f2fd;
+            border-left: 5px solid #2196f3;
+            padding: 20px;
+            border-radius: 4px;
+            margin: 30px 0;
+        }
+    </style>
+  <link rel="stylesheet" href="../assets/css/book.css">
+</head>
+<body>
+
+<div class="container">
+
+    <h1>Tutorial: Stop confusing Tenant Isolation vs IAM vs AD Groups</h1>
+
+    <p>You’re dealing with three different “who are you / what can you access” systems that often get mixed up:</p>
+    <ol>
+        <li><strong>Application tenancy</strong> (<code>tenant_id</code>, <code>user_id</code>) → your SaaS data isolation</li>
+        <li><strong>Cloud IAM</strong> → who can see/use GCP resources (Console, buckets, secrets)</li>
+        <li><strong>Org group gating</strong> (AD/Workspace groups) → who is allowed to use your app at all</li>
+    </ol>
+
+    <p>They can interact, but they’re not the same thing.</p>
+
+    <hr>
+
+    <div class="mental-model">
+        <h2>The one-sentence mental model</h2>
+        <ul>
+            <li><strong>IAM</strong> controls access to GCP resources (projects, buckets, secrets).</li>
+            <li><strong>Tenancy</strong> controls access to your app’s data (documents, rows, search results).</li>
+            <li><strong>AD/Group gating</strong> controls who can even use the app (coarse allowlist), before tenancy even matters.</li>
+        </ul>
+    </div>
+
+    <hr>
+
+    <h2>Scenario 1 — Normal end user uses your app (tenant isolation)</h2>
+
+    <h3>Goal</h3>
+    <p>User can only access their tenant’s documents, even though all tenants share the same backend + databases.</p>
+
+    <h3>Step-by-step</h3>
+    <ol>
+        <li>
+            <strong>User signs in with Google Workspace</strong>
+            <ul><li>React uses OIDC (Auth Code + PKCE).</li></ul>
+        </li>
+        <li>
+            <strong>React receives an access token</strong>
+            <ul><li>This is the user’s “proof” for your API.</li></ul>
+        </li>
+        <li>
+            <strong>React calls your backend</strong>
+            <ul><li>Every call includes:</li></ul>
+            <pre><code class="language-http">Authorization: Bearer &lt;access_token&gt;</code></pre>
+        </li>
+        <li>
+            <strong>Backend validates token</strong>
+            <ul><li>signature + issuer + audience + expiry.</li></ul>
+        </li>
+        <li>
+            <strong>Backend maps token → identity</strong>
+            <ul>
+                <li><code>user_id = claims["sub"]</code></li>
+                <li><code>tenant_id = mapping(...)</code> (domain mapping or DB lookup)</li>
+            </ul>
+        </li>
+        <li>
+            <strong>Backend scopes all data access by tenant</strong>
+            <ul>
+                <li>DB queries: <code>WHERE tenant_id = ...</code></li>
+                <li>Search queries: tenant filter</li>
+                <li>Jobs: store <code>tenant_id</code> and enforce later</li>
+            </ul>
+        </li>
+    </ol>
+
+    <h3>What this means</h3>
+    <ul class="status-check">
+        <li><span class="success">✅</span> Tenant isolation is enforced inside your app + DB/search rules.</li>
+        <li><span class="error">🚫</span> End users do not need GCP Console access or IAM permissions.</li>
+    </ul>
+
+    <hr>
+
+    <h2>Scenario 2 — Internal employee sees buckets in GCP Console (IAM)</h2>
+
+    <h3>Goal</h3>
+    <p>Some employees can see/modify certain buckets/projects, others cannot.</p>
+
+    <h3>Step-by-step</h3>
+    <ol>
+        <li>
+            <strong>Employee logs into GCP Console</strong>
+            <ul><li>They are a human principal.</li></ul>
+        </li>
+        <li>
+            <strong>GCP checks IAM bindings</strong>
+            <ul><li>Example: <code>group:platform-admins@company.com</code> has <code>roles/storage.admin</code> on a project.</li></ul>
+        </li>
+        <li>
+            <strong>Console shows only permitted resources</strong>
+            <ul><li>If they lack <code>storage.buckets.list</code> or equivalent permissions, the bucket won’t show / access denied.</li></ul>
+        </li>
+    </ol>
+
+    <h3>What this means</h3>
+    <ul class="status-check">
+        <li><span class="success">✅</span> Console visibility = Cloud IAM (users/groups/roles on org/folder/project/bucket).</li>
+        <li><span class="error">🚫</span> This is unrelated to your app’s <code>tenant_id</code>.</li>
+    </ul>
+    <p>The GCP Console is the cloud control plane, not your SaaS tenancy system.</p>
+
+    <hr>
+
+    <h2>Scenario 3 — App is accessible only to an AD group (org allowlist gate)</h2>
+
+    <h3>Goal</h3>
+    <p>Only users in an org group (from Active Directory) can use the app at all.</p>
+
+    <h3>Step-by-step</h3>
+    <ol>
+        <li>
+            <strong>AD group exists</strong>
+            <ul><li>e.g. <code>DocQA-Users</code></li></ul>
+        </li>
+        <li>
+            <strong>Group is synced/federated into Google Workspace</strong>
+            <ul><li>e.g. Google Group: <code>docqa-users@company.com</code></li></ul>
+        </li>
+        <li>
+            <strong>User signs in with Google (OIDC)</strong>
+        </li>
+        <li>
+            <strong>React calls <code>/auth/bootstrap</code> (or <code>/me</code>) with:</strong>
+            <pre><code class="language-http">Authorization: Bearer &lt;access_token&gt;</code></pre>
+        </li>
+        <li>
+            <strong>Backend checks two things:</strong>
+            <ul>
+                <li>token is valid</li>
+                <li>user is in <code>docqa-users@company.com</code></li>
+            </ul>
+        </li>
+        <li>
+            <strong>If allowed: backend does tenant mapping + provisioning</strong>
+            <ul>
+                <li>determine <code>tenant_id</code></li>
+                <li>create user row if missing</li>
+                <li>return identity</li>
+            </ul>
+        </li>
+    </ol>
+
+    <h3>What this means</h3>
+    <ul class="status-check">
+        <li><span class="success">✅</span> Group gating answers: “Can you use the app at all?”</li>
+        <li><span class="success">✅</span> Tenancy answers: “Which tenant’s data can you access?”</li>
+        <li><span class="error">🚫</span> Group gating is not tenancy.</li>
+        <li><span class="error">🚫</span> Group gating is not IAM.</li>
+    </ul>
+
+    <hr>
+
+    <h2>Scenario 3 has two enforcement methods</h2>
+
+    <h3>Method A — Backend enforces group membership (app-level gate)</h3>
+    <h4>How it works</h4>
+    <ul>
+        <li>The backend validates the token and calls an org directory/groups API (or uses cached membership) to answer:</li>
+        <li>“Is <code>alice@company.com</code> in <code>docqa-users@company.com</code>?”</li>
+        <li>Not a member → 403</li>
+        <li>Member → proceed to tenant mapping + provisioning</li>
+    </ul>
+    <h4>Why you’d choose it</h4>
+    <ul>
+        <li>Your backend remains the “source of truth” for access.</li>
+        <li>You can combine it naturally with onboarding/provisioning logic.</li>
+        <li>Works even if you change gateways or hosting.</li>
+    </ul>
+    <h4>Trade-offs</h4>
+    <ul>
+        <li>Backend needs permission to check group membership.</li>
+        <li>You usually cache membership in DB to avoid checking on every request.</li>
+    </ul>
+
+    <h3>Method B — Edge/gateway enforces group membership (Apigee/IAP-style)</h3>
+    <h4>How it works</h4>
+    <ul>
+        <li>An edge layer sits in front of your backend.</li>
+        <li>It verifies the caller identity and enforces a policy: “must be in allowed group”</li>
+        <li>If user is not allowed, the request never reaches FastAPI.</li>
+    </ul>
+    <h4>Why you’d choose it</h4>
+    <ul>
+        <li>Strong perimeter: reduces backend exposure.</li>
+        <li>Central policy for multiple services: auth, rate limits, quotas, logging.</li>
+    </ul>
+    <h4>Trade-offs</h4>
+    <ul>
+        <li>More moving parts.</li>
+        <li>You still typically keep backend checks as a backstop (especially for provisioning + tenant mapping).</li>
+    </ul>
+
+    <h3>Best-practice combo</h3>
+    <ul>
+        <li>Edge gate = front door protection</li>
+        <li>Backend gate = final authority + tenant mapping + provisioning</li>
+        <li>(Defense in depth)</li>
+    </ul>
+
+    <hr>
+
+    <h2>How all three fit together (the “3-lane model”)</h2>
+
+    <h3>Lane A — End-user identity (OIDC token)</h3>
+    <ul>
+        <li>Comes from Google login</li>
+        <li>Arrives as <code>Authorization: Bearer ...</code></li>
+        <li>Used to derive <code>user_id</code>/<code>tenant_id</code></li>
+    </ul>
+
+    <h3>Lane B — Application authorization (tenant isolation)</h3>
+    <ul>
+        <li>DB/search filtering rules using <code>tenant_id</code></li>
+        <li>RLS is a backstop, not the primary identity mechanism</li>
+    </ul>
+
+    <h3>Lane C — Workload identity (service account IAM)</h3>
+    <ul>
+        <li>Backend runs as a service account</li>
+        <li>IAM grants that service account access to infra:</li>
+        <li>Cloud SQL, Cloud Storage, Secret Manager, logging, queues</li>
+        <li>Not tied to the human user</li>
+    </ul>
+
+    <hr>
+
+    <h2>Common mistakes (and fixes)</h2>
+
+    <h3>Mistake 1: “Tenant = IAM”</h3>
+    <p>No. Tenant is inside your app; IAM is for GCP resources.<br>
+    <strong>Fix:</strong> keep end users out of IAM; enforce tenancy in app/DB/search.</p>
+
+    <h3>Mistake 2: “If user is in AD group, they’re tenant X”</h3>
+    <p>Not necessarily. Group is a coarse gate; tenant mapping is separate.<br>
+    <strong>Fix:</strong> group check first, tenant mapping second.</p>
+
+    <h3>Mistake 3: “Users should access buckets directly via IAM”</h3>
+    <p>Usually no for SaaS customers.<br>
+    <strong>Fix:</strong> users access files via your API (or signed URLs); backend uses service account to talk to storage.</p>
+
+    <hr>
+
+    <h2>Bootstrap decision tree (the exact order)</h2>
+    <p><code>/auth/bootstrap</code> (or <code>/me</code>):</p>
+    <ol>
+        <li>Verify token (signature, iss, aud, exp)</li>
+        <li>Check org allowlist (AD/Workspace group) → if fail: 403</li>
+        <li>Map to <code>tenant_id</code> (domain mapping or DB lookup) → if fail: 403</li>
+        <li>Provision user if missing (issuer+sub key, store <code>tenant_id</code>)</li>
+        <li>Return <code>{user_id, tenant_id, is_new_user}</code></li>
+    </ol>
+
+    <p>If you want, I can add a minimal FastAPI <code>/auth/bootstrap</code> example that shows:</p>
+    <ul>
+        <li>token validation hook (mock or real)</li>
+        <li>group gate (stubbed)</li>
+        <li>tenant mapping</li>
+        <li>DB provisioning shape</li>
+    </ul>
+    <p>…but this tutorial should already give you the “no confusion” framework.</p>
+
+</div>
+
+<!-- Script to activate syntax highlighting -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+
+  <script src="../assets/js/nav.js"></script>
+</body>
+</html>

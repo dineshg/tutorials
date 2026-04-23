@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Step 4–5 Tutorial (GCP): Concrete Services, Provisioning Tickets, Latency Targets, and Handling 1000s of Users</title>
+  <style>
+    :root{
+      /* Light theme (default) */
+      --bg:#f7f9fc;
+      --card:rgba(2,6,23,.03);
+      --border:rgba(2,6,23,.10);
+      --text:#0f172a;
+      --muted:#475569;
+
+      --h1:#0f172a;
+      --h2:#1d4ed8;
+      --h3:#0f766e;
+
+      --callout:rgba(15,118,110,.08);
+      --warn:rgba(225,29,72,.08);
+      --ok:rgba(29,78,216,.08);
+    }
+
+    @media (prefers-color-scheme: dark){
+      :root{
+        --bg:#0b1220;
+        --card:rgba(255,255,255,.06);
+        --border:rgba(255,255,255,.12);
+        --text:#e6eaf2;
+        --muted:#a8b3cf;
+
+        --h1:#eaf0ff;
+        --h2:#93c5fd;
+        --h3:#5eead4;
+
+        --callout:rgba(94,234,212,.10);
+        --warn:rgba(255,180,180,.12);
+        --ok:rgba(147,197,253,.12);
+      }
+    }
+
+    body{
+      margin:0;
+      padding:28px 18px;
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height:1.65;
+      color:var(--text);
+      background:
+        radial-gradient(1200px 600px at 20% -10%, rgba(37,99,235,.12), transparent 60%),
+        radial-gradient(900px 500px at 90% 10%, rgba(15,118,110,.10), transparent 55%),
+        var(--bg);
+    }
+
+    @media (prefers-color-scheme: dark){
+      body{
+        background:
+          radial-gradient(1200px 600px at 20% -10%, rgba(97,175,254,.18), transparent 60%),
+          radial-gradient(900px 500px at 90% 10%, rgba(94,234,212,.12), transparent 55%),
+          var(--bg);
+      }
+    }
+
+    .container{
+      max-width: 1140px;
+      margin:0 auto;
+      padding:44px;
+      border:1px solid var(--border);
+      border-radius:14px;
+      background: linear-gradient(180deg, rgba(255,255,255,.85), rgba(255,255,255,.70));
+      box-shadow: 0 10px 30px rgba(2,6,23,.10);
+    }
+
+    @media (prefers-color-scheme: dark){
+      .container{
+        background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+        box-shadow: 0 10px 30px rgba(0,0,0,.35);
+        backdrop-filter: blur(8px);
+      }
+    }
+
+    h1{ margin:0 0 10px; color:var(--h1); letter-spacing:-0.02em; font-size:2.05rem; }
+    .lead{ margin:0 0 18px; color:var(--muted); max-width: 110ch; }
+
+    h2{
+      margin-top:44px;
+      padding-top:22px;
+      border-top:1px solid var(--border);
+      color:var(--h2);
+    }
+    h3{ margin:18px 0 10px; color:var(--h3); font-size:1.08rem; }
+
+    p{ margin:0 0 14px; }
+    ul,ol{ margin:0 0 14px; padding-left:22px; }
+    li{ margin:0 0 8px; }
+
+    .card{
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px 18px 6px;
+      margin: 16px 0 20px;
+    }
+
+    .callout{
+      background: var(--callout);
+      border: 1px solid rgba(94,234,212,.22);
+      border-left: 5px solid var(--h3);
+      padding: 14px 16px;
+      border-radius: 12px;
+      margin: 18px 0;
+    }
+    .warn{
+      background: var(--warn);
+      border: 1px solid rgba(255,180,180,.25);
+      border-left: 5px solid rgba(255,180,180,.9);
+      padding: 14px 16px;
+      border-radius: 12px;
+      margin: 18px 0;
+    }
+    .ok{
+      background: var(--ok);
+      border: 1px solid rgba(147,197,253,.20);
+      border-left: 5px solid rgba(147,197,253,.85);
+      padding: 14px 16px;
+      border-radius: 12px;
+      margin: 18px 0;
+    }
+
+    code{
+      background: rgba(2,6,23,.05);
+      padding: 2px 6px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      color: var(--text);
+      font-size: .92em;
+    }
+
+    @media (prefers-color-scheme: dark){
+      code{
+        background: rgba(255,255,255,.07);
+        color: #ffd6ff;
+      }
+    }
+
+    table{
+      width:100%;
+      border-collapse: collapse;
+      margin: 10px 0 18px;
+      overflow:hidden;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.04);
+    }
+    th,td{
+      text-align:left;
+      padding:10px 12px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      vertical-align: top;
+    }
+    th{ color: var(--h1); font-size: .92rem; }
+    td{ color: var(--text); }
+
+    .grid2{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 10px 0 18px;
+    }
+    @media (max-width: 900px){ .grid2{ grid-template-columns: 1fr; } }
+
+    .box{
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+    }
+    .box .k{
+      color: var(--muted);
+      font-size: .82rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 6px;
+    }
+
+    .pill{
+      display:inline-block;
+      padding: 2px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.05);
+      color: var(--text);
+      font-size: .86rem;
+      margin-right: 6px;
+      margin-bottom: 6px;
+    }
+  </style>
+  <link rel="stylesheet" href="../assets/css/book.css">
+</head>
+
+<body>
+  <div class="container">
+    <h1>Step 4–5 (GCP): Provisioning Tickets + Concrete Service Choices + Latency + 1000s of Users</h1>
+    <p class="lead">
+      This tutorial expands Step 4 and Step 5 for your multi-tenant Document Q&amp;A system on <strong>GCP</strong>.
+      It answers: <strong>which exact services</strong> you provision, <strong>why GKE / Pub/Sub / Cloud Tasks</strong>,
+      what <strong>latency targets</strong> are acceptable, and how to handle <strong>1000s of simultaneous users</strong>
+      in a large enterprise.
+    </p>
+
+    <h2>1) Concrete reference architecture (GCP services)</h2>
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>Capability</th>
+            <th>Concrete GCP implementation</th>
+            <th>Notes (bank/enterprise friendly)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Frontend</strong></td>
+            <td>Cloud Run (React static via CDN or server-render), behind HTTPS LB</td>
+            <td>Public entry, simple scaling; no direct access to data stores</td>
+          </tr>
+          <tr>
+            <td><strong>API backend</strong></td>
+            <td>GKE (private cluster) running FastAPI, multiple replicas</td>
+            <td>Strong network controls, sidecars, private egress, platform patterns</td>
+          </tr>
+          <tr>
+            <td><strong>Object storage</strong></td>
+            <td>Cloud Storage (GCS) buckets (raw docs + processed artifacts)</td>
+            <td>Retention policies, CMEK (KMS), uniform bucket-level access</td>
+          </tr>
+          <tr>
+            <td><strong>Canonical store</strong></td>
+            <td>Cloud SQL for PostgreSQL (tenants, users, documents, chunks metadata)</td>
+            <td>Private IP + IAM DB auth where possible; RLS optional backstop</td>
+          </tr>
+          <tr>
+            <td><strong>Async pipeline</strong></td>
+            <td>Pub/Sub for events + Cloud Tasks for controlled retries to workers</td>
+            <td>Pub/Sub for fan-out; Tasks for rate-limited HTTP execution + DLQ</td>
+          </tr>
+          <tr>
+            <td><strong>Document extraction</strong></td>
+            <td>Option A: Document AI (OCR/forms) called by an ingestion worker</td>
+            <td>Best for scans/PDFs; keep outputs minimal and stored internally</td>
+          </tr>
+          <tr>
+            <td><strong>Search / vectors</strong></td>
+            <td>(Your design) Elasticsearch/OpenSearch hosted/managed or in-cluster</td>
+            <td>Must enforce tenant/corpus filters; isolate indices or filter fields</td>
+          </tr>
+          <tr>
+            <td><strong>Secrets</strong></td>
+            <td>Secret Manager + CMEK KMS keys</td>
+            <td>Rotation + least privilege; avoid secrets baked into images</td>
+          </tr>
+          <tr>
+            <td><strong>Observability</strong></td>
+            <td>Cloud Logging + Cloud Monitoring + Cloud Trace</td>
+            <td>Structured logs + trace correlation IDs; retention controls</td>
+          </tr>
+          <tr>
+            <td><strong>Egress to external LLM</strong></td>
+            <td>Private egress via NAT + egress proxy / allowlist + DLP/redaction hooks</td>
+            <td>Network allowlisting + audit + bounded payload rules</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout">
+        <strong>Key boundary:</strong> Human users authenticate to <em>your app</em> (OIDC token). Your workloads authenticate to GCP
+        using <em>workload identity</em> + service accounts. End users do not get GCP IAM access to buckets/DB.
+      </div>
+    </div>
+
+    <h2>2) Document extraction tooling: where implemented and why</h2>
+    <div class="card">
+      <p>
+        Extraction is almost never done in the interactive API path. It is an <strong>async worker responsibility</strong>.
+        The normal pattern:
+      </p>
+      <ol>
+        <li>User uploads document → stored in <code>gs://raw-docs</code></li>
+        <li>Upload emits an event (Pub/Sub) → ingestion worker picks it up</li>
+        <li>Worker performs extraction (Document AI / libraries) → stores canonical text in Cloud SQL + processed text in GCS</li>
+        <li>Worker generates chunks + embeddings → writes to vector store (with strict tenant/corpus tags)</li>
+      </ol>
+
+      <div class="grid2">
+        <div class="box">
+          <div class="k">Option A (common): Document AI</div>
+          <ul>
+            <li>Best when you have PDFs, scans, mixed layouts, forms</li>
+            <li>Managed OCR quality tends to beat DIY OCR</li>
+            <li>Worker calls Document AI API; you store only needed output</li>
+          </ul>
+        </div>
+        <div class="box">
+          <div class="k">Option B: Self-managed extractors</div>
+          <ul>
+            <li>Apache Tika / unstructured / custom parsers in a worker container</li>
+            <li>Good for Office docs / HTML / text-heavy content</li>
+            <li>More operational burden (libs, CVEs, memory spikes)</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="ok">
+        <strong>Enterprise-friendly practice:</strong> “extract → store canonical text internally → index”
+        and keep extraction strictly async with retries and DLQs.
+      </div>
+    </div>
+
+    <h2>3) Why GKE for the backend (and what Cloud Run would change)</h2>
+    <div class="card">
+      <div class="grid2">
+        <div class="box">
+          <div class="k">Why choose GKE (common in banks)</div>
+          <ul>
+            <li><strong>Private cluster</strong> + tighter network isolation patterns</li>
+            <li>Sidecars (proxies, policy agents), service mesh (if required)</li>
+            <li>More predictable performance under heavy concurrency</li>
+            <li>Consistent “platform standard” if the org runs many services on GKE</li>
+          </ul>
+        </div>
+        <div class="box">
+          <div class="k">When Cloud Run is acceptable</div>
+          <ul>
+            <li>Faster initial delivery, simpler operations</li>
+            <li>Great for stateless HTTP services</li>
+            <li>Still supports service identities, private networking (with setup)</li>
+            <li>Less flexibility for complex in-cluster patterns</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="callout">
+        <strong>Decision framing:</strong> In a large org, you usually align with the platform team’s “golden path”.
+        If the enterprise runs private GKE landing zones, GKE reduces approval friction.
+      </div>
+    </div>
+
+    <h2>4) Why Pub/Sub + Cloud Tasks (and what they solve)</h2>
+    <div class="card">
+      <div class="grid2">
+        <div class="box">
+          <div class="k">Pub/Sub: event distribution (fan-out)</div>
+          <ul>
+            <li>“Something happened” messaging (document uploaded, extraction complete)</li>
+            <li>Multiple consumers can subscribe (indexer, audit, notifications)</li>
+            <li>High throughput and decoupling</li>
+          </ul>
+        </div>
+        <div class="box">
+          <div class="k">Cloud Tasks: controlled execution (rate + retries)</div>
+          <ul>
+            <li>Push a specific HTTP job to a worker endpoint</li>
+            <li>Built-in retry + scheduling + DLQ patterns</li>
+            <li>Enforce per-queue throughput (useful for external API limits)</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="ok">
+        <strong>Typical pattern:</strong> Pub/Sub announces the event; Cloud Tasks is used for the “do work” step
+        when you need strict retry, backoff, and rate control.
+      </div>
+
+      <div class="warn">
+        <strong>What about Kafka?</strong> Acceptable in some orgs, but usually heavier to operate. If your enterprise already has it,
+        it’s a viable alternative. Otherwise Pub/Sub is the GCP-native path.
+      </div>
+    </div>
+
+    <h2>5) Latency targets: what’s acceptable and how to meet it</h2>
+    <div class="card">
+      <p>
+        You should define <strong>SLOs</strong> separately for interactive query and async ingestion.
+        Concrete targets that work for exec Q&amp;A:
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Path</th>
+            <th>Target (p50 / p95)</th>
+            <th>How you hit it</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>/query (interactive)</strong></td>
+            <td>p50: 2–4s, p95: 6–10s</td>
+            <td>Async I/O, fast retrieval (sub-second), bounded context size, caching, LLM timeouts</td>
+          </tr>
+          <tr>
+            <td><strong>Retrieval alone</strong></td>
+            <td>p50: 100–300ms, p95: &lt; 800ms</td>
+            <td>Tenant-filtered indices, warm caches, limit top_k, avoid expensive rescoring</td>
+          </tr>
+          <tr>
+            <td><strong>LLM call alone</strong></td>
+            <td>p50: 1–3s, p95: 5–8s</td>
+            <td>Streaming responses, concurrency limits, fallback/timeout, smaller prompts</td>
+          </tr>
+          <tr>
+            <td><strong>Ingestion (async)</strong></td>
+            <td>Minutes are fine (SLO: &lt; 15 min typical)</td>
+            <td>Worker autoscale, retries, DLQ, document size limits, batch processing</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout">
+        <strong>Practical trick:</strong> Stream the LLM answer to the UI so the user “sees progress” even if p95 is high.
+        It improves perceived latency.
+      </div>
+    </div>
+
+    <h2>6) Handling 1000s of simultaneous users (GKE + FastAPI + external LLM constraints)</h2>
+    <div class="card">
+      <p>
+        At scale, your true bottleneck is often <strong>the LLM endpoint</strong>, not FastAPI itself.
+        Your strategy is: keep the API stateless and fast, and protect downstream dependencies.
+      </p>
+
+      <h3>6.1 API layer (FastAPI on GKE) — what actually scales</h3>
+      <ul>
+        <li><strong>Stateless replicas:</strong> multiple pods behind a load balancer; each request carries its identity.</li>
+        <li><strong>Async I/O:</strong> use async clients for DB/search/LLM so threads aren’t blocked waiting on network.</li>
+        <li><strong>Connection pooling:</strong> DB and HTTP clients pooled per pod; avoid per-request reconnects.</li>
+        <li><strong>Timeouts + circuit breakers:</strong> fail fast when LLM/retrieval is degraded.</li>
+      </ul>
+
+      <h3>6.2 Downstream protection (what keeps you stable)</h3>
+      <div class="grid2">
+        <div class="box">
+          <div class="k">Rate limits &amp; fairness</div>
+          <ul>
+            <li>Per-tenant concurrency caps (avoid one tenant consuming all capacity)</li>
+            <li>Global cap for LLM calls (protect the quota)</li>
+            <li>Queueing for overflow (return 429 / retry-after when needed)</li>
+          </ul>
+        </div>
+        <div class="box">
+          <div class="k">Degradation strategies</div>
+          <ul>
+            <li>If retrieval slow → lower top_k / skip re-rank</li>
+            <li>If LLM slow → shorter prompt / cheaper model / refusal with guidance</li>
+            <li>If dependency down → return “try again” with tracking ID</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="ok">
+        <strong>Key point:</strong> “1000s of users” is fine for stateless HTTP + retrieval.
+        The hard part is controlling <em>LLM concurrency</em> and ensuring tenant fairness.
+      </div>
+    </div>
+
+    <h2>7) Step 4: Provisioning & dependency tickets (what to raise, exactly)</h2>
+    <div class="card">
+      <p><span class="pill">Goal</span> Avoid being blocked mid-sprint. Treat provisioning as part of delivery.</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Area</th>
+            <th>Ticket examples (concrete)</th>
+            <th>Why it matters</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>GKE</strong></td>
+            <td>
+              Create namespace <code>docqa</code>; create KSA + map to GSA (workload identity);
+              set pod security standards; enable image scanning gate in CI/CD
+            </td>
+            <td>Everything else depends on the runtime identity and security posture</td>
+          </tr>
+          <tr>
+            <td><strong>Data</strong></td>
+            <td>
+              Cloud SQL Postgres (private IP) + IAM/roles; GCS buckets: <code>raw-docs</code>, <code>processed-text</code>;
+              retention + UBLA + CMEK
+            </td>
+            <td>Data stores are often the slowest approvals in enterprises</td>
+          </tr>
+          <tr>
+            <td><strong>Async</strong></td>
+            <td>
+              Pub/Sub topic <code>doc-uploaded</code>; subscription for ingestion worker; DLQ topic;
+              Cloud Tasks queues <code>extract</code>, <code>index</code> with rate limits
+            </td>
+            <td>Reliable ingestion requires retryable, auditable async plumbing</td>
+          </tr>
+          <tr>
+            <td><strong>Security</strong></td>
+            <td>
+              Secret Manager secrets (DB creds / API keys); KMS keys; log retention policy; audit log schema sign-off
+            </td>
+            <td>Without this, you’ll fail review conditions late</td>
+          </tr>
+          <tr>
+            <td><strong>Egress</strong></td>
+            <td>
+              External egress allowlist to LLM endpoint; egress proxy approval; NAT/IP ranges; DLP/redaction controls
+            </td>
+            <td>External calls are a common compliance blocker—start early</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout">
+        <strong>Lead technique:</strong> Every ticket should specify: <em>service name</em>, <em>data classification</em>,
+        <em>identity (GSA)</em>, <em>network path</em>, and <em>evidence needed for approval</em>.
+      </div>
+    </div>
+
+    <h2>8) Step 5: Engineering kickoff (internal) — make “good” unambiguous</h2>
+    <div class="card">
+      <p><span class="pill">Goal</span> Align the team on scope, contracts, evaluation gates, and Definition of Done.</p>
+
+      <h3>Kickoff checklist</h3>
+      <ul>
+        <li><strong>Confirm vertical slice:</strong> the exact demo you will deliver at end of Sprint 1</li>
+        <li><strong>API contracts:</strong> <code>/auth/bootstrap</code>, <code>/query</code>, <code>/ingest</code> (request/response + error codes)</li>
+        <li><strong>Evaluation gates:</strong> golden set baseline, citation correctness checks, regression threshold</li>
+        <li><strong>Definition of Done:</strong> includes tests + logs/metrics/traces + safety checks</li>
+        <li><strong>Integration points:</strong> schema for docs/chunks, tenant/corpus tag format, log schema</li>
+      </ul>
+
+      <div class="ok">
+        <strong>Best practice:</strong> write the vertical slice as a single end-to-end “demo script”
+        (login → ingest sample → ask question → see citations → check audit log entry).
+      </div>
+
+      <div class="warn">
+        <strong>Common rework source:</strong> engineers implement in parallel without agreed contracts.
+        Freeze the first version of schemas and endpoints early.
+      </div>
+    </div>
+
+    <h2>9) Quick “acceptable alternatives” cheat sheet (if approvals block you)</h2>
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>Need</th>
+            <th>Preferred</th>
+            <th>Acceptable alternative (for pilot)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Runtime platform</td>
+            <td>GKE private cluster</td>
+            <td>Cloud Run (if allowed by platform/security), then migrate later</td>
+          </tr>
+          <tr>
+            <td>Async jobs</td>
+            <td>Pub/Sub + Cloud Tasks</td>
+            <td>Pub/Sub only (simpler), but less fine-grained rate limiting for HTTP work</td>
+          </tr>
+          <tr>
+            <td>Extraction</td>
+            <td>Document AI</td>
+            <td>Basic parser for text/PDF-only corpus (limit scope to reduce risk)</td>
+          </tr>
+          <tr>
+            <td>Search/vectors</td>
+            <td>OpenSearch/Elastic w/ filters</td>
+            <td>Postgres + pgvector for pilot (lower scale, simpler ops) if acceptable</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout">
+        <strong>Leadership message:</strong> “We can deliver a safe vertical slice with reduced scope while approvals for the full target stack complete.”
+      </div>
+    </div>
+  </div>
+  <script src="../assets/js/nav.js"></script>
+</body>
+</html>

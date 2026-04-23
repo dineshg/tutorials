@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Linear Classification in PyTorch — Tutorial Chapter</title>
+
+  <!-- KaTeX (LaTeX math rendering) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+
+  <!-- Highlight.js (syntax highlighting) -->
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/python.min.js"></script>
+
+  <style>
+    :root{
+      --bg:#ffffff;
+      --panel:#f6f8ff;
+      --panel2:#f8fafc;
+      --text:#0f172a;
+      --muted:#334155;
+      --muted2:#475569;
+      --border:#d0d5dd;
+
+      --blue:#2563eb;
+      --green:#16a34a;
+      --orange:#c2410c;
+      --purple:#6d28d9;
+      --red:#b42318;
+
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Liberation Sans", sans-serif;
+    }
+
+    html,body{background:linear-gradient(180deg, #ffffff, #f6f8fc); color:var(--text); font-family:var(--sans); margin:0;}
+    a{color:var(--blue); text-decoration:none}
+    a:hover{text-decoration:underline}
+
+    .container{max-width:1120px; margin:0 auto; padding:28px 18px 96px;}
+    header{
+      background:linear-gradient(135deg, rgba(37,99,235,.10), rgba(109,40,217,.07));
+      border:1px solid var(--border);
+      border-radius:18px;
+      padding:22px 22px;
+      box-shadow:0 10px 28px rgba(15,23,42,.08);
+    }
+    header h1{margin:0 0 10px; font-size:30px; letter-spacing:.2px; line-height:1.2}
+    header p{margin:0; color:var(--muted); line-height:1.75; font-size:16px}
+    .badge{
+      display:inline-flex; gap:8px; align-items:center;
+      padding:7px 12px; border-radius:999px;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.78);
+      color:var(--muted2); font-size:13px;
+      margin-top:12px;
+    }
+
+    nav.toc{
+      margin-top:16px;
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:10px;
+    }
+    .toc a{
+      display:block; padding:10px 12px;
+      background:rgba(255,255,255,.88);
+      border:1px solid var(--border);
+      border-radius:12px;
+      color:var(--muted);
+    }
+    .toc a:hover{color:var(--text); border-color:#98a2b3}
+
+    h2{margin:40px 0 10px; font-size:22px; line-height:1.25}
+    h3{margin:18px 0 8px; font-size:18px; color:#111827; line-height:1.25}
+    p,li{color:var(--muted); line-height:1.85; font-size:16px}
+    ul,ol{margin:10px 0 10px 22px}
+
+    .divider{height:1px; background:var(--border); margin:22px 0;}
+
+    .callout{
+      border:1px solid var(--border);
+      border-left-width:6px;
+      border-radius:14px;
+      padding:14px 14px 12px;
+      background:var(--panel);
+      margin:14px 0;
+    }
+    .callout .title{
+      font-weight:900;
+      color:var(--text);
+      margin-bottom:6px;
+      display:flex; align-items:center; gap:8px;
+    }
+    .callout.blue{border-left-color:var(--blue)}
+    .callout.green{border-left-color:var(--green)}
+    .callout.orange{border-left-color:var(--orange)}
+    .callout.purple{border-left-color:var(--purple)}
+    .callout.red{border-left-color:var(--red)}
+
+    .grid{display:grid; grid-template-columns:1fr; gap:14px;}
+    @media(min-width:920px){
+      .grid.two{grid-template-columns:1fr 1fr;}
+      .grid.three{grid-template-columns:1fr 1fr 1fr;}
+    }
+
+    /* ---------- VSCode-light style code blocks ---------- */
+    .codeblock{
+      border:1px solid var(--border);
+      border-radius:14px;
+      overflow:hidden;
+      background:#ffffff;
+      box-shadow:0 8px 22px rgba(15,23,42,.06);
+      margin:12px 0 18px;
+    }
+    .codebar{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:10px 12px;
+      background:linear-gradient(180deg, #f8fafc, #f1f5f9);
+      border-bottom:1px solid var(--border);
+      color:#0f172a;
+      font-size:13px;
+      font-weight:800;
+    }
+    .codebar .left{display:flex; gap:10px; align-items:center;}
+    .dots{display:flex; gap:6px; align-items:center;}
+    .dot{width:10px; height:10px; border-radius:50%;}
+    .dot.red{background:#ff5f56}
+    .dot.yellow{background:#ffbd2e}
+    .dot.green{background:#27c93f}
+    .lang{
+      padding:3px 8px; border-radius:999px;
+      border:1px solid var(--border);
+      background:#ffffff;
+      font-weight:900; color:#334155;
+    }
+    .copybtn{
+      border:1px solid var(--border);
+      background:#ffffff;
+      padding:6px 10px;
+      border-radius:10px;
+      font-weight:900;
+      cursor:pointer;
+      color:#334155;
+    }
+    .copybtn:hover{border-color:#98a2b3}
+
+    .editor{display:grid; grid-template-columns:54px 1fr; background:#ffffff;}
+    .gutter{
+      background:#ffffff;
+      border-right:1px solid #e5e7eb;
+      color:#64748b;
+      font-family:var(--mono);
+      font-size:12px;
+      line-height:1.6;
+      padding:14px 0 16px;
+      text-align:right;
+      user-select:none;
+    }
+    .gutter > div{padding:0 10px;}
+    pre{margin:0; padding:14px 14px 16px; overflow:auto; font-family:var(--mono); font-size:13px; line-height:1.6; background:#ffffff;}
+    code{font-family:var(--mono);}
+
+    /* Python token colors (match screenshot: magenta keywords, blue numbers/builtins, red strings, green comments) */
+    .hljs{background:transparent; color:#111827;}
+    .hljs-keyword{color:#AF00DB; font-weight:700;}
+    .hljs-built_in{color:#0000ff;}
+    .hljs-title, .hljs-function .hljs-title{color:#111827;}
+    .hljs-string{color:#A31515;}
+    .hljs-comment{color:#008000;}
+    .hljs-number{color:#0000ff;}
+    .hljs-meta{color:#0000ff;}
+
+    /* ---------- Figures (online images) ---------- */
+    figure{
+      margin:12px 0 18px;
+      border:1px solid var(--border);
+      border-radius:14px;
+      overflow:hidden;
+      background:var(--panel2);
+      box-shadow:0 8px 22px rgba(15,23,42,.06);
+    }
+    figure img{
+      display:block;
+      width:100%;
+      height:auto;
+      max-height:420px;
+      object-fit:contain;
+      background:#ffffff;
+    }
+    @media(max-width:640px){
+      figure img{max-height:320px;}
+    }
+    figcaption{
+      padding:10px 12px 12px;
+      color:var(--muted2);
+      font-size:13px;
+      line-height:1.6;
+      background:linear-gradient(180deg, rgba(248,250,252,.85), rgba(241,245,249,.85));
+      border-top:1px solid var(--border);
+    }
+
+    .katex{font-size:1.05em;}
+    .mini{font-size:13px; color:var(--muted2)}
+    .pill{
+      display:inline-block;
+      font-size:12px;
+      font-weight:900;
+      color:#0f172a;
+      background:#ffffff;
+      border:1px solid var(--border);
+      border-radius:999px;
+      padding:4px 10px;
+      margin-right:6px;
+      white-space:nowrap;
+    }
+  </style>
+
+  <script>
+    // Helpers: KaTeX + line numbers + copy buttons + highlight
+    window.addEventListener("DOMContentLoaded", () => {
+      const normalizeBackslashesInsideMath = (text) => {
+        if (!text || text.indexOf("\\\\") === -1) return text;
+
+        let out = "";
+        let i = 0;
+        let mode = null; // null | 'inline' | 'display'
+
+        const isEscaped = (s, idx) => {
+          let backslashes = 0;
+          for (let j = idx - 1; j >= 0 && s[j] === "\\"; j--) backslashes++;
+          return backslashes % 2 === 1;
+        };
+
+        while (i < text.length) {
+          if (mode === null) {
+            if (text.startsWith("$$", i)) {
+              mode = "display";
+              out += "$$";
+              i += 2;
+              continue;
+            }
+            if (text[i] === "$" && !isEscaped(text, i)) {
+              mode = "inline";
+              out += "$";
+              i += 1;
+              continue;
+            }
+            out += text[i];
+            i += 1;
+            continue;
+          }
+
+          if (mode === "display") {
+            if (text.startsWith("$$", i) && !isEscaped(text, i)) {
+              mode = null;
+              out += "$$";
+              i += 2;
+              continue;
+            }
+          } else {
+            if (text[i] === "$" && !isEscaped(text, i)) {
+              mode = null;
+              out += "$";
+              i += 1;
+              continue;
+            }
+          }
+
+          if (text[i] === "\\" && text[i + 1] === "\\") {
+            out += "\\";
+            i += 2;
+            continue;
+          }
+
+          out += text[i];
+          i += 1;
+        }
+
+        return out;
+      };
+
+      const normalizeMathInDom = (root) => {
+        const ignoredParents = new Set(["SCRIPT", "STYLE", "TEXTAREA", "PRE", "CODE", "NOSCRIPT"]);
+        const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+          acceptNode(node) {
+            const parent = node.parentElement;
+            if (!parent) return NodeFilter.FILTER_REJECT;
+            if (ignoredParents.has(parent.tagName)) return NodeFilter.FILTER_REJECT;
+            if (!node.nodeValue) return NodeFilter.FILTER_REJECT;
+            return NodeFilter.FILTER_ACCEPT;
+          },
+        });
+
+        const nodes = [];
+        while (walker.nextNode()) nodes.push(walker.currentNode);
+        for (const node of nodes) {
+          const normalized = normalizeBackslashesInsideMath(node.nodeValue);
+          if (normalized !== node.nodeValue) node.nodeValue = normalized;
+        }
+      };
+
+      // KaTeX
+      if (typeof renderMathInElement === "function") {
+        normalizeMathInDom(document.body);
+        renderMathInElement(document.body, {
+          delimiters: [
+            { left: "$$", right: "$$", display: true },
+            { left: "\\[", right: "\\]", display: true },
+            { left: "\\(", right: "\\)", display: false },
+            { left: "$", right: "$", display: false },
+          ],
+          ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code"],
+          throwOnError: false,
+        });
+      }
+
+      // highlight
+      if (typeof hljs !== "undefined") {
+        hljs.configure({ languages: ["python"] });
+        document.querySelectorAll("pre code").forEach((el) => hljs.highlightElement(el));
+      }
+
+      // line numbers
+      document.querySelectorAll("pre[data-ln]").forEach((pre) => {
+        const code = pre.querySelector("code");
+        if (!code) return;
+        const lines = code.innerText.replace(/\n$/, "").split("\n").length;
+        const gutter = pre.parentElement.querySelector(".gutter");
+        if (!gutter) return;
+        gutter.innerHTML = "";
+        for (let i=1; i<=lines; i++){
+          const div = document.createElement("div");
+          div.textContent = i;
+          gutter.appendChild(div);
+        }
+      });
+
+      // copy buttons
+      document.querySelectorAll("[data-copy]").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const id = btn.getAttribute("data-copy");
+          const code = document.getElementById(id)?.innerText ?? "";
+          try {
+            await navigator.clipboard.writeText(code);
+            btn.textContent = "Copied ✓";
+            setTimeout(() => btn.textContent = "Copy", 1100);
+          } catch (e) {
+            btn.textContent = "Copy failed";
+            setTimeout(() => btn.textContent = "Copy", 1100);
+          }
+        });
+      });
+    });
+  </script>
+  <link rel="stylesheet" href="../assets/css/book.css">
+</head>
+
+<body>
+  <div class="container">
+    <header>
+      <h1>Linear Classification in PyTorch</h1>
+      <p>
+        A student-friendly chapter that explains linear decision boundaries, logistic regression, and a complete
+        PyTorch training loop end-to-end.
+        Diagrams are saved locally under <code>assets/images/ch4</code> (downloaded from Wikimedia Commons) so the
+        page works offline.
+      </p>
+      <div class="badge">Light theme • VSCode-like code blocks • LaTeX via KaTeX • Offline diagrams</div>
+
+      <nav class="toc" aria-label="Table of contents">
+        <a href="#workflow">1) The ML workflow and what happens inside fit/predict/score</a>
+        <a href="#accuracy">2) Accuracy, error, train vs test</a>
+        <a href="#geometry">3) Linear decision boundaries and the logit</a>
+        <a href="#sigmoid">4) Step vs sigmoid, logistic regression</a>
+        <a href="#training">5) Training: loss, gradient descent, learning rate</a>
+        <a href="#dataset">6) Dataset: Breast cancer (scikit-learn) + preprocessing</a>
+        <a href="#pytorch">7) PyTorch implementation: BCE, Adam, training loop, accuracy</a>
+        <a href="#stability">8) Better logistic regression: BCEWithLogitsLoss</a>
+        <a href="#save">9) Saving/loading models (state_dict) + Colab download</a>
+        <a href="#neuron">10) Why logistic regression is a “neuron”</a>
+        <a href="#splits">11) Train/validation/test, Kaggle, cross-validation, hyperparameters</a>
+        <a href="#summary">12) Summary + exercises</a>
+      </nav>
+    </header>
+
+    <div class="callout.green">
+      <div class="title">What you’ll build (and the math behind it)</div>
+      <ul>
+        <li>
+          A <strong>linear classifier</strong> with logit $a = w^\top x + b$ and probability
+          $p = \sigma(a)$.
+        </li>
+        <li>
+          A training objective (binary cross-entropy) and a training loop that minimizes it:
+          $$\theta^* = \arg\min_{\theta} \frac{1}{n}\sum_{i=1}^{n} \ell\bigl(a_i(\theta), y_i\bigr).$$
+        </li>
+        <li>
+          Practical evaluation: accuracy on train vs test, and how to spot overfitting.
+        </li>
+      </ul>
+      <p class="mini">
+        Notation used throughout: $x\in\mathbb{R}^D$ (features), $y\in\{0,1\}$ (label),
+        $w\in\mathbb{R}^D$ (weights), $b\in\mathbb{R}$ (bias).
+      </p>
+    </div>
+
+    <!-- ===================================================== -->
+    <section id="workflow">
+      <h2>1) The ML Workflow: What Happens Inside <span class="pill">fit</span><span class="pill">predict</span><span class="pill">score</span>?</h2>
+
+      <p>
+        A typical scikit-learn-style workflow follows the same outer structure for many models:
+      </p>
+
+      <ol>
+        <li>Load data into inputs \(X\) and targets \(y\).</li>
+        <li>Instantiate a model (e.g., logistic regression, linear regression, etc.).</li>
+        <li>Train it with something like <code>model.fit(X, y)</code>.</li>
+        <li>Make predictions with <code>model.predict(X)</code> (on train or on new/test data).</li>
+        <li>Evaluate with <code>model.score(X, y)</code>.</li>
+      </ol>
+
+      <div class="callout.blue">
+        <div class="title">Why this question matters</div>
+        <p>
+          On the surface, “linear regression” and “logistic regression” can look identical in code:
+          you mostly change the class name. The difference is what the model computes, what loss it minimizes,
+          and how training updates parameters. <strong>The inside of these functions is where the real meaning is.</strong>
+        </p>
+        <p class="mini">
+          In math terms, <span class="pill">fit</span> is “choose parameters to minimize a loss”,
+          <span class="pill">predict</span> is “run the model forward”, and <span class="pill">score</span>
+          is “compute a metric”. For classification, the most common metric is accuracy.
+        </p>
+      </div>
+    </section>
+
+    <!-- ===================================================== -->
+    <section id="accuracy">
+      <h2>2) Classification Accuracy and Error</h2>
+
+      <p>
+        In binary classification (e.g., spam vs not-spam), every prediction is either correct or incorrect.
+      </p>
+
+      <p>
+        $$\text{accuracy}=\frac{\#\text{correct}}{\#\text{total}}, \qquad
+          \text{error}=\frac{\#\text{wrong}}{\#\text{total}}=1-\text{accuracy}.$$
+      </p>
+
+      <p>
+        Equivalently, using an indicator function $\mathbf{1}[\cdot]$:
+        $$\text{accuracy} = \frac{1}{n}\sum_{i=1}^{n}\mathbf{1}[\hat{y}_i = y_i].$$
+      </p>
+
+      <div class="callout.green">
+        <div class="title">Train vs test accuracy</div>
+        <p>
+          You can compute accuracy on the training set and on a held-out test set:
+          <strong>train accuracy</strong> measures how well you fit the seen data,
+          while <strong>test accuracy</strong> estimates how well you generalize to unseen data.
+        </p>
+        <p class="mini">
+          Note: if classes are highly imbalanced (e.g., 99% of samples are class 0), accuracy can be misleading.
+          It’s still a good starting point, but you may later want precision/recall or ROC-AUC.
+        </p>
+      </div>
+    </section>
+
+    <!-- ===================================================== -->
+    <section id="geometry">
+      <h2>3) Geometry: Linear Decision Boundary and the Logit</h2>
+
+      <p>
+        A linear classifier draws a boundary in feature space.
+        For a 2D input \(x=(x_1,x_2)\), the boundary is a line:
+      </p>
+
+      <p>
+        $$w_1x_1+w_2x_2+b=0.$$
+      </p>
+
+      <p>
+        This form generalizes cleanly to higher dimensions (where the boundary is a hyperplane).
+        It also connects directly to the key scalar quantity the model computes:
+      </p>
+
+      <p>
+        $$a=w^\top x + b,$$
+      </p>
+
+      <p>
+        where \(a\) is commonly called the <strong>activation</strong> or <strong>logit</strong>.
+      </p>
+
+      <div class="callout.blue">
+        <div class="title">Signed distance intuition</div>
+        <p>
+          The value $a = w^\top x + b$ tells you which side of the boundary you’re on.
+          If you normalize by $\lVert w\rVert$, then $\frac{a}{\lVert w\rVert}$ is proportional to the signed distance
+          from the point to the hyperplane.
+        </p>
+      </div>
+
+      <div class="callout.orange">
+        <div class="title">Why not just use \(y=mx+b\)?</div>
+        <p>
+          In classification, the axes are features \(x_1,x_2,\dots\). The label \(y\) is <em>not an axis</em>.
+          The vector form \(w^\top x+b\) works for any number of features \(D\), not just 2.
+        </p>
+      </div>
+
+      <h3>From geometry to prediction (sign test)</h3>
+      <p>
+        If a point is not on the boundary, then \(a=w^\top x+b\) will be either positive or negative.
+        One side of the hyperplane always yields \(a&gt;0\), the other yields \(a&lt;0\).
+      </p>
+
+      <p>
+        $$\hat{y}=\begin{cases}
+          1 & \text{if } a&gt;0 \\
+          0 & \text{if } a\le 0
+        \end{cases}$$
+      </p>
+
+      <figure>
+        <!-- Wikimedia image (decision boundaries / hyperplanes) -->
+        <img
+          alt="SVM separating hyperplanes diagram (used here to visualize linear decision boundaries)"
+          src="assets/images/ch4/svm-separating-hyperplanes.svg">
+        <figcaption>
+          Wikimedia diagram illustrating separating hyperplanes (used here purely as a visual intuition for linear decision boundaries).
+          The lecture’s key idea matches the hyperplane form \(w^\top x + b = 0\).
+        </figcaption>
+      </figure>
+    </section>
+
+    <!-- ===================================================== -->
+    <section id="sigmoid">
+      <h2>4) Step Function vs Sigmoid: Logistic Regression</h2>
+
+      <p>
+        The sign test is like a hard “step function.” In deep learning we prefer smooth differentiable functions,
+        so we often map the logit \(a\) through a sigmoid:
+      </p>
+
+      <p>
+        $$\sigma(a)=\frac{1}{1+e^{-a}} \in (0,1).$$
+      </p>
+
+      <p>
+        We interpret \(p=\sigma(a)\) as a probability:
+      </p>
+
+      <p>
+        $$p(y=1\mid x)=\sigma(w^\top x + b).$$
+      </p>
+
+      <p>
+        A useful identity: the log-odds are linear in $x$:
+        $$\log\frac{p}{1-p} = w^\top x + b.$$
+        This is one reason logistic regression is so interpretable.
+      </p>
+
+      <p>
+        And convert to a class prediction by thresholding:
+      </p>
+
+      <p>
+        $$\hat{y}=\mathbf{1}[p\ge 0.5].$$
+      </p>
+
+      <div class="callout.purple">
+        <div class="title">Terminology you’ll see</div>
+        <ul>
+          <li><strong>Logistic function</strong> = sigmoid function.</li>
+          <li><strong>Logit</strong> = the sigmoid input \(a=w^\top x+b\).</li>
+          <li><strong>Logistic regression</strong> = linear model + sigmoid for binary classification.</li>
+        </ul>
+      </div>
+
+      <figure>
+        <img
+          alt="Sigmoid function plot"
+          src="assets/images/ch4/sigmoid-function.svg">
+        <figcaption>
+          Sigmoid curve from Wikimedia. It smoothly maps any real logit \(a\) to a probability in \((0,1)\).
+          Note: \(a=0 \Rightarrow \sigma(a)=0.5\).
+        </figcaption>
+      </figure>
+    </section>
+
+    <!-- ===================================================== -->
+    <section id="training">
+      <h2>5) Training: Loss Functions, Gradients, and Learning Rate</h2>
+
+      <h3>Regression vs classification: why the loss changes</h3>
+      <p>
+        In regression, targets \(y\in\mathbb{R}\), predictions \(\hat{y}\in\mathbb{R}\), so losses like mean squared error (MSE) make sense:
+      </p>
+      <p>
+        $$\text{MSE}=\frac{1}{n}\sum_{i=1}^{n}(y_i-\hat{y}_i)^2.$$
+      </p>
+
+      <p>
+        In binary classification, the model outputs probabilities, and a standard loss is <strong>binary cross-entropy</strong>:
+      </p>
+      <p>
+        $$\mathcal{L}_{\text{BCE}} = -\frac{1}{n}\sum_{i=1}^{n}\left[y_i\log(p_i) + (1-y_i)\log(1-p_i)\right],\quad p_i=\sigma(a_i).$$
+      </p>
+
+      <div class="callout.purple">
+        <div class="title">Where BCE comes from (one sentence)</div>
+        <p>
+          If you assume $y\mid x$ follows a Bernoulli distribution with probability $p=\sigma(w^\top x+b)$,
+          then minimizing BCE is exactly minimizing the <strong>negative log-likelihood</strong>.
+        </p>
+      </div>
+
+      <div class="callout.blue">
+        <div class="title">Loss / cost / objective</div>
+        <p>
+          The lecture used these words interchangeably: they all mean “the scalar we minimize during training.”
+        </p>
+      </div>
+
+      <h3>How does a model learn?</h3>
+      <p>
+        PyTorch uses <strong>automatic differentiation</strong> to compute gradients of the loss with respect to parameters
+        \(w\) and \(b\). Gradient descent updates parameters iteratively:
+      </p>
+
+      <p>
+        $$w \leftarrow w - \eta \frac{\partial \mathcal{L}}{\partial w},\qquad
+          b \leftarrow b - \eta \frac{\partial \mathcal{L}}{\partial b},$$
+      </p>
+
+      <p>
+        where \(\eta\) is the <strong>learning rate</strong>.
+      </p>
+
+      <div class="callout.orange">
+        <div class="title">Learning rate is a hyperparameter</div>
+        <p>
+          It is not learned by the model; you choose it (often by trial + intuition).
+          A common starting sweep is \(10^{-1},10^{-2},10^{-3},\dots\).
+        </p>
+      </div>
+
+      <figure>
+        <img
+          alt="Gradient descent animation"
+          src="assets/images/ch4/gradient-descent.gif">
+        <figcaption>
+          Gradient descent animation (Wikimedia). It shows repeated steps moving “downhill” along the loss landscape.
+          The step size relates to the learning rate.
+        </figcaption>
+      </figure>
+    </section>
+
+    <!-- ===================================================== -->
+    <section id="dataset">
+      <h2>6) Dataset: Breast Cancer (scikit-learn) + Preprocessing</h2>
+
+      <p>
+        The lecture uses the well-known breast cancer dataset included in scikit-learn.
+        Loading it is a single function call (no manual download needed):
+      </p>
+
+      <ul>
+        <li>Inputs: <code>data.data</code> \(\rightarrow X\)</li>
+        <li>Targets: <code>data.target</code> \(\rightarrow y\) (0/1)</li>
+        <li>Names: <code>data.target_names</code>, <code>data.feature_names</code></li>
+      </ul>
+
+      <div class="callout.green">
+        <div class="title">Two preprocessing steps from the lecture</div>
+        <ol>
+          <li><strong>Train/test split</strong> so we can evaluate on unseen data.</li>
+          <li><strong>Standardization</strong> with <code>StandardScaler</code>:
+            fit on train only, then transform train and test using the train mean/std.</li>
+        </ol>
+        <p class="mini">
+          Standardization is: $$x' = \frac{x-\mu}{\sigma}$$
+          computed per feature (dimension). It helps optimization because different features can start on very different scales.
+        </p>
+      </div>
+    </section>
+
+    <!-- ===================================================== -->
+    <section id="pytorch">
+      <h2>7) PyTorch Implementation: Logistic Regression End-to-End</h2>
+
+      <p>
+        We will implement the lecture’s PyTorch pipeline:
+        load data, split, scale, build model, train with gradient descent, then evaluate accuracy.
+      </p>
+
+      <div class="codeblock">
+        <div class="codebar">
+          <div class="left">
+            <div class="dots"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span></div>
+            <span class="lang">Python</span>
+            <span class="mini">Load + split + scale</span>
+          </div>
+          <button class="copybtn" data-copy="code-data">Copy</button>
+        </div>
+        <div class="editor">
+          <div class="gutter"></div>
+          <pre data-ln><code id="code-data" class="language-python">import numpy as np
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+
+# 1) Load data (built into sklearn)
+data = load_breast_cancer()
+X = data.data               # shape (n, D)
+y = data.target             # shape (n,), values in {0,1}
+
+# (Optional inspection)
+print("X shape:", X.shape)  # e.g., (569, 30)
+print("y shape:", y.shape)
+print("target names:", data.target_names)  # e.g., ['malignant', 'benign']
+
+# 2) Train/test split (test_size ~ 33% as in the lecture)
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.33, random_state=123, stratify=y
+)
+
+# 3) Standardize features
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)   # fit only on train
+X_test  = scaler.transform(X_test)        # transform test using train stats
+
+n, D = X_train.shape
+print("train:", X_train.shape, "test:", X_test.shape)</code></pre>
+        </div>
+      </div>
+
+      <h3>Model: Linear layer + sigmoid</h3>
+      <p>
+        The lecture builds a logistic regression model as:
+      </p>
+      <p>
+        $$p=\sigma(w^\top x+b),$$
+      </p>
+      <p>
+        which in PyTorch can be represented as <code>nn.Linear(D,1)</code> then <code>nn.Sigmoid()</code>, wrapped in <code>nn.Sequential</code>.
+      </p>
+
+      <div class="callout.orange">
+        <div class="title">Shape sanity check</div>
+        <p>
+          For binary classification, it’s common to keep outputs as shape $(n,1)$.
+          That’s why the targets are reshaped with <code>.view(-1, 1)</code>.
+        </p>
+      </div>
+
+      <div class="codeblock">
+        <div class="codebar">
+          <div class="left">
+            <div class="dots"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span></div>
+            <span class="lang">Python</span>
+            <span class="mini">Model + loss + optimizer + tensor conversion</span>
+          </div>
+          <button class="copybtn" data-copy="code-model">Copy</button>
+        </div>
+        <div class="editor">
+          <div class="gutter"></div>
+          <pre data-ln><code id="code-model" class="language-python">import torch
+import torch.nn as nn
+
+# Logistic regression = Linear + Sigmoid
+model = nn.Sequential(
+    nn.Linear(D, 1),
+    nn.Sigmoid()
+)
+
+# Binary cross entropy loss (for probabilities)
+criterion = nn.BCELoss()
+
+# Adam optimizer (common default in deep learning)
+optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+
+# Convert numpy -> torch tensors (float32)
+X_train_t = torch.from_numpy(X_train.astype(np.float32))
+X_test_t  = torch.from_numpy(X_test.astype(np.float32))
+
+# IMPORTANT in PyTorch: y should be shape (n, 1) for this setup
+y_train_t = torch.from_numpy(y_train.astype(np.float32)).view(-1, 1)
+y_test_t  = torch.from_numpy(y_test.astype(np.float32)).view(-1, 1)</code></pre>
+        </div>
+      </div>
+
+      <h3>Training loop (gradient descent with autograd)</h3>
+      <p>
+        The lecture’s loop is the standard PyTorch pattern:
+        zero gradients → forward pass → loss → backward → optimizer step.
+      </p>
+
+      <div class="codeblock">
+        <div class="codebar">
+          <div class="left">
+            <div class="dots"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span></div>
+            <span class="lang">Python</span>
+            <span class="mini">Train + track train/test loss (per epoch)</span>
+          </div>
+          <button class="copybtn" data-copy="code-train">Copy</button>
+        </div>
+        <div class="editor">
+          <div class="gutter"></div>
+          <pre data-ln><code id="code-train" class="language-python">train_losses = []
+test_losses = []
+
+epochs = 300
+
+for epoch in range(epochs):
+    # ---- TRAIN step ----
+    optimizer.zero_grad()
+    p_train = model(X_train_t)                 # probabilities in (0,1)
+    loss_train = criterion(p_train, y_train_t)
+    loss_train.backward()
+    optimizer.step()
+
+    # ---- EVAL losses (no gradient needed) ----
+    with torch.no_grad():
+        p_test = model(X_test_t)
+        loss_test = criterion(p_test, y_test_t)
+
+    train_losses.append(loss_train.item())
+    test_losses.append(loss_test.item())
+
+    if (epoch+1) % 50 == 0:
+        print(f"epoch {epoch+1:4d}  train_loss={loss_train.item():.4f}  test_loss={loss_test.item():.4f}")</code></pre>
+        </div>
+      </div>
+
+      <div class="callout.red">
+        <div class="title">Why “test loss increasing” matters</div>
+        <p>
+          If training loss keeps decreasing but test/validation loss starts increasing,
+          you may be overfitting (memorizing train patterns that don’t generalize).
+        </p>
+      </div>
+
+      <figure>
+        <img
+          alt="Overfitting curves: training error decreases while validation error increases"
+          src="assets/images/ch4/overfitting.png">
+        <figcaption>
+          Wikimedia overfitting diagram: blue = training error, red = validation error over epochs.
+          This matches the lecture’s explanation of monitoring loss curves to detect overfitting.
+        </figcaption>
+      </figure>
+
+      <h3>Accuracy computation (and the “mean of booleans” trick)</h3>
+      <p>
+        The model outputs probabilities. For predictions, round to 0/1:
+      </p>
+      <p>
+        $$\hat{y}=\text{round}(p).$$
+      </p>
+      <p>
+        Then accuracy is the mean of element-wise equality:
+        in Python, <code>True</code> behaves like 1 and <code>False</code> like 0.
+      </p>
+
+      <div class="codeblock">
+        <div class="codebar">
+          <div class="left">
+            <div class="dots"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span></div>
+            <span class="lang">Python</span>
+            <span class="mini">Train/test accuracy</span>
+          </div>
+          <button class="copybtn" data-copy="code-acc">Copy</button>
+        </div>
+        <div class="editor">
+          <div class="gutter"></div>
+          <pre data-ln><code id="code-acc" class="language-python">with torch.no_grad():
+    p_train = model(X_train_t).numpy()
+    p_test  = model(X_test_t).numpy()
+
+# probabilities -> class predictions
+yhat_train = np.round(p_train)
+yhat_test  = np.round(p_test)
+
+train_acc = (yhat_train.reshape(-1) == y_train).mean()
+test_acc  = (yhat_test.reshape(-1)  == y_test).mean()
+
+print("train accuracy:", train_acc)
+print("test  accuracy:", test_acc)</code></pre>
+        </div>
+      </div>
+
+      <div class="callout.blue">
+        <div class="title">Lecture exercise (kept, but made explicit)</div>
+        <p>
+          Modify the training loop to also compute accuracy each epoch (train and test),
+          store them in arrays, and plot accuracy vs epoch. You should typically see loss go down while accuracy goes up.
+        </p>
+      </div>
+    </section>
+
+    <!-- ===================================================== -->
+    <section id="stability">
+      <h2>8) A Better Logistic Regression in PyTorch: <code>BCEWithLogitsLoss</code></h2>
+
+      <p>
+        The lecture points out a practical numerical-stability issue:
+        explicitly computing sigmoid uses exponentials, and BCE uses logs.
+        PyTorch provides a stable combined loss that works directly on logits.
+      </p>
+
+      <p>
+        Conceptually, it’s still the same loss, just computed in a numerically stable way.
+        For a single logit $a$ and label $y\in\{0,1\}$, one stable form is:
+        $$\ell(a,y)=\max(a,0) - a\,y + \log\left(1+e^{-|a|}\right).$$
+      </p>
+
+      <p>
+        Instead of computing \(p=\sigma(a)\) then BCE, we keep the model output as:
+      </p>
+      <p>
+        $$a=w^\top x+b\quad\text{(logit)},$$
+      </p>
+      <p>
+        and use <code>nn.BCEWithLogitsLoss</code>.
+      </p>
+
+      <div class="codeblock">
+        <div class="codebar">
+          <div class="left">
+            <div class="dots"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span></div>
+            <span class="lang">Python</span>
+            <span class="mini">Stable version: logits + BCEWithLogitsLoss</span>
+          </div>
+          <button class="copybtn" data-copy="code-logits">Copy</button>
+        </div>
+        <div class="editor">
+          <div class="gutter"></div>
+          <pre data-ln><code id="code-logits" class="language-python"># Model now outputs logits (no Sigmoid layer!)
+model = nn.Linear(D, 1)
+
+# Stable combined loss
+criterion = nn.BCEWithLogitsLoss()
+
+optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+
+# Training loop is the same shape, but now model(X) returns logits
+for epoch in range(epochs):
+    optimizer.zero_grad()
+    logits_train = model(X_train_t)                 # any real number
+    loss_train = criterion(logits_train, y_train_t)
+    loss_train.backward()
+    optimizer.step()
+
+# Predictions: logits > 0  <=>  sigmoid(logits) > 0.5
+with torch.no_grad():
+    logits_test = model(X_test_t).numpy()
+yhat_test = (logits_test > 0).astype(np.int64).reshape(-1)</code></pre>
+        </div>
+      </div>
+
+      <div class="callout.purple">
+        <div class="title">Prediction rule without sigmoid</div>
+        <p>
+          Because \(\sigma(a)\ge 0.5 \iff a\ge 0\), you can classify directly using the sign of the logit:
+          \(a&gt;0 \Rightarrow \hat{y}=1\), else \(\hat{y}=0\).
+        </p>
+      </div>
+    </section>
+
+    <!-- ===================================================== -->
+    <section id="save">
+      <h2>9) Saving and Loading Models (and Downloading from Colab)</h2>
+
+      <h3>The key object: <code>state_dict</code></h3>
+      <p>
+        In PyTorch, a model’s parameters live in an ordered dictionary returned by:
+      </p>
+      <p>
+        $$\texttt{model.state\_dict()} \Rightarrow \{\text{weights},\text{biases},\dots\}.$$
+      </p>
+
+      <div class="codeblock">
+        <div class="codebar">
+          <div class="left">
+            <div class="dots"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span></div>
+            <span class="lang">Python</span>
+            <span class="mini">Save + reload (recommended pattern)</span>
+          </div>
+          <button class="copybtn" data-copy="code-save">Copy</button>
+        </div>
+        <div class="editor">
+          <div class="gutter"></div>
+          <pre data-ln><code id="code-save" class="language-python"># Save
+torch.save(model.state_dict(), "mymodel.pt")
+
+# Recreate the same architecture (must match!)
+model2 = nn.Sequential(
+    nn.Linear(D, 1),
+    nn.Sigmoid()
+)
+
+# Load weights
+state = torch.load("mymodel.pt", map_location="cpu")
+model2.load_state_dict(state)
+model2.eval()
+
+# Verify identical accuracy (example)
+with torch.no_grad():
+    p_test2 = model2(X_test_t).numpy()
+yhat_test2 = np.round(p_test2).reshape(-1)
+print("test accuracy (reloaded):", (yhat_test2 == y_test).mean())</code></pre>
+        </div>
+      </div>
+
+      <h3>Colab download</h3>
+      <p>
+        The lecture gave two ways:
+      </p>
+      <ol>
+        <li>Use the Colab file browser sidebar and click “Download” on <code>mymodel.pt</code>.</li>
+        <li>Use code: <code>from google.colab import files; files.download("mymodel.pt")</code>.</li>
+      </ol>
+    </section>
+
+    <!-- ===================================================== -->
+    <section id="neuron">
+      <h2>10) Why Logistic Regression is a “Neuron”</h2>
+
+      <p>
+        A single neuron-like computation in deep learning is:
+      </p>
+      <p>
+        $$a=\sum_{i=1}^{D} w_i x_i + b,\qquad \hat{y}=\sigma(a)\ \text{(then threshold)}.$$
+      </p>
+
+      <p>
+        So logistic regression is literally a single neuron: a weighted sum + bias, followed by a nonlinear activation.
+        Deep networks are just many of these stacked together.
+      </p>
+
+      <p>
+        The lecture’s biological analogy:
+      </p>
+      <ul>
+        <li>Inputs \(x_i\) correspond to signals from many incoming connections (dendrites).</li>
+        <li>Weights \(w_i\) represent connection strengths (strong vs weak).</li>
+        <li>The sign of \(w_i\) represents excitatory (positive) vs inhibitory (negative) influence.</li>
+        <li>A threshold-like effect resembles the “all-or-nothing” firing behavior.</li>
+      </ul>
+
+      <div class="callout.green">
+        <div class="title">Interpretation of weights (kept from lecture)</div>
+        <p>
+          If \(w_i\approx 0\), feature \(x_i\) has little effect on the output. If \(|w_i|\) is large,
+          small changes in \(x_i\) strongly affect the output. The sign determines direction of influence.
+        </p>
+      </div>
+    </section>
+
+    <!-- ===================================================== -->
+    <section id="splits">
+      <h2>11) Train / Validation / Test: Why Splits Exist (and How Kaggle Changes the Words)</h2>
+
+      <h3>Why split at all?</h3>
+      <p>
+        The whole point of a classifier is to work on <em>future</em> unseen data.
+        If you only measure performance on past seen data, you can fool yourself.
+      </p>
+
+      <div class="callout.red">
+        <div class="title">Overfitting intuition (from lecture)</div>
+        <p>
+          Complex models can fit training data extremely well but generalize poorly.
+          We want a model that balances being expressive enough to learn patterns,
+          but not so expressive that it memorizes noise.
+        </p>
+      </div>
+
+      <figure>
+        <img
+          alt="Bias and variance contributing to total error (bias-variance tradeoff intuition)"
+          src="assets/images/ch4/bias-variance-total-error.svg">
+        <figcaption>
+          Bias–variance intuition from Wikimedia: total error is a combination of bias and variance (and irreducible noise).
+          This supports the lecture’s “not too simple, not too complex” message.
+        </figcaption>
+      </figure>
+
+      <h3>Train vs validation vs test: the naming confusion</h3>
+      <p>
+        If you only split into two sets, the “test” set is effectively acting as a validation set
+        (you are using it to validate generalization). That’s why people sometimes say
+        “train/validation” and sometimes “train/test” for the same two-way split.
+      </p>
+
+      <h3>Kaggle contest semantics (from the lecture)</h3>
+      <ul>
+        <li>Kaggle provides a labeled “train” set and an unlabeled “test” set.</li>
+        <li>You can’t compute test accuracy yourself (labels are hidden).</li>
+        <li>So you split Kaggle’s train into <strong>train + validation</strong> to tune choices.</li>
+        <li>Public leaderboard vs private leaderboard: private is used for final ranking to reduce overfitting to the public test feedback.</li>
+      </ul>
+
+      <h3>Cross-validation (kept, with clean wording)</h3>
+      <p>
+        A common classical ML approach is \(k\)-fold cross-validation:
+        split data into \(k\) parts, train on \(k-1\), validate on the remaining part,
+        repeat \(k\) times, then summarize validation performance.
+        The lecture notes it’s less common in deep learning due to large datasets and long training times.
+      </p>
+
+      <h3>What is validation used for?</h3>
+      <p>
+        Validation performance is how you choose <strong>hyperparameters</strong>:
+        learning rate, optimizer type, feature subsets, model architecture, number of layers/units,
+        activation choices, etc. You can’t just “gradient descent” on architecture, so you use
+        trial-and-error guided by validation scores.
+      </p>
+
+      <figure>
+        <img
+          alt="Learning curve (training vs validation score vs amount of training data)"
+          src="assets/images/ch4/learning-curves-naive-bayes.png">
+        <figcaption>
+          Wikimedia learning-curve diagram: training vs validation score as training data grows.
+          This supports the lecture’s point that validation helps diagnose bias/variance issues and whether more data would help.
+        </figcaption>
+      </figure>
+    </section>
+
+    <!-- ===================================================== -->
+    <section id="summary">
+      <h2>12) Summary + Exercises</h2>
+
+      <div class="callout.blue">
+        <div class="title">What you should now understand (directly from lecture topics)</div>
+        <ul>
+          <li>What a linear classifier is: boundary \(w^\top x+b=0\), logit \(a=w^\top x+b\).</li>
+          <li>How predictions work: sign test or sigmoid + threshold.</li>
+          <li>Why logistic regression is linear + sigmoid, and why “logit” matters.</li>
+          <li>Why classification uses cross-entropy (binary cross entropy for two classes).</li>
+          <li>The PyTorch training loop pattern: zero_grad → forward → loss → backward → step.</li>
+          <li>Why scaling (StandardScaler) and train/test split matter.</li>
+          <li>How to compute accuracy correctly (including the boolean-mean trick).</li>
+          <li>How to save/load models using <code>state_dict</code>.</li>
+          <li>Why BCEWithLogitsLoss is numerically safer than sigmoid + BCELoss.</li>
+          <li>Train/validation/test semantics, Kaggle workflow, and what validation is for (hyperparameter tuning).</li>
+        </ul>
+      </div>
+
+      <div class="callout.green">
+        <div class="title">Exercises (from the lecture, made precise)</div>
+        <ol>
+          <li>
+            During training, compute <strong>train accuracy</strong> and <strong>test accuracy</strong> each epoch.
+            Store them in arrays and plot them later (or print every N epochs). Verify: loss ↓ tends to imply accuracy ↑.
+          </li>
+          <li>
+            Switch from <code>nn.Sequential(Linear,Sigmoid)</code> + <code>BCELoss</code> to <code>Linear</code> + <code>BCEWithLogitsLoss</code>.
+            Confirm you get similar accuracy, and change prediction rule to <code>(logits &gt; 0)</code>.
+          </li>
+          <li>
+            Experiment with learning rates \(10^{-2}, 10^{-3}, 10^{-4}\) and compare convergence behavior and final test accuracy.
+          </li>
+        </ol>
+      </div>
+
+      <p class="mini">
+        Image sources (original downloads):
+        <a href="https://commons.wikimedia.org/wiki/Special:FilePath/Svm%20separating%20hyperplanes%20%28SVG%29.svg">SVM hyperplanes</a>,
+        <a href="https://commons.wikimedia.org/wiki/Special:FilePath/Sigmoid-function.svg">Sigmoid</a>,
+        <a href="https://commons.wikimedia.org/wiki/Special:FilePath/Gradient%20descent.gif">Gradient descent</a>,
+        <a href="https://commons.wikimedia.org/wiki/Special:FilePath/Overfitting.png">Overfitting</a>,
+        <a href="https://commons.wikimedia.org/wiki/Special:FilePath/Bias%20and%20variance%20contributing%20to%20total%20error.svg">Bias-variance</a>,
+        <a href="https://commons.wikimedia.org/wiki/Special:FilePath/Learning%20Curves%20%28Naive%20Bayes%29.png">Learning curves</a>.
+      </p>
+    </section>
+  </div>
+  <script src="../assets/js/nav.js"></script>
+</body>
+</html>
