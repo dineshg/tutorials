@@ -4,60 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>LangChain → LangGraph → Flowise: A practical tutorial (dicts, nodes, state)</title>
-  <style>
-    :root{
-      --bg:#ffffff; --fg:#111827; --muted:#6b7280; --card:#f9fafb; --line:#e5e7eb;
-      --codebg:#0b1020; --codefg:#e5e7eb; --accent:#2563eb; --accent2:#16a34a;
-    }
-    html,body{background:var(--bg); color:var(--fg); font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif; margin:0;}
-    a{color:var(--accent); text-decoration:none;} a:hover{text-decoration:underline;}
-    header{border-bottom:1px solid var(--line); background:linear-gradient(180deg,#ffffff,#fbfdff);}
-    .wrap{max-width:1000px; margin:0 auto; padding:28px 20px;}
-    h1{font-size:30px; margin:0 0 6px;}
-    h2{font-size:22px; margin:26px 0 10px;}
-    h3{font-size:18px; margin:18px 0 8px;}
-    p{margin:10px 0;}
-    .muted{color:var(--muted);}
-    .toc{background:var(--card); border:1px solid var(--line); padding:14px 16px; border-radius:12px;}
-    .toc ul{margin:10px 0 0 20px;}
-    .card{background:var(--card); border:1px solid var(--line); padding:14px 16px; border-radius:12px; margin:12px 0;}
-    .callout{border-left:4px solid var(--accent); background:#eff6ff; padding:12px 14px; border-radius:10px;}
-    .good{border-left-color:var(--accent2); background:#f0fdf4;}
-    code.inline{background:#f3f4f6; padding:2px 6px; border-radius:6px; border:1px solid var(--line);}
-    pre{background:var(--codebg); color:var(--codefg); padding:14px 16px; border-radius:12px; overflow:auto; border:1px solid #0f172a;}
-    pre code{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,Liberation Mono,monospace; font-size:13px;}
-    /* Make code blocks colorful (lightweight in-page highlighting) */
-    pre code.hl{display:block;}
-    pre code.hl .tok-kw{color:var(--accent); font-weight:650;}
-    pre code.hl .tok-str{color:var(--accent2);}
-    pre code.hl .tok-num{color:var(--accent2);}
-    pre code.hl .tok-com{color:var(--muted); font-style:italic;}
-    pre code.hl .tok-id{color:var(--codefg);}
-    pre code.hl .tok-op{color:var(--codefg); opacity:.85;}
-    pre code.hl .tok-bool{color:var(--accent); font-weight:650;}
-    pre code.hl .tok-null{color:var(--muted); font-weight:650;}
-    .grid{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
-    @media (max-width: 860px){ .grid{grid-template-columns:1fr;} }
-    table{width:100%; border-collapse:collapse; margin:10px 0; font-size:14px;}
-    th,td{border:1px solid var(--line); padding:10px; text-align:left; vertical-align:top;}
-    th{background:#f3f4f6;}
-    .badge{display:inline-block; font-size:12px; padding:2px 8px; border-radius:999px; border:1px solid var(--line); background:#fff;}
-    .diagram{font-family:ui-monospace,Menlo,Consolas,monospace; background:#fff; border:1px dashed var(--line); padding:10px 12px; border-radius:12px; color:#111827;}
-    .hr{height:1px; background:var(--line); margin:18px 0;}
-    /* Inline visuals */
-    .viz{width:100%; height:auto; display:block;}
-    .viz text{font-family:ui-monospace,Menlo,Consolas,monospace;}
-    .viz .box{fill:#ffffff; stroke:var(--line); stroke-width:1.2;}
-    .viz .box2{fill:var(--card); stroke:var(--line); stroke-width:1.2;}
-    .viz .title{fill:var(--fg); font-weight:700;}
-    .viz .label{fill:var(--fg); opacity:.92;}
-    .viz .muted{fill:var(--muted);}
-    .viz .accent{stroke:var(--accent);}
-    .viz .accentFill{fill:var(--accent);}
-    .viz .accent2{stroke:var(--accent2);}
-    .viz .accent2Fill{fill:var(--accent2);}
-  </style>
-  <link rel="stylesheet" href="../assets/css/book.css">
+<link rel="stylesheet" href="../assets/css/book.css">
 </head>
 
 <body>

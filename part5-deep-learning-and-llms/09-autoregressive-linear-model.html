@@ -6,37 +6,7 @@
   <title>Forecasting (Next Section): Coding an Autoregressive Linear Model in PyTorch</title>
 
   <!-- Light theme, readable code blocks -->
-  <style>
-    :root{
-      --bg:#ffffff; --fg:#111827; --muted:#6b7280;
-      --card:#f9fafb; --border:#e5e7eb; --codebg:#f3f4f6;
-      --link:#1d4ed8;
-    }
-    body{ margin:0; background:var(--bg); color:var(--fg);
-      font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;}
-    main{ max-width:980px; margin:0 auto; padding:32px 20px 64px;}
-    h1,h2,h3{ line-height:1.2; margin:0.8em 0 0.4em;}
-    h1{ font-size:2.0rem; }
-    h2{ font-size:1.45rem; margin-top:1.5em; }
-    h3{ font-size:1.15rem; margin-top:1.2em; }
-    p{ margin:0.6em 0; }
-    .card{ background:var(--card); border:1px solid var(--border);
-      border-radius:14px; padding:16px 16px; margin:14px 0; }
-    .muted{ color:var(--muted); }
-    a{ color:var(--link); }
-    ul{ margin:0.4em 0 0.8em 1.2em; }
-    code, pre{ font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace; }
-    pre{ background:var(--codebg); border:1px solid var(--border);
-      border-radius:14px; padding:14px 14px; overflow:auto; margin:12px 0; }
-    .grid2{ display:grid; grid-template-columns: 1fr 1fr; gap:14px; }
-    @media (max-width: 860px){ .grid2{ grid-template-columns:1fr; } }
-    img{ max-width:100%; height:auto; border-radius:14px; border:1px solid var(--border); background:#fff; }
-    .eq{ background:#fff; border:1px dashed var(--border); border-radius:14px; padding:10px 12px; margin:12px 0; }
-    .warn{ border-left:4px solid #f59e0b; padding-left:12px; }
-    .ok{ border-left:4px solid #10b981; padding-left:12px; }
-  </style>
-
-  <!-- MathJax for equations -->
+<!-- MathJax for equations -->
   <script>
     window.MathJax = { tex: { inlineMath: [['\\(','\\)'], ['$', '$']] } };
   </script>
