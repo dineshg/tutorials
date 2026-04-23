@@ -77,7 +77,7 @@ sequentially‑numbered chapter slots.
 ## Local viewing
 
 ```bash
-cd /Users/dineshgamage/Developer/tutorial_refined
+cd /Users/dineshgamage/Developer/datascience_tutorial
 python3 -m http.server 8080
 # then open http://localhost:8080/
 ```

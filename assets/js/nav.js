@@ -114,7 +114,7 @@
       '<span>Enterprise AI, Agents &amp; Applied ML</span>' +
     '</a>' +
     '<span class="tr-spacer"></span>' +
-    '<span class="tr-meta">tutorial_refined · v1.0</span>';
+    '<span class="tr-meta">datascience_tutorial · v1.0</span>';
 
   // ---------- 5. Build sidebar --------------------------------------------
   var sidebar = document.createElement("aside");
