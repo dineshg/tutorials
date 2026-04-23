@@ -11,6 +11,42 @@
   var assetBase = thisScript.src.replace(/assets\/js\/nav\.js.*$/, "");
   // assetBase ends with "/" pointing at the book root.
 
+  // ---------- 1b. Load highlight.js so every code block on every page gets
+  //               uniform, VS-Code-style colourful syntax highlighting.
+  //               The GitHub light + dark theme stylesheets are loaded from
+  //               CDN; the dark sheet is gated by prefers-color-scheme so the
+  //               page automatically switches with the rest of the theme. ---
+  function addHljsStylesheet(href, media) {
+    var link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = href;
+    if (media) link.media = media;
+    document.head.appendChild(link);
+  }
+  addHljsStylesheet("https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github.min.css",
+                    "(prefers-color-scheme: light)");
+  addHljsStylesheet("https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css",
+                    "(prefers-color-scheme: dark)");
+  var hljsScript = document.createElement("script");
+  hljsScript.src = "https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/common.min.js";
+  hljsScript.defer = true;
+  hljsScript.onload = function () {
+    if (!window.hljs) return;
+    // Highlight every <pre><code> block. Pages that already wrap tokens in
+    // <span class="keyword">, <span class="tok-kw">, etc. are skipped so we
+    // don't double-tokenize manually-coloured snippets.
+    document.querySelectorAll("pre code").forEach(function (block) {
+      if (block.querySelector(
+        "span.keyword, span.string, span.comment, span.function, span.number, span.tok-kw, span.tok-str, span.tok-com, span.tok-fn, span.tok-num, span.tok-typ, span.kw, span.str, span.com, span.fn, span.num, span.typ"
+      )) {
+        block.classList.add("hljs");
+        return;
+      }
+      try { window.hljs.highlightElement(block); } catch (e) { /* ignore */ }
+    });
+  };
+  document.head.appendChild(hljsScript);
+
   // ---------- 2. Book table of contents (kept here so every page sees it) --
   var BOOK = [
     { id: "part1", title: "Part I — Enterprise AI Delivery Lifecycle",

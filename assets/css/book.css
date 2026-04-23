@@ -377,6 +377,19 @@ img, svg, video, canvas { max-width: 100%; height: auto; }
   font-size: inherit;
 }
 
+/* highlight.js GitHub theme integration: the CDN stylesheet paints its own
+   background and padding on `code.hljs`. Strip those so our outer <pre>
+   chrome (border, radius, padding, scroll) stays the single source of truth
+   and every code block looks identical regardless of language or page. */
+.tr-content pre code.hljs {
+  background: transparent !important;
+  padding: 0 !important;
+  display: block;
+  font-size: inherit;
+  line-height: inherit;
+  white-space: pre;
+}
+
 /* Generic syntax highlight tokens (used by several chapters) */
 .tr-content .keyword,
 .tr-content .tok-kw,
