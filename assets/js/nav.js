@@ -46,6 +46,26 @@
     // Silence Prism if it loaded anyway
     if (window.Prism) { window.Prism.highlightAll = function(){}; }
 
+    // Normalise: any bare <pre> without a child <code> gets its inner content
+    // wrapped in <code> so hljs can highlight it. Skip <pre> blocks that are
+    // single-line inline-style snippets (e.g. "Authorization: Bearer x") by
+    // requiring at least one newline OR a width that suggests a real block.
+    document.querySelectorAll("pre").forEach(function (pre) {
+      if (pre.querySelector("code")) return;
+      // Skip <pre> blocks already containing manual token spans
+      if (pre.querySelector(
+        "span.keyword,span.string,span.comment,span.function,span.tok-kw,span.tok-str,span.tok-com,span.tok-fn,span.tok-num,span.tok-typ,span.kw,span.str,span.com,span.fn,span.typ,span.hljs-keyword,span.token"
+      )) return;
+      var raw = pre.innerHTML;
+      // If the pre wraps a single short line, leave it alone (likely an inline display)
+      var text = pre.textContent || "";
+      if (!/\n/.test(text) && text.length < 60) return;
+      var code = document.createElement("code");
+      code.innerHTML = raw;
+      pre.innerHTML = "";
+      pre.appendChild(code);
+    });
+
     document.querySelectorAll("pre code").forEach(function (block) {
       // Skip blocks that already have manually-inserted colour tokens
       var hasManualTokens = block.querySelector(
