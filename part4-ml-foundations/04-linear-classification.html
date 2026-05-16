@@ -320,7 +320,7 @@
         <!-- Wikimedia image (decision boundaries / hyperplanes) -->
         <img
           alt="SVM separating hyperplanes diagram (used here to visualize linear decision boundaries)"
-          src="assets/images/ch4/svm-separating-hyperplanes.svg">
+          src="../assets/images/ch4/svm-separating-hyperplanes.svg">
         <figcaption>
           Wikimedia diagram illustrating separating hyperplanes (used here purely as a visual intuition for linear decision boundaries).
           The lecture’s key idea matches the hyperplane form \(w^\top x + b = 0\).
@@ -375,7 +375,7 @@
       <figure>
         <img
           alt="Sigmoid function plot"
-          src="assets/images/ch4/sigmoid-function.svg">
+          src="../assets/images/ch4/sigmoid-function.svg">
         <figcaption>
           Sigmoid curve from Wikimedia. It smoothly maps any real logit \(a\) to a probability in \((0,1)\).
           Note: \(a=0 \Rightarrow \sigma(a)=0.5\).
@@ -443,7 +443,7 @@
       <figure>
         <img
           alt="Gradient descent animation"
-          src="assets/images/ch4/gradient-descent.gif">
+          src="../assets/images/ch4/gradient-descent.gif">
         <figcaption>
           Gradient descent animation (Wikimedia). It shows repeated steps moving “downhill” along the loss landscape.
           The step size relates to the learning rate.
@@ -639,7 +639,7 @@ for epoch in range(epochs):
       <figure>
         <img
           alt="Overfitting curves: training error decreases while validation error increases"
-          src="assets/images/ch4/overfitting.png">
+          src="../assets/images/ch4/overfitting.png">
         <figcaption>
           Wikimedia overfitting diagram: blue = training error, red = validation error over epochs.
           This matches the lecture’s explanation of monitoring loss curves to detect overfitting.
@@ -875,9 +875,9 @@ print("test accuracy (reloaded):", (yhat_test2 == y_test).mean())</code></pre>
       <figure>
         <img
           alt="Bias and variance contributing to total error (bias-variance tradeoff intuition)"
-          src="assets/images/ch4/bias-variance-total-error.svg">
+          src="../assets/images/ch4/bias-variance-total-error-local.svg">
         <figcaption>
-          Bias–variance intuition from Wikimedia: total error is a combination of bias and variance (and irreducible noise).
+          Local bias-variance diagram: total error is a combination of bias and variance (and irreducible noise).
           This supports the lecture’s “not too simple, not too complex” message.
         </figcaption>
       </figure>
@@ -916,9 +916,9 @@ print("test accuracy (reloaded):", (yhat_test2 == y_test).mean())</code></pre>
       <figure>
         <img
           alt="Learning curve (training vs validation score vs amount of training data)"
-          src="assets/images/ch4/learning-curves-naive-bayes.png">
+          src="../assets/images/ch4/learning-curves-naive-bayes.svg">
         <figcaption>
-          Wikimedia learning-curve diagram: training vs validation score as training data grows.
+          Local learning-curve diagram: training vs validation score as training data grows.
           This supports the lecture’s point that validation helps diagnose bias/variance issues and whether more data would help.
         </figcaption>
       </figure>

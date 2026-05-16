@@ -32,34 +32,21 @@
     if (media) link.media = media;
     document.head.appendChild(link);
   }
-  addHljsStylesheet("https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github.min.css",
+  addHljsStylesheet(assetBase + "assets/vendor/highlight.js/11.9.0/styles/github.min.css",
                     "(prefers-color-scheme: light)");
-  addHljsStylesheet("https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css",
+  addHljsStylesheet(assetBase + "assets/vendor/highlight.js/11.9.0/styles/github-dark.min.css",
                     "(prefers-color-scheme: dark)");
 
-  var hljsScript = document.createElement("script");
-  hljsScript.src = "https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/common.min.js";
-  hljsScript.defer = true;
-  hljsScript.onload = function () {
-    if (!window.hljs) return;
-
+  function decorateCodeBlocks() {
     // Silence Prism if it loaded anyway
     if (window.Prism) { window.Prism.highlightAll = function(){}; }
 
-    // Normalise: any bare <pre> without a child <code> gets its inner content
-    // wrapped in <code> so hljs can highlight it. Skip <pre> blocks that are
-    // single-line inline-style snippets (e.g. "Authorization: Bearer x") by
-    // requiring at least one newline OR a width that suggests a real block.
+    // Normalise: any bare <pre> without a child <code> gets wrapped in <code>
+    // so the same CSS, copy button, and optional highlighter can handle every
+    // chapter consistently.
     document.querySelectorAll("pre").forEach(function (pre) {
       if (pre.querySelector("code")) return;
-      // Skip <pre> blocks already containing manual token spans
-      if (pre.querySelector(
-        "span.keyword,span.string,span.comment,span.function,span.tok-kw,span.tok-str,span.tok-com,span.tok-fn,span.tok-num,span.tok-typ,span.kw,span.str,span.com,span.fn,span.typ,span.hljs-keyword,span.token"
-      )) return;
       var raw = pre.innerHTML;
-      // If the pre wraps a single short line, leave it alone (likely an inline display)
-      var text = pre.textContent || "";
-      if (!/\n/.test(text) && text.length < 60) return;
       var code = document.createElement("code");
       code.innerHTML = raw;
       pre.innerHTML = "";
@@ -73,7 +60,7 @@
       );
       if (hasManualTokens) {
         block.classList.add("hljs");
-      } else {
+      } else if (window.hljs) {
         try { window.hljs.highlightElement(block); } catch (e) { /* ignore */ }
       }
 
@@ -84,10 +71,15 @@
 
       // Detect language
       var lang = "";
-      block.classList.forEach(function (c) {
-        if (c.startsWith("language-")) lang = c.replace("language-", "").toUpperCase();
-        if (c.startsWith("hljs-")) return; // skip hljs internal classes
+      var classSources = [block, pre];
+      classSources.forEach(function (node) {
+        node.classList.forEach(function (c) {
+          if (c.startsWith("language-")) lang = c.replace("language-", "").toUpperCase();
+          if (c === "sql-code") lang = "SQL";
+          if (c === "code" && !lang) lang = "CODE";
+        });
       });
+      if (!lang && pre.dataset && pre.dataset.lang) lang = pre.dataset.lang.toUpperCase();
       if (!lang && block.result) lang = (block.result.language || "").toUpperCase();
       if (!lang) lang = "CODE";
 
@@ -120,7 +112,13 @@
         });
       });
     });
-  };
+  }
+
+  var hljsScript = document.createElement("script");
+  hljsScript.src = assetBase + "assets/vendor/highlight.js/11.9.0/lib/common.min.js";
+  hljsScript.defer = true;
+  hljsScript.onload = decorateCodeBlocks;
+  hljsScript.onerror = decorateCodeBlocks;
   document.head.appendChild(hljsScript);
 
   // ---------- 2. Book table of contents (kept here so every page sees it) --

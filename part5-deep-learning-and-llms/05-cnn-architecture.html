@@ -77,7 +77,7 @@
         <a href="#stride">Strided conv as pooling alternative</a>
         <a href="#global">Flatten vs global max pooling</a>
         <a href="#end">Putting it all together</a>
-        <a href="#credits">Online visuals used</a>
+        <a href="#credits">Local visuals and credits</a>
       </nav>
     </header>
 
@@ -112,7 +112,7 @@
       </div>
 
       <figure>
-        <img alt="RGB channels split (conceptual)" src="https://upload.wikimedia.org/wikipedia/commons/2/2b/Rgb_channels_separate.png">
+        <img alt="RGB channels split (conceptual)" src="../assets/images/external/Rgb_channels_separate-66f58fb11f-fallback.svg">
         <figcaption>
           RGB channels separated (Wikimedia Commons):
           <a href="https://commons.wikimedia.org/wiki/File:Rgb_channels_separate.png" target="_blank" rel="noopener">Rgb_channels_separate.png</a>
@@ -152,7 +152,7 @@
       </div>
 
       <figure>
-        <img alt="Feature map visualization from a CNN layer (conceptual)" src="https://upload.wikimedia.org/wikipedia/commons/6/63/Typical_cnn.png">
+        <img alt="Feature map visualization from a CNN layer (conceptual)" src="../assets/images/external/Typical_cnn-46df08c8b8-fallback.svg">
         <figcaption>
           CNN concept diagram showing stacks of feature maps (Wikimedia Commons):
           <a href="https://commons.wikimedia.org/wikipedia/commons/6/63/Typical_cnn.png" target="_blank" rel="noopener">Typical_cnn.png</a>
@@ -199,7 +199,7 @@
       </div>
 
       <figure>
-        <img alt="Convolution arithmetic illustration showing shapes" src="https://upload.wikimedia.org/wikipedia/commons/3/3b/Convolution_arithmetic_padding_strides.png">
+        <img alt="Convolution arithmetic illustration showing shapes" src="../assets/images/external/Convolution_arithmetic_padding_strides-939a950445-fallback.svg">
         <figcaption>
           Convolution arithmetic (padding/stride) (Wikimedia Commons):
           <a href="https://commons.wikimedia.org/wiki/File:Convolution_arithmetic_padding_strides.png" target="_blank" rel="noopener">Convolution_arithmetic_padding_strides.png</a>
@@ -304,7 +304,7 @@ print(y.shape)  # (8, 16, 32, 32)</code></pre>
       </p>
 
       <figure>
-        <img alt="Illustration of local receptive fields and weight sharing in CNNs" src="https://upload.wikimedia.org/wikipedia/commons/9/9a/Conv_layer.png">
+        <img alt="Illustration of local receptive fields and weight sharing in CNNs" src="../assets/images/external/Conv_layer-42782a549f-fallback.svg">
         <figcaption>
           Local receptive fields / convolution layer concept (Wikimedia Commons):
           <a href="https://commons.wikimedia.org/wiki/File:Conv_layer.png" target="_blank" rel="noopener">Conv_layer.png</a>
@@ -329,7 +329,7 @@ print(y.shape)  # (8, 16, 32, 32)</code></pre>
       </ol>
 
       <figure>
-        <img alt="LeNet-5 architecture diagram (classic CNN archetype)" src="https://upload.wikimedia.org/wikipedia/commons/6/60/LeNet5.png">
+        <img alt="LeNet-5 architecture diagram (classic CNN archetype)" src="../assets/images/external/LeNet5-46fbf8dc74-fallback.svg">
         <figcaption>
           LeNet-5 style architecture diagram (Wikimedia Commons):
           <a href="https://commons.wikimedia.org/wiki/File:LeNet5.png" target="_blank" rel="noopener">LeNet5.png</a>
@@ -404,7 +404,7 @@ print("avg:\n", avgpool(x)[0,0])</code></pre>
       </div>
 
       <figure>
-        <img alt="Max pooling visualization" src="https://upload.wikimedia.org/wikipedia/commons/e/e9/Max_pooling.png">
+        <img alt="Max pooling visualization" src="../assets/images/external/Max_pooling-422a90d58b.png">
         <figcaption>
           Max pooling visualization (Wikimedia Commons):
           <a href="https://commons.wikimedia.org/wiki/File:Max_pooling.png" target="_blank" rel="noopener">Max_pooling.png</a>
@@ -494,7 +494,7 @@ print("avg:\n", avgpool(x)[0,0])</code></pre>
       </div>
 
       <figure>
-        <img alt="Convolution with stride illustration" src="https://upload.wikimedia.org/wikipedia/commons/7/7d/Conv_arithmetic_strides.png">
+        <img alt="Convolution with stride illustration" src="../assets/images/external/Conv_arithmetic_strides-4314c5336a-fallback.svg">
         <figcaption>
           Convolution arithmetic showing stride behavior (Wikimedia Commons):
           <a href="https://commons.wikimedia.org/wiki/File:Conv_arithmetic_strides.png" target="_blank" rel="noopener">Conv_arithmetic_strides.png</a>
@@ -563,7 +563,7 @@ print("stride=2:", y_b.shape)   # (1, 16, 16, 16)</code></pre>
       </div>
 
       <figure>
-        <img alt="Global average pooling diagram (conceptual; same idea applies to global max pooling)" src="https://upload.wikimedia.org/wikipedia/commons/1/1b/GlobalAveragePooling.png">
+        <img alt="Global average pooling diagram (conceptual; same idea applies to global max pooling)" src="../assets/images/external/GlobalAveragePooling-ea08b562e2-fallback.svg">
         <figcaption>
           Global pooling concept (shown as global average pooling; global max is analogous) (Wikimedia Commons):
           <a href="https://commons.wikimedia.org/wiki/File:GlobalAveragePooling.png" target="_blank" rel="noopener">GlobalAveragePooling.png</a>
@@ -670,7 +670,7 @@ class SimpleCNN(nn.Module):
     </section>
 
     <section id="credits">
-      <h2>Online visuals used (inline, reputable)</h2>
+      <h2>Local visuals and source credits</h2>
       <ul class="small">
         <li>RGB channels separated: <a href="https://commons.wikimedia.org/wiki/File:Rgb_channels_separate.png" target="_blank" rel="noopener">Wikimedia Commons</a></li>
         <li>CNN feature map stack diagram: <a href="https://commons.wikimedia.org/wiki/File:Typical_cnn.png" target="_blank" rel="noopener">Wikimedia Commons</a></li>
@@ -685,7 +685,7 @@ class SimpleCNN(nn.Module):
       <div class="hr"></div>
       <p class="muted small">
         This HTML is self-contained in structure: equations render via MathJax CDN, code blocks are readable with copy buttons,
-        and all visuals are embedded inline from Wikimedia Commons (stable, reputable sources).
+        and all displayed visuals are local assets, with Wikimedia source credits retained where applicable.
       </p>
     </section>
 

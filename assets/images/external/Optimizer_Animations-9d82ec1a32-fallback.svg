@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="620" viewBox="0 0 1100 620" role="img" aria-labelledby="title desc">
+<title id="title">Optimizer paths</title><desc id="desc">Local tutorial diagram</desc>
+<defs>
+  <style><![CDATA[
+    .bg{fill:#f6f8fa} .panel{fill:#fff;stroke:#d0d7de;stroke-width:2} .axis{stroke:#8c959f;stroke-width:2} .grid{stroke:#eaeef2;stroke-width:1} .blue{stroke:#0969da;fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin:round} .purple{stroke:#8250df;fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin:round} .green{stroke:#1a7f37;fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin:round} .red{stroke:#cf222e;fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin:round} .box{fill:#f6f8fa;stroke:#d0d7de;stroke-width:2;rx:12} .bfill{fill:#ddf4ff;stroke:#0969da;stroke-width:2;rx:10} .pfill{fill:#f1e5ff;stroke:#8250df;stroke-width:2;rx:10} .gfill{fill:#dafbe1;stroke:#1a7f37;stroke-width:2;rx:10} .afill{fill:#fff8c5;stroke:#9a6700;stroke-width:2;rx:10} text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;fill:#1f2328} .muted{fill:#59636e} .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  ]]></style>
+</defs>
+<rect class="bg" width="1100" height="620"/><rect class="panel" x="42" y="42" width="1016" height="536" rx="18"/>
+<text x="550" y="92" text-anchor="middle" font-size="32" font-weight="700">Optimizer paths</text>
+<text x="550" y="145" text-anchor="middle" font-size="21" class="muted">Different optimizers take different paths down the same loss surface.</text><ellipse cx="550" cy="330" rx="330" ry="145" fill="none" stroke="#d0d7de" stroke-width="2"/><ellipse cx="550" cy="330" rx="210" ry="90" fill="none" stroke="#d0d7de" stroke-width="2"/><ellipse cx="550" cy="330" rx="90" ry="38" fill="none" stroke="#d0d7de" stroke-width="2"/><path class="blue" d="M220 230 C340 260 335 390 465 360 S600 280 550 330"/><path class="purple" d="M230 430 C360 410 435 375 490 350 S525 332 550 330"/><path class="green" d="M870 245 C720 265 700 330 615 330 S575 330 550 330"/><circle cx="550" cy="330" r="10" fill="#cf222e"/><text x="570" y="333" font-size="18">minimum</text>
+</svg>
