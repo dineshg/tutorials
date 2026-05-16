@@ -1,0 +1,26 @@
+name: Test examples
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test-examples:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Test churn API example
+        working-directory: examples/churn-api
+        run: |
+          python -m pip install -e ".[test]"
+          pytest
+      - name: Test local examples
+        run: |
+          python -m pip install pytest
+          for dir in examples/rag-document-qa examples/agent-ticket-triage examples/forecasting-service; do
+            (cd "$dir" && PYTHONPATH=src pytest)
+          done

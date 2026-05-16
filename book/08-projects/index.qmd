@@ -1,0 +1,12 @@
+# End-to-End Projects
+
+This part contains the chapters for **End-to-End Projects**.
+
+Read these chapters with the running enterprise document Q&A assistant in mind: every concept should eventually help you design, build, secure, evaluate, or operate a production AI system.
+
+## Part checklist
+
+- [ ] Understand the core vocabulary.
+- [ ] Connect each concept to a production workflow.
+- [ ] Identify evaluation and security risks.
+- [ ] Capture open questions for the project appendices.

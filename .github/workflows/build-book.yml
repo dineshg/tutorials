@@ -1,0 +1,15 @@
+name: Build Quarto book
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-book:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: quarto-dev/quarto-actions/setup@v2
+      - name: Render book
+        run: quarto render book

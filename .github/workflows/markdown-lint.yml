@@ -1,0 +1,23 @@
+name: Markdown lint
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  markdown-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DavidAnson/markdownlint-cli2-action@v17
+        with:
+          globs: |
+            README.md
+            CONTRIBUTING.md
+            STYLE_GUIDE.md
+            BOOK_RESTRUCTURE_PLAN.md
+            ASSET_MANIFEST.md
+            GLOSSARY.md
+            CHANGELOG.md
+            book/**/*.qmd

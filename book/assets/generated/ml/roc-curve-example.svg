@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" role="img">
+  <rect width="960" height="540" fill="#ffffff"/>
+  <style>
+    .title { font: 700 28px system-ui, -apple-system, Segoe UI, sans-serif; fill: #111827; }
+    .label { font: 600 17px system-ui, -apple-system, Segoe UI, sans-serif; fill: #1f2937; }
+    .small { font: 14px system-ui, -apple-system, Segoe UI, sans-serif; fill: #4b5563; }
+    .box { fill: #f8fafc; stroke: #334155; stroke-width: 2; rx: 12; }
+    .blue { fill: #dbeafe; stroke: #2563eb; }
+    .green { fill: #dcfce7; stroke: #16a34a; }
+    .orange { fill: #ffedd5; stroke: #ea580c; }
+    .red { fill: #fee2e2; stroke: #dc2626; }
+    .purple { fill: #ede9fe; stroke: #7c3aed; }
+    .line { stroke: #334155; stroke-width: 3; fill: none; }
+    .thin { stroke: #94a3b8; stroke-width: 1.5; fill: none; }
+    .arrow { marker-end: url(#arrow); }
+  </style>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <path d="M0,0 L10,3 L0,6 Z" fill="#334155"/>
+    </marker>
+  </defs>
+
+  <text x="48" y="58" class="title">ROC Curve Example</text>
+  <line x1="120" y1="455" x2="740" y2="455" class="line"/>
+  <line x1="120" y1="95" x2="120" y2="455" class="line"/>
+  <polyline points="120.0,455.0 169.6,303.8 256.4,203.0 392.8,145.4 554.0,113.0 740.0,95.0" fill="none" stroke="#2563eb" stroke-width="5"/>
+  <text x="740" y="497" text-anchor="end" class="small">False positive rate</text>
+  <text x="50" y="115" class="small">True positive rate</text>
+  <text x="790" y="180" class="small">Use curves to choose thresholds,</text>
+  <text x="790" y="210" class="small">not just to report a single score.</text>
+
+</svg>

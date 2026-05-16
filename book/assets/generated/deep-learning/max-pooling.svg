@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" role="img">
+  <rect width="960" height="540" fill="#ffffff"/>
+  <style>
+    .title { font: 700 28px system-ui, -apple-system, Segoe UI, sans-serif; fill: #111827; }
+    .label { font: 600 17px system-ui, -apple-system, Segoe UI, sans-serif; fill: #1f2937; }
+    .small { font: 14px system-ui, -apple-system, Segoe UI, sans-serif; fill: #4b5563; }
+    .box { fill: #f8fafc; stroke: #334155; stroke-width: 2; rx: 12; }
+    .blue { fill: #dbeafe; stroke: #2563eb; }
+    .green { fill: #dcfce7; stroke: #16a34a; }
+    .orange { fill: #ffedd5; stroke: #ea580c; }
+    .red { fill: #fee2e2; stroke: #dc2626; }
+    .purple { fill: #ede9fe; stroke: #7c3aed; }
+    .line { stroke: #334155; stroke-width: 3; fill: none; }
+    .thin { stroke: #94a3b8; stroke-width: 1.5; fill: none; }
+    .arrow { marker-end: url(#arrow); }
+  </style>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <path d="M0,0 L10,3 L0,6 Z" fill="#334155"/>
+    </marker>
+  </defs>
+<text x="48" y="58" class="title">Max Pooling</text>
+  <rect x="70.0" y="210" width="254.7" height="120" class="box blue"/>
+  <text x="197.3" y="258" text-anchor="middle" class="label">2x2 region</text>
+  <text x="197.3" y="292" text-anchor="middle" class="small">values</text>
+  <line x1="324.7" y1="270" x2="346.7" y2="270" class="line arrow"/>
+  <rect x="352.7" y="210" width="254.7" height="120" class="box green"/>
+  <text x="480.0" y="258" text-anchor="middle" class="label">max()</text>
+  <text x="480.0" y="292" text-anchor="middle" class="small">select largest</text>
+  <line x1="607.3" y1="270" x2="629.3" y2="270" class="line arrow"/>
+  <rect x="635.3" y="210" width="254.7" height="120" class="box orange"/>
+  <text x="762.7" y="258" text-anchor="middle" class="label">pooled map</text>
+  <text x="762.7" y="292" text-anchor="middle" class="small">smaller</text>
+
+</svg>

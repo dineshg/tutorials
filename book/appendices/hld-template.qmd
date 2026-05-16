@@ -1,0 +1,56 @@
+# HLD Template
+
+## Purpose
+
+Use this template during enterprise AI delivery. Copy the sections into your project workspace and fill them in with project-specific evidence.
+
+## Status
+
+Proposed / In Review / Accepted / Rejected / Superseded
+
+## Context
+
+What problem are we solving? Who is affected? What decision or review does this support?
+
+## Owners
+
+| Role | Name | Responsibility |
+|---|---|---|
+| Sponsor |  | Business ownership |
+| AI lead |  | Technical delivery |
+| Security reviewer |  | Security and identity |
+| Data owner |  | Data access and quality |
+| Support owner |  | Operations |
+
+## Requirements
+
+- Business outcome:
+- Users:
+- Data sources:
+- Access requirements:
+- Compliance constraints:
+- Non-functional requirements:
+- Success metrics:
+
+## Options Considered
+
+| Option | Pros | Cons | Decision |
+|---|---|---|---|
+|  |  |  |  |
+
+## Decision or Checklist
+
+- [ ] Scope is clear.
+- [ ] Risks are documented.
+- [ ] Evaluation evidence is defined.
+- [ ] Security controls are documented.
+- [ ] Support model is defined.
+- [ ] Review date is set.
+
+## Consequences
+
+What becomes easier or harder because of this decision?
+
+## Review Date
+
+When should this be revisited?

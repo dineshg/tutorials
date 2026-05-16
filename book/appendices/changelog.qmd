@@ -1,0 +1,11 @@
+# Change Log
+
+## Purpose
+
+This appendix provides practical reference material for industry AI delivery.
+
+## Notes
+
+- Keep this appendix concise and operational.
+- Prefer stable official references.
+- Update dated material during release reviews.
