@@ -530,7 +530,7 @@ from datasets import load_dataset
 from transformers import AutoTokenizer, AutoModelForCausalLM, TrainingArguments, Trainer
 import torch
 
-MODEL_ID = "gpt2"  # replace with your base model
+MODEL_ID = "HuggingFaceTB/SmolLM2-135M-Instruct"  # small instruction model for a tutorial run
 
 # 1) Load JSONL
 ds = load_dataset("json", data_files={"train":"train.jsonl"})
@@ -540,19 +540,12 @@ tok = AutoTokenizer.from_pretrained(MODEL_ID)
 if tok.pad_token is None:
     tok.pad_token = tok.eos_token
 
-# 3) Simple chat formatter (you can swap with a model-specific chat template)
-def format_messages(messages):
-    # Minimal, readable template:
-    # <|system|>...<|user|>...<|assistant|>...
-    parts = []
-    for m in messages:
-        role = m["role"]
-        content = m["content"]
-        parts.append(f"&lt;|{role}|&gt;\\n{content.strip()}\\n")
-    parts.append("&lt;|end|&gt;\\n")
-    return "".join(parts)
-
-ASSISTANT_TAG = "&lt;|assistant|&gt;"
+	# 3) Use the tokenizer's chat template when available.
+	def format_messages(messages):
+	    if getattr(tok, "chat_template", None):
+	        return tok.apply_chat_template(messages, tokenize=False, add_generation_prompt=False)
+	    # Fallback only for toy models without a template.
+	    return "".join(f"&lt;|{m['role']}|&gt;\\n{m['content'].strip()}\\n" for m in messages)
 
 def tokenize_and_mask(example, max_length=1024):
     text = format_messages(example["messages"])
@@ -566,16 +559,17 @@ def tokenize_and_mask(example, max_length=1024):
         return_offsets_mapping=True,  # lets us map characters to tokens
     )
 
-    input_ids = enc["input_ids"]
-    attn = enc["attention_mask"]
-    offsets = enc["offset_mapping"]
+	    input_ids = enc["input_ids"]
+	    offsets = enc["offset_mapping"]
 
     # Create labels = input_ids, then mask prompt tokens to -100
     labels = input_ids.copy()
 
-    # Find character index where assistant content starts.
-    # We mask everything before the first assistant tag ends.
-    assistant_pos = text.find(ASSISTANT_TAG)
+	    # Find character index where assistant content starts.
+	    # In production, prefer TRL's SFTTrainer/DataCollatorForCompletionOnlyLM
+	    # or tokenizer-aware message masking for your chosen model template.
+	    assistant_text = example["messages"][-1]["content"].strip()
+	    assistant_pos = text.rfind(assistant_text)
     if assistant_pos == -1:
         # No assistant => mask everything
         labels = [-100] * len(labels)
@@ -583,8 +577,8 @@ def tokenize_and_mask(example, max_length=1024):
         enc["labels"] = labels
         return enc
 
-    # We want to start computing loss AFTER the assistant tag itself.
-    start_char = assistant_pos + len(ASSISTANT_TAG)
+	    # We want to start computing loss at the assistant answer.
+	    start_char = assistant_pos
 
     # Mask tokens whose span ends at/before start_char
     for i, (s, e) in enumerate(offsets):
@@ -616,7 +610,7 @@ args = TrainingArguments(
     weight_decay=0.01,
     logging_steps=10,
     save_steps=200,
-    fp16=True,  # or bf16=True if supported
+	    bf16=True,  # use bf16 on supported GPUs/TPUs; otherwise use fp16 or fp32
     report_to="none",
 )
 
@@ -653,9 +647,8 @@ print(pipe(prompt, max_new_tokens=60, do_sample=False)[0]["generated_text"])</co
         <div class="callout danger">
           <strong>Reality check:</strong>
           <div class="muted">
-            GPT-2 is tiny and doesn’t have chat tooling built in. For real instruction tuning,
-            start from an instruction-tuned base model (Llama-style chat model, etc.)
-            and use its official chat template for formatting.
+	            Use a model’s official chat template and data collator. Manual string templates are useful for teaching,
+	            but production SFT should be tokenizer-aware so label masking matches the model’s real control tokens.
           </div>
         </div>
       </section>
@@ -684,7 +677,7 @@ print(pipe(prompt, max_new_tokens=60, do_sample=False)[0]["generated_text"])</co
           <pre><code class="language-python">from peft import LoraConfig, get_peft_model
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-MODEL_ID = "gpt2"  # replace with your base model
+MODEL_ID = "HuggingFaceTB/SmolLM2-135M-Instruct"  # replace with your approved base model
 model = AutoModelForCausalLM.from_pretrained(MODEL_ID)
 tok = AutoTokenizer.from_pretrained(MODEL_ID)
 tok.pad_token = tok.eos_token
@@ -697,7 +690,7 @@ lora_cfg = LoraConfig(
     lora_dropout=0.05,
     bias="none",
     task_type="CAUSAL_LM",
-    target_modules=["c_attn"],  # example for GPT-2; adjust for your model
+    target_modules=["q_proj","k_proj","v_proj","o_proj"],  # common in Llama-like models; inspect your model
 )
 
 model = get_peft_model(model, lora_cfg)
@@ -831,6 +824,7 @@ print(resp.output_text)</code></pre>
             <li>Make a strong <strong>validation set</strong> and measure regressions (tone, correctness, safety).</li>
             <li>Keep system prompts consistent across training and inference.</li>
             <li>Prefer fewer, higher-quality examples over lots of noisy examples.</li>
+            <li>Treat supported base models and schema details as live platform constraints; check the official guide before running a job.</li>
           </ul>
         </div>
       </section>
@@ -894,7 +888,7 @@ cfg = DPOConfig(
     gradient_accumulation_steps=8,
     learning_rate=5e-6,
     num_train_epochs=1,
-    fp16=True,
+    bf16=True,
 )
 
 trainer = DPOTrainer(
@@ -1038,6 +1032,7 @@ print(stats)</code></pre>
         <p class="muted">
           OpenAI supports “reinforcement fine-tuning” where you provide a grader that returns a numeric score.
           The platform runs the RL optimization process for you (you focus on the grader + data).
+          Model support is narrower than SFT/DPO and changes over time; the current official guide should be treated as the source of truth.
         </p>
 
         <details>

@@ -140,6 +140,10 @@
           others “weak” (small weight). Some are excitatory (positive weight), others inhibitory (negative weight).
           A neuron either “fires” or does not (an all-or-nothing spike), which resembles a binary decision.
         </p>
+        <p class="mini">
+          This is an analogy, not a claim that artificial neurons model biology faithfully. The useful engineering abstraction is:
+          weighted inputs + bias + nonlinearity + learnable parameters.
+        </p>
       </div>
 
       <figure>
@@ -421,6 +425,14 @@
           <p style="margin:0;">
             Use <span class="kbd">nn.CrossEntropyLoss</span> with raw logits (no softmax layer).
             It internally computes a stable log-softmax + negative log-likelihood.
+          </p>
+        </div>
+
+        <div class="callout">
+          <div class="title">Probability vs calibration</div>
+          <p style="margin:0;">
+            Softmax produces values that are shaped like probabilities, but a trained model can still be overconfident.
+            Use validation data and calibration checks if the numerical confidence itself matters, not just the predicted class.
           </p>
         </div>
 

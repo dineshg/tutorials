@@ -153,12 +153,12 @@
     <div class="box">
       <h3>“How is that container/tool found?” (your earlier question)</h3>
       <p>
-        In a workflow, the line <code>uses: aquasecurity/trivy-action@master</code> is an explicit pointer to an Action repository.
+        In a workflow, a line such as <code>uses: aquasecurity/trivy-action@v0.24.0</code> is an explicit pointer to an Action repository and version.
         GitHub fetches that action and runs it. If the action is Docker-based, its own <code>action.yml</code> defines the container image.
         If it is composite-based, it runs commands directly on the runner (often installing Trivy and executing it).
       </p>
       <p class="tiny">
-        As an admin, you care about pinning versions (avoid floating refs like <code>@master</code> for stricter supply-chain control),
+        As an admin, you care about pinning versions (avoid floating refs like <code>@master</code>), pinning to full commit SHAs for high-control repositories,
         and restricting which actions are allowed via org/enterprise policies.
       </p>
     </div>
@@ -296,13 +296,13 @@ permissions:
 jobs:
   scan:
     name: scan
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Trivy filesystem scan (fail on HIGH/CRITICAL)
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@v0.24.0
         with:
           scan-type: fs
           scan-ref: .
@@ -390,7 +390,7 @@ release/*</code></pre>
           Great default for most repos and for consistent environments.
         </p>
         <ul>
-          <li>Select with: <code>runs-on: ubuntu-latest</code></li>
+          <li>Select a specific image such as <code>runs-on: ubuntu-24.04</code> when reproducibility matters; <code>ubuntu-latest</code> is convenient but can move.</li>
           <li>Minimal operational work for admins</li>
         </ul>
       </div>
@@ -499,7 +499,7 @@ permissions:
 jobs:
   job1:
     name: job1
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - run: echo "hello"</code></pre>
@@ -518,10 +518,10 @@ permissions:
 jobs:
   scan:
     name: scan
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - uses: aquasecurity/trivy-action@master
+      - uses: aquasecurity/trivy-action@v0.24.0
         with:
           scan-type: fs
           scan-ref: .

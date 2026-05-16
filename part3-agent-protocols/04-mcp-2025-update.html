@@ -20,6 +20,15 @@
   remains conceptually correct but you know what to use in production.
 </div>
 
+<div class="tr-note">
+  <strong>Revision note</strong>
+  The <code>2025-11-25</code> MCP spec builds on the changes below. It does not
+  undo the Streamable HTTP / OAuth resource-server / structured-output model;
+  it adds refinements such as OpenID Connect discovery support, URL-mode
+  elicitation, richer metadata, tool-name guidance, and a clarified
+  <code>403 Forbidden</code> response for invalid <code>Origin</code> headers.
+</div>
+
 <h2>1) Transport: HTTP+SSE → Streamable HTTP</h2>
 
 <p>In the older spec, an MCP server over HTTP exposed two endpoints — a
@@ -39,7 +48,17 @@ endpoint, typically <code>/mcp</code>. The semantics are:</p>
       sampling, elicitation).</li>
   <li>A <code>Mcp-Session-Id</code> header issued on initialize keeps the two
       sides correlated through any proxy.</li>
+  <li>HTTP clients include <code>MCP-Protocol-Version</code> on subsequent
+      requests, using the version negotiated during initialization.</li>
 </ul>
+
+<div class="tr-warn">
+  <strong>Security detail that is easy to miss</strong>
+  Streamable HTTP servers must validate <code>Origin</code> headers to defend
+  against DNS rebinding. Local servers should bind to localhost unless they
+  are intentionally exposed, and production servers should require proper
+  authentication.
+</div>
 
 <h3>What this means for the code in Chapter 1</h3>
 <p>Practically nothing changes for the user — <code>FastMCP</code> already calls
@@ -59,6 +78,8 @@ pattern. The 2025 spec formalizes this and is now an OAuth 2.1 profile:</p>
   <li>Clients use <strong>OAuth 2.1</strong> — Authorization Code + PKCE only,
       no implicit, no password grant. (Same flow as Chapter 7, just the
       newer consolidated spec.)</li>
+  <li>Newer revisions also allow OpenID Connect Discovery to help find
+      authorization-server metadata when an IdP supports it.</li>
   <li>Tokens are validated as in Chapter 9: JWKS for JWTs, introspection
       for opaque tokens.</li>
   <li>The <strong>resource indicator</strong> (<code>resource=</code> parameter, RFC 8707)
@@ -85,7 +106,7 @@ confirmation, a clarification) had to either fail the call or guess. The
 new <code>elicitation/create</code> method lets the server ask the
 <em>user</em> for input via the host:</p>
 
-<pre><code># Server side (hypothetical FastMCP API; check your SDK's exact name)
+<pre><code># Server side (conceptual FastMCP-style API; adapt names to your SDK)
 @mcp.tool()
 async def book_flight(ctx, origin: str, destination: str) -&gt; dict:
     if not origin:
@@ -160,6 +181,12 @@ the loop. This is the right primitive for RAG‑style answers.</p>
   <li><strong>JSON‑RPC batching</strong> was <em>removed</em> in
       <code>2025-06-18</code>. If your old client sent batched requests,
       switch to one request per call.</li>
+  <li><strong>Protocol version header</strong> — HTTP clients send
+      <code>MCP-Protocol-Version</code> after initialization so servers can
+      apply the correct revision-specific behavior.</li>
+  <li><strong>2025-11-25 refinements</strong> — OpenID Connect Discovery,
+      URL-mode elicitation, metadata icons, tool-name guidance, and experimental
+      durable tasks appear after the 2025-06-18 revision.</li>
 </ul>
 
 <h2>7) Migration checklist</h2>

@@ -46,7 +46,7 @@
       </div>
 
       <div class="card">
-        <h3>Example time series plot (online)</h3>
+        <h3>Example time series plot</h3>
         <figure>
           <img
             src="../assets/images/external/COVID-19_Confirmed_Cases-d7a49434a6-fallback.svg"
@@ -54,7 +54,7 @@
             style="width:100%; height:auto; border:1px solid var(--border); border-radius:12px;"
           />
           <figcaption>
-            Any “value vs time” curve is a time series. Source: Wikimedia Commons (inline image).
+            Any “value vs time” curve is a time series. Displayed as a local asset; source credit retained where applicable.
           </figcaption>
         </figure>
       </div>
@@ -268,6 +268,11 @@ print("First 5 preds:", preds[:5])</code></pre>
         This tutorial intentionally starts with the simplest correct approach: an autoregressive baseline.
         RNNs (and later, modern sequence models) shine when relationships are nonlinear and depend on longer context,
         but the data-shape thinking (\(N \times T \times D\)) and the “no future leakage” rule stay the same.
+      </p>
+      <p>
+        A strong sequence model does not remove the need for a chronological validation split. If preprocessing, scaling,
+        feature selection, or hyperparameter tuning sees the future period, the evaluation is optimistic even when the model
+        architecture itself is correct.
       </p>
       <p class="mini">
         If your baseline is wrong (e.g., uses true future inputs), you can’t trust any advanced model results either.

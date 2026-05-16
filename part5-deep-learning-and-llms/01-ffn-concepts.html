@@ -522,17 +522,25 @@ mistakes = collect_mistakes()
 print("Collected mistakes:", len(mistakes))
 </code></pre>
 
-      <h3>Plotting training curves (use online plots; don’t generate here)</h3>
+      <h3>Plotting training curves</h3>
       <p class="muted">
-        To follow your requirement (“use online plots without trying to generate them”), you can compare your runs to standard learning-curve
-        discussions and visualizations. For example, you can search for “MNIST SGD learning curve cross entropy” and compare shapes.
-        If you want, you can log your own metrics and view them in TensorBoard, Weights &amp; Biases, or another dashboard (those generate plots externally).
+        You can compare your runs to standard learning-curve discussions and visualizations.
+        For example, compare whether training loss decreases smoothly, validation loss follows it, or validation loss starts rising while training loss keeps falling.
+        You can also log your own metrics and view them in TensorBoard, Weights &amp; Biases, or another dashboard.
       </p>
 
       <div class="callout">
         <p style="margin:0;">
           <b>Common gotcha:</b> If you use <code>nn.CrossEntropyLoss()</code>, do <b>not</b> apply softmax in your model forward pass.
           Cross-entropy expects raw logits.
+        </p>
+      </div>
+
+      <div class="callout">
+        <p style="margin:0;">
+          <b>Probability nuance:</b> softmax outputs non-negative values that sum to 1, so they are convenient class probabilities.
+          They are not automatically <i>well calibrated</i>. A model can be 99% confident and still be wrong. Calibration is a separate
+          evaluation topic, usually checked with reliability diagrams, expected calibration error, or held-out validation data.
         </p>
       </div>
     </section>

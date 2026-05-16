@@ -32,7 +32,7 @@ gcloud billing projects link myapp-dev  --billing-account=BILLING_ACCOUNT_ID</co
 gcloud compute networks subnets create subnet-us --project=myapp-prod \
     --network=my-vpc --region=us-central1 --range=10.10.0.0/16</code></pre>
 
-<p>If using Shared VPC, set up one “host” project containing the VPC, and attach service projects (e.g. myapp-prod) to it. Configure firewall rules to allow only necessary traffic (e.g. allow HTTPS (443) from 0.0.0.0/0 to the load balancer, allow health checks, etc.). Use Private Google Access and Private IP for Cloud SQL if you want internal-only DB access.</p>
+<p>If using Shared VPC, set up one “host” project containing the VPC, and attach service projects (e.g. myapp-prod) to it. Configure firewall rules to allow only necessary traffic (for example, allow public HTTPS only to the external load balancer, allow Google health-check ranges to backend services, and keep database traffic private). Use Private Google Access and Private IP for Cloud SQL for production database access.</p>
 
 <p>Finally, tag and label your projects and resources for clarity (e.g. env=prod). At the org level, enforce policies (such as disabling default-credential grants) so that service accounts must have only the permissions you grant.</p>
 
@@ -46,7 +46,10 @@ gcloud compute networks subnets create subnet-us --project=myapp-prod \
 <pre><code class="language-bash">gcloud iam service-accounts create backend-sa --display-name="Backend Service Account"
 gcloud projects add-iam-policy-binding myapp-prod \
     --member="serviceAccount:backend-sa@myapp-prod.iam.gserviceaccount.com" \
-    --role="roles/cloudsql.client"  \
+    --role="roles/cloudsql.client"
+
+gcloud projects add-iam-policy-binding myapp-prod \
+    --member="serviceAccount:backend-sa@myapp-prod.iam.gserviceaccount.com" \
     --role="roles/logging.logWriter"</code></pre>
     </li>
 
@@ -61,7 +64,7 @@ metadata:
     Then deploy this KSA into the cluster (e.g. <code>kubectl apply -f ...</code>). This binds the KSA to backend-sa via Workload Identity. Now pods using backend-ksa will automatically present the Google SA identity when calling GCP APIs.
     </li>
 
-    <li><strong>Cloud Run authentication to GCP:</strong> Cloud Run uses its service identity (the Google SA you assign) to call other Google Cloud services. By default Cloud Run will fetch tokens from its metadata server and use ADC. Ensure the Cloud Run SA has the right roles (e.g. roles/storage.admin to write to buckets, roles/iam.serviceAccountTokenCreator if you need to generate ID tokens). As above, use a user-managed SA and avoid giving it broad Editor rights.</li>
+    <li><strong>Cloud Run authentication to GCP:</strong> Cloud Run uses its service identity (the Google SA you assign) to call other Google Cloud services. By default Cloud Run will fetch tokens from its metadata server and use ADC. Ensure the Cloud Run SA has the right roles (for example <code>roles/storage.objectViewer</code> to read static objects, <code>roles/storage.objectUser</code> to write objects, and <code>roles/iam.serviceAccountTokenCreator</code> only if it truly needs to mint tokens). As above, use a user-managed SA and avoid broad roles like Editor or project-wide Storage Admin unless there is a specific operational reason.</li>
 </ul>
 
 <p>Remember to use Google Groups to manage user access to projects. Assign IAM roles to groups (e.g. “NetworkAdmin”, “DevOps”, “AppDeveloper”) rather than individual users.</p>
@@ -118,30 +121,43 @@ blob.upload_from_filename('localfile.png')</code></pre>
 <p>Our frontend is a React Single-Page App; our backend is a FastAPI microservice.</p>
 
 <h3>Frontend on Cloud Run</h3>
-<p>Containerize the React app (e.g. with a Node build stage and Nginx serving the build). Example Dockerfile:</p>
+<p>For a purely static React SPA, Cloud Storage + Cloud CDN, Firebase Hosting, or a managed static host is often the simplest industry-standard deployment. Use Cloud Run when you want a containerized frontend, SSR, a backend-for-frontend, or the same release controls as the rest of your services. If you do containerize the SPA, use reproducible installs and a non-root runtime image:</p>
 <pre><code class="language-dockerfile"># Build stage
-FROM node:18 AS builder
+FROM node:lts-bookworm-slim AS builder
 WORKDIR /app
 COPY package*.json ./
-RUN npm install
+RUN npm ci
 COPY . .
 RUN npm run build
 
-# Serve with nginx
-FROM nginx:alpine
+# Serve with nginx as a non-root user; pin image digests in production.
+FROM nginxinc/nginx-unprivileged:stable-alpine
 COPY --from=builder /app/build /usr/share/nginx/html</code></pre>
 
-<p>Build and push the container image (replace gcr.io/myapp-prod with your container registry):</p>
-<pre><code class="language-bash">docker build -t gcr.io/myapp-prod/react-frontend:latest .
-docker push gcr.io/myapp-prod/react-frontend:latest</code></pre>
+<p>Build and push the container image. New GCP projects usually use Artifact Registry rather than the older Container Registry-style <code>gcr.io</code> path:</p>
+<pre><code class="language-bash">REGION=us-central1
+PROJECT_ID=myapp-prod
+REPOSITORY=app-images
+TAG=2026-05-17
+
+gcloud artifacts repositories create "$REPOSITORY" \
+    --repository-format=docker \
+    --location="$REGION"
+
+docker build -t "$REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/react-frontend:$TAG" .
+docker push "$REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/react-frontend:$TAG"</code></pre>
+
+<p>For production, prefer immutable version tags or image digests over <code>latest</code>. That makes rollbacks and audit trails much easier.</p>
 
 <p>Deploy it to Cloud Run:</p>
 <pre><code class="language-bash">gcloud run deploy react-frontend \
-    --image gcr.io/myapp-prod/react-frontend:latest \
+    --image us-central1-docker.pkg.dev/myapp-prod/app-images/react-frontend:2026-05-17 \
     --region us-central1 \
     --platform managed \
     --allow-unauthenticated \
     --service-account=frontend-sa@myapp-prod.iam.gserviceaccount.com</code></pre>
+
+<p><code>--allow-unauthenticated</code> is appropriate for a public marketing site or public SPA shell. For internal/admin frontends, remove it and put Cloud Run behind IAM, Identity-Aware Proxy, or your enterprise IdP.</p>
 
 <p>Cloud Run automatically provisions an HTTPS endpoint for you (for example https://react-frontend-abcd1234-uc.a.run.app). It only serves over HTTPS – HTTP is redirected to HTTPS by default. If you want a custom domain (e.g. www.myapp.com), you can map it in Cloud Run settings.</p>
 
@@ -180,7 +196,7 @@ spec:
       serviceAccountName: backend-ksa
       containers:
       - name: fastapi
-        image: gcr.io/myapp-prod/fastapi-backend:latest
+        image: us-central1-docker.pkg.dev/myapp-prod/app-images/fastapi-backend:2026-05-17
         ports: [ { containerPort: 80 } ]
 
 apiVersion: v1

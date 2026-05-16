@@ -70,7 +70,7 @@
         <a href="#dot">Dot product / cosine similarity view</a>
         <a href="#matrix">Convolution as matrix multiplication</a>
         <a href="#torch">PyTorch conv2d quickstart</a>
-        <a href="#credits">Online plots used</a>
+        <a href="#credits">Local visuals and credits</a>
       </nav>
     </header>
 
@@ -564,6 +564,14 @@ print(y_padded[0,0])</code></pre>
       <p class="muted">
         This example uses PyTorch’s deep-learning “convolution” (cross-correlation). The values match the hand computation for valid mode.
       </p>
+      <div class="callout">
+        <p style="margin:0;">
+          <b>Terminology precision:</b> classical signal-processing convolution flips the kernel before sliding it.
+          Most deep-learning libraries, including PyTorch <code>Conv2d</code>, compute cross-correlation instead.
+          Because kernels are learned, the distinction usually does not change model expressiveness, but it matters when
+          you manually compare against a textbook convolution formula.
+        </p>
+      </div>
     </section>
 
     <section id="credits">
@@ -580,7 +588,7 @@ print(y_padded[0,0])</code></pre>
 
       <div class="hr"></div>
       <p class="muted small">
-        This HTML is designed to be self-sufficient: equations render via MathJax CDN, code blocks are high-contrast with copy buttons,
+        This HTML is designed to be self-sufficient: equations render via MathJax, code blocks use the shared book copy controls,
         and plots/animations are served from local assets.
       </p>
     </section>

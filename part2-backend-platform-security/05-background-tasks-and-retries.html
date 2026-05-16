@@ -39,16 +39,16 @@
 
 app = FastAPI()
 
-<span style="color: #008000;"># --- pretend identity (normally from JWT/Bearer dependency) ---</span>
+    <span style="color: #008000;"># --- teaching identity (production: verified JWT/Bearer dependency) ---</span>
 <span style="color: #0000ff;">class</span> <span style="color: #2b91af;">Identity</span>(BaseModel):
     tenant_id: str
     user_id: str
 
 <span style="color: #0000ff;">def</span> <span style="color: #795e26;">get_identity</span>() -&gt; Identity:
-    <span style="color: #008000;"># placeholder: in real life, derive from Bearer token</span>
+    <span style="color: #008000;"># production: verify Bearer token and derive tenant/user from claims</span>
     <span style="color: #0000ff;">return</span> Identity(tenant_id=<span style="color: #a31515;">"tenant-acme"</span>, user_id=<span style="color: #a31515;">"user-123"</span>)
 
-<span style="color: #008000;"># --- pretend DB tables ---</span>
+    <span style="color: #008000;"># --- teaching in-memory stores (production: database + durable queue) ---</span>
 JOBS: dict[str, dict] = {}               <span style="color: #008000;"># job_id -> {tenant_id,user_id,status}</span>
 IDEMPOTENCY: dict[str, dict] = {}        <span style="color: #008000;"># (tenant_id, idem_key) -> response</span>
 
@@ -86,7 +86,9 @@ IDEMPOTENCY: dict[str, dict] = {}        <span style="color: #008000;"># (tenant
     <span style="color: #008000;"># schedule work after response</span>
     background.add_task(ingest_job, job_id)
 
-    <span style="color: #0000ff;">return</span> response</code></pre>
+	    <span style="color: #0000ff;">return</span> response</code></pre>
+
+    <p class="highlight-box"><strong>Industry standard:</strong> FastAPI <code>BackgroundTasks</code> is fine for short best-effort work inside the same process. For ingestion, emails, document processing, retries, or anything that must survive a restart, put the job in a durable queue such as Cloud Tasks, Pub/Sub, Celery/RQ backed by Redis, or a managed workflow service, and persist job state in the database.</p>
 
     <h3>How the client calls it (retry-safe)</h3>
 

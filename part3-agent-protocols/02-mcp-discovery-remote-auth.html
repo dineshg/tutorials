@@ -29,7 +29,7 @@
         <li><a href="#openai-llm">7) Using a remote MCP server from an LLM (OpenAI analogy)</a></li>
         <li><a href="#auth">8) Authentication & Identity Providers in MCP</a></li>
         <li><a href="#auth-selfhosted">9) Self-hosted IdP + Bearer token + middleware validation</a></li>
-        <li><a href="#auth-get-token">10) How the client gets tokens (password/auth-key vs PKCE)</a></li>
+        <li><a href="#auth-get-token">10) How the client gets tokens (PKCE, client credentials, token exchange)</a></li>
         <li><a href="#auth-validate">11) How the server validates tokens (introspection vs JWKS)</a></li>
         <li><a href="#best-practices">12) Practical best practices (tool allow-list, least privilege, CORS)</a></li>
         <li><a href="#troubleshooting">13) Beginner troubleshooting checklist</a></li>
@@ -546,7 +546,7 @@ tools <span class="op">=</span> [
     <h3>9.1 Opaque token path (introspection)</h3>
     <div class="card">
       <div class="diagram">
-        Client → IdP: POST /token (username/password or auth-key) → access_token (opaque)<br/>
+        Client → IdP: standards-based OAuth flow → access_token (opaque or JWT)<br/>
         Client → MCP: Authorization: Bearer access_token<br/>
         MCP → IdP: POST /introspect (token) → active? claims? scopes?<br/>
         MCP → allow/deny
@@ -565,7 +565,13 @@ auth <span class="op">=</span> request.headers.<span class="fn">get</span>(<span
 
 token <span class="op">=</span> auth.<span class="fn">split</span>(<span class="str">" "</span>, <span class="num">1</span>)[<span class="num">1</span>].<span class="fn">strip</span>()
 
-r <span class="op">=</span> <span class="kw">await</span> client.<span class="fn">post</span>(IDP_INTROSPECT_URL, json<span class="op">=</span>{<span class="str">"token"</span>: token})
+r <span class="op">=</span> <span class="kw">await</span> client.<span class="fn">post</span>(
+    IDP_INTROSPECT_URL,
+    data<span class="op">=</span>{<span class="str">"token"</span>: token},
+    auth<span class="op">=</span>(INTROSPECTION_CLIENT_ID, INTROSPECTION_CLIENT_SECRET),
+    timeout<span class="op">=</span><span class="num">5</span>,
+)
+r.<span class="fn">raise_for_status</span>()
 data <span class="op">=</span> r.<span class="fn">json</span>()
 <span class="kw">if</span> <span class="kw">not</span> data.<span class="fn">get</span>(<span class="str">"active"</span>):
     <span class="kw">return</span> <span class="typ">JSONResponse</span>({<span class="str">"detail"</span>: <span class="str">"Invalid token"</span>}, status_code<span class="op">=</span><span class="num">401</span>)
@@ -580,7 +586,7 @@ request.state.scope <span class="op">=</span> data.<span class="fn">get</span>(<
   </section>
 
   <section id="auth-get-token">
-    <h2>10) How clients get tokens: password/auth-key (local) vs PKCE (public)</h2>
+    <h2>10) How clients get tokens: PKCE, client credentials, and token exchange</h2>
 
     <p>
       You asked two key questions:
@@ -590,20 +596,22 @@ request.state.scope <span class="op">=</span> data.<span class="fn">get</span>(<
       <li>“Client has to access Google server to get bearer token still? Is this PKCE?”</li>
     </ul>
 
-    <h3>10.1 Local services (can keep secrets): password OR auth-key exchange</h3>
+    <h3>10.1 Confidential clients and services</h3>
     <p>
-      If your client is a backend service, CLI, or trusted machine environment, it can keep secrets safely (vault/env vars).
-      You can obtain bearer tokens by:
+      If your client is a backend service, CLI running in a managed environment, or trusted machine workload,
+      use a standards-based OAuth pattern rather than passing user passwords around:
     </p>
     <ul>
-      <li><strong>Username/password</strong> (user identity) → token (scoped to user)</li>
-      <li><strong>Auth key / client credential</strong> (service identity) → token (scoped to service)</li>
+      <li><strong>Authorization Code + PKCE</strong> when a human user is signing in.</li>
+      <li><strong>Client Credentials</strong> or workload identity federation for service-to-service calls.</li>
+      <li><strong>Token Exchange</strong> when a host service must call MCP on behalf of an already-authenticated user.</li>
     </ul>
 
     <div class="callout">
-      <strong>Why use auth keys?</strong>
-      They help when you don’t want to store user passwords or you need machine-to-machine access.
-      They also simplify rotation and auditing at the service level.
+      <strong>Where API keys fit:</strong>
+      API keys can still be useful for legacy integrations, bootstrap, or low-risk service identification,
+      but they are not the preferred way to represent end-user identity. Prefer OAuth tokens with issuer,
+      audience, expiry, and scopes.
     </div>
 
     <h3>10.2 Public clients (cannot keep secrets): PKCE</h3>
@@ -675,6 +683,11 @@ request.state.scope <span class="op">=</span> data.<span class="fn">get</span>(<
       If a browser-based host calls your MCP server cross-origin, you must configure CORS properly.
       Expect OPTIONS preflight if you use Authorization headers.
     </p>
+    <div class="callout warn">
+      <strong>Industry standard:</strong> do not use wildcard CORS with credentialed requests.
+      Allow only the exact host origins you operate, return only the methods/headers required,
+      and keep authorization enforcement on the server even when CORS blocks browsers.
+    </div>
 
     <div class="callout ok">
       <strong>One-sentence summary:</strong><br/>
@@ -689,7 +702,7 @@ request.state.scope <span class="op">=</span> data.<span class="fn">get</span>(<
     <div class="card">
       <div class="diagram">
         1) Host connects to MCP server and discovers tools/resources/prompts<br/>
-        2) Host obtains bearer token from IdP (password/auth-key for local services; PKCE for public clients)<br/>
+        2) Host obtains bearer token from IdP (PKCE for public clients; client credentials or token exchange for services)<br/>
         3) Host calls MCP server with Authorization: Bearer token<br/>
         4) MCP middleware validates token (introspection or JWT+JWKS public key)<br/>
         5) Host lets model call allow-listed tools; executes calls; returns results to model<br/>

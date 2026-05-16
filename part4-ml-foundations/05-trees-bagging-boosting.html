@@ -555,6 +555,13 @@ Final prediction:
         </div>
       </div>
 
+      <div class="callout amber">
+        <strong>Regression vs classification nuance:</strong>
+        for squared-error regression, the “errors” are literal residuals.
+        For logistic loss and other objectives, boosting fits negative
+        gradients (pseudo-residuals), not raw label errors.
+      </div>
+
       <h3>What makes XGBoost special?</h3>
       <div class="grid cols3">
         <div class="card">
@@ -593,13 +600,19 @@ Final prediction:
         <p>
           For a candidate split, XGBoost summarizes the node using two numbers:
           the sum of gradients (G) and sum of Hessians (H) in that node.
-          It can estimate how much the objective improves if we split into left and right.
+          It estimates how much the regularized objective improves if we split into left and right.
         </p>
         <div class="math">
-          $$\mathrm{Gain} \approx \mathrm{Score}(L) + \mathrm{Score}(R) - \mathrm{Score}(\text{parent}) - \gamma$$
+          $$\mathrm{Gain} =
+          \frac{1}{2}\left[
+          \frac{G_L^2}{H_L+\lambda} +
+          \frac{G_R^2}{H_R+\lambda} -
+          \frac{(G_L+G_R)^2}{H_L+H_R+\lambda}
+          \right] - \gamma$$
         </div>
         <p>
-          Where γ is a penalty for creating a new split (discourages unnecessary splits).
+          Where λ is L2 regularization on leaf weights and γ is a penalty for creating a new split
+          (discouraging unnecessary splits).
         </p>
       </details>
 
@@ -763,4 +776,3 @@ Final prediction:
   <script src="../assets/js/nav.js"></script>
 </body>
 </html>
-

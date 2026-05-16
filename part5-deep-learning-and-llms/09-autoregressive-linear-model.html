@@ -46,12 +46,11 @@
     </div>
 
     <div class="card">
-      <h3>Optional visual: sine wave (online image)</h3>
+      <h3>Optional visual: sine wave</h3>
       <p class="muted">A sine wave is periodic, which makes it great for controlled experiments.</p>
-      <!-- Replace the src with any other trusted sine-wave SVG if you prefer -->
       <img
         src="../assets/images/external/Sine_wave-abf800537c-fallback.svg"
-        alt="Sine wave plot (SVG) from Wikimedia"
+        alt="Sine wave plot"
       />
     </div>
   </section>
@@ -307,6 +306,7 @@ plt.show()
         <li><b>Random train/test split:</b> don’t do it for forecasting—split chronologically.</li>
         <li><b>Evaluating only 1-step ahead:</b> can be useful, but it’s not the same as multi-step forecasting.</li>
         <li><b>Error compounding:</b> recursive forecasting will drift if the model is slightly wrong.</li>
+        <li><b>Scaling leakage:</b> fit scalers on the training period only, then transform validation/test periods with those training statistics.</li>
       </ul>
     </div>
   </section>

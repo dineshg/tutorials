@@ -62,6 +62,7 @@
 
     <h2>Example FastAPI Endpoint for User Provisioning</h2>
     <p>This endpoint is the bootstrap call that validates the Bearer token, looks up the user, creates the DB row if missing, and returns user details.</p>
+    <p class="callout warn">The code below is a teaching scaffold. The industry-standard version verifies the token against JWKS/OIDC discovery, stores users in a real database with a unique constraint on <code>(issuer, subject)</code>, performs the create-or-return logic in a transaction/upsert, and records audit fields such as <code>created_at</code> and <code>last_login_at</code>.</p>
     <pre><code><span style="color: #0000ff;">from</span> fastapi <span style="color: #0000ff;">import</span> FastAPI, Depends, HTTPException
 <span style="color: #0000ff;">from</span> fastapi.security <span style="color: #0000ff;">import</span> HTTPAuthorizationCredentials, HTTPBearer
 <span style="color: #0000ff;">from</span> pydantic <span style="color: #0000ff;">import</span> BaseModel
@@ -75,18 +76,20 @@ bearer = HTTPBearer(auto_error=<span style="color: #0000ff;">True</span>)
     tenant_id: str
     is_new_user: bool
 
-<span style="color: #008000;"># --- Pretend DB (replace with Postgres later) ---</span>
+	<span style="color: #008000;"># --- Teaching-only in-memory store (production: Postgres/Cloud SQL) ---</span>
 USERS_BY_ISS_SUB: dict[tuple[str, str], dict] = {}  <span style="color: #008000;"># key = (issuer, sub)</span>
 
-<span style="color: #008000;"># --- Token verification (placeholder) ---</span>
+	<span style="color: #008000;"># --- Teaching-only token verifier (production: JWT/JWKS validation) ---</span>
 <span style="color: #0000ff;">def</span> <span style="color: #795e26;">verify_and_decode_access_token</span>(token: str) -&gt; dict:
     <span style="color: #a31515;">"""
-    Real implementation would:
-      - verify JWT signature using Google JWKS
-      - check issuer (iss), audience (aud), expiry (exp)
-    Here we return mock claims so you see where they come from.
+	    Production implementation:
+	      - verify JWT signature using Google JWKS
+	      - check issuer (iss), audience (aud), expiry (exp)
+	      - optionally check nonce/azp/scopes depending on token type
+	    This teaching version returns mock claims so you see where they come from.
     """</span>
-    <span style="color: #0000ff;">if</span> token == <span style="color: #a31515;">"tokenA"</span>:
+    <span style="color: #008000;"># demo-alice-token is only a classroom stand-in for an already-verified JWT.</span>
+    <span style="color: #0000ff;">if</span> token == <span style="color: #a31515;">"demo-alice-token"</span>:
         <span style="color: #0000ff;">return</span> {
             <span style="color: #a31515;">"iss"</span>: <span style="color: #a31515;">"https://accounts.google.com"</span>,
             <span style="color: #a31515;">"sub"</span>: <span style="color: #a31515;">"user-A-sub"</span>,

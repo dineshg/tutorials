@@ -314,7 +314,7 @@
   footer.className = "tr-footer";
   footer.innerHTML =
     'Tutorial Refined — built from the original /pytorch tutorials. ' +
-    'Original content preserved verbatim; new chapters marked “(NEW)” add latest methods.';
+    'Original scope and theory preserved; new chapters marked “(NEW)” add current methods.';
   content.appendChild(footer);
 
   main.appendChild(content);

@@ -223,7 +223,7 @@
     <ul>
       <li><code>nn.Dropout(p)</code> applies random masking only when the module is in <code>train()</code> mode.</li>
       <li>In <code>eval()</code> mode, it becomes an identity function (no change).</li>
-      <li>Masks are typically sampled per forward call (practically per mini-batch).</li>
+      <li>For standard dropout, mask entries are sampled independently for activations during each forward call. Structured variants such as <code>Dropout2d</code> drop whole channels instead.</li>
     </ul>
 
     <div class="codewrap">
@@ -354,6 +354,10 @@ print("val acc:", correct / total)</code></pre>
     <p>
       Often not necessary. If you do, consider channel-wise dropout (<code>Dropout2d</code>) rather than pixel-wise dropout,
       and verify by experiment—sometimes it helps, sometimes it’s neutral.
+    </p>
+    <p>
+      In modern CNNs, batch normalization, data augmentation, weight decay, early stopping, and larger datasets often reduce
+      the need for heavy dropout. Dropout is still valid, but it is a regularization choice to validate, not a mandatory CNN ingredient.
     </p>
   </section>
 

@@ -79,7 +79,7 @@
           src="../assets/images/external/960px-Recurrent_neural_network_unfold.svg-4cef6e46bf-fallback.svg"
         />
         <figcaption>
-          Unrolling an RNN across time (same cell repeated at each step). Source: Wikimedia Commons.  [oai_citation:0‡Wikimedia Commons](https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Recurrent_neural_network_unfold.svg/960px-Recurrent_neural_network_unfold.svg.png)
+          Unrolling an RNN across time: the same cell and parameters are reused at each step.
         </figcaption>
       </figure>
 
@@ -89,7 +89,7 @@
           src="../assets/images/external/DiagramElmanNet_english-1e821cdb14-fallback.svg"
         />
         <figcaption>
-          The classic “Elman” recurrent network view. Source: Wikimedia Commons.  [oai_citation:1‡Wikimedia Commons](https://upload.wikimedia.org/wikipedia/commons/3/3b/DiagramElmanNet_english.png)
+          The classic “Elman” recurrent network view: current input plus previous hidden state produce the next hidden state.
         </figcaption>
       </figure>
     </div>
@@ -105,7 +105,11 @@
     </ul>
     <p>
       The only thing that changes over time is the <em>data</em> (\(x_t\)) and the <em>state</em> (\(h_{t-1}\to h_t\)).
-      This is exactly why RNNs can be far cheaper than flattening.
+      This is exactly why RNNs can have far fewer parameters than a flattened dense design.
+    </p>
+    <p>
+      Cost nuance: the <em>parameter count</em> does not grow with \(T\), but the <em>computation</em> still runs once per time step,
+      and training stores intermediate states for backpropagation through time. Long sequences can still be expensive.
     </p>
 
     <h2>3) Many-to-one vs many-to-many: why you might “ignore” most outputs</h2>
@@ -169,6 +173,11 @@ for t in range(T):
       \[
         MD + M^2 + OM
       \]
+    </p>
+    <p class="muted">
+      This comparison is about trainable parameters. Runtime still scales with sequence length because the recurrent update is applied
+      at every step. For many-to-one tasks, the output head may only be applied to the final hidden state; for many-to-many tasks, it is
+      applied at each step, which changes compute but not the shared recurrent parameter count.
     </p>
 
     <div class="callout">

@@ -7,7 +7,7 @@ A unified, GitHub‑style tutorial book that consolidates the original
 
 > **Or open `index.html` in a browser** to read it locally. Every chapter
 > shares a fixed header, a left sidebar, breadcrumbs, and prev/next pagers.
-> The existing tutorial content was preserved verbatim — nothing was truncated.
+> The existing tutorial scope and theory were preserved — nothing was truncated.
 
 ## Hosting (GitHub Pages)
 
@@ -40,8 +40,9 @@ The home page (`index.html`) lists explicit reading paths for:
 
 ## What was added vs. the originals
 
-The original tutorials were preserved as-is. The following new chapters were
-added to fill gaps and cover the latest methods:
+The original tutorials were consolidated, then formatting and selected technical
+wording were refreshed without intentionally dropping theory. The following new
+chapters were added to fill gaps and cover current methods:
 
 - `part2-backend-platform-security/15-modern-auth-additions.html`
   Passkeys / WebAuthn, DPoP sender‑constrained tokens, mTLS, token‑exchange (RFC 8693).
@@ -62,7 +63,7 @@ added to fill gaps and cover the latest methods:
 - **Part III reordered** so the four MCP chapters are contiguous (1 → 4),
   followed by A2A, JS/TS primer, and LangChain.
 - **Part V Chapter 3** (FFN canonical merged) is now labelled and styled as
-  *optional reference* — it duplicates Chapters 1 + 2 verbatim.
+  *optional reference* — it duplicates the FFN theory from Chapters 1 + 2.
 - **Appendices** (`Appendix A`, `Appendix B`) now have HTML wrappers that
   render the `.md` and `.tex` source inline, so they are first‑class book
   chapters with the shared header / sidebar / pager. The raw `.md` and

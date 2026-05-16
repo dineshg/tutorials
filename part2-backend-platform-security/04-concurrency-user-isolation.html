@@ -75,20 +75,17 @@ class Identity(BaseModel):
     tenant_id: str
     user_id: str
 
-# Dependency to extract identity from header
+# Dependency to extract identity from a verified bearer token
 def get_identity(authorization: str | None = Header(None)) -> Identity:
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Missing bearer token")
 
     token = authorization.removeprefix("Bearer ").strip()
 
-    # demo-only logic
-    if token == "tokenA":
-        return Identity(tenant_id="tenant-1", user_id="user-A")
-    if token == "tokenB":
-        return Identity(tenant_id="tenant-2", user_id="user-B")
-    
-    raise HTTPException(status_code=401, detail="Invalid token")
+    # Production: verify JWT signature + iss/aud/exp, then map claims to tenant/user.
+    # This chapter focuses on request isolation, so imagine this returns verified claims.
+    claims = verify_and_decode_jwt(token)
+    return Identity(tenant_id=claims["tenant_id"], user_id=claims["sub"])
 
 @app.post("/query")
 async def query(req: QueryReq, ident: Identity = Depends(get_identity)):
@@ -102,13 +99,13 @@ async def query(req: QueryReq, ident: Identity = Depends(get_identity)):
         <div class="comparison-grid">
             <div class="concept-box">
                 <h4>User A Request</h4>
-                <pre>Authorization: Bearer tokenA</pre>
+                <pre>Authorization: Bearer &lt;verified JWT for Alice&gt;</pre>
                 <p>FastAPI calls:</p>
                 <code>ident=Identity(tenant_id="tenant-1", ...)</code>
             </div>
             <div class="concept-box">
                 <h4>User B Request</h4>
-                <pre>Authorization: Bearer tokenB</pre>
+                <pre>Authorization: Bearer &lt;verified JWT for Bob&gt;</pre>
                 <p>FastAPI calls:</p>
                 <code>ident=Identity(tenant_id="tenant-2", ...)</code>
             </div>

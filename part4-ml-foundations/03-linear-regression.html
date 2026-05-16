@@ -288,13 +288,14 @@ print(loss.item())</code></pre>
                         <p>$$ \frac{\partial L}{\partial m} = 0, \qquad \frac{\partial L}{\partial b} = 0. $$</p>
 
                         <p>
-                            However, this approach does not generalize to more complex models, such as deep neural
-                            networks, where the loss depends on thousands or millions of parameters in highly
-                            nonlinear ways. Instead, we use gradient-based iterative methods.
+                            The normal-equation approach is useful theory, and closed-form or direct solvers remain
+                            important for some linear models. However, this approach does not generalize cleanly to
+                            deep neural networks, where the loss depends on thousands or millions of parameters in
+                            highly nonlinear ways. For those models, we use gradient-based iterative methods.
                         </p>
 
                         <p>
-                            For a parameter vector $\theta$ (in our case $\theta = {m, b}$), classic gradient
+                            For a parameter vector $\theta$ (in our case $\theta = \{m, b\}$), classic gradient
                             descent updates parameters as:
                         </p>
                         <p>$$ \theta \leftarrow \theta - \eta \nabla_\theta L(\theta), $$</p>

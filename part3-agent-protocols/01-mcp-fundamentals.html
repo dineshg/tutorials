@@ -41,7 +41,7 @@
                 <p>Without MCP, if you want user data, you might need to know:</p>
                 <ul style="margin-top: 10px;">
                     <li>Is it <code class="inline-code">GET https://api.vendor.com/users?email=...</code>?</li>
-                    <li>Or <code class="inline-code">SELECT * FROM users WHERE email = ...</code>?</li>
+                    <li>Or <code class="inline-code">SELECT user_id, email, plan FROM users WHERE email = :email</code>?</li>
                     <li>Or <code class="inline-code">sdk.users.get(email)</code>?</li>
                 </ul>
                 <p style="margin-top: 10px;">Each requires different code, different error handling, different security patterns.</p>

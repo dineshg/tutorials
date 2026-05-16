@@ -153,13 +153,13 @@ async def _get_salesforce_token() -> tuple[str, str]:
 # -----------------------------------------------------------------------------
 @mcp.resource("resource://salesforce/soql_policy")
 def soql_policy() -> str:
-    return (
-        "BANK POLICY:\n"
-        "- Only SELECT queries\n"
-        "- LIMIT required (<= 50)\n"
-        "- No write keywords (INSERT/UPDATE/DELETE/UPSERT/MERGE)\n"
-        "- Prefer allowlisting objects/fields in production\n"
-    )
+	    return (
+	        "BANK POLICY:\n"
+	        "- Only SELECT queries\n"
+	        "- LIMIT required (<= 50)\n"
+	        "- No write keywords (INSERT/UPDATE/DELETE/UPSERT/MERGE)\n"
+	        "- Require allowlisted objects and fields in production\n"
+	    )
 
 # -----------------------------------------------------------------------------
 # 4) PROMPT: a reusable instruction template clients/agents can fetch
@@ -252,21 +252,22 @@ from fastmcp.client.transports import StreamableHttpTransport
 
 app = FastAPI()
 
-MCP_SF_URL = os.environ["MCP_SF_URL"]                  # e.g. http://mcp-salesforce.internal/mcp
-MCP_SERVICE_TOKEN = os.environ["MCP_SERVICE_TOKEN"]    # same shared secret used by MCP server
+MCP_SF_URL = os.environ["MCP_SF_URL"]                  # e.g. https://mcp-salesforce.internal/mcp
+MCP_SERVICE_TOKEN = os.environ["MCP_SERVICE_TOKEN"]    # short-lived OAuth access token from client credentials/token exchange
 
 class SoqlReq(BaseModel):
     soql: str
 
 async def get_identity():
-    # Placeholder: in your real app, verify Google OIDC Bearer token and return claims.
-    return {"email": "alice@bank.com", "is_admin": True}
+    # Production: verify OIDC Bearer token, map groups/roles, and return claims.
+    return {"email": "alice@bank.com", "roles": ["salesforce.query.read"]}
 
 @app.post("/admin/salesforce/query")
 async def admin_salesforce_query(req: SoqlReq, ident=Depends(get_identity)):
-    # Bank rule: only admins can submit "free-form query text"
-    if not ident.get("is_admin"):
-        raise HTTPException(status_code=403, detail="Admin only")
+    # Bank rule: free-form query text is privileged and should usually be
+    # replaced by named, parameterized tools. If kept, gate it by role/scope.
+    if "salesforce.query.read" not in ident.get("roles", []):
+        raise HTTPException(status_code=403, detail="Missing salesforce.query.read")
 
     # Service-to-service auth to MCP server (NOT the end-user token)
     transport = StreamableHttpTransport(
@@ -342,7 +343,7 @@ async def admin_salesforce_query(req: SoqlReq, ident=Depends(get_identity)):
             <div class="highlight-box">
                 <h4>MCP Server (mcp_salesforce_server.py):</h4>
                 <ul>
-                    <li><code class="inline-code">MCP_SERVICE_TOKEN</code> - Shared secret for FastAPI → MCP auth</li>
+                    <li><code class="inline-code">MCP_SERVICE_TOKEN</code> - Short-lived OAuth token for FastAPI → MCP auth</li>
                     <li><code class="inline-code">SF_CLIENT_ID</code> - Salesforce Connected App consumer key</li>
                     <li><code class="inline-code">SF_USERNAME</code> - Integration user username</li>
                     <li><code class="inline-code">SF_PRIVATE_KEY_PEM</code> - PEM private key for JWT signing</li>
@@ -355,7 +356,7 @@ async def admin_salesforce_query(req: SoqlReq, ident=Depends(get_identity)):
                 <h4>FastAPI Host (main.py):</h4>
                 <ul>
                     <li><code class="inline-code">MCP_SF_URL</code> - MCP server URL (e.g., http://mcp-salesforce.internal/mcp)</li>
-                    <li><code class="inline-code">MCP_SERVICE_TOKEN</code> - Same shared secret as MCP server</li>
+                    <li><code class="inline-code">MCP_SERVICE_TOKEN</code> - Short-lived OAuth token, preferably obtained at startup or per request from the IdP</li>
                 </ul>
             </div>
         </div>

@@ -97,11 +97,11 @@ class MultiHeadAttention(nn.Module):
         self.W_v = nn.Linear(d_model, d_model, bias=False)
         self.W_o = nn.Linear(d_model, d_model, bias=False)
 
-    def forward(self, x, mask=None):
+    def forward(self, x, causal=True):
         B, N, _ = x.shape
         def split(t): return t.view(B, N, self.h, self.d_k).transpose(1, 2)
         Q, K, V = split(self.W_q(x)), split(self.W_k(x)), split(self.W_v(x))
-        out = F.scaled_dot_product_attention(Q, K, V, is_causal=mask is None)
+        out = F.scaled_dot_product_attention(Q, K, V, is_causal=causal)
         out = out.transpose(1, 2).contiguous().view(B, N, self.h * self.d_k)
         return self.W_o(out)
 </code></pre>
@@ -112,6 +112,14 @@ class MultiHeadAttention(nn.Module):
   fused kernels (FlashAttention‑2, memory‑efficient attention) where
   available. Hand‑rolling the einsum version is good for understanding,
   not for production.
+</div>
+
+<div class="tr-warn">
+  <strong>Masking nuance</strong>
+  The compact class above demonstrates decoder-only causal attention. Real
+  training code also handles padding masks, packed sequences, and sometimes
+  non-causal attention; pass those masks explicitly instead of assuming
+  <code>is_causal=True</code> everywhere.
 </div>
 
 <h2>4) Position information: sinusoidal vs RoPE</h2>
@@ -139,8 +147,8 @@ $m - n$:</p>
 $\langle\mathrm{RoPE}(q, m),\ \mathrm{RoPE}(k, n)\rangle
    = f(q, k, m - n)$
 </div>
-<p>This makes long‑context generalization much better and is why every
-modern open‑weights LLM uses it. Variants like <strong>YaRN</strong> and
+<p>This often improves long‑context behavior and is why many modern
+open‑weights LLMs use it. Variants like <strong>YaRN</strong> and
 <strong>NTK‑aware scaling</strong> stretch RoPE's effective range to extend a
 4k‑trained model to 32k+ tokens at inference.</p>
 
@@ -199,9 +207,12 @@ Instead you cache the per‑layer $K$ and $V$ tensors:</p>
   <li>Append $k_t, v_t$ to the cache.</li>
   <li>Attention is now $q_t$ against the cached $K, V$ — linear in $t$.</li>
 </ul>
-<p>The KV cache is the main reason LLM inference is memory‑bound rather than
-compute‑bound, and the reason context length costs RAM (each extra token
-adds <code>2 · n_layers · n_heads · d_head · dtype_bytes</code> per request).</p>
+<p>During decode, the KV cache is a major reason LLM inference often becomes
+memory-bandwidth-bound: every new token must read the cached keys and values.
+Prefill over a long prompt can still be compute-heavy. The cache is also why
+context length costs RAM (each extra token adds roughly
+<code>2 · n_layers · n_kv_heads · d_head · dtype_bytes</code> per request; with
+MQA/GQA, <code>n_kv_heads</code> can be smaller than the number of query heads).</p>
 
 <h2>8) Efficiency: FlashAttention, MQA, GQA, sliding window</h2>
 <ul>
@@ -213,7 +224,7 @@ adds <code>2 · n_layers · n_heads · d_head · dtype_bytes</code> per request)
       all heads — shrinks the KV cache by $h\times$. Used in PaLM.</li>
   <li><strong>Grouped‑Query Attention (GQA)</strong> is the compromise: one $K$/$V$
       per group of $g$ query heads. Used in LLaMA‑2/3, Mistral, Qwen2,
-      Gemma 2 — basically the modern default.</li>
+      Gemma 2 — a common modern choice for decoder-only LLMs.</li>
   <li><strong>Sliding‑window attention</strong> (Mistral, Gemma) restricts each token
       to attend only to the last $W$ tokens, lowering the attention cost
       from $O(n^2)$ to $O(nW)$.</li>

@@ -120,7 +120,8 @@ def tenant_context(claims=Depends(verify_jwt)):
             <li><code>chunks(tenant_id, chunk_id, embedding_ref, ...)</code></li>
         </ul>
         <p>Query example:</p>
-<pre class="sql-code">SELECT * FROM documents
+<pre class="sql-code">SELECT doc_id, title, text, created_at
+FROM documents
 WHERE tenant_id = :tenant_id AND doc_id = :doc_id;</pre>
 
         <h3>B) Vector search (Elastic/OpenSearch)</h3>

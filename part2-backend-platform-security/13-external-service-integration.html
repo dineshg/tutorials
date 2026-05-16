@@ -65,7 +65,7 @@
 
     endpoint = os.environ[<span class="string">"AZURE_OPENAI_ENDPOINT"</span>]  <span class="comment"># e.g. https://xxx.openai.azure.com</span>
     deployment = os.environ[<span class="string">"AZURE_OPENAI_DEPLOYMENT"</span>]
-    api_version = os.environ.get(<span class="string">"AZURE_OPENAI_API_VERSION"</span>, <span class="string">"2024-xx-xx"</span>)
+    api_version = os.environ[<span class="string">"AZURE_OPENAI_API_VERSION"</span>]  <span class="comment"># set to a supported Azure OpenAI API version</span>
 
     url = <span class="string">f"{endpoint}/openai/deployments/{deployment}/chat/completions?api-version={api_version}"</span>
 
@@ -80,6 +80,8 @@
         )
         r.raise_for_status()
         <span class="keyword">return</span> r.json()</code></pre>
+
+    <p class="callout warn">Do not ship with a fake API-version placeholder. Azure OpenAI API versions are explicit service contracts; set <code>AZURE_OPENAI_API_VERSION</code> from the Azure documentation for the feature and deployment you are using.</p>
 
     <div class="section-divider"></div>
 

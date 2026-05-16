@@ -293,11 +293,12 @@ from operator import itemgetter
 def llm_write_sql(inputs: dict) -&gt; dict:
     # In practice: prompt | llm | parser
     q = inputs["question"]
-    sql = f"SELECT SUM(amount) AS total FROM orders WHERE month = 'last' -- for: {q}"
-    return {**inputs, "sql": sql}
+    sql = "SELECT SUM(amount) AS total FROM orders WHERE order_month = :month"
+    params = {"month": "last"}
+    return {**inputs, "sql": sql, "params": params, "question_echo": q}
 
 def run_sql(inputs: dict) -&gt; dict:
-    # In practice: call your DB driver here
+    # In practice: call your DB driver here with bound parameters, not string interpolation.
     rows = [{"total": 1245.40}]
     return {**inputs, "rows": rows}
 

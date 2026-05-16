@@ -62,7 +62,10 @@
       So you must protect it in transit and at rest (HTTPS, secure storage). (RFC 6750) 
       <span class="ref">Reference: RFC 6750 Bearer Token Usage.</span>
     </div>
-    <div class="ref">Sources: RFC 6750 (Bearer tokens) and general OAuth usage.  [oai_citation:0‡IETF Datatracker](https://datatracker.ietf.org/doc/html/rfc6750?utm_source=chatgpt.com)</div>
+    <div class="ref">
+      Sources: <a href="https://datatracker.ietf.org/doc/html/rfc6750" target="_blank" rel="noopener">RFC 6750 Bearer Token Usage</a>
+      and general OAuth usage.
+    </div>
   </section>
 
   <section id="bearer">
@@ -72,7 +75,9 @@
       A bearer token is sent on every request to a protected API using an HTTP header:
       <code class="inline">Authorization: Bearer &lt;token&gt;</code>.
     </p>
-    <div class="ref">Source: RFC 6750 bearer token scheme.  [oai_citation:1‡IETF Datatracker](https://datatracker.ietf.org/doc/html/rfc6750?utm_source=chatgpt.com)</div>
+    <div class="ref">
+      Source: <a href="https://datatracker.ietf.org/doc/html/rfc6750" target="_blank" rel="noopener">RFC 6750 bearer token scheme</a>.
+    </div>
 
     <div class="card">
       <strong>What the server does with a bearer token</strong>
@@ -150,7 +155,8 @@
     </table>
 
     <div class="ref">
-      Sources: bearer tokens can be opaque or structured; introspection defined by RFC 7662.  [oai_citation:2‡OAuth Community Site](https://oauth.net/2/bearer-tokens/?utm_source=chatgpt.com)
+      Sources: bearer tokens can be opaque or structured; introspection is defined by
+      <a href="https://datatracker.ietf.org/doc/html/rfc7662" target="_blank" rel="noopener">RFC 7662</a>.
     </div>
   </section>
 
@@ -170,7 +176,10 @@
       </div>
     </div>
 
-    <div class="ref">Token introspection spec: resource server queries auth server about token state.  [oai_citation:3‡IETF Datatracker](https://datatracker.ietf.org/doc/html/rfc7662?utm_source=chatgpt.com)</div>
+    <div class="ref">
+      Token introspection spec: resource server queries auth server about token state
+      (<a href="https://datatracker.ietf.org/doc/html/rfc7662" target="_blank" rel="noopener">RFC 7662</a>).
+    </div>
 
     <h3>Example endpoints (like our demo)</h3>
     <pre><code># Auth server:
@@ -206,7 +215,8 @@ POST /introspect   -> returns {"active": true, "sub": "demo", "scope": "sql:read
     </div>
 
     <div class="ref">
-      OIDC Discovery defines the well-known configuration and includes jwks_uri; verification relies on keys.  [oai_citation:4‡OpenID Foundation](https://openid.net/specs/openid-connect-discovery-1_0.html?utm_source=chatgpt.com)
+      OIDC Discovery defines the well-known configuration and includes <code class="inline">jwks_uri</code>; verification relies on keys.
+      See the <a href="https://openid.net/specs/openid-connect-discovery-1_0.html">OpenID Connect Discovery specification</a>.
     </div>
 
     <h3>Why this is faster than introspection</h3>
@@ -228,7 +238,7 @@ POST /introspect   -> returns {"active": true, "sub": "demo", "scope": "sql:read
       <strong>OpenID Connect (OIDC) on top of OAuth 2.0</strong>. Google issues an <strong>ID token</strong> (a signed JWT) and optionally access tokens.
     </p>
 
-    <div class="ref">Google’s OpenID Connect implementation and server-side token verification guidance.  [oai_citation:5‡Google for Developers](https://developers.google.com/identity/openid-connect/openid-connect?utm_source=chatgpt.com)</div>
+    <div class="ref">Google documents its OpenID Connect implementation and server-side token verification in the <a href="https://developers.google.com/identity/openid-connect/openid-connect">Google Identity OIDC guide</a>.</div>
 
     <div class="callout">
       <strong>Key point you asked:</strong> even if your server caches Google’s public keys, the <em>client still must talk to Google</em> to obtain the token (login/consent).
@@ -243,7 +253,7 @@ POST /introspect   -> returns {"active": true, "sub": "demo", "scope": "sql:read
       <li>signature matches a Google public key from JWKS</li>
     </ul>
 
-    <div class="ref">OIDC core (claims like iss/aud/exp) and Google’s verification guidance.  [oai_citation:6‡OpenID Foundation](https://openid.net/specs/openid-connect-core-1_0.html?utm_source=chatgpt.com)</div>
+    <div class="ref">OIDC Core defines claims such as <code class="inline">iss</code>, <code class="inline">aud</code>, and <code class="inline">exp</code>; see the <a href="https://openid.net/specs/openid-connect-core-1_0.html">OpenID Connect Core specification</a>.</div>
   </section>
 
   <section id="pkce">
@@ -253,7 +263,7 @@ POST /introspect   -> returns {"active": true, "sub": "demo", "scope": "sql:read
       <strong>PKCE</strong> (Proof Key for Code Exchange) protects the OAuth authorization code flow against code interception attacks
       for <em>public clients</em> (mobile apps, SPAs, desktop apps). (RFC 7636)
     </p>
-    <div class="ref">PKCE is defined in RFC 7636.  [oai_citation:7‡IETF Datatracker](https://datatracker.ietf.org/doc/html/rfc7636?utm_source=chatgpt.com)</div>
+    <div class="ref">PKCE is defined in <a href="https://datatracker.ietf.org/doc/html/rfc7636">RFC 7636</a>.</div>
 
     <div class="card">
       <div class="diagram">
@@ -268,7 +278,7 @@ POST /introspect   -> returns {"active": true, "sub": "demo", "scope": "sql:read
     <div class="callout ok">
       <strong>Modern direction:</strong> OAuth 2.1 requires PKCE for authorization code flow clients.
     </div>
-    <div class="ref">OAuth 2.1 requirement summary and draft.  [oai_citation:8‡OAuth Community Site](https://oauth.net/2.1/?utm_source=chatgpt.com)</div>
+    <div class="ref">The OAuth community’s <a href="https://oauth.net/2.1/">OAuth 2.1 summary</a> explains the direction of the consolidated draft.</div>
   </section>
 
   <section id="authorize-post">
@@ -285,7 +295,7 @@ POST /introspect   -> returns {"active": true, "sub": "demo", "scope": "sql:read
       <li><strong>OIDC response mode “form_post”</strong>: the authorization response can be returned to the client via an HTTP form POST.</li>
     </ul>
 
-    <div class="ref">OIDC core defines response modes/flows and the overall authorization behavior in OIDC.  [oai_citation:9‡OpenID Foundation](https://openid.net/specs/openid-connect-core-1_0.html?utm_source=chatgpt.com)</div>
+    <div class="ref">OIDC Core defines the overall authorization behavior; response modes such as <code class="inline">form_post</code> are specified separately by OpenID.</div>
 
     <div class="callout warn">
       <strong>Important:</strong> Whether your <code class="inline">/authorize</code> is GET or POST is a design choice / framework detail.
@@ -311,8 +321,7 @@ POST /introspect   -> returns {"active": true, "sub": "demo", "scope": "sql:read
     </div>
 
     <div class="ref">
-      OpenAI docs cover MCP integration, tool filtering with <code class="inline">allowed_tools</code>, and MCP tool usage via Responses API.
-       [oai_citation:10‡OpenAI Platform](https://platform.openai.com/docs/mcp?utm_source=chatgpt.com)
+      OpenAI docs cover MCP integration, tool filtering with <code class="inline">allowed_tools</code>, and MCP tool usage via the Responses API.
     </div>
 
     <h3>Example: bearer token on MCP calls</h3>
@@ -326,7 +335,7 @@ headers = {"Authorization": f"Bearer {token}"}
       <strong>Safety practice you discussed:</strong> avoid passing secrets as tool arguments; prefer headers or OAuth.
       Also restrict which tools the model can use (e.g., read-only) with <code class="inline">allowed_tools</code>.
     </div>
-    <div class="ref">OpenAI MCP tool guidance on filtering tools (allowed_tools).  [oai_citation:11‡OpenAI Developers](https://developers.openai.com/cookbook/examples/mcp/mcp_tool_guide/?utm_source=chatgpt.com)</div>
+    <div class="ref">OpenAI MCP tool guidance covers filtering tools with <code class="inline">allowed_tools</code>.</div>
   </section>
 
   <section id="sql-auth">
@@ -342,20 +351,27 @@ headers = {"Authorization": f"Bearer {token}"}
       <li><strong>SQL Server Authentication</strong>: database-level username/password (“SQL login”).</li>
     </ul>
 
-    <div class="ref">Microsoft SQL Server guidance on choosing auth mode and how Windows auth works.  [oai_citation:12‡Microsoft Learn](https://learn.microsoft.com/en-us/sql/relational-databases/security/choose-an-authentication-mode?view=sql-server-ver17&utm_source=chatgpt.com)</div>
+    <div class="ref">Microsoft Learn explains SQL Server authentication modes and when to choose Windows authentication or SQL Server authentication.</div>
 
     <h3>How it looks in connection configuration</h3>
     <pre><code># SQL authentication (username/password in connection string)
 DRIVER={ODBC Driver 18 for SQL Server};
 SERVER=host,1433;
 DATABASE=MyDb;
-UID=myuser;
-PWD=mypassword;
-TrustServerCertificate=yes;
+UID=${DB_USER};
+PWD=${DB_PASSWORD_FROM_SECRET_MANAGER};
+Encrypt=yes;
+TrustServerCertificate=no;
 
 # Windows integrated authentication (varies by environment)
 # Often includes Integrated Security / Trusted_Connection
 # DRIVER=...;SERVER=...;DATABASE=...;Trusted_Connection=yes;</code></pre>
+
+    <div class="callout ok">
+      <strong>Industry standard:</strong> prefer managed identity / Active Directory authentication where possible.
+      If you must use SQL username/password, store the password in a secret manager, rotate it, require encrypted transport,
+      and validate the server certificate instead of using <code class="inline">TrustServerCertificate=yes</code>.
+    </div>
 
     <div class="callout warn">
       <strong>Don’t confuse the layers:</strong><br/>
@@ -373,7 +389,7 @@ TrustServerCertificate=yes;
         <li>Always use HTTPS/TLS for bearer tokens (possession = access). (RFC 6750)</li>
         <li>Don’t log tokens; avoid putting them in URLs; store securely.</li>
       </ul>
-      <div class="ref">Bearer token security considerations.  [oai_citation:13‡IETF Datatracker](https://datatracker.ietf.org/doc/html/rfc6750?utm_source=chatgpt.com)</div>
+      <div class="ref">Bearer token security considerations are covered in <a href="https://datatracker.ietf.org/doc/html/rfc6750">RFC 6750</a>.</div>
     </div>
 
     <div class="card">
@@ -383,7 +399,7 @@ TrustServerCertificate=yes;
         <li>JWT tokens: verify signature + claims; fetch JWKS via OIDC discovery; refresh on unknown <code class="inline">kid</code>.</li>
         <li>Always validate <code class="inline">aud</code> and <code class="inline">iss</code> for OIDC tokens.</li>
       </ul>
-      <div class="ref">Token introspection (RFC 7662) and OIDC discovery/core.  [oai_citation:14‡IETF Datatracker](https://datatracker.ietf.org/doc/html/rfc7662?utm_source=chatgpt.com)</div>
+      <div class="ref">Token introspection is defined in <a href="https://datatracker.ietf.org/doc/html/rfc7662">RFC 7662</a>; JWT validation commonly combines OIDC Discovery and OIDC Core.</div>
     </div>
 
     <div class="card">
@@ -392,7 +408,7 @@ TrustServerCertificate=yes;
         <li>Use PKCE for public clients; OAuth 2.1 direction makes it required for code flow. (RFC 7636)</li>
         <li>Use exact redirect URI matching and avoid legacy implicit flows (OAuth 2.1 direction).</li>
       </ul>
-      <div class="ref">PKCE (RFC 7636) and OAuth 2.1 direction.  [oai_citation:15‡IETF Datatracker](https://datatracker.ietf.org/doc/html/rfc7636?utm_source=chatgpt.com)</div>
+      <div class="ref">See <a href="https://datatracker.ietf.org/doc/html/rfc7636">RFC 7636</a> for PKCE and the OAuth 2.1 draft direction for current authorization-code-flow hygiene.</div>
     </div>
 
     <div class="card">
@@ -401,7 +417,7 @@ TrustServerCertificate=yes;
         <li>Use least-privilege tool exposure (e.g., read-only tools) via <code class="inline">allowed_tools</code>.</li>
         <li>Prefer headers/OAuth rather than passing secrets in tool arguments.</li>
       </ul>
-      <div class="ref">OpenAI MCP docs on tool filtering and MCP tool usage.  [oai_citation:16‡OpenAI Developers](https://developers.openai.com/cookbook/examples/mcp/mcp_tool_guide/?utm_source=chatgpt.com)</div>
+      <div class="ref">OpenAI’s MCP tool guidance covers tool filtering and MCP tool usage.</div>
     </div>
   </section>
 

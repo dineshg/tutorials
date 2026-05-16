@@ -68,6 +68,11 @@ $\mathcal{L}_{\mathrm{OR}} = -\log\sigma\!\left(\log\dfrac{\mathrm{odds}_\theta(
 \quad \mathrm{odds}_\theta(y|x) = \dfrac{\pi_\theta(y|x)}{1-\pi_\theta(y|x)}$
 </div>
 
+<p>In implementation, those probabilities are computed from sequence log
+probabilities or length-normalized token log probabilities. The displayed
+formula is the intuition; raw full-sequence probabilities are tiny, so real
+code works in log space for numerical stability.</p>
+
 <p><strong>Why people like it:</strong></p>
 <ul>
   <li>One model in memory — no frozen reference policy. ~50 % less VRAM than DPO.</li>
@@ -121,8 +126,9 @@ network, so memory and stability are much better than PPO.</p>
       a reward model at all — graders are deterministic.</li>
   <li>The “group baseline” replaces the value network with cheap Monte‑Carlo
       variance reduction.</li>
-  <li>This is what produced DeepSeek‑R1's chain‑of‑thought reasoning gains
-      starting from a base model with essentially no preference labels.</li>
+  <li>Published DeepSeek‑R1 reports describe this style of RLVR training as a
+      major ingredient in its reasoning gains, especially when graders can
+      verify answers automatically.</li>
 </ul>
 
 <p><strong>Use when:</strong> your task has a programmatic grader (math, code,
@@ -136,8 +142,8 @@ strong LLM judge. You generate response pairs, ask a judge model
 rubric (the “constitution”), and then run DPO/ORPO/PPO on those AI
 preferences.</p>
 
-<p>This is now the standard way to scale alignment to millions of samples.
-Combine it with active learning (only ask the judge when the policy is
+<p>This is now a common way to scale preference-data creation beyond what
+human labelers can review directly. Combine it with active learning (only ask the judge when the policy is
 uncertain) and you have a tight, cheap loop.</p>
 
 <h2>7) Choosing between them</h2>
