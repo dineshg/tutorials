@@ -1,31 +1,12 @@
 # ML Foundations for Industry Data Scientists
 
-<span class="part-kicker">Part I</span>
+This part contains the chapters for **ML Foundations for Industry Data Scientists**.
 
-This part builds the practical modelling discipline that every production AI lead needs. The goal is not to memorize algorithms. The goal is to understand what models learn, how they fail, how to evaluate them honestly, and how to explain trade-offs to stakeholders.
+Read these chapters with the running enterprise document Q&A assistant in mind: every concept should eventually help you design, build, secure, evaluate, or operate a production AI system.
 
-## Flow Through This Part
+## Part checklist
 
-<section class="flow-strip">
-  <article class="flow-step"><span class="flow-step__label">Model</span><p>Start with what machine learning is really doing: learning useful patterns from historical data.</p></article>
-  <article class="flow-step"><span class="flow-step__label">Fit</span><p>Use linear and logistic regression as the simplest useful models.</p></article>
-  <article class="flow-step"><span class="flow-step__label">Rank</span><p>Learn trees, forests, boosting, and XGBoost as strong tabular baselines.</p></article>
-  <article class="flow-step"><span class="flow-step__label">Evaluate</span><p>Design splits, metrics, baselines, leakage checks, and error analysis.</p></article>
-  <article class="flow-step"><span class="flow-step__label">Operate</span><p>Turn features and data expectations into production contracts.</p></article>
-</section>
-
-## Industry Thread
-
-The examples use churn prediction, fraud detection, demand forecasting, lead scoring, document classification, and support ticket triage. These are deliberately ordinary business problems because ordinary business problems expose the real production issues: data leakage, class imbalance, cost-sensitive thresholds, stale features, and metric-to-business alignment.
-
-## Running Case Study Link
-
-In the enterprise document Q&A assistant, classical ML still matters. You may classify documents, score retrieval quality, detect low-confidence answers, monitor drift in usage patterns, or train lightweight models for routing and escalation.
-
-## Visual Anchor
-
-![Train, validation, and test split diagram showing separate model development and final evaluation partitions.](../assets/generated/ml/train-validation-test-split.svg)
-
-## Read Next
-
-Read this part in order. The evaluation and leakage chapters are the most important chapters for production judgement.
+- [ ] Understand the core vocabulary.
+- [ ] Connect each concept to a production workflow.
+- [ ] Identify evaluation and security risks.
+- [ ] Capture open questions for the project appendices.

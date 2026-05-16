@@ -1,51 +1,12 @@
 # End-to-End Projects
 
-<span class="part-kicker">Part VIII</span>
+This part contains the chapters for **End-to-End Projects**.
 
-The projects turn the book into practice. Each project has a business problem, architecture, setup instructions, code walkthrough, tests, production hardening notes, and exercises.
+Read these chapters with the running enterprise document Q&A assistant in mind: every concept should eventually help you design, build, secure, evaluate, or operate a production AI system.
 
-## Project Sequence
+## Part checklist
 
-::: {.project-grid}
-
-::: {.project-card}
-
-### [Project 1: Churn Prediction API](56-churn-prediction-api.qmd)
-
-Train a baseline model on synthetic data, tune a threshold, serve predictions through FastAPI, and test the endpoint.
-:::
-
-::: {.project-card}
-
-### [Project 2: Enterprise Document Q&A Assistant](57-enterprise-document-qa.qmd)
-
-Build the book's running case study with ingestion, chunking, retrieval, citations, authentication placeholders, and evaluation.
-:::
-
-::: {.project-card}
-
-### [Project 3: Agentic Support Ticket Triage](58-agentic-support-ticket-triage.qmd)
-
-Classify tickets, retrieve policy, draft a response, decide escalation, require approval, and log tool use.
-:::
-
-::: {.project-card}
-
-### [Project 4: Forecasting Service with Monitoring](59-forecasting-service-monitoring.qmd)
-
-Use time series splits, a naive baseline, a forecast function, monitoring checks, and retraining triggers.
-:::
-
-:::
-
-## How To Use The Projects
-
-Run the tests before reading the walkthrough. Then change one behaviour at a time and rerun the tests. That practice is closer to production engineering than copying a full notebook in one sitting.
-
-## Flow Back To The Book
-
-- If the model behaves badly, return to Part I and Part II.
-- If the endpoint contract is unclear, return to Part IV.
-- If access control or auditability is unclear, return to Part V.
-- If tools or approval gates are unclear, return to Part VI.
-- If project ownership is unclear, return to Part VII.
+- [ ] Understand the core vocabulary.
+- [ ] Connect each concept to a production workflow.
+- [ ] Identify evaluation and security risks.
+- [ ] Capture open questions for the project appendices.

@@ -1,31 +1,12 @@
 # Modern LLM Application Development
 
-<span class="part-kicker">Part III</span>
+This part contains the chapters for **Modern LLM Application Development**.
 
-This part is where the book shifts from model training to product behaviour. LLM applications are probabilistic systems wrapped in deterministic software, retrieval systems, prompts, tools, tests, safety controls, and cost constraints.
+Read these chapters with the running enterprise document Q&A assistant in mind: every concept should eventually help you design, build, secure, evaluate, or operate a production AI system.
 
-## Flow Through This Part
+## Part checklist
 
-<section class="flow-strip">
-  <article class="flow-step"><span class="flow-step__label">Different</span><p>Compare traditional ML with prompting, retrieval, workflows, and agents.</p></article>
-  <article class="flow-step"><span class="flow-step__label">Prompt</span><p>Use system, developer, and user messages with versioning and regression tests.</p></article>
-  <article class="flow-step"><span class="flow-step__label">Retrieve</span><p>Build RAG with ingestion, chunking, metadata, permissions, reranking, and citations.</p></article>
-  <article class="flow-step"><span class="flow-step__label">Evaluate</span><p>Measure retrieval quality, factuality, citation accuracy, safety, cost, and latency.</p></article>
-  <article class="flow-step"><span class="flow-step__label">Adapt</span><p>Choose between prompting, RAG, fine-tuning, and preference optimisation.</p></article>
-</section>
-
-## Industry Thread
-
-In a notebook, you can ask an LLM a few questions and inspect the answers. In production, you need expected answer criteria, regression tests, cost budgets, prompt versioning, citation checks, and release gates. In an enterprise, you additionally need permission-aware retrieval and evidence for risk review.
-
-## Running Case Study Link
-
-This is the core part for the enterprise document Q&A assistant. The RAG chapter explains the ingestion-to-answer path, and the evaluation chapter explains how to decide whether the assistant is ready for a pilot.
-
-## Visual Anchor
-
-![RAG pipeline diagram showing ingestion, chunking, embedding, retrieval, and cited answer generation.](../assets/generated/llm/rag-pipeline.svg)
-
-## Read Next
-
-Read the first five chapters of this part together before jumping to fine-tuning. Most enterprise LLM problems need better prompting, retrieval, and evaluation before they need fine-tuning.
+- [ ] Understand the core vocabulary.
+- [ ] Connect each concept to a production workflow.
+- [ ] Identify evaluation and security risks.
+- [ ] Capture open questions for the project appendices.

@@ -1,30 +1,12 @@
 # Backend Engineering for Data Scientists
 
-<span class="part-kicker">Part IV</span>
+This part contains the chapters for **Backend Engineering for Data Scientists**.
 
-This part turns model and LLM logic into services. The practical goal is to make a data scientist comfortable reading, writing, testing, and operating a small production-facing API.
+Read these chapters with the running enterprise document Q&A assistant in mind: every concept should eventually help you design, build, secure, evaluate, or operate a production AI system.
 
-## Flow Through This Part
+## Part checklist
 
-<section class="flow-strip">
-  <article class="flow-step"><span class="flow-step__label">Contract</span><p>Understand why notebooks need APIs, schemas, tests, and monitoring.</p></article>
-  <article class="flow-step"><span class="flow-step__label">HTTP</span><p>Learn methods, status codes, JSON, headers, validation, and OpenAPI.</p></article>
-  <article class="flow-step"><span class="flow-step__label">Serve</span><p>Load a model, validate requests, return predictions, log outcomes, and test endpoints.</p></article>
-  <article class="flow-step"><span class="flow-step__label">Scale</span><p>Add background jobs, concurrency discipline, Docker, deployment, and observability.</p></article>
-</section>
-
-## Industry Thread
-
-In a notebook, you call a Python function. In production, another system calls an endpoint. In an enterprise, that endpoint needs authentication, request IDs, audit logs, rate limits, dependency ownership, and a rollback path.
-
-## Running Case Study Link
-
-The document Q&A assistant needs an authenticated API for questions, retrieval, answer generation, feedback capture, evaluation runs, and admin workflows.
-
-## Visual Anchor
-
-![Model inference API architecture showing client request, FastAPI validation, model prediction, response, and logs.](../assets/generated/backend/inference-api-architecture.svg)
-
-## Read Next
-
-Read this part before the security chapters. Identity and governance are much easier to understand once the API boundary is clear.
+- [ ] Understand the core vocabulary.
+- [ ] Connect each concept to a production workflow.
+- [ ] Identify evaluation and security risks.
+- [ ] Capture open questions for the project appendices.

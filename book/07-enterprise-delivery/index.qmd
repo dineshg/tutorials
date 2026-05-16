@@ -1,31 +1,12 @@
 # Enterprise AI Delivery Lifecycle
 
-<span class="part-kicker">Part VII</span>
+This part contains the chapters for **Enterprise AI Delivery Lifecycle**.
 
-This part is the senior-practice playbook. It explains how an AI lead turns a business problem into an evaluated, reviewed, deployed, supported system.
+Read these chapters with the running enterprise document Q&A assistant in mind: every concept should eventually help you design, build, secure, evaluate, or operate a production AI system.
 
-## Flow Through This Part
+## Part checklist
 
-<section class="flow-strip">
-  <article class="flow-step"><span class="flow-step__label">Qualify</span><p>Decide whether AI is appropriate or whether rules, automation, or dashboards are better.</p></article>
-  <article class="flow-step"><span class="flow-step__label">Intake</span><p>Capture sponsor, users, data, access, compliance, metrics, timeline, and reviewers.</p></article>
-  <article class="flow-step"><span class="flow-step__label">Respond</span><p>Write the AI lead response: approach, assumptions, risks, architecture, evaluation, phases.</p></article>
-  <article class="flow-step"><span class="flow-step__label">Design</span><p>Move from kickoff to HLD, LLD, Architecture Decision Records (ADRs), and sprint plan.</p></article>
-  <article class="flow-step"><span class="flow-step__label">Launch</span><p>Plan environments, CI/CD, secrets, monitoring, pilot users, rollback, support, and review.</p></article>
-</section>
-
-## Industry Thread
-
-In a notebook, success is a result. In production, success is an operating service. In an enterprise, success also means accountable ownership, sign-off, audit evidence, support readiness, and a path to stop or roll back.
-
-## Running Case Study Link
-
-This part walks the document Q&A assistant through intake, architecture review, delivery planning, rollout, and support. It is the bridge from technical design to organizational delivery.
-
-## Visual Anchor
-
-![AI delivery lifecycle diagram showing intake, architecture, prototype, review, rollout, and support.](../assets/generated/enterprise/ai-delivery-lifecycle.svg)
-
-## Read Next
-
-Use this part as a checklist during a real project. The first seven days chapter is especially useful when a new AI initiative has unclear ownership.
+- [ ] Understand the core vocabulary.
+- [ ] Connect each concept to a production workflow.
+- [ ] Identify evaluation and security risks.
+- [ ] Capture open questions for the project appendices.

@@ -1,30 +1,12 @@
 # Security, Identity, and Governance
 
-<span class="part-kicker">Part V</span>
+This part contains the chapters for **Security, Identity, and Governance**.
 
-This part explains the enterprise controls that turn a useful prototype into a system the organization can responsibly run. It covers Single Sign-On (SSO), OAuth2, OpenID Connect (OIDC), Proof Key for Code Exchange (PKCE), JSON Web Tokens (JWTs), tenant isolation, LLM security, AI risk management, and secure development.
+Read these chapters with the running enterprise document Q&A assistant in mind: every concept should eventually help you design, build, secure, evaluate, or operate a production AI system.
 
-## Flow Through This Part
+## Part checklist
 
-<section class="flow-strip">
-  <article class="flow-step"><span class="flow-step__label">Identity</span><p>Understand users, groups, tenants, claims, scopes, tokens, and validation.</p></article>
-  <article class="flow-step"><span class="flow-step__label">Protect</span><p>Secure FastAPI routes and separate end-user identity from workload identity.</p></article>
-  <article class="flow-step"><span class="flow-step__label">Isolate</span><p>Design tenant boundaries, row-level security, document access control, and tests.</p></article>
-  <article class="flow-step"><span class="flow-step__label">Govern</span><p>Handle LLM threat modelling, risk registers, approvals, incidents, and release sign-off.</p></article>
-</section>
-
-## Industry Thread
-
-In a notebook, access control is often your laptop login. In production, access control is a system design requirement. In an enterprise, you must show audit evidence that the assistant only used data the user was allowed to see.
-
-## Running Case Study Link
-
-The document Q&A assistant is not credible without identity propagation and document-level access control. Retrieval must filter by permissions before content enters the prompt.
-
-## Visual Anchor
-
-![OIDC and PKCE flow diagram showing browser, identity provider, token exchange, API validation, and scoped data access.](../assets/generated/security/oidc-pkce-flow.svg)
-
-## Read Next
-
-Read identity, OIDC/JWT validation, and multi-tenant access before the LLM security chapter. The strongest LLM safety posture still fails if basic authorization is wrong.
+- [ ] Understand the core vocabulary.
+- [ ] Connect each concept to a production workflow.
+- [ ] Identify evaluation and security risks.
+- [ ] Capture open questions for the project appendices.

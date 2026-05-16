@@ -1,176 +1,31 @@
-# From Data Scientist to Production AI Lead {.unnumbered .visually-hidden}
+# From Data Scientist to Production AI Lead
 
-<section class="book-hero">
-  <h1>From Data Scientist to Production AI Lead</h1>
-  <p>This book teaches industry data scientists how to move beyond notebooks and build real AI systems: models, APIs, Retrieval-Augmented Generation (RAG), identity, governance, agents, and delivery leadership.</p>
-  <div class="book-hero__meta">
-    <span class="book-pill">ML foundations</span>
-    <span class="book-pill">LLM systems</span>
-    <span class="book-pill">Backend APIs</span>
-    <span class="book-pill">Security and governance</span>
-    <span class="book-pill">Enterprise delivery</span>
-  </div>
-</section>
+This book teaches industry data scientists how to move beyond notebooks and build real AI systems.
 
-## The Reader Journey
+You will learn how to:
 
-The default flow is intentional:
+- understand core machine learning and deep learning methods
+- evaluate models properly
+- build APIs around models
+- design Retrieval-Augmented Generation (RAG) and Large Language Model (LLM) applications
+- secure AI systems with enterprise identity
+- understand agents, tools, and Model Context Protocol (MCP)
+- deploy, monitor, and govern AI systems
+- lead an enterprise AI project from business pain to production rollout
 
-1. Learn how models work and how to evaluate them.
-2. Learn neural networks and transformer foundations.
-3. Build Large Language Model (LLM) applications.
-4. Wrap models and LLM workflows in backend services.
-5. Add identity, access control, threat modelling, and governance.
-6. Understand agentic systems and protocols.
-7. Lead delivery from business pain to production rollout.
-8. Finish with end-to-end projects.
+The running example throughout the book is an enterprise document Q&A assistant. Employees waste time searching policies, project documents, architecture notes, meeting summaries, and operating procedures. The organisation wants a secure AI assistant that can answer questions using internal documents while respecting access control.
 
-In a notebook, you can optimize a model score. In production, you need a service contract, monitoring, and repeatable evaluation. In an enterprise, you must also prove who can access what, how decisions are reviewed, and how the system is supported after launch.
+![Enterprise document Q&A assistant architecture showing documents, ingestion, retrieval, LLM answer generation, and audit logging.](assets/generated/enterprise/document-qa-architecture.svg)
 
-```{mermaid}
-flowchart LR
-  A["Part 0<br/>Orientation"] --> B["Part I<br/>ML foundations"]
-  B --> C["Part II<br/>Deep learning"]
-  C --> D["Part III<br/>LLM applications"]
-  D --> E["Part IV<br/>Backend services"]
-  E --> F["Part V<br/>Security and governance"]
-  F --> G["Part VI<br/>Agents and protocols"]
-  G --> H["Part VII<br/>Enterprise delivery"]
-  H --> I["Part VIII<br/>Projects"]
-```
+## How to read this book
 
-<section class="path-switcher" data-path-switcher>
-  <h2>Choose Your Reading Path</h2>
-  <div class="path-tabs" role="tablist" aria-label="Reading paths">
-    <button class="path-tab" data-path-tab="ds">Data scientist</button>
-    <button class="path-tab" data-path-tab="lead">AI lead</button>
-    <button class="path-tab" data-path-tab="backend">Backend or ML engineer</button>
-    <button class="path-tab" data-path-tab="interview">Interview preparation</button>
-  </div>
-  <article class="path-panel" data-path-panel="ds">
-    <h3>Path A: Data scientist becoming production-ready</h3>
-    <ol>
-      <li>Start with Part 0 to understand the book and running case study.</li>
-      <li>Read Part I and Part II to strengthen ML and deep learning fundamentals.</li>
-      <li>Move through Part III and Part IV to build LLM applications and APIs.</li>
-      <li>Use the projects to turn the concepts into runnable systems.</li>
-    </ol>
-  </article>
-  <article class="path-panel" data-path-panel="lead">
-    <h3>Path B: AI lead or senior data scientist</h3>
-    <ol>
-      <li>Start with Part 0, then jump to Part III for modern LLM application trade-offs.</li>
-      <li>Read Part V and Part VI for security, governance, agents, MCP, and A2A.</li>
-      <li>Use Part VII as your delivery playbook for intake, architecture, rollout, and support.</li>
-    </ol>
-  </article>
-  <article class="path-panel" data-path-panel="backend">
-    <h3>Path C: Backend or ML engineer</h3>
-    <ol>
-      <li>Read Part IV first to align on APIs, FastAPI, jobs, Docker, and observability.</li>
-      <li>Read Part V for enterprise identity, tenant isolation, and AI security.</li>
-      <li>Read Part III and Part VI for RAG, tool calling, agents, MCP, and framework choices.</li>
-    </ol>
-  </article>
-  <article class="path-panel" data-path-panel="interview">
-    <h3>Path D: Interview preparation</h3>
-    <ol>
-      <li>Review ML foundations, deep learning, LLM applications, and backend basics.</li>
-      <li>Use the glossary, acronyms, checklists, and interview appendix to tighten explanations.</li>
-      <li>Practice explaining the enterprise document Q&A assistant end to end.</li>
-    </ol>
-  </article>
-</section>
+| Path | Reader | Sequence |
+|---|---|---|
+| Path A | Data scientist becoming production-ready | Part 0 -> Part I -> Part II -> Part III -> Part IV -> Projects |
+| Path B | AI lead / senior data scientist | Part 0 -> Part III -> Part V -> Part VI -> Part VII |
+| Path C | Backend/ML engineer | Part 0 -> Part IV -> Part V -> Part III -> Part VI |
+| Path D | Interview preparation | ML Foundations -> Deep Learning -> LLM Applications -> Backend Basics -> Appendices |
 
-## Running Case Study
+## Repository status
 
-<section class="visual-band">
-  <div>
-    <h3>Enterprise Document Q&A Assistant</h3>
-    <p>Employees waste time searching policies, architecture notes, project documents, meeting summaries, and operational procedures. The organization wants a secure assistant that answers questions using internal documents while respecting document-level access control.</p>
-    <p>The case study follows one system across the book: ingestion, chunking, embeddings, retrieval, reranking, answer generation, citations, authentication, audit logs, evaluation, monitoring, and rollout.</p>
-  </div>
-  <img src="assets/generated/enterprise/document-qa-architecture.svg" alt="Enterprise document Q&A assistant architecture showing documents, ingestion, retrieval, LLM answer generation, and audit logging.">
-</section>
-
-## Parts
-
-::: {.book-grid}
-
-::: {.book-card}
-<span class="part-kicker">Part 0</span>
-
-### [Orientation](00-orientation/index.qmd)
-
-Audience, delivery map, running case study, and how to use the book.
-:::
-
-::: {.book-card}
-<span class="part-kicker">Part I</span>
-
-### [ML Foundations](01-ml-foundations/index.qmd)
-
-Regression, classification, ensembles, evaluation, leakage, feature engineering, and data contracts.
-:::
-
-::: {.book-card}
-<span class="part-kicker">Part II</span>
-
-### [Deep Learning](02-deep-learning/index.qmd)
-
-Neural networks, PyTorch training, debugging, convolution, sequence models, transformers, and embeddings.
-:::
-
-::: {.book-card}
-<span class="part-kicker">Part III</span>
-
-### [LLM Applications](03-llm-applications/index.qmd)
-
-Prompting, structured outputs, tool calling, RAG, evaluation, fine-tuning, alignment, cost, and latency.
-:::
-
-::: {.book-card}
-<span class="part-kicker">Part IV</span>
-
-### [Backend Engineering](04-backend-engineering/index.qmd)
-
-HTTP, FastAPI, inference APIs, background jobs, concurrency, Docker, deployment, and observability.
-:::
-
-::: {.book-card}
-<span class="part-kicker">Part V</span>
-
-### [Security and Governance](05-security-governance/index.qmd)
-
-Single Sign-On (SSO), OAuth2, OpenID Connect (OIDC), JSON Web Tokens (JWTs), tenant isolation, AI risk, and secure development.
-:::
-
-::: {.book-card}
-<span class="part-kicker">Part VI</span>
-
-### [Agentic Systems](06-agentic-systems/index.qmd)
-
-Agents, workflows, tool safety, Model Context Protocol (MCP), Agent-to-Agent (A2A), frameworks, evaluation, and observability.
-:::
-
-::: {.book-card}
-<span class="part-kicker">Part VII</span>
-
-### [Enterprise Delivery](07-enterprise-delivery/index.qmd)
-
-Intake, response documents, kickoff, first seven days, architecture, service selection, review, rollout, and support.
-:::
-
-::: {.book-card}
-<span class="part-kicker">Part VIII</span>
-
-### [Projects](08-projects/index.qmd)
-
-Churn API, document Q&A assistant, agentic ticket triage, and forecasting service with monitoring.
-:::
-
-:::
-
-## What Changed From the Legacy Static Site
-
-The legacy static HTML chapters remain in the repository for reference. The maintainable book source now lives in Quarto so the table of contents, search, cross-page navigation, generated assets, examples, and CI checks can be managed consistently.
+The legacy static HTML tutorial remains in the repository while this Quarto source becomes the maintainable authoring layer.

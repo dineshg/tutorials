@@ -10,9 +10,9 @@ python3 scripts/check_assets.py
 
 Latest audit result:
 
-- Documentation files scanned: 178
-- Asset/media references found: 134
-- Local assets OK: 134
+- Documentation files scanned: 176
+- Asset/media references found: 126
+- Local assets OK: 126
 - Missing local assets: 0
 - Remote media URLs: 0
 - Image references missing alt text: 0
@@ -20,7 +20,7 @@ Latest audit result:
 
 The checker currently passes.
 
-Note: the Quarto book carries self-contained generated assets under `book/assets/generated/`, including the local architecture image used by the custom Quarto theme. Some root-level generated assets are retained for the legacy static HTML site and future source reuse.
+Note: the Quarto book carries self-contained generated assets under `book/assets/generated/`. Some root-level generated assets are retained for the legacy static HTML site and future source reuse.
 
 ## Broken Local References
 
