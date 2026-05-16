@@ -1,5 +1,6 @@
 # MCP Fundamentals
 
+
 ::: {.callout-note}
 Version note
 

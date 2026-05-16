@@ -28,7 +28,7 @@ Current build model:
 Planned build model:
 
 ```bash
-quarto render book --to html
+quarto render book
 ```
 
 The Quarto migration is documented in [BOOK_RESTRUCTURE_PLAN.md](BOOK_RESTRUCTURE_PLAN.md).
