@@ -344,10 +344,29 @@ div.sourceCode {
   cursor: pointer;
 }
 
-.path-tab[aria-selected="true"] {
+.path-radio {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.path-radio:checked + .path-tab {
   color: #ffffff;
   background: var(--part-color);
   border-color: var(--part-color);
+}
+
+.path-panels .path-panel {
+  display: none;
+}
+
+.path-switcher:has(#path-ds:checked) [data-path-panel="ds"],
+.path-switcher:has(#path-lead:checked) [data-path-panel="lead"],
+.path-switcher:has(#path-backend:checked) [data-path-panel="backend"],
+.path-switcher:has(#path-interview:checked) [data-path-panel="interview"] {
+  display: block;
 }
 
 .path-panel {
