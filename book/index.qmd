@@ -42,16 +42,11 @@ flowchart LR
 <section class="path-switcher" data-path-switcher>
 <h2>Choose Your Reading Path</h2>
 <div class="path-tabs" role="tablist" aria-label="Reading paths">
-<input class="path-radio" type="radio" name="reading-path" id="path-ds" checked>
-<label class="path-tab" for="path-ds">Data scientist</label>
-<input class="path-radio" type="radio" name="reading-path" id="path-lead">
-<label class="path-tab" for="path-lead">AI lead</label>
-<input class="path-radio" type="radio" name="reading-path" id="path-backend">
-<label class="path-tab" for="path-backend">Backend or ML engineer</label>
-<input class="path-radio" type="radio" name="reading-path" id="path-interview">
-<label class="path-tab" for="path-interview">Interview preparation</label>
+<button class="path-tab" data-path-tab="ds">Data scientist</button>
+<button class="path-tab" data-path-tab="lead">AI lead</button>
+<button class="path-tab" data-path-tab="backend">Backend or ML engineer</button>
+<button class="path-tab" data-path-tab="interview">Interview preparation</button>
 </div>
-<div class="path-panels">
 <article class="path-panel" data-path-panel="ds">
 <h3>Path A: Data scientist becoming production-ready</h3>
 <ol>
@@ -85,7 +80,6 @@ flowchart LR
 <li>Practice explaining the enterprise document Q&A assistant end to end.</li>
 </ol>
 </article>
-</div>
 </section>
 
 ## Running Case Study
