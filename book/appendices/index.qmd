@@ -1,12 +1,30 @@
 # Appendices
 
-This part contains the chapters for **Appendices**.
+<span class="part-kicker">Reference</span>
 
-Read these chapters with the running enterprise document Q&A assistant in mind: every concept should eventually help you design, build, secure, evaluate, or operate a production AI system.
+The appendices are working documents, not decorative back matter. Use them when you need a definition, checklist, template, review structure, or interview preparation aid.
 
-## Part checklist
+## What Is Here
 
-- [ ] Understand the core vocabulary.
-- [ ] Connect each concept to a production workflow.
-- [ ] Identify evaluation and security risks.
-- [ ] Capture open questions for the project appendices.
+<section class="part-card-grid">
+  <article class="part-card">
+    <h3>Reference</h3>
+    <p>Glossary and acronyms for terms that recur across ML, LLMs, backend engineering, identity, governance, and delivery.</p>
+  </article>
+  <article class="part-card">
+    <h3>Architecture and Delivery Templates</h3>
+    <p>Architecture Decision Record (ADR), AI intake, AI lead response, High-Level Design (HLD), Low-Level Design (LLD), and sprint planning templates.</p>
+  </article>
+  <article class="part-card">
+    <h3>Review Checklists</h3>
+    <p>Security review, model evaluation, RAG evaluation, launch readiness, data contract, risk register, and post-launch review.</p>
+  </article>
+  <article class="part-card">
+    <h3>Career Preparation</h3>
+    <p>Interview preparation notes and further reading for expanding the starter book into deeper expertise.</p>
+  </article>
+</section>
+
+## Recommended Use
+
+Do not wait until the end of the book to use these materials. When a chapter introduces a decision or review gate, open the corresponding appendix and fill in a small version for the document Q&A assistant.

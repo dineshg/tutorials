@@ -1,12 +1,27 @@
 # Orientation: From Notebook to Enterprise AI System
 
-This part contains the chapters for **Orientation: From Notebook to Enterprise AI System**.
+<span class="part-kicker">Part 0</span>
 
-Read these chapters with the running enterprise document Q&A assistant in mind: every concept should eventually help you design, build, secure, evaluate, or operate a production AI system.
+This part sets the operating context for the book. The central move is from notebook work to enterprise AI delivery: a model or prompt becomes useful only when it sits inside a system with users, data contracts, identity, evaluation, monitoring, governance, and support.
 
-## Part checklist
+## Why Start Here
 
-- [ ] Understand the core vocabulary.
-- [ ] Connect each concept to a production workflow.
-- [ ] Identify evaluation and security risks.
-- [ ] Capture open questions for the project appendices.
+Industry AI work fails when teams treat production delivery as an afterthought. Before learning APIs, Retrieval-Augmented Generation (RAG), Model Context Protocol (MCP), or governance templates, you need a map of how the pieces connect.
+
+<section class="flow-strip">
+  <article class="flow-step"><span class="flow-step__label">Reader</span><p>Clarify who the book is for and what background it assumes.</p></article>
+  <article class="flow-step"><span class="flow-step__label">Map</span><p>See how ML, LLMs, backend systems, security, and delivery fit together.</p></article>
+  <article class="flow-step"><span class="flow-step__label">Case</span><p>Anchor the book in a secure enterprise document Q&A assistant.</p></article>
+  <article class="flow-step"><span class="flow-step__label">Path</span><p>Choose the reading sequence that matches your role and urgency.</p></article>
+</section>
+
+## What You Should Be Able To Explain
+
+- Why a notebook result is not a production system.
+- Why enterprise AI systems need identity, auditability, evaluation, and support.
+- How the document Q&A assistant connects to ML foundations, RAG, APIs, security, agents, and delivery.
+- Which reading path fits your current role.
+
+## Read Next
+
+Start with **Who This Book Is For**, then read the delivery map and case study before moving into ML foundations.

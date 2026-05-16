@@ -1,12 +1,31 @@
 # Agentic Systems and Protocols
 
-This part contains the chapters for **Agentic Systems and Protocols**.
+<span class="part-kicker">Part VI</span>
 
-Read these chapters with the running enterprise document Q&A assistant in mind: every concept should eventually help you design, build, secure, evaluate, or operate a production AI system.
+This part separates useful agent patterns from hype. An agent is not every LLM workflow. Agentic systems use model-driven decisions, state, tools, memory, and approval gates; deterministic workflows remain better when the process is known.
 
-## Part checklist
+## Flow Through This Part
 
-- [ ] Understand the core vocabulary.
-- [ ] Connect each concept to a production workflow.
-- [ ] Identify evaluation and security risks.
-- [ ] Capture open questions for the project appendices.
+<section class="flow-strip">
+  <article class="flow-step"><span class="flow-step__label">Decide</span><p>Distinguish workflows, agents, planning, autonomy, and approval gates.</p></article>
+  <article class="flow-step"><span class="flow-step__label">Constrain</span><p>Design tool schemas, validation, scoped permissions, retries, and audit logs.</p></article>
+  <article class="flow-step"><span class="flow-step__label">Connect</span><p>Use Model Context Protocol (MCP) concepts for tools, resources, prompts, and servers.</p></article>
+  <article class="flow-step"><span class="flow-step__label">Coordinate</span><p>Understand Agent-to-Agent (A2A) coordination and framework trade-offs.</p></article>
+  <article class="flow-step"><span class="flow-step__label">Observe</span><p>Evaluate and monitor agent behaviour, tool use, cost, latency, and failure modes.</p></article>
+</section>
+
+## Industry Thread
+
+In a demo, an agent can call a tool and produce a convincing answer. In production, the tool call needs argument validation, permission checks, idempotency, logs, and fallback behaviour. In an enterprise, dangerous actions often require human approval.
+
+## Running Case Study Link
+
+The document Q&A assistant might use tools to search documents, file support tickets, request access, summarize incidents, or draft policy updates. This part explains how to expose those capabilities without giving the model uncontrolled authority.
+
+## Visual Anchor
+
+![Workflow versus agent diagram showing deterministic orchestration compared with model-driven tool use.](../assets/generated/agents/workflow-vs-agent.svg)
+
+## Read Next
+
+Read tool safety before MCP. Protocols do not replace security boundaries; they make integration easier.
