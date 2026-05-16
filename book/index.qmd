@@ -40,46 +40,46 @@ flowchart LR
 ```
 
 <section class="path-switcher" data-path-switcher>
-<h2>Choose Your Reading Path</h2>
-<div class="path-tabs" role="tablist" aria-label="Reading paths">
-<button class="path-tab" data-path-tab="ds">Data scientist</button>
-<button class="path-tab" data-path-tab="lead">AI lead</button>
-<button class="path-tab" data-path-tab="backend">Backend or ML engineer</button>
-<button class="path-tab" data-path-tab="interview">Interview preparation</button>
-</div>
-<article class="path-panel" data-path-panel="ds">
-<h3>Path A: Data scientist becoming production-ready</h3>
-<ol>
-<li>Start with Part 0 to understand the book and running case study.</li>
-<li>Read Part I and Part II to strengthen ML and deep learning fundamentals.</li>
-<li>Move through Part III and Part IV to build LLM applications and APIs.</li>
-<li>Use the projects to turn the concepts into runnable systems.</li>
-</ol>
-</article>
-<article class="path-panel" data-path-panel="lead">
-<h3>Path B: AI lead or senior data scientist</h3>
-<ol>
-<li>Start with Part 0, then jump to Part III for modern LLM application trade-offs.</li>
-<li>Read Part V and Part VI for security, governance, agents, MCP, and A2A.</li>
-<li>Use Part VII as your delivery playbook for intake, architecture, rollout, and support.</li>
-</ol>
-</article>
-<article class="path-panel" data-path-panel="backend">
-<h3>Path C: Backend or ML engineer</h3>
-<ol>
-<li>Read Part IV first to align on APIs, FastAPI, jobs, Docker, and observability.</li>
-<li>Read Part V for enterprise identity, tenant isolation, and AI security.</li>
-<li>Read Part III and Part VI for RAG, tool calling, agents, MCP, and framework choices.</li>
-</ol>
-</article>
-<article class="path-panel" data-path-panel="interview">
-<h3>Path D: Interview preparation</h3>
-<ol>
-<li>Review ML foundations, deep learning, LLM applications, and backend basics.</li>
-<li>Use the glossary, acronyms, checklists, and interview appendix to tighten explanations.</li>
-<li>Practice explaining the enterprise document Q&A assistant end to end.</li>
-</ol>
-</article>
+  <h2>Choose Your Reading Path</h2>
+  <div class="path-tabs" role="tablist" aria-label="Reading paths">
+    <button class="path-tab" data-path-tab="ds">Data scientist</button>
+    <button class="path-tab" data-path-tab="lead">AI lead</button>
+    <button class="path-tab" data-path-tab="backend">Backend or ML engineer</button>
+    <button class="path-tab" data-path-tab="interview">Interview preparation</button>
+  </div>
+  <article class="path-panel" data-path-panel="ds">
+    <h3>Path A: Data scientist becoming production-ready</h3>
+    <ol>
+      <li>Start with Part 0 to understand the book and running case study.</li>
+      <li>Read Part I and Part II to strengthen ML and deep learning fundamentals.</li>
+      <li>Move through Part III and Part IV to build LLM applications and APIs.</li>
+      <li>Use the projects to turn the concepts into runnable systems.</li>
+    </ol>
+  </article>
+  <article class="path-panel" data-path-panel="lead">
+    <h3>Path B: AI lead or senior data scientist</h3>
+    <ol>
+      <li>Start with Part 0, then jump to Part III for modern LLM application trade-offs.</li>
+      <li>Read Part V and Part VI for security, governance, agents, MCP, and A2A.</li>
+      <li>Use Part VII as your delivery playbook for intake, architecture, rollout, and support.</li>
+    </ol>
+  </article>
+  <article class="path-panel" data-path-panel="backend">
+    <h3>Path C: Backend or ML engineer</h3>
+    <ol>
+      <li>Read Part IV first to align on APIs, FastAPI, jobs, Docker, and observability.</li>
+      <li>Read Part V for enterprise identity, tenant isolation, and AI security.</li>
+      <li>Read Part III and Part VI for RAG, tool calling, agents, MCP, and framework choices.</li>
+    </ol>
+  </article>
+  <article class="path-panel" data-path-panel="interview">
+    <h3>Path D: Interview preparation</h3>
+    <ol>
+      <li>Review ML foundations, deep learning, LLM applications, and backend basics.</li>
+      <li>Use the glossary, acronyms, checklists, and interview appendix to tighten explanations.</li>
+      <li>Practice explaining the enterprise document Q&A assistant end to end.</li>
+    </ol>
+  </article>
 </section>
 
 ## Running Case Study
