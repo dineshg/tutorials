@@ -1,137 +1,101 @@
-# From Data Scientist to Production AI Lead
+# Tutorial Refined
 
-Building ML, LLM, and Agentic Systems for Real Enterprise Delivery.
+A unified, GitHub‑style tutorial book that consolidates the original
+`pytorch/` and `Full_Stack/` materials into a single navigable structure.
 
-This book teaches industry data scientists how to move beyond notebooks and build real AI systems.
+📖 **Read it online:** <https://dineshg.github.io/tutorials/>
 
-You will learn how to:
+> **Or open `index.html` in a browser** to read it locally. Every chapter
+> shares a fixed header, a left sidebar, breadcrumbs, and prev/next pagers.
+> The existing tutorial content was preserved verbatim — nothing was truncated.
 
-- understand core machine learning and deep learning methods
-- evaluate models properly
-- build APIs around models
-- design Retrieval-Augmented Generation (RAG) and Large Language Model (LLM) applications
-- secure AI systems with enterprise identity
-- understand agents, tools, and Model Context Protocol (MCP)
-- deploy, monitor, and govern AI systems
-- lead an enterprise AI project from business pain to production rollout
+## Hosting (GitHub Pages)
 
-The running example throughout the book is an enterprise document Q&A assistant. We start with the business problem, build the ML/LLM foundations, design the backend, add security and governance, and finally turn it into a production-ready enterprise AI system.
+This repository is published as a static book using **GitHub Pages**. The
+workflow at `.github/workflows/pages.yml` deploys the entire repo (the
+HTML book) to Pages on every push to `main`. A `.nojekyll` file is
+included so Pages serves all asset paths verbatim (no Jekyll processing).
 
-## Current Repository Status
+## Structure
 
-This repository is currently a static HTML tutorial site published with GitHub Pages. The current site is still readable from `index.html`, but the planned direction is to migrate the source authoring format to a Quarto book while preserving useful existing content.
+| Part | Folder | Theme |
+| --- | --- | --- |
+| I  | `part1-enterprise-ai-delivery/`        | Business pain → AI lead → HLD/LLD → ship |
+| II | `part2-backend-platform-security/`     | FastAPI, concurrency, auth, identity, GitHub governance |
+| III| `part3-agent-protocols/`               | MCP (incl. 2025 update), A2A, JS/TS, LangChain/LangGraph/Flowise |
+| IV | `part4-ml-foundations/`                | Geometry of ML, regression, classification, ensembles |
+| V  | `part5-deep-learning-and-llms/`        | FFN, CNN, RNN, Transformers, fine‑tuning, alignment |
+| VI | `part6-appendices/`                    | Interview talk track, LaTeX print edition |
 
-Current framework:
+## How a new learner should read this book
 
-- Static HTML pages
-- Shared CSS in `assets/css/book.css`
-- Shared navigation injected by `assets/js/nav.js`
-- GitHub Pages deployment through `.github/workflows/pages.yml`
-- No Quarto, MkDocs, Jupyter Book, package manager, or local build system yet
+The parts are presented in the order an enterprise team usually meets them
+(delivery first), but a new learner should read them in a different order.
+The home page (`index.html`) lists explicit reading paths for:
 
-Current local viewing command:
+- New ML learners (Part IV → V → III → II → I)
+- Backend / platform engineers learning AI (Part II → III → select V → I)
+- Lead / Principal AI engineers (Part I → II → III → select V → Appendix A)
+- Lead DS interview prep (Appendix A first, then drill‑downs)
+
+## What was added vs. the originals
+
+The original tutorials were preserved as-is. The following new chapters were
+added to fill gaps and cover the latest methods:
+
+- `part2-backend-platform-security/15-modern-auth-additions.html`
+  Passkeys / WebAuthn, DPoP sender‑constrained tokens, mTLS, token‑exchange (RFC 8693).
+- `part3-agent-protocols/04-mcp-2025-update.html`
+  The MCP 2025‑03‑26 / 2025‑06‑18 changes: Streamable HTTP transport,
+  OAuth 2.1 with Protected Resource Metadata, elicitation, structured
+  tool output, resource links. Placed immediately after the original three
+  MCP chapters so the MCP track is contiguous.
+- `part5-deep-learning-and-llms/11-transformers-and-attention.html`
+  Self‑attention, multi‑head attention, encoder/decoder, KV cache,
+  rotary positional embeddings, FlashAttention.
+- `part5-deep-learning-and-llms/13-modern-llm-alignment-orpo-grpo.html`
+  ORPO (odds‑ratio preference), GRPO (group‑relative policy optimization
+  used by DeepSeek R1), KTO, RLAIF — the post‑PPO/DPO landscape.
+
+## Structural changes for learner flow (v1.1)
+
+- **Part III reordered** so the four MCP chapters are contiguous (1 → 4),
+  followed by A2A, JS/TS primer, and LangChain.
+- **Part V Chapter 3** (FFN canonical merged) is now labelled and styled as
+  *optional reference* — it duplicates Chapters 1 + 2 verbatim.
+- **Appendices** (`Appendix A`, `Appendix B`) now have HTML wrappers that
+  render the `.md` and `.tex` source inline, so they are first‑class book
+  chapters with the shared header / sidebar / pager. The raw `.md` and
+  `.tex` files are still present for direct download.
+- **Each Part landing page** now shows a **Prerequisites** callout so a new
+  reader knows what they should already know before starting.
+
+Original folders such as `Lanchain_langraph_flowise/` (typo for
+"Langchain") and `7_Forecasting_RNN/` were normalized into clean,
+sequentially‑numbered chapter slots.
+
+## Local viewing
 
 ```bash
+cd /Users/dineshgamage/Developer/datascience_tutorial
 python3 -m http.server 8080
+# then open http://localhost:8080/
 ```
 
-Then open:
+The sidebar navigation (`assets/js/nav.js`) is injected at runtime, so
+opening `index.html` directly via `file://` also works in modern browsers.
+The Appendix A wrapper uses `fetch()` to load its markdown source, which
+requires HTTP — use the local server above if `file://` blocks the fetch.
 
-```text
-http://localhost:8080/
-```
+## File mapping (original → refined)
 
-## How to Read This Book
+A complete mapping from each original file path to its new location is
+preserved in the chapter file names: original ordering numbers and topics
+were maintained wherever possible (e.g. `5_1_*` → `01-ffn-concepts.html`,
+`5_2_*` → `02-ffn-training-debugging.html`, `5_*` → `03-ffn-canonical-merged.html`).
 
-Path A - Data scientist becoming production-ready:
+## License / authorship
 
-```text
-Part 0 -> Part I -> Part II -> Part III -> Part IV -> Projects
-```
-
-Path B - AI lead / senior data scientist:
-
-```text
-Part 0 -> Part III -> Part V -> Part VI -> Part VII
-```
-
-Path C - Backend/ML engineer:
-
-```text
-Part 0 -> Part IV -> Part V -> Part III -> Part VI
-```
-
-Path D - Interview preparation:
-
-```text
-ML Foundations -> Deep Learning -> LLM Applications -> Backend Basics -> Appendices
-```
-
-## Planned Book Structure
-
-The target book structure is documented in [BOOK_RESTRUCTURE_PLAN.md](BOOK_RESTRUCTURE_PLAN.md). The short version:
-
-- Part 0: Orientation
-- Part I: ML Foundations for Industry Data Scientists
-- Part II: Deep Learning Foundations
-- Part III: Modern LLM Application Development
-- Part IV: Backend Engineering for Data Scientists
-- Part V: Security, Identity, and Governance
-- Part VI: Agentic Systems and Protocols
-- Part VII: Enterprise AI Delivery Lifecycle
-- Part VIII: End-to-End Projects
-- Appendices: glossary, templates, checklists, further reading, changelog
-
-## Asset Reliability
-
-Broken images and remote instructional media are tracked in [ASSET_MANIFEST.md](ASSET_MANIFEST.md).
-
-Run the asset checker:
-
-```bash
-python3 scripts/check_assets.py
-```
-
-Current audit result:
-
-- 176 documentation files scanned
-- 126 image/media references found
-- 0 broken local image references
-- 0 remote media references
-- 13 unused generated media candidates under root `assets/` because the Quarto book now uses self-contained copies under `book/assets/`
-
-The checker exits non-zero if broken local image references are introduced. That is intentional: missing local instructional assets should block publication.
-
-## Contributor Guides
-
-- [STYLE_GUIDE.md](STYLE_GUIDE.md) defines the book voice, chapter template, file naming rules, and asset policy.
-- [CONTRIBUTING.md](CONTRIBUTING.md) explains local setup, editing workflow, asset checks, and review checklists.
-
-## Existing Static Site
-
-The current static site contains useful material that should be preserved and reorganised rather than deleted:
-
-- `part1-enterprise-ai-delivery/`
-- `part2-backend-platform-security/`
-- `part3-agent-protocols/`
-- `part4-ml-foundations/`
-- `part5-deep-learning-and-llms/`
-- `part6-appendices/`
-
-The migration plan maps these chapters into the new book journey and identifies duplicate or overlapping content.
-
-## New Quarto Source
-
-The maintainable book source now lives under `book/`.
-
-When Quarto is installed:
-
-```bash
-quarto render book
-```
-
-The GitHub Pages workflow now renders and publishes `book/_book`. The legacy static site remains in the repository for reference while the Quarto book matures.
-
-## License
-
-No new license file was introduced in this audit pass. Before wider publication or reuse of third-party assets, add a repository license and confirm that all retained media has compatible licensing.
+All original content remains the property of its author. The refined book
+chrome (CSS, navigation injector, index/part landing pages, and the four
+new chapters listed above) is provided as a structural overlay.

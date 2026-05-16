@@ -1,4 +1,4 @@
-name: Deploy Quarto book to GitHub Pages
+name: Deploy book to GitHub Pages
 
 on:
   push:
@@ -24,19 +24,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Quarto
-        uses: quarto-dev/quarto-actions/setup@v2
-
-      - name: Render Quarto book
-        run: quarto render book
-
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: 'book/_book'
+          path: '.'
 
       - name: Deploy to GitHub Pages
         id: deployment
