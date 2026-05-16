@@ -61,12 +61,13 @@ Latest local checks:
 
 - `python3 scripts/check_assets.py`: passed
 - `python3 scripts/check_links.py`: passed
+- `npx --yes markdownlint-cli2@0.14.0 ...`: passed
 - `python3 -m py_compile ...`: passed
 - full example pytest suite in a local virtualenv: passed
 - `git diff --check`: passed
-- Quarto local render: not run because the local Homebrew cask requires sudo; the GitHub Actions workflow installs Quarto without local sudo
+- Quarto local render: not run because the local Quarto CLI is not installed; the GitHub Actions workflow installs Quarto without local sudo
 
-CI includes a Quarto render job using `quarto-dev/quarto-actions/setup@v2`, and the GitHub Pages workflow now renders and publishes `book/_book`.
+CI includes a Quarto HTML render job using `quarto-dev/quarto-actions/setup@v2`, and the GitHub Pages workflow now renders and publishes `book/_book`.
 
 ## Deployment Recommendation
 

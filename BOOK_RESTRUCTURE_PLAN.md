@@ -368,5 +368,5 @@ scripts/
 2. Expand generated diagrams where deeper visual explanations are useful.
 3. Add more complete runnable notebooks for ML, PyTorch, RAG evaluation, and forecasting.
 4. Review each converted chapter with a subject-matter expert.
-5. Run `quarto render book` once Quarto is installed locally.
+5. Run `quarto render book --to html` once Quarto is installed locally.
 6. Keep the static site available until the Quarto site renders cleanly.

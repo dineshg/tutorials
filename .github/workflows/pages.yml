@@ -28,7 +28,7 @@ jobs:
         uses: quarto-dev/quarto-actions/setup@v2
 
       - name: Render Quarto book
-        run: quarto render book
+        run: quarto render book --to html
 
       - name: Setup Pages
         uses: actions/configure-pages@v5

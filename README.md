@@ -127,7 +127,7 @@ The maintainable book source now lives under `book/`.
 When Quarto is installed:
 
 ```bash
-quarto render book
+quarto render book --to html
 ```
 
 The GitHub Pages workflow now renders and publishes `book/_book`. The legacy static site remains in the repository for reference while the Quarto book matures.

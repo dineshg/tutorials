@@ -1,6 +1,5 @@
 # OAuth2, OIDC, PKCE, JWTs, and SSO
 
-
 ::: {.callout-note}
 Version note
 
