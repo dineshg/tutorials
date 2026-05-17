@@ -32,6 +32,9 @@
   --color-done-soft:    rgba(130,80,223,.08);
   --color-codebg:       #f6f8fa;
   --color-codeborder:   #d0d7de;
+  --color-codebar:      #eef2f7;
+  --color-codebar-fg:   #5d6673;
+  --color-figure-bg:    #fbfdff;
   --color-tableheader:  #f6f8fa;
 
   --sidebar-width:      300px;
@@ -72,6 +75,9 @@
     --color-done-soft:    rgba(163,113,247,.15);
     --color-codebg:       #161b22;
     --color-codeborder:   #30363d;
+    --color-codebar:      #0f172a;
+    --color-codebar-fg:   #cbd5e1;
+    --color-figure-bg:    #0f172a;
     --color-tableheader:  #161b22;
   }
 }
@@ -360,19 +366,22 @@ img, svg, video, canvas { max-width: 100%; height: auto; }
 .tr-content pre {
   background: var(--color-codebg);
   color: var(--color-fg-default);
-  padding: 14px 16px;
+  padding: 18px 20px;
   border-radius: var(--radius-md);
   overflow-x: auto;
   border: 1px solid var(--color-codeborder);
-  margin: 12px 0 18px;
-  font-size: 0.9em;
-  line-height: 1.5;
+  margin: 14px 0 22px;
+  font-size: 0.95rem;
+  line-height: 1.58;
+  box-shadow: 0 1px 2px rgba(31,35,40,.04);
+  tab-size: 2;
 }
 .tr-content pre[style] {
   background: var(--color-codebg) !important;
   color: var(--color-fg-default) !important;
-  padding: 14px 16px !important;
+  padding: 18px 20px !important;
   border-radius: var(--radius-md) !important;
+  border: 1px solid var(--color-codeborder) !important;
 }
 .tr-content pre code {
   background: transparent !important;
@@ -399,38 +408,41 @@ img, svg, video, canvas { max-width: 100%; height: auto; }
 /* Generic syntax highlight tokens (used by several chapters) */
 .tr-content .keyword,
 .tr-content .tok-kw,
-.tr-content .kw      { color: #cf222e; font-weight: 600; }
+.tr-content .kw      { color: #0000ff; font-weight: 600; }
 .tr-content .string,
 .tr-content .tok-str,
-.tr-content .str     { color: #0a3069; }
+.tr-content .str     { color: #a31515; }
 .tr-content .comment,
 .tr-content .tok-com,
-.tr-content .com     { color: var(--color-fg-muted); font-style: italic; }
+.tr-content .com     { color: #008000; font-style: italic; }
 .tr-content .function,
 .tr-content .tok-fn,
-.tr-content .fn      { color: #8250df; }
+.tr-content .fn      { color: #795e26; }
 .tr-content .number,
 .tr-content .tok-num,
-.tr-content .num     { color: #0550ae; }
+.tr-content .num     { color: #098658; }
 .tr-content .typ,
-.tr-content .tok-typ { color: #953800; }
+.tr-content .tok-typ { color: #267f99; }
 .tr-content .op      { color: var(--color-fg-default); }
 
 @media (prefers-color-scheme: dark) {
   .tr-content .keyword,
   .tr-content .tok-kw,
-  .tr-content .kw      { color: #ff7b72; }
+  .tr-content .kw      { color: #569cd6; }
   .tr-content .string,
   .tr-content .tok-str,
-  .tr-content .str     { color: #a5d6ff; }
+  .tr-content .str     { color: #ce9178; }
+  .tr-content .comment,
+  .tr-content .tok-com,
+  .tr-content .com     { color: #6a9955; }
   .tr-content .function,
   .tr-content .tok-fn,
-  .tr-content .fn      { color: #d2a8ff; }
+  .tr-content .fn      { color: #dcdcaa; }
   .tr-content .number,
   .tr-content .tok-num,
-  .tr-content .num     { color: #79c0ff; }
+  .tr-content .num     { color: #b5cea8; }
   .tr-content .typ,
-  .tr-content .tok-typ { color: #ffa657; }
+  .tr-content .tok-typ { color: #4ec9b0; }
 }
 
 /* ==========================================================================
@@ -890,9 +902,27 @@ img, svg, video, canvas { max-width: 100%; height: auto; }
 
 .tr-content .figure,
 .tr-content figure {
-  margin: 18px 0;
+  position: relative;
+  margin: 22px 0;
   text-align: center;
+  background: var(--color-figure-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  box-shadow: 0 1px 2px rgba(31,35,40,.04);
+  overflow: hidden;
 }
+.tr-content .figure::before,
+.tr-content figure::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #0969da, #1a7f37, #bf8700, #8250df);
+}
+.tr-content img,
 .tr-content figure img,
 .tr-content .figure img {
   display: block;
@@ -900,16 +930,23 @@ img, svg, video, canvas { max-width: 100%; height: auto; }
   max-height: 560px;
   object-fit: contain;
   margin: 0 auto;
-  background: var(--color-bg-subtle);
-  border: 1px solid var(--color-border-muted);
-  border-radius: var(--radius-md);
-  padding: 10px;
+  background: #fff;
+  border: 1px solid var(--color-border-muted) !important;
+  border-radius: var(--radius-md) !important;
+  padding: 10px !important;
+  box-shadow: none !important;
+}
+.tr-content figure img,
+.tr-content .figure img {
+  width: auto !important;
+  height: auto !important;
 }
 .tr-content figure figcaption,
 .tr-content .figure figcaption {
   font-size: .85rem;
   color: var(--color-fg-muted);
-  margin-top: 6px;
+  margin-top: 10px;
+  line-height: 1.45;
 }
 
 /* Equations / math blocks */
@@ -987,36 +1024,38 @@ img, svg, video, canvas { max-width: 100%; height: auto; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: var(--color-bg-inset);
+  background: var(--color-codebar);
   border: 1px solid var(--color-codeborder);
   border-bottom: 0;
   border-radius: var(--radius-md) var(--radius-md) 0 0;
-  padding: 5px 12px 5px 14px;
-  margin-top: 12px;
+  padding: 9px 14px 9px 16px;
+  margin-top: 16px;
   font-family: var(--font-mono);
-  font-size: .78rem;
-  color: var(--color-fg-muted);
+  font-size: .8rem;
+  color: var(--color-codebar-fg);
   line-height: 1;
+  box-shadow: 0 1px 2px rgba(31,35,40,.04);
 }
 .tr-code-bar + pre {
   margin-top: 0 !important;
   border-top-left-radius: 0 !important;
   border-top-right-radius: 0 !important;
+  border-top-color: var(--color-codeborder) !important;
 }
 .tr-code-lang {
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: .04em;
-  color: var(--color-fg-subtle);
+  letter-spacing: .08em;
+  color: var(--color-codebar-fg);
 }
 .tr-copy-btn {
-  background: transparent;
+  background: var(--color-bg-canvas);
   border: 1px solid var(--color-border-muted);
   border-radius: var(--radius-sm);
   color: var(--color-fg-muted);
   font-family: var(--font-sans);
-  font-size: .75rem;
-  padding: 2px 9px;
+  font-size: .78rem;
+  padding: 3px 10px;
   cursor: pointer;
   transition: background .15s, color .15s;
 }
@@ -1053,18 +1092,106 @@ img, svg, video, canvas { max-width: 100%; height: auto; }
 .tr-content .diagram,
 .tr-content .mini-diagram,
 .tr-content .viz {
-  background: var(--color-bg-subtle);
-  border: 1px solid var(--color-border-muted);
-  border-radius: var(--radius-md);
-  padding: 14px;
-  margin: 14px 0;
+  background:
+    linear-gradient(var(--color-figure-bg), var(--color-figure-bg)) padding-box,
+    linear-gradient(135deg, #0969da, #1a7f37, #bf8700, #8250df) border-box;
+  border: 1px solid transparent;
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  margin: 16px 0;
   text-align: center;
+  box-shadow: 0 1px 2px rgba(31,35,40,.04);
 }
 .tr-content .svgwrap svg,
 .tr-content .svgbox svg,
 .tr-content .diagram svg,
 .tr-content .mini-diagram svg,
 .tr-content .viz svg { max-width: 100%; height: auto; }
+
+/* Inline SVG figures often reuse generic class names like .box, .title, and
+   .muted. Set SVG-specific paint rules so those shapes do not inherit the
+   HTML card styles or fall back to SVG's default black fill. */
+.tr-content svg.viz,
+.tr-content .viz svg,
+.tr-content figure svg {
+  display: block;
+  width: 100%;
+  max-width: 980px;
+  height: auto;
+  margin: 0 auto;
+  color: var(--color-fg-default);
+}
+.tr-content svg .box,
+.tr-content svg rect.box {
+  fill: #eaf3ff;
+  stroke: #0969da;
+  stroke-width: 1.5;
+}
+.tr-content svg .box2,
+.tr-content svg rect.box2 {
+  fill: #f3f8f1;
+  stroke: #1a7f37;
+  stroke-width: 1.5;
+}
+.tr-content svg .title {
+  fill: var(--color-fg-default);
+  font: 700 16px var(--font-sans);
+}
+.tr-content svg .label {
+  fill: #334155;
+  font: 600 14px var(--font-sans);
+}
+.tr-content svg .muted {
+  fill: var(--color-fg-muted);
+  font: 500 13px var(--font-sans);
+}
+.tr-content svg .accent {
+  stroke: #0969da;
+  fill: none;
+}
+.tr-content svg .accentFill {
+  fill: #0969da;
+}
+.tr-content svg .accent2 {
+  stroke: #8250df;
+  fill: none;
+}
+.tr-content svg .accent2Fill {
+  fill: #8250df;
+}
+.tr-content svg line,
+.tr-content svg path {
+  vector-effect: non-scaling-stroke;
+}
+
+@media (prefers-color-scheme: dark) {
+  .tr-content svg .box,
+  .tr-content svg rect.box {
+    fill: #10233f;
+    stroke: #58a6ff;
+  }
+  .tr-content svg .box2,
+  .tr-content svg rect.box2 {
+    fill: #102b1a;
+    stroke: #3fb950;
+  }
+  .tr-content svg .title,
+  .tr-content svg .label {
+    fill: var(--color-fg-default);
+  }
+  .tr-content svg .accent {
+    stroke: #58a6ff;
+  }
+  .tr-content svg .accentFill {
+    fill: #58a6ff;
+  }
+  .tr-content svg .accent2 {
+    stroke: #a371f7;
+  }
+  .tr-content svg .accent2Fill {
+    fill: #a371f7;
+  }
+}
 
 /* Auth boundary diagrams (Part II) */
 .tr-content .auth-boundaries,

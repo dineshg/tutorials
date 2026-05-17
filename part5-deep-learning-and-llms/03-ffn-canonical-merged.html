@@ -16,9 +16,7 @@
       options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] }
     };
   </script>
-  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script><script defer>
-    window.addEventListener('DOMContentLoaded', () =>);
-  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
 
 <link rel="stylesheet" href="../assets/css/book.css">
 </head>
@@ -33,6 +31,14 @@
       linear models, why activation functions matter, how <b>backpropagation</b> works (chain rule!), and how this connects
       to practical PyTorch code for <b>multiclass image classification</b>.
     </p>
+    <div class="tr-note">
+      <strong>Optional reference edition</strong>
+      This chapter deliberately merges the concepts from
+      <a href="01-ffn-concepts.html">Chapter 1</a> and
+      <a href="02-ffn-training-debugging.html">Chapter 2</a> into one long
+      reference article. If you are reading the teaching path in order, treat
+      this as a recap/reference, not a new required concept block.
+    </div>
     <div class="badge-row">
       <span class="badge"><b>Task types</b>: regression · binary class · multiclass class</span>
       <span class="badge"><b>Core math</b>: logits · sigmoid · softmax · cross-entropy · chain rule</span>

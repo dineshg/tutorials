@@ -59,6 +59,39 @@ shippable.</p>
   bootstrap policy. Read them together before the GCP implementation chapter.
 </div>
 
+<h2>Concept ownership</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Cluster</th>
+      <th>Owner chapter</th>
+      <th>How the related chapters should be read</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>FastAPI runtime and HTTP request handling</td>
+      <td><a href="03-fastapi-request-mapping.html">Ch. 3</a></td>
+      <td>Ch. 1 introduces the server, Ch. 2 owns verb semantics, Ch. 3 owns the exact HTTP-to-FastAPI mapping.</td>
+    </tr>
+    <tr>
+      <td>OAuth2/OIDC/PKCE/JWT/opaque/API key authentication</td>
+      <td><a href="09-authentication-deep-dive.html">Ch. 9</a></td>
+      <td>Ch. 6 primes the vocabulary, Ch. 7 implements it in FastAPI, Ch. 8 covers first-login provisioning, Ch. 15 adds modern extensions.</td>
+    </tr>
+    <tr>
+      <td>End-user identity, tenancy, IAM, groups, workload identity</td>
+      <td><a href="10-enduser-vs-workload-identity.html">Ch. 10</a></td>
+      <td>Ch. 12 applies the model to AD/Workspace group gates and tenant bootstrap policy; Ch. 11 implements it on GCP.</td>
+    </tr>
+    <tr>
+      <td>External integration and governance</td>
+      <td><a href="13-external-service-integration.html">Ch. 13</a> and <a href="14-github-governance.html">Ch. 14</a></td>
+      <td>Ch. 13 owns service-to-service integration patterns; Ch. 14 owns repository and CI enforcement.</td>
+    </tr>
+  </tbody>
+</table>
+
 <script src="../assets/js/nav.js"></script>
 </body>
 </html>

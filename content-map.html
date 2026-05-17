@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>High-Level Content Map and Duplicate Ownership</title>
+  <link rel="stylesheet" href="assets/css/book.css" />
+</head>
+<body>
+
+<h1>High-Level Content Map and Duplicate Ownership</h1>
+
+<p>This page is the book-level map created after scanning every chapter. Its
+job is not to remove repeated material. Repetition is kept where it teaches a
+concept from a different angle, but each repeated area now has an explicit
+owner chapter, a reason for the later revisit, and a suggested reading order.</p>
+
+<div class="tr-note">
+  <strong>Rule used for this correction pass</strong>
+  No concept or factual detail is dropped. When the same idea appears in
+  multiple places, the most complete chapter becomes the canonical explanation;
+  nearby chapters are treated as introductions, applications, implementation
+  views, enterprise views, or reference editions.
+</div>
+
+<h2>Book Spine</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Part</th>
+      <th>Primary purpose</th>
+      <th>How to read it</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a href="part1-enterprise-ai-delivery/index.html">Part I</a></td>
+      <td>Enterprise AI delivery lifecycle: intake, kickoff, HLD, architecture review, LLD, sprint planning, provisioning, and scale.</td>
+      <td>Read as a process story. Repeated roles, artifacts, and gates are intentional lifecycle continuity.</td>
+    </tr>
+    <tr>
+      <td><a href="part2-backend-platform-security/index.html">Part II</a></td>
+      <td>Backend runtime, HTTP/FastAPI mechanics, authentication, identity, tenancy, workload identity, external integrations, and governance.</td>
+      <td>Read in three blocks: runtime basics, auth identity, then tenancy/IAM/GCP implementation.</td>
+    </tr>
+    <tr>
+      <td><a href="part3-agent-protocols/index.html">Part III</a></td>
+      <td>Agent protocol integration: MCP fundamentals, MCP remote/auth/enterprise patterns, 2025 MCP changes, A2A, JS/TS, and LangChain/LangGraph/Flowise.</td>
+      <td>Read MCP chapters together, then A2A as the separate agent-to-agent protocol.</td>
+    </tr>
+    <tr>
+      <td><a href="part4-ml-foundations/index.html">Part IV</a></td>
+      <td>Classical ML foundations: PyTorch, geometry, regression, classification, trees, bagging, boosting, and XGBoost.</td>
+      <td>Read before Part V. Regression and classification share the same training workflow but differ in target, output, and loss.</td>
+    </tr>
+    <tr>
+      <td><a href="part5-deep-learning-and-llms/index.html">Part V</a></td>
+      <td>Deep learning and LLM track: FFNs, CNNs, forecasting, RNNs, Transformers, fine-tuning, and alignment.</td>
+      <td>Read by cluster: FFN, CNN, sequence models, then LLMs.</td>
+    </tr>
+    <tr>
+      <td><a href="part6-appendices/index.html">Part VI</a></td>
+      <td>Supporting references: interview talk track and print-oriented classification source.</td>
+      <td>Use as review material or a printable companion.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Concept Ownership Map</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Concept cluster</th>
+      <th>Canonical owner</th>
+      <th>Related chapters and why they repeat it</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Enterprise delivery artifacts, roles, gates, and decision flow</td>
+      <td><a href="part1-enterprise-ai-delivery/05-seven-days-after-kickoff.html">Part I Ch. 5</a> for the post-kickoff document pack; <a href="part1-enterprise-ai-delivery/10-hld-to-lld-sprint-plan.html">Ch. 10</a> for sprint conversion.</td>
+      <td>Ch. 1-4 introduce the same people and artifacts from intake and kickoff. Ch. 6-11 reuse them during architecture, review, implementation, and provisioning.</td>
+    </tr>
+    <tr>
+      <td>HTTP and FastAPI request handling</td>
+      <td><a href="part2-backend-platform-security/03-fastapi-request-mapping.html">Part II Ch. 3</a></td>
+      <td>Ch. 1 introduces FastAPI/Uvicorn and briefly names methods. Ch. 2 owns HTTP verb semantics. Ch. 3 owns the exact mapping from raw HTTP to FastAPI function arguments.</td>
+    </tr>
+    <tr>
+      <td>OAuth2, OIDC, PKCE, bearer tokens, JWTs, opaque tokens, and API keys</td>
+      <td><a href="part2-backend-platform-security/09-authentication-deep-dive.html">Part II Ch. 9</a></td>
+      <td>Ch. 6 is the beginner primer, Ch. 7 is the FastAPI implementation, Ch. 8 is user bootstrap, and Ch. 15 adds modern sender-constrained and passwordless patterns. MCP auth chapters reference this theory instead of redefining it.</td>
+    </tr>
+    <tr>
+      <td>End-user identity, tenant isolation, IAM, AD/Workspace groups, and workload identity</td>
+      <td><a href="part2-backend-platform-security/10-enduser-vs-workload-identity.html">Part II Ch. 10</a></td>
+      <td>Ch. 12 applies the same three-lane model to AD groups and bootstrap policy. Ch. 11 implements it on GCP. Part I Ch. 6-7 mention it only at architecture-decision level.</td>
+    </tr>
+    <tr>
+      <td>MCP mental model, resources, prompts, tools, discovery, remote servers, and auth</td>
+      <td><a href="part3-agent-protocols/02-mcp-discovery-remote-auth.html">Part III Ch. 2</a></td>
+      <td>Ch. 1 is the first-principles local database example. Ch. 3 applies MCP to an enterprise Salesforce pattern. Ch. 4 updates transport/auth/elicitation for 2025. A2A in Ch. 5 is deliberately separate: inter-agent coordination, not host-to-tool integration.</td>
+    </tr>
+    <tr>
+      <td>Classical ML workflow: features, target, model, loss, optimizer, fit/predict/score</td>
+      <td><a href="part4-ml-foundations/02-ml-as-geometry.html">Part IV Ch. 2</a></td>
+      <td>Ch. 3 instantiates the workflow for numeric regression. Ch. 4 instantiates it for classification with logits, sigmoid/softmax, and accuracy. Ch. 5 branches to trees and ensembles for tabular baselines.</td>
+    </tr>
+    <tr>
+      <td>Feed-forward neural networks, neurons, activations, backprop, batching, and debugging</td>
+      <td><a href="part5-deep-learning-and-llms/01-ffn-concepts.html">Part V Ch. 1</a> and <a href="part5-deep-learning-and-llms/02-ffn-training-debugging.html">Ch. 2</a></td>
+      <td><a href="part5-deep-learning-and-llms/03-ffn-canonical-merged.html">Ch. 3</a> is the optional merged reference edition. It repeats the same concepts in one article for print/reference use.</td>
+    </tr>
+    <tr>
+      <td>CNN convolution, feature maps, pooling, implementation, dropout, and train/eval behavior</td>
+      <td><a href="part5-deep-learning-and-llms/04-cnn-convolution.html">Part V Ch. 4</a> through <a href="part5-deep-learning-and-llms/06-cnn-pytorch-implementation.html">Ch. 6</a></td>
+      <td><a href="part5-deep-learning-and-llms/07-cnn-dropout-train-eval.html">Ch. 7</a> expands the short dropout and train/eval section from Ch. 6 into a full conceptual and coding deep dive.</td>
+    </tr>
+    <tr>
+      <td>Sequence forecasting, autoregressive windows, leakage, recursion, RNNs, and Transformers</td>
+      <td><a href="part5-deep-learning-and-llms/08-forecasting-sequence-data.html">Part V Ch. 8</a></td>
+      <td>Ch. 9 implements the autoregressive linear baseline. Ch. 10 replaces a fixed window with recurrent state. Ch. 11 replaces recurrence with attention and becomes the bridge into LLMs.</td>
+    </tr>
+    <tr>
+      <td>LLM adaptation, SFT, PEFT, LoRA/QLoRA, DPO/RLHF, ORPO, KTO, GRPO, RLAIF</td>
+      <td><a href="part5-deep-learning-and-llms/12-llm-fine-tuning.html">Part V Ch. 12</a> for adaptation; <a href="part5-deep-learning-and-llms/13-modern-llm-alignment-orpo-grpo.html">Ch. 13</a> for alignment comparison.</td>
+      <td>Ch. 12 introduces SFT/PEFT and first-generation preference methods. Ch. 13 deliberately repeats the DPO/RLHF baseline only to compare newer alignment methods in one decision framework.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Duplicate Clusters Found by Scan</h2>
+<table>
+  <thead>
+    <tr>
+      <th>High-overlap pages</th>
+      <th>Resolution</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Part II Ch. 10 and Ch. 12: tenant identity, IAM, group gating.</td>
+      <td>Ch. 10 owns the three-lane model. Ch. 12 is the applied policy/bootstrap chapter.</td>
+    </tr>
+    <tr>
+      <td>Part III Ch. 1, Ch. 2, Ch. 3, and Ch. 4: MCP resources/prompts/tools, discovery, remote servers, auth, and enterprise patterns.</td>
+      <td>Ch. 2 owns the full technical model. Ch. 1 remains the beginner example, Ch. 3 the enterprise pattern, Ch. 4 the 2025 update.</td>
+    </tr>
+    <tr>
+      <td>Part V Ch. 1, Ch. 2, and Ch. 3: FFN concepts, training, batching, backprop, and debugging.</td>
+      <td>Ch. 1-2 are the teaching path. Ch. 3 is marked as an optional merged reference edition.</td>
+    </tr>
+    <tr>
+      <td>Part V Ch. 6 and Ch. 7: dropout and train/eval behavior in CNN code.</td>
+      <td>Ch. 6 introduces the implementation requirement. Ch. 7 is the detailed behavior chapter.</td>
+    </tr>
+    <tr>
+      <td>Part V Ch. 12 and Ch. 13: DPO, RLHF, preference data, and alignment objectives.</td>
+      <td>Ch. 12 introduces adaptation and earlier alignment methods. Ch. 13 owns the modern comparison across ORPO, KTO, GRPO, RLAIF, and PPO-style RLHF.</td>
+    </tr>
+    <tr>
+      <td>Part IV Ch. 3 and Ch. 4: training loops, loss, optimizer, and evaluation.</td>
+      <td>The shared workflow is intentional. Ch. 3 is regression; Ch. 4 is classification and changes target type, activation, loss, and metric.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Page-by-Page Map</h2>
+
+<h3>Part I - Enterprise AI Delivery Lifecycle</h3>
+<table>
+  <thead><tr><th>Chapter</th><th>Role in the book</th></tr></thead>
+  <tbody>
+    <tr><td><a href="part1-enterprise-ai-delivery/01-business-pain-to-ai-lead.html">1. From business pain to AI lead</a></td><td>Introduces the enterprise flow, roles, BU context, example pain point, and day-1 lead responsibilities.</td></tr>
+    <tr><td><a href="part1-enterprise-ai-delivery/02-intake-package.html">2. The intake package</a></td><td>Defines minimum viable intake, expected stakeholders, red flags, and a copy/paste intake expectation template.</td></tr>
+    <tr><td><a href="part1-enterprise-ai-delivery/03-ai-lead-response.html">3. AI lead response document</a></td><td>Turns the intake into scope, metrics, controls, risks, architecture sketch, evaluation plan, and asks.</td></tr>
+    <tr><td><a href="part1-enterprise-ai-delivery/04-kickoff-meeting.html">4. Pilot kickoff meeting</a></td><td>Defines meeting purpose, required attendees, agenda, decisions, questions by role, and post-meeting outputs.</td></tr>
+    <tr><td><a href="part1-enterprise-ai-delivery/05-seven-days-after-kickoff.html">5. Seven days after kickoff</a></td><td>Canonical playbook for the first week, AI lead document pack, ownership split, and release gates.</td></tr>
+    <tr><td><a href="part1-enterprise-ai-delivery/06-architecture-reference-design.html">6. Architecture reference design</a></td><td>Maps the app architecture: React, FastAPI, OIDC, token validation, tenant enforcement, DB isolation, and async processing.</td></tr>
+    <tr><td><a href="part1-enterprise-ai-delivery/07-hld-service-selection.html">7. HLD and service selection</a></td><td>Chooses GCP-aligned services, explains alternatives, constraints, critical path, and architecture review framing.</td></tr>
+    <tr><td><a href="part1-enterprise-ai-delivery/08-after-hld-next-steps.html">8. After HLD</a></td><td>Explains what changes after HLD, next-step sequencing, practical artifacts, and up-managing.</td></tr>
+    <tr><td><a href="part1-enterprise-ai-delivery/09-architecture-review.html">9. Architecture review</a></td><td>Owns review prep, agenda, expected reviewer questions, approval conditions, and follow-up capture.</td></tr>
+    <tr><td><a href="part1-enterprise-ai-delivery/10-hld-to-lld-sprint-plan.html">10. HLD to LLD and sprint plan</a></td><td>Converts HLD boxes into epics, vertical slices, stories, acceptance criteria, ownership, and sprint plan.</td></tr>
+    <tr><td><a href="part1-enterprise-ai-delivery/11-provisioning-services-scale.html">11. Provisioning, services, scale</a></td><td>Owns concrete provisioning tickets, service choices, latency targets, and scaling for thousands of users.</td></tr>
+  </tbody>
+</table>
+
+<h3>Part II - Backend, Platform, and Security</h3>
+<table>
+  <thead><tr><th>Chapter</th><th>Role in the book</th></tr></thead>
+  <tbody>
+    <tr><td><a href="part2-backend-platform-security/01-fastapi-uvicorn-basics.html">1. FastAPI and Uvicorn basics</a></td><td>Introduces the server runtime, why FastAPI/Uvicorn fit, and the first API mental model.</td></tr>
+    <tr><td><a href="part2-backend-platform-security/02-http-methods.html">2. HTTP methods</a></td><td>Owns HTTP verb semantics, common REST mappings, and PUT vs POST confusion.</td></tr>
+    <tr><td><a href="part2-backend-platform-security/03-fastapi-request-mapping.html">3. FastAPI request mapping</a></td><td>Shows the exact path from raw HTTP request to FastAPI parameters and return value.</td></tr>
+    <tr><td><a href="part2-backend-platform-security/04-concurrency-user-isolation.html">4. Concurrency and user isolation</a></td><td>Explains async, concurrency vs parallelism, per-request identity, and why global mutable state breaks user isolation.</td></tr>
+    <tr><td><a href="part2-backend-platform-security/05-background-tasks-and-retries.html">5. Background tasks and retries</a></td><td>Owns background work, retries, idempotency, and async processing patterns for FastAPI systems.</td></tr>
+    <tr><td><a href="part2-backend-platform-security/06-sso-oauth2-oidc-primer.html">6. SSO / OAuth2 / OIDC primer</a></td><td>Beginner-friendly explanation of SSO, OAuth2, OIDC, and why applications delegate login.</td></tr>
+    <tr><td><a href="part2-backend-platform-security/07-oidc-oauth2-pkce-fastapi.html">7. OIDC + OAuth2 + PKCE in FastAPI</a></td><td>Implementation flow for Auth Code + PKCE, bearer tokens, token validation, and backend identity.</td></tr>
+    <tr><td><a href="part2-backend-platform-security/08-registering-new-users.html">8. Registering new users</a></td><td>Owns first-login bootstrap, user provisioning, and where registration actually lives.</td></tr>
+    <tr><td><a href="part2-backend-platform-security/09-authentication-deep-dive.html">9. Authentication deep dive</a></td><td>Canonical auth chapter for API keys, bearer tokens, JWT vs opaque tokens, introspection, JWKS, PKCE, MCP auth, and SQL auth.</td></tr>
+    <tr><td><a href="part2-backend-platform-security/15-modern-auth-additions.html">10. Modern auth additions</a></td><td>Extends auth with passkeys/WebAuthn, DPoP, mTLS sender-constrained tokens, and token exchange.</td></tr>
+    <tr><td><a href="part2-backend-platform-security/10-enduser-vs-workload-identity.html">11. End-user vs workload identity</a></td><td>Canonical three-lane identity model: end-user identity, app authorization/tenancy, and workload identity/IAM.</td></tr>
+    <tr><td><a href="part2-backend-platform-security/12-tenant-iam-ad-groups.html">12. Tenant isolation, IAM, AD groups</a></td><td>Applies the identity model to tenant isolation, IAM, group gating, and common mistakes.</td></tr>
+    <tr><td><a href="part2-backend-platform-security/11-gcp-workload-identity.html">13. GCP workload identity</a></td><td>Implements project setup, service accounts, Google identity, storage design, deployment, networking, and governance on GCP.</td></tr>
+    <tr><td><a href="part2-backend-platform-security/13-external-service-integration.html">14. External service integration</a></td><td>Compares API keys in Secret Manager with workload identity federation and service-account patterns.</td></tr>
+    <tr><td><a href="part2-backend-platform-security/14-github-governance.html">15. GitHub governance and CI</a></td><td>Owns rulesets, status checks, workflows, required workflows, scanning, runners, and merge enforcement.</td></tr>
+  </tbody>
+</table>
+
+<h3>Part III - Agent Protocols and Integration</h3>
+<table>
+  <thead><tr><th>Chapter</th><th>Role in the book</th></tr></thead>
+  <tbody>
+    <tr><td><a href="part3-agent-protocols/01-mcp-fundamentals.html">1. MCP fundamentals</a></td><td>Beginner local example for MCP tools, resources, prompts, and why a standard interface matters.</td></tr>
+    <tr><td><a href="part3-agent-protocols/02-mcp-discovery-remote-auth.html">2. MCP discovery, remote, auth</a></td><td>Canonical MCP technical chapter: server/client code, discovery, remote access, auth, token acquisition, validation, and best practices.</td></tr>
+    <tr><td><a href="part3-agent-protocols/03-mcp-enterprise-pattern.html">3. MCP enterprise pattern</a></td><td>Applies MCP to FastAPI host -> MCP server -> Salesforce with the enterprise auth story.</td></tr>
+    <tr><td><a href="part3-agent-protocols/04-mcp-2025-update.html">4. MCP 2025 update</a></td><td>Owns Streamable HTTP, OAuth 2.1 protected resource metadata, elicitation, structured output, resource links, and migration.</td></tr>
+    <tr><td><a href="part3-agent-protocols/05-a2a-protocol.html">5. A2A protocol</a></td><td>Separates agent-to-agent collaboration from MCP host-to-tool integration.</td></tr>
+    <tr><td><a href="part3-agent-protocols/06-javascript-typescript-primer.html">6. JavaScript and TypeScript primer</a></td><td>Self-contained language foundation for readers who need JS/TS before LangChain and Flowise.</td></tr>
+    <tr><td><a href="part3-agent-protocols/07-langchain-langgraph-flowise.html">7. LangChain -> LangGraph -> Flowise</a></td><td>Maps runnable pipelines, stateful graphs, and UI-based flow composition.</td></tr>
+  </tbody>
+</table>
+
+<h3>Part IV - ML Foundations</h3>
+<table>
+  <thead><tr><th>Chapter</th><th>Role in the book</th></tr></thead>
+  <tbody>
+    <tr><td><a href="part4-ml-foundations/01-introduction-pytorch.html">1. Introduction to PyTorch</a></td><td>Introduces PyTorch, practical applications, and the working style used in later ML chapters.</td></tr>
+    <tr><td><a href="part4-ml-foundations/02-ml-as-geometry.html">2. ML as geometry</a></td><td>Canonical conceptual base: data as points, models as shapes, regression as fitting, classification as separating.</td></tr>
+    <tr><td><a href="part4-ml-foundations/03-linear-regression.html">3. Linear regression</a></td><td>Owns straight-line model, MSE, SGD, training loop, and numeric prediction.</td></tr>
+    <tr><td><a href="part4-ml-foundations/04-linear-classification.html">4. Linear classification</a></td><td>Owns logits, sigmoid/logistic regression, classification loss, accuracy, preprocessing, and PyTorch implementation.</td></tr>
+    <tr><td><a href="part4-ml-foundations/05-trees-bagging-boosting.html">5. Trees, bagging, boosting</a></td><td>Owns decision trees, Gini/information gain, random forests, AdaBoost, Gradient Boosting, and XGBoost.</td></tr>
+  </tbody>
+</table>
+
+<h3>Part V - Deep Learning and LLMs</h3>
+<table>
+  <thead><tr><th>Chapter</th><th>Role in the book</th></tr></thead>
+  <tbody>
+    <tr><td><a href="part5-deep-learning-and-llms/01-ffn-concepts.html">1. FFN concepts</a></td><td>Owns neurons, layers, feed-forward architecture, activation functions, vanishing gradients, softmax, and flattening images.</td></tr>
+    <tr><td><a href="part5-deep-learning-and-llms/02-ffn-training-debugging.html">2. FFN training and debugging</a></td><td>Owns mini-batches, DataLoader, scalable training loops, logits vs probabilities, GPU handling, confusion matrices, and debugging.</td></tr>
+    <tr><td><a href="part5-deep-learning-and-llms/03-ffn-canonical-merged.html">3. FFN canonical merged</a></td><td>Optional reference edition that merges Ch. 1-2 into one publication-style article.</td></tr>
+    <tr><td><a href="part5-deep-learning-and-llms/04-cnn-convolution.html">4. CNN convolution</a></td><td>Owns convolution mechanics, output sizes, convolution modes, equations, cross-correlation, and sliding dot-product intuition.</td></tr>
+    <tr><td><a href="part5-deep-learning-and-llms/05-cnn-architecture.html">5. CNN architecture</a></td><td>Owns channels, filters, feature maps, pooling, parameter sharing, and full CNN architecture.</td></tr>
+    <tr><td><a href="part5-deep-learning-and-llms/06-cnn-pytorch-implementation.html">6. CNN PyTorch implementation</a></td><td>Owns Conv2d, nn.Module design, Sequential vs custom modules, model skeletons, dropout introduction, and convolution arithmetic.</td></tr>
+    <tr><td><a href="part5-deep-learning-and-llms/07-cnn-dropout-train-eval.html">7. CNN dropout and train/eval</a></td><td>Deep dive for dropout masks, inverted scaling, train/eval mode, flattening, and common confusions.</td></tr>
+    <tr><td><a href="part5-deep-learning-and-llms/08-forecasting-sequence-data.html">8. Forecasting and sequence data</a></td><td>Owns sequence representation, forecasting horizon, AR baseline, leakage, recursive forecasting, and the RNN preview.</td></tr>
+    <tr><td><a href="part5-deep-learning-and-llms/09-autoregressive-linear-model.html">9. Autoregressive linear model</a></td><td>Owns windowed dataset construction, chronological split, AR model in PyTorch, full-batch training, and correct recursive forecasting.</td></tr>
+    <tr><td><a href="part5-deep-learning-and-llms/10-recurrent-neural-networks.html">10. Recurrent neural networks</a></td><td>Owns Elman RNN equations, many-to-one vs many-to-many, manual loop, nn.RNN, hidden state, and recurrent weight sharing.</td></tr>
+    <tr><td><a href="part5-deep-learning-and-llms/11-transformers-and-attention.html">11. Transformers and attention</a></td><td>Owns scaled dot-product attention, multi-head attention, positional encoding/RoPE, Transformer blocks, encoder/decoder variants, KV cache, and why Transformers won.</td></tr>
+    <tr><td><a href="part5-deep-learning-and-llms/12-llm-fine-tuning.html">12. LLM fine-tuning</a></td><td>Owns SFT, data formats, Hugging Face/OpenAI fine-tuning, label masking, PEFT, LoRA/QLoRA, evaluation, DPO, and classic RLHF introduction.</td></tr>
+    <tr><td><a href="part5-deep-learning-and-llms/13-modern-llm-alignment-orpo-grpo.html">13. Modern LLM alignment</a></td><td>Owns the comparison of DPO, ORPO, KTO, GRPO, RLAIF, PPO-style RLHF, and the decision framework for preference alignment.</td></tr>
+  </tbody>
+</table>
+
+<h3>Part VI - Appendices</h3>
+<table>
+  <thead><tr><th>Appendix</th><th>Role in the book</th></tr></thead>
+  <tbody>
+    <tr><td><a href="part6-appendices/01-lead-ds-interview-talk-track.html">A. Lead DS interview talk track</a></td><td>One-hour narrative synthesis of enterprise AI delivery, multi-tenancy, MCP/A2A, and ML/DL depth.</td></tr>
+    <tr><td><a href="part6-appendices/02-classification-latex-print.html">B. Classification print edition</a></td><td>Print-oriented LaTeX companion for the linear classification chapter.</td></tr>
+  </tbody>
+</table>
+
+<script src="assets/js/nav.js"></script>
+</body>
+</html>

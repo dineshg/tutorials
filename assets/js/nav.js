@@ -81,6 +81,7 @@
       });
       if (!lang && pre.dataset && pre.dataset.lang) lang = pre.dataset.lang.toUpperCase();
       if (!lang && block.result) lang = (block.result.language || "").toUpperCase();
+      if (!lang || lang === "CODE") lang = inferLanguage(block.innerText || block.textContent || lang);
       if (!lang) lang = "CODE";
 
       // Friendly label map
@@ -231,6 +232,7 @@
   sidebar.className = "tr-sidebar";
   var sb = '<h3 style="margin-top:0">Book</h3>' +
            '<ul><li><a href="' + assetBase + 'index.html">Home / Table of contents</a></li>' +
+           '<li><a href="' + assetBase + 'content-map.html">High-level content map</a></li>' +
            '<li><a href="' + assetBase + 'README.md">README</a></li></ul>';
   BOOK.forEach(function (part) {
     sb += '<h3>' + escapeHtml(part.title) + '</h3><ul>';
@@ -277,6 +279,8 @@
   }
 
   existing.forEach(function (n) { content.appendChild(n); });
+
+  decorateImages(content);
 
   // Shared TeX rendering for chapters that contain math but do not ship their
   // own KaTeX/MathJax setup. This keeps equations out of code-block styling
@@ -373,6 +377,37 @@
     script.async = true;
     script.onload = typeset;
     document.head.appendChild(script);
+  }
+
+  function decorateImages(root) {
+    if (!root) return;
+    root.querySelectorAll("img").forEach(function (img) {
+      if (!img.getAttribute("loading")) img.setAttribute("loading", "lazy");
+      if (!img.getAttribute("decoding")) img.setAttribute("decoding", "async");
+
+      if (img.closest("figure, .figure, a, pre, code")) return;
+
+      var parent = img.parentNode;
+      if (!parent) return;
+
+      var figure = document.createElement("figure");
+      figure.className = "tr-auto-figure";
+      parent.insertBefore(figure, img);
+      figure.appendChild(img);
+    });
+  }
+
+  function inferLanguage(text) {
+    var sample = String(text || "").trim();
+    if (!sample) return "";
+    if (/^(GET|POST|PUT|PATCH|DELETE|OPTIONS|HEAD)\s+https?:\/\//m.test(sample) ||
+        /^Authorization:\s*Bearer\b/m.test(sample)) return "HTTP";
+    if (/^\s*(SELECT|INSERT|UPDATE|DELETE|CREATE|ALTER|WITH)\b/im.test(sample)) return "SQL";
+    if (/^\s*[{[]/.test(sample) && /["']?[A-Za-z0-9_-]+["']?\s*:/.test(sample)) return "JSON";
+    if (/\b(from\s+[\w.]+\s+import|import\s+[\w.,{}\s]+\s+from|def\s+\w+\(|class\s+\w+|async\s+def)\b/.test(sample)) return "PYTHON";
+    if (/\b(const|let|var|function|interface|type)\s+\w+|=>|console\.log/.test(sample)) return "JAVASCRIPT";
+    if (/^\s*(pip|npm|npx|uvicorn|python|node|docker|gcloud|kubectl)\b/m.test(sample)) return "BASH";
+    return "";
   }
 
   function collectRenderableText(root) {
