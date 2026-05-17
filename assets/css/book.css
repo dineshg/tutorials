@@ -376,6 +376,23 @@ img, svg, video, canvas { max-width: 100%; height: auto; }
   box-shadow: 0 1px 2px rgba(31,35,40,.04);
   tab-size: 2;
 }
+.tr-content .card,
+.tr-content .box,
+.tr-content .box2 {
+  min-width: 0;
+}
+.tr-content .card pre,
+.tr-content .box pre,
+.tr-content .box2 pre,
+.tr-content .info-box pre,
+.tr-content .concept-box pre,
+.tr-content .step-box pre {
+  max-width: 100%;
+  min-width: 0;
+  background: var(--color-codebg) !important;
+  border-color: var(--color-codeborder) !important;
+  box-shadow: 0 1px 2px rgba(31,35,40,.04);
+}
 .tr-content pre[style] {
   background: var(--color-codebg) !important;
   color: var(--color-fg-default) !important;
@@ -1036,6 +1053,17 @@ img, svg, video, canvas { max-width: 100%; height: auto; }
   line-height: 1;
   box-shadow: 0 1px 2px rgba(31,35,40,.04);
 }
+.tr-content .card .tr-code-bar,
+.tr-content .box .tr-code-bar,
+.tr-content .box2 .tr-code-bar,
+.tr-content .info-box .tr-code-bar,
+.tr-content .concept-box .tr-code-bar,
+.tr-content .step-box .tr-code-bar {
+  max-width: 100%;
+  min-width: 0;
+  background: var(--color-codebar) !important;
+  border-color: var(--color-codeborder) !important;
+}
 .tr-code-bar + pre {
   margin-top: 0 !important;
   border-top-left-radius: 0 !important;
@@ -1121,43 +1149,64 @@ img, svg, video, canvas { max-width: 100%; height: auto; }
   margin: 0 auto;
   color: var(--color-fg-default);
 }
-.tr-content svg .box,
-.tr-content svg rect.box {
-  fill: #eaf3ff;
-  stroke: #0969da;
-  stroke-width: 1.5;
+.tr-content svg.viz .box,
+.tr-content svg.viz rect.box,
+.tr-content figure svg .box,
+.tr-content figure svg rect.box {
+  fill: #eaf3ff !important;
+  stroke: #0969da !important;
+  stroke-width: 1.5 !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
 }
-.tr-content svg .box2,
-.tr-content svg rect.box2 {
-  fill: #f3f8f1;
-  stroke: #1a7f37;
-  stroke-width: 1.5;
+.tr-content svg.viz .box2,
+.tr-content svg.viz rect.box2,
+.tr-content figure svg .box2,
+.tr-content figure svg rect.box2 {
+  fill: #f3f8f1 !important;
+  stroke: #1a7f37 !important;
+  stroke-width: 1.5 !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
 }
-.tr-content svg .title {
-  fill: var(--color-fg-default);
-  font: 700 16px var(--font-sans);
+.tr-content svg.viz .title,
+.tr-content figure svg .title {
+  fill: var(--color-fg-default) !important;
+  font: 700 16px var(--font-sans) !important;
 }
-.tr-content svg .label {
-  fill: #334155;
-  font: 600 14px var(--font-sans);
+.tr-content svg.viz .label,
+.tr-content figure svg .label {
+  fill: #334155 !important;
+  font: 600 14px var(--font-sans) !important;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
 }
-.tr-content svg .muted {
-  fill: var(--color-fg-muted);
-  font: 500 13px var(--font-sans);
+.tr-content svg.viz .muted,
+.tr-content figure svg .muted {
+  fill: var(--color-fg-muted) !important;
+  font: 500 13px var(--font-sans) !important;
 }
-.tr-content svg .accent {
-  stroke: #0969da;
-  fill: none;
+.tr-content svg.viz .accent,
+.tr-content figure svg .accent {
+  stroke: #0969da !important;
+  fill: none !important;
 }
-.tr-content svg .accentFill {
-  fill: #0969da;
+.tr-content svg.viz .accentFill,
+.tr-content figure svg .accentFill {
+  fill: #0969da !important;
+  stroke: none !important;
 }
-.tr-content svg .accent2 {
-  stroke: #8250df;
-  fill: none;
+.tr-content svg.viz .accent2,
+.tr-content figure svg .accent2 {
+  stroke: #8250df !important;
+  fill: none !important;
 }
-.tr-content svg .accent2Fill {
-  fill: #8250df;
+.tr-content svg.viz .accent2Fill,
+.tr-content figure svg .accent2Fill {
+  fill: #8250df !important;
+  stroke: none !important;
 }
 .tr-content svg line,
 .tr-content svg path {
@@ -1165,31 +1214,41 @@ img, svg, video, canvas { max-width: 100%; height: auto; }
 }
 
 @media (prefers-color-scheme: dark) {
-  .tr-content svg .box,
-  .tr-content svg rect.box {
-    fill: #10233f;
-    stroke: #58a6ff;
+  .tr-content svg.viz .box,
+  .tr-content svg.viz rect.box,
+  .tr-content figure svg .box,
+  .tr-content figure svg rect.box {
+    fill: #10233f !important;
+    stroke: #58a6ff !important;
   }
-  .tr-content svg .box2,
-  .tr-content svg rect.box2 {
-    fill: #102b1a;
-    stroke: #3fb950;
+  .tr-content svg.viz .box2,
+  .tr-content svg.viz rect.box2,
+  .tr-content figure svg .box2,
+  .tr-content figure svg rect.box2 {
+    fill: #102b1a !important;
+    stroke: #3fb950 !important;
   }
-  .tr-content svg .title,
-  .tr-content svg .label {
-    fill: var(--color-fg-default);
+  .tr-content svg.viz .title,
+  .tr-content svg.viz .label,
+  .tr-content figure svg .title,
+  .tr-content figure svg .label {
+    fill: var(--color-fg-default) !important;
   }
-  .tr-content svg .accent {
-    stroke: #58a6ff;
+  .tr-content svg.viz .accent,
+  .tr-content figure svg .accent {
+    stroke: #58a6ff !important;
   }
-  .tr-content svg .accentFill {
-    fill: #58a6ff;
+  .tr-content svg.viz .accentFill,
+  .tr-content figure svg .accentFill {
+    fill: #58a6ff !important;
   }
-  .tr-content svg .accent2 {
-    stroke: #a371f7;
+  .tr-content svg.viz .accent2,
+  .tr-content figure svg .accent2 {
+    stroke: #a371f7 !important;
   }
-  .tr-content svg .accent2Fill {
-    fill: #a371f7;
+  .tr-content svg.viz .accent2Fill,
+  .tr-content figure svg .accent2Fill {
+    fill: #a371f7 !important;
   }
 }
 
