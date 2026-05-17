@@ -920,9 +920,17 @@ img, svg, video, canvas { max-width: 100%; height: auto; }
   border-radius: var(--radius-md);
   padding: 10px 14px;
   margin: 12px 0;
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-size: .95em;
   overflow-x: auto;
+}
+.tr-content .eq mjx-container,
+.tr-content .math mjx-container {
+  margin: 0.25em 0 !important;
+}
+.tr-content .eq code,
+.tr-content .math code {
+  white-space: normal;
 }
 .tr-content .eq-label {
   font-size: .8rem;

@@ -152,12 +152,12 @@
         ["07-oidc-oauth2-pkce-fastapi.html",      "7. OIDC + OAuth2 + PKCE in FastAPI"],
         ["08-registering-new-users.html",         "8. Registering new users"],
         ["09-authentication-deep-dive.html",      "9. Authentication deep dive"],
-        ["10-enduser-vs-workload-identity.html",  "10. End-user vs workload identity"],
-        ["11-gcp-workload-identity.html",         "11. GCP workload identity"],
+        ["15-modern-auth-additions.html",         "10. Modern auth additions (Passkeys, DPoP, mTLS)"],
+        ["10-enduser-vs-workload-identity.html",  "11. End-user vs workload identity"],
         ["12-tenant-iam-ad-groups.html",          "12. Tenant isolation, IAM, AD groups"],
-        ["13-external-service-integration.html",  "13. External service integration"],
-        ["14-github-governance.html",             "14. GitHub governance & CI"],
-        ["15-modern-auth-additions.html",         "15. Modern auth additions (Passkeys, DPoP, mTLS)"]
+        ["11-gcp-workload-identity.html",         "13. GCP workload identity"],
+        ["13-external-service-integration.html",  "14. External service integration"],
+        ["14-github-governance.html",             "15. GitHub governance & CI"]
       ]},
     { id: "part3", title: "Part III — Agent Protocols & Integration",
       tag: "agents-mcp-a2a", folder: "part3-agent-protocols",
@@ -187,11 +187,11 @@
         ["index.html",                          "Part overview"],
         ["01-ffn-concepts.html",                "1. FFN concepts"],
         ["02-ffn-training-debugging.html",      "2. FFN training & debugging"],
-        ["03-ffn-canonical-merged.html",        "3. FFN canonical (merged release edition)"],
+        ["03-ffn-canonical-merged.html",        "3. FFN canonical reference (merged Ch. 1–2)"],
         ["04-cnn-convolution.html",             "4. CNN — convolution"],
         ["05-cnn-architecture.html",            "5. CNN — architecture"],
         ["06-cnn-pytorch-implementation.html",  "6. CNN — PyTorch implementation"],
-        ["07-cnn-dropout-train-eval.html",      "7. CNN — dropout & train/eval"],
+        ["07-cnn-dropout-train-eval.html",      "7. CNN — dropout & train/eval deep dive"],
         ["08-forecasting-sequence-data.html",   "8. Forecasting & sequence data"],
         ["09-autoregressive-linear-model.html", "9. Autoregressive linear model"],
         ["10-recurrent-neural-networks.html",   "10. Recurrent neural networks"],
@@ -278,6 +278,11 @@
 
   existing.forEach(function (n) { content.appendChild(n); });
 
+  // Shared TeX rendering for chapters that contain math but do not ship their
+  // own KaTeX/MathJax setup. This keeps equations out of code-block styling
+  // and makes newer pages follow the same math behavior as the older ML pages.
+  renderGlobalMathIfNeeded(content);
+
   // Pager
   if (partInfo) {
     var idx = -1;
@@ -328,6 +333,119 @@
   });
 
   // ---------- 8. Helpers ---------------------------------------------------
+  function renderGlobalMathIfNeeded(root) {
+    if (!root) return;
+
+    var pageAlreadyOwnsMath =
+      document.querySelector('script[src*="katex"], script[src*="MathJax"], script[src*="mathjax"]') ||
+      root.querySelector(".katex, mjx-container");
+    if (pageAlreadyOwnsMath) return;
+
+    var text = collectRenderableText(root);
+    var hasTeX = /(\$\$?\\|\\\(|\\\[)/.test(text);
+    if (!hasTeX) return;
+
+    normalizeBackslashesInsideMath(root);
+
+    window.MathJax = window.MathJax || {};
+    window.MathJax.tex = Object.assign({
+      inlineMath: [["\\(", "\\)"], ["$", "$"]],
+      displayMath: [["\\[", "\\]"], ["$$", "$$"]],
+      processEscapes: true
+    }, window.MathJax.tex || {});
+    window.MathJax.options = Object.assign({
+      skipHtmlTags: ["script", "noscript", "style", "textarea", "pre", "code"]
+    }, window.MathJax.options || {});
+
+    function typeset() {
+      if (window.MathJax && window.MathJax.typesetPromise) {
+        window.MathJax.typesetPromise([root]).catch(function () {});
+      }
+    }
+
+    if (window.MathJax && window.MathJax.typesetPromise) {
+      typeset();
+      return;
+    }
+
+    var script = document.createElement("script");
+    script.src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js";
+    script.async = true;
+    script.onload = typeset;
+    document.head.appendChild(script);
+  }
+
+  function collectRenderableText(root) {
+    var ignored = { SCRIPT:1, STYLE:1, TEXTAREA:1, PRE:1, CODE:1, NOSCRIPT:1 };
+    var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode: function (node) {
+        var parent = node.parentElement;
+        if (!parent || ignored[parent.tagName]) return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    var out = "";
+    while (walker.nextNode()) out += walker.currentNode.nodeValue + "\n";
+    return out;
+  }
+
+  function normalizeBackslashesInsideMath(root) {
+    var ignored = { SCRIPT:1, STYLE:1, TEXTAREA:1, PRE:1, CODE:1, NOSCRIPT:1 };
+    var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode: function (node) {
+        var parent = node.parentElement;
+        if (!parent || ignored[parent.tagName]) return NodeFilter.FILTER_REJECT;
+        if (!node.nodeValue || node.nodeValue.indexOf("\\\\") === -1) return NodeFilter.FILTER_SKIP;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    var nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach(function (node) {
+      node.nodeValue = normalizeMathText(node.nodeValue);
+    });
+  }
+
+  function normalizeMathText(text) {
+    var out = "", i = 0, mode = null;
+    function escaped(s, idx) {
+      var count = 0;
+      for (var j = idx - 1; j >= 0 && s[j] === "\\"; j--) count++;
+      return count % 2 === 1;
+    }
+    while (i < text.length) {
+      if (!mode) {
+        if (text.startsWith("$$", i)) { mode = "$$"; out += "$$"; i += 2; continue; }
+        if (text.startsWith("\\[", i)) { mode = "\\]"; out += "\\["; i += 2; continue; }
+        if (text.startsWith("\\(", i)) { mode = "\\)"; out += "\\("; i += 2; continue; }
+        if (text[i] === "$" && !escaped(text, i)) { mode = "$"; out += "$"; i++; continue; }
+        out += text[i++];
+        continue;
+      }
+      if ((mode === "$$" && text.startsWith("$$", i) && !escaped(text, i)) ||
+          (mode === "\\]" && text.startsWith("\\]", i)) ||
+          (mode === "\\)" && text.startsWith("\\)", i))) {
+        out += mode === "$$" ? "$$" : mode;
+        i += mode === "$$" ? 2 : 2;
+        mode = null;
+        continue;
+      }
+      if (mode === "$" && text[i] === "$" && !escaped(text, i)) {
+        out += "$";
+        i++;
+        mode = null;
+        continue;
+      }
+      if (text[i] === "\\" && text[i + 1] === "\\") {
+        out += "\\";
+        i += 2;
+        continue;
+      }
+      out += text[i++];
+    }
+    return out;
+  }
+
   function escapeHtml(s) {
     return String(s)
       .replace(/&/g, "&amp;")

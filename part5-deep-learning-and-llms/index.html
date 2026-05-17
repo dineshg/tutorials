@@ -24,8 +24,8 @@ forecasting and RNNs, then two new chapters: <strong>Transformers &amp; attentio
 <div class="tr-tip">
   <strong>How the chapters cluster</strong>
   <ul style="margin: 6px 0 0 18px">
-    <li><strong>FFN track</strong> — Chapters 1, 2 (then optional Chapter 3, see below).</li>
-    <li><strong>CNN track</strong> — Chapters 4, 5, 6, 7.</li>
+    <li><strong>FFN track</strong> — Chapters 1, 2 (Chapter 3 is the merged reference version).</li>
+    <li><strong>CNN track</strong> — Chapters 4, 5, 6; Chapter 7 is the dropout/train-eval deep dive that expands the short dropout section in Chapter 6.</li>
     <li><strong>Sequence track</strong> — Chapters 8, 9, 10.</li>
     <li><strong>LLM track</strong> — Chapters 11, 12, 13.</li>
   </ul>
@@ -61,11 +61,11 @@ forecasting and RNNs, then two new chapters: <strong>Transformers &amp; attentio
   <strong>About the LLM track (Ch. 11–13)</strong>
   Chapter 11 explains the Transformer architecture itself. Chapter 12 covers
   how to <em>adapt</em> a pretrained Transformer to your domain (SFT, LoRA,
-  QLoRA) and the classical preference‑tuning step (DPO, RLHF) — this is
-  the carried‑over reference text. Chapter 13 then picks up where Chapter 12
-  ends and walks through the post‑DPO landscape (ORPO, GRPO, KTO, RLAIF)
-  with a decision matrix. There is intentional overlap on DPO between
-  Ch. 12 and Ch. 13: Ch. 12 introduces it, Ch. 13 contrasts it.
+  QLoRA), then introduces evaluation and first-generation alignment methods
+  such as DPO/RLHF. Chapter 13 is the merged alignment continuation: it starts
+  with a DPO recap only to compare ORPO, KTO, GRPO, RLAIF, and PPO-style RLHF
+  in one decision framework. No concept is removed; repeated ideas are
+  explicitly linked as “intro here, comparison there.”
 </div>
 
 <script src="../assets/js/nav.js"></script>
