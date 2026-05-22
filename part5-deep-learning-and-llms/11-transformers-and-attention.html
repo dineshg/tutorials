@@ -71,7 +71,7 @@
 </div>
 
 <figure>
-  <img class="book-diagram" src="../diagrams/exports/transformer-rich-rnn-to-attention.svg" alt="RNN bottleneck compared with attention lookup">
+  <img class="book-diagram" src="../diagrams/exports/transformer-rnn-to-attention.svg" alt="RNN bottleneck compared with attention lookup">
   <figcaption>
     The key step from RNNs to attention is simple: keep all encoder states, then let the decoder choose which ones to use.
   </figcaption>
@@ -168,7 +168,7 @@
 </p>
 
 <figure>
-  <img class="book-diagram" src="../diagrams/exports/transformer-rich-attention-patterns.svg" alt="Cross attention self attention and causal self attention patterns">
+  <img class="book-diagram" src="../diagrams/exports/transformer-attention-patterns.svg" alt="Cross attention self attention and causal self attention patterns">
   <figcaption>
     Cross-attention reads a separate memory. Self-attention reads the same sequence. Causal self-attention blocks the future.
   </figcaption>
@@ -239,7 +239,7 @@
 </table>
 
 <figure>
-  <img class="book-diagram" src="../diagrams/exports/transformer-rich-gpt-generation-loop.svg" alt="GPT autoregressive generation loop">
+  <img class="book-diagram" src="../diagrams/exports/transformer-gpt-generation-loop.svg" alt="GPT autoregressive generation loop">
   <figcaption>
     The output token becomes part of the next input prefix. KV caching makes this efficient by reusing previous keys and values.
   </figcaption>
@@ -299,7 +299,7 @@ $\mathrm{Attention}(Q,K,V) = \mathrm{softmax}\!\left(\dfrac{QK^{\top}}{\sqrt{d_k
 </div>
 
 <figure>
-  <img class="book-diagram" src="../diagrams/exports/transformer-rich-scaled-dot-product.svg" alt="Scaled dot-product attention calculation flow">
+  <img class="book-diagram" src="../diagrams/exports/transformer-scaled-dot-product.svg" alt="Scaled dot-product attention calculation flow">
   <figcaption>
     Scaled dot-product attention is a soft lookup: compare queries to keys, mask if needed, normalize into weights, then blend values.
   </figcaption>
@@ -349,7 +349,7 @@ $\mathrm{MHA}(X) = \big[\mathrm{head}_1; \dots; \mathrm{head}_h\big] W^{O},
 </div>
 
 <figure>
-  <img class="book-diagram" src="../diagrams/exports/transformer-rich-multi-head.svg" alt="Multi-head attention splits token states into parallel attention heads then merges them">
+  <img class="book-diagram" src="../diagrams/exports/transformer-multi-head.svg" alt="Multi-head attention splits token states into parallel attention heads then merges them">
   <figcaption>
     Multi-head attention gives the model several parallel relevance functions before merging them back into one token representation.
   </figcaption>
@@ -459,7 +459,7 @@ a final LayerNorm and an unembedding (often tied to the input embedding),
 and you have a GPT‑style language model.</p>
 
 <figure>
-  <img class="book-diagram" src="../diagrams/exports/transformer-rich-decoder-block.svg" alt="Decoder-only Transformer block with pre-norm attention feed-forward and residual paths">
+  <img class="book-diagram" src="../diagrams/exports/transformer-decoder-block.svg" alt="Decoder-only Transformer block with pre-norm attention feed-forward and residual paths">
   <figcaption>
     A modern decoder block is pre-norm plus residual attention, followed by pre-norm plus residual feed-forward transformation.
   </figcaption>
@@ -492,7 +492,7 @@ and you have a GPT‑style language model.</p>
 </table>
 
 <figure>
-  <img class="book-diagram" src="../diagrams/exports/transformer-rich-family-variants.svg" alt="Encoder-only decoder-only and encoder-decoder Transformer family variants">
+  <img class="book-diagram" src="../diagrams/exports/transformer-family-variants.svg" alt="Encoder-only decoder-only and encoder-decoder Transformer family variants">
   <figcaption>
     The main Transformer families differ by masking and where information is allowed to flow, not by a completely different core operation.
   </figcaption>
@@ -511,7 +511,7 @@ Instead you cache the per‑layer $K$ and $V$ tensors:</p>
 </ul>
 
 <figure>
-  <img class="book-diagram" src="../diagrams/exports/transformer-rich-kv-cache.svg" alt="KV cache prefill and decode flow for Transformer inference">
+  <img class="book-diagram" src="../diagrams/exports/transformer-kv-cache.svg" alt="KV cache prefill and decode flow for Transformer inference">
   <figcaption>
     KV caching preserves the same autoregressive loop while avoiding recomputation of old keys and values at every decode step.
   </figcaption>

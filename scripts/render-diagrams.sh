@@ -42,19 +42,13 @@ render_tex() {
   rm -rf "$tmpdir"
 }
 
-render_mjs() {
-  local file="$1"
-
-  node "$file" "$EXPORT_DIR"
-}
-
 if [[ "$#" -gt 0 ]]; then
   files=("$@")
 else
   files=()
   while IFS= read -r file; do
     files+=("$file")
-  done < <(find "$SOURCE_DIR" -maxdepth 1 -type f \( -name '*.d2' -o -name '*.dot' -o -name '*.tex' -o -name '*.mjs' \) | sort)
+  done < <(find "$SOURCE_DIR" -maxdepth 1 -type f \( -name '*.d2' -o -name '*.dot' -o -name '*.tex' \) | sort)
 fi
 
 for file in "${files[@]}"; do
@@ -62,7 +56,6 @@ for file in "${files[@]}"; do
     *.d2) render_d2 "$file" ;;
     *.dot) render_dot "$file" ;;
     *.tex) render_tex "$file" ;;
-    *.mjs) render_mjs "$file" ;;
     *) echo "Skipping unsupported diagram source: $file" >&2 ;;
   esac
 done

@@ -19,7 +19,6 @@ Use vector outputs (`.svg` or `.pdf`) in the book. PNG exports are previews only
 - D2 + ELK: default for conceptual flow, arrow, layered system, and node-link diagrams.
 - Graphviz: formal DAGs, trees, state machines, dependency graphs, and proof-like transition systems.
 - TikZ: final academic or mathematical figures that need precise notation.
-- Scripted SVG (`.mjs`): bespoke book figures that need matrices, heatmaps, token strips, residual lanes, or custom visual grammar beyond auto-layout.
 
 Game engines are only appropriate for 3D or cinematic backgrounds. Arrows, labels, and typography should remain vector-first.
 
@@ -42,8 +41,6 @@ Outputs are written to `diagrams/exports/` with matching names:
 - `diagram-name.svg` for the web/book
 - `diagram-name.pdf` for print layout
 - `diagram-name.png` for preview
-
-Scripted SVG sources write all three export formats themselves and use `rsvg-convert` for PDF/PNG conversion.
 
 ## Quality Rules
 
