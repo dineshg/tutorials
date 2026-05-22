@@ -1,0 +1,38 @@
+classes: {
+  input: {
+    style.fill: "#eaf3ff"
+    style.stroke: "#0969da"
+    style.stroke-width: 2
+  }
+  model: {
+    style.fill: "#f5f0ff"
+    style.stroke: "#8250df"
+    style.stroke-width: 2
+  }
+  output: {
+    style.fill: "#f3f8f1"
+    style.stroke: "#1a7f37"
+    style.stroke-width: 2
+  }
+  stop: {
+    style.fill: "#fff8e6"
+    style.stroke: "#bf8700"
+    style.stroke-width: 2
+  }
+}
+
+direction: right
+
+prefix: "input prefix\nmy name is" {class: input}
+transformer: "decoder-only Transformer\nmasked self-attention" {class: model}
+logits: "next-token logits\nvocabulary distribution" {class: output}
+sample: "sample / choose token\nDinesh" {class: output}
+append: "append to prefix\nmy name is Dinesh" {class: input}
+stop: "stop if EOS\nor length limit" {class: stop}
+
+prefix -> transformer
+transformer -> logits
+logits -> sample
+sample -> append
+append -> stop
+append -> transformer: "repeat with longer prefix"

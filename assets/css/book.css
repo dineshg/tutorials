@@ -591,6 +591,18 @@ img, svg, video, canvas { max-width: 100%; height: auto; }
 }
 .tr-content tr:last-child td { border-bottom: 0; }
 .tr-content tbody tr:nth-child(even) { background: var(--color-bg-subtle); }
+@media (max-width: 760px) {
+  .tr-content table,
+  .tr-content .table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .tr-content th,
+  .tr-content td {
+    min-width: 140px;
+  }
+}
 
 /* ---------- 8. Generic content containers used across pages ------------- */
 /* Pages used to wrap their own body in <div class="container"> with their
@@ -927,7 +939,8 @@ img, svg, video, canvas { max-width: 100%; height: auto; }
   border-radius: var(--radius-lg);
   padding: 18px;
   box-shadow: 0 1px 2px rgba(31,35,40,.04);
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 .tr-content .figure::before,
 .tr-content figure::before {
@@ -957,6 +970,21 @@ img, svg, video, canvas { max-width: 100%; height: auto; }
 .tr-content .figure img {
   width: auto !important;
   height: auto !important;
+}
+.tr-content figure img.book-diagram,
+.tr-content .figure img.book-diagram {
+  width: 100% !important;
+  max-width: 980px;
+  min-width: 720px;
+  max-height: none;
+  padding: 14px !important;
+}
+@media (max-width: 760px) {
+  .tr-content figure img.book-diagram,
+  .tr-content .figure img.book-diagram {
+    width: 720px !important;
+    max-width: none;
+  }
 }
 .tr-content figure figcaption,
 .tr-content .figure figcaption {

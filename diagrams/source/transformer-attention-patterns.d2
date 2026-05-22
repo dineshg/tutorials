@@ -1,0 +1,52 @@
+classes: {
+  query: {
+    style.fill: "#f3f8f1"
+    style.stroke: "#1a7f37"
+    style.stroke-width: 2
+  }
+  memory: {
+    style.fill: "#eaf3ff"
+    style.stroke: "#0969da"
+    style.stroke-width: 2
+  }
+  token: {
+    style.fill: "#f5f0ff"
+    style.stroke: "#8250df"
+    style.stroke-width: 2
+  }
+  mask: {
+    style.fill: "#fff8e6"
+    style.stroke: "#bf8700"
+    style.stroke-width: 2
+  }
+}
+
+direction: right
+
+Cross_attention: {
+  label: "Cross-attention"
+  q: "decoder query\nQ from target side" {class: query}
+  kv: "encoder memory\nK,V from source side" {class: memory}
+  ctx: "source-aware context" {class: query}
+  q -> kv: "look up source"
+  kv -> ctx: "weighted values"
+}
+
+Self_attention: {
+  label: "Self-attention"
+  seq: "same sequence\nX supplies Q,K,V" {class: token}
+  all: "all tokens can read\nall tokens" {class: token}
+  seq -> all: "bidirectional lookup"
+}
+
+Causal_self_attention: {
+  label: "Causal self-attention"
+  prefix: "prefix only\npositions <= t" {class: mask}
+  future: "future tokens\nmasked out" {class: memory}
+  next: "predict token t+1\nfrom h_t" {class: query}
+  prefix -> next: "visible context"
+  future -> next: "blocked" {
+    style.stroke: "#cf222e"
+    style.stroke-dash: 5
+  }
+}

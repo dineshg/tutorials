@@ -1,0 +1,45 @@
+classes: {
+  dense: {
+    style.fill: "#fff8e6"
+    style.stroke: "#bf8700"
+    style.stroke-width: 2
+  }
+  rnn: {
+    style.fill: "#eaf3ff"
+    style.stroke: "#0969da"
+    style.stroke-width: 2
+  }
+  result: {
+    style.fill: "#f3f8f1"
+    style.stroke: "#1a7f37"
+    style.stroke-width: 2
+  }
+}
+
+direction: right
+
+Flattened_MLP: {
+  label: "Flattened MLP: sequence length changes the input layer"
+  flat: "flatten T x D\ninto one vector" {class: dense}
+  dense1: "large dense matrix\nweights grow with T" {class: dense}
+  dense_out: "output" {class: result}
+  flat -> dense1
+  dense1 -> dense_out
+}
+
+Recurrent_Model: {
+  label: "RNN: one cell reused at every time step"
+  x1: "x1" {class: rnn}
+  cell1: "shared cell" {class: rnn}
+  x2: "x2" {class: rnn}
+  cell2: "same weights" {class: rnn}
+  xT: "xT" {class: rnn}
+  cellT: "same weights" {class: rnn}
+  rnn_out: "state / output" {class: result}
+  x1 -> cell1
+  cell1 -> cell2: "h carries information"
+  x2 -> cell2
+  cell2 -> cellT: "..."
+  xT -> cellT
+  cellT -> rnn_out
+}

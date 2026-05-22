@@ -1,0 +1,39 @@
+classes: {
+  tensor: {
+    style.fill: "#eaf3ff"
+    style.stroke: "#0969da"
+    style.stroke-width: 2
+  }
+  score: {
+    style.fill: "#fff8e6"
+    style.stroke: "#bf8700"
+    style.stroke-width: 2
+  }
+  weights: {
+    style.fill: "#f5f0ff"
+    style.stroke: "#8250df"
+    style.stroke-width: 2
+  }
+  output: {
+    style.fill: "#f3f8f1"
+    style.stroke: "#1a7f37"
+    style.stroke-width: 2
+  }
+}
+
+direction: right
+
+Q: "queries Q\nwhat do I need?" {class: tensor}
+K: "keys K\nwhat do you contain?" {class: tensor}
+scores: "scores\nQK^T / sqrt(d_k)" {class: score}
+mask: "optional mask\npadding or future tokens" {class: score}
+softmax: "softmax\nattention weights" {class: weights}
+V: "values V\nwhat to return" {class: tensor}
+out: "weighted sum\nAttention(Q,K,V)" {class: output}
+
+Q -> scores
+K -> scores
+scores -> mask
+mask -> softmax
+softmax -> out
+V -> out

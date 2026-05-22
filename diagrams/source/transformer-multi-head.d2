@@ -1,0 +1,41 @@
+classes: {
+  input: {
+    style.fill: "#eaf3ff"
+    style.stroke: "#0969da"
+    style.stroke-width: 2
+  }
+  head: {
+    style.fill: "#f5f0ff"
+    style.stroke: "#8250df"
+    style.stroke-width: 2
+  }
+  merge: {
+    style.fill: "#fff8e6"
+    style.stroke: "#bf8700"
+    style.stroke-width: 2
+  }
+  output: {
+    style.fill: "#f3f8f1"
+    style.stroke: "#1a7f37"
+    style.stroke-width: 2
+  }
+}
+
+direction: right
+
+X: "token states X" {class: input}
+h1: "head 1\nsyntax / local pattern" {class: head}
+h2: "head 2\ncoreference / entity" {class: head}
+h3: "head 3\ntopic / formatting" {class: head}
+concat: "concatenate heads" {class: merge}
+proj: "output projection W_O" {class: merge}
+Y: "mixed token states" {class: output}
+
+X -> h1: "W_Q1, W_K1, W_V1"
+X -> h2: "W_Q2, W_K2, W_V2"
+X -> h3: "W_Q3, W_K3, W_V3"
+h1 -> concat
+h2 -> concat
+h3 -> concat
+concat -> proj
+proj -> Y

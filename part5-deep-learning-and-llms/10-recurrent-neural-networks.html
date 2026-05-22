@@ -125,68 +125,7 @@
     </ul>
 
     <figure>
-      <svg class="viz" viewBox="0 0 960 330" role="img" aria-label="RNN unrolled through four time steps">
-        <defs>
-          <marker id="rnn-arrow-blue" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
-            <path d="M0,0 L8,3 L0,6 Z" fill="#0969da"></path>
-          </marker>
-          <marker id="rnn-arrow-purple" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
-            <path d="M0,0 L8,3 L0,6 Z" fill="#8250df"></path>
-          </marker>
-        </defs>
-
-        <text x="30" y="34" class="title">Unrolled RNN: one cell, reused weights, evolving hidden state</text>
-        <text x="30" y="60" class="muted">The boxes look repeated in the diagram, but they all represent the same learned parameters.</text>
-
-        <g>
-          <rect x="55" y="150" width="150" height="70" rx="12" fill="#eaf3ff" stroke="#0969da" stroke-width="1.5"></rect>
-          <text x="130" y="177" class="label" text-anchor="middle">RNN cell</text>
-          <text x="130" y="201" class="muted" text-anchor="middle">same Wxh, Whh</text>
-          <text x="130" y="245" class="label" text-anchor="middle">x1</text>
-          <text x="130" y="126" class="label" text-anchor="middle">y1</text>
-        </g>
-        <g>
-          <rect x="285" y="150" width="150" height="70" rx="12" fill="#f3f8f1" stroke="#1a7f37" stroke-width="1.5"></rect>
-          <text x="360" y="177" class="label" text-anchor="middle">RNN cell</text>
-          <text x="360" y="201" class="muted" text-anchor="middle">same Wxh, Whh</text>
-          <text x="360" y="245" class="label" text-anchor="middle">x2</text>
-          <text x="360" y="126" class="label" text-anchor="middle">y2</text>
-        </g>
-        <g>
-          <rect x="515" y="150" width="150" height="70" rx="12" fill="#fff8e6" stroke="#bf8700" stroke-width="1.5"></rect>
-          <text x="590" y="177" class="label" text-anchor="middle">RNN cell</text>
-          <text x="590" y="201" class="muted" text-anchor="middle">same Wxh, Whh</text>
-          <text x="590" y="245" class="label" text-anchor="middle">x3</text>
-          <text x="590" y="126" class="label" text-anchor="middle">y3</text>
-        </g>
-        <g>
-          <rect x="745" y="150" width="150" height="70" rx="12" fill="#f5f0ff" stroke="#8250df" stroke-width="1.5"></rect>
-          <text x="820" y="177" class="label" text-anchor="middle">RNN cell</text>
-          <text x="820" y="201" class="muted" text-anchor="middle">same Wxh, Whh</text>
-          <text x="820" y="245" class="label" text-anchor="middle">x4</text>
-          <text x="820" y="126" class="label" text-anchor="middle">y4</text>
-        </g>
-
-        <path d="M130 230 L130 222" stroke="#0969da" stroke-width="2.2" marker-end="url(#rnn-arrow-blue)"></path>
-        <path d="M360 230 L360 222" stroke="#0969da" stroke-width="2.2" marker-end="url(#rnn-arrow-blue)"></path>
-        <path d="M590 230 L590 222" stroke="#0969da" stroke-width="2.2" marker-end="url(#rnn-arrow-blue)"></path>
-        <path d="M820 230 L820 222" stroke="#0969da" stroke-width="2.2" marker-end="url(#rnn-arrow-blue)"></path>
-
-        <path d="M130 148 L130 132" stroke="#1a7f37" stroke-width="2.2" marker-end="url(#rnn-arrow-blue)"></path>
-        <path d="M360 148 L360 132" stroke="#1a7f37" stroke-width="2.2" marker-end="url(#rnn-arrow-blue)"></path>
-        <path d="M590 148 L590 132" stroke="#1a7f37" stroke-width="2.2" marker-end="url(#rnn-arrow-blue)"></path>
-        <path d="M820 148 L820 132" stroke="#1a7f37" stroke-width="2.2" marker-end="url(#rnn-arrow-blue)"></path>
-
-        <path d="M205 185 L285 185" stroke="#8250df" stroke-width="2.5" marker-end="url(#rnn-arrow-purple)"></path>
-        <path d="M435 185 L515 185" stroke="#8250df" stroke-width="2.5" marker-end="url(#rnn-arrow-purple)"></path>
-        <path d="M665 185 L745 185" stroke="#8250df" stroke-width="2.5" marker-end="url(#rnn-arrow-purple)"></path>
-        <text x="245" y="174" class="muted" text-anchor="middle">h1</text>
-        <text x="475" y="174" class="muted" text-anchor="middle">h2</text>
-        <text x="705" y="174" class="muted" text-anchor="middle">h3</text>
-
-        <rect x="44" y="278" width="868" height="34" rx="8" fill="#f6f8fa" stroke="#d0d7de"></rect>
-        <text x="478" y="300" class="muted" text-anchor="middle">Input changes at every step. Hidden state changes at every step. Learned weights stay shared.</text>
-      </svg>
+      <img class="book-diagram" src="../diagrams/exports/rnn-unrolled.svg" alt="RNN unrolled through four time steps">
       <figcaption>
         Unrolling shows the time loop explicitly: current input plus previous hidden state produces the next hidden state.
       </figcaption>
@@ -219,6 +158,13 @@
       <li><strong>Many-to-many:</strong> label each time step (e.g., tagging) → use all \(\hat{y}_t\)</li>
       <li><strong>Seq2seq (translation):</strong> outputs are also a sequence → you need stepwise predictions</li>
     </ul>
+
+    <figure>
+      <img class="book-diagram" src="../diagrams/exports/rnn-output-patterns.svg" alt="RNN output patterns for many-to-one many-to-many and seq2seq tasks">
+      <figcaption>
+        Many-to-one, many-to-many, and seq2seq are not different definitions of an RNN. They are different ways of using the outputs.
+      </figcaption>
+    </figure>
 
     <h3>Compact RNN summary</h3>
     <table>
@@ -368,72 +314,7 @@ print(x.shape)  # one 300-dimensional input vector per time step</code></pre>
     </table>
 
     <figure>
-      <svg class="viz" viewBox="0 0 960 430" role="img" aria-label="Encoder decoder RNN translation flow">
-        <defs>
-          <marker id="seq2seq-arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
-            <path d="M0,0 L8,3 L0,6 Z" fill="#0969da"></path>
-          </marker>
-          <marker id="seq2seq-arrow-purple" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
-            <path d="M0,0 L8,3 L0,6 Z" fill="#8250df"></path>
-          </marker>
-        </defs>
-
-        <text x="30" y="34" class="title">Encoder-decoder RNN for translation</text>
-        <text x="30" y="60" class="muted">The encoder reads English. The decoder writes French. Hidden state is the bridge.</text>
-
-        <text x="82" y="100" class="label" text-anchor="middle">English tokens</text>
-        <g>
-          <rect x="32" y="118" width="100" height="42" rx="10" fill="#eaf3ff" stroke="#0969da"></rect>
-          <rect x="142" y="118" width="100" height="42" rx="10" fill="#eaf3ff" stroke="#0969da"></rect>
-          <rect x="252" y="118" width="100" height="42" rx="10" fill="#eaf3ff" stroke="#0969da"></rect>
-          <rect x="362" y="118" width="100" height="42" rx="10" fill="#eaf3ff" stroke="#0969da"></rect>
-          <rect x="472" y="118" width="100" height="42" rx="10" fill="#f6f8fa" stroke="#d0d7de"></rect>
-          <text x="82" y="145" class="label" text-anchor="middle">my</text>
-          <text x="192" y="145" class="label" text-anchor="middle">name</text>
-          <text x="302" y="145" class="label" text-anchor="middle">is</text>
-          <text x="412" y="145" class="label" text-anchor="middle">dinesh</text>
-          <text x="522" y="145" class="muted" text-anchor="middle">EOS</text>
-        </g>
-
-        <g>
-          <rect x="78" y="205" width="100" height="54" rx="12" fill="#dbeafe" stroke="#0969da" stroke-width="1.5"></rect>
-          <rect x="198" y="205" width="100" height="54" rx="12" fill="#dbeafe" stroke="#0969da" stroke-width="1.5"></rect>
-          <rect x="318" y="205" width="100" height="54" rx="12" fill="#dbeafe" stroke="#0969da" stroke-width="1.5"></rect>
-          <rect x="438" y="205" width="100" height="54" rx="12" fill="#dbeafe" stroke="#0969da" stroke-width="1.5"></rect>
-          <text x="128" y="236" class="label" text-anchor="middle">enc</text>
-          <text x="248" y="236" class="label" text-anchor="middle">enc</text>
-          <text x="368" y="236" class="label" text-anchor="middle">enc</text>
-          <text x="488" y="236" class="label" text-anchor="middle">enc</text>
-          <path d="M178 232 L198 232" stroke="#0969da" stroke-width="2.2" marker-end="url(#seq2seq-arrow)"></path>
-          <path d="M298 232 L318 232" stroke="#0969da" stroke-width="2.2" marker-end="url(#seq2seq-arrow)"></path>
-          <path d="M418 232 L438 232" stroke="#0969da" stroke-width="2.2" marker-end="url(#seq2seq-arrow)"></path>
-        </g>
-
-        <rect x="590" y="197" width="150" height="70" rx="14" fill="#f5f0ff" stroke="#8250df" stroke-width="1.7"></rect>
-        <text x="665" y="225" class="label" text-anchor="middle">context</text>
-        <text x="665" y="247" class="muted" text-anchor="middle">final hidden state</text>
-        <path d="M538 232 L590 232" stroke="#8250df" stroke-width="2.5" marker-end="url(#seq2seq-arrow-purple)"></path>
-
-        <g>
-          <rect x="70" y="318" width="105" height="46" rx="10" fill="#f3f8f1" stroke="#1a7f37"></rect>
-          <rect x="190" y="318" width="105" height="46" rx="10" fill="#f3f8f1" stroke="#1a7f37"></rect>
-          <rect x="310" y="318" width="105" height="46" rx="10" fill="#f3f8f1" stroke="#1a7f37"></rect>
-          <rect x="430" y="318" width="105" height="46" rx="10" fill="#f3f8f1" stroke="#1a7f37"></rect>
-          <rect x="550" y="318" width="105" height="46" rx="10" fill="#f6f8fa" stroke="#d0d7de"></rect>
-          <text x="122" y="346" class="label" text-anchor="middle">mon</text>
-          <text x="242" y="346" class="label" text-anchor="middle">nom</text>
-          <text x="362" y="346" class="label" text-anchor="middle">est</text>
-          <text x="482" y="346" class="label" text-anchor="middle">dinesh</text>
-          <text x="602" y="346" class="muted" text-anchor="middle">EOS</text>
-          <text x="362" y="394" class="muted" text-anchor="middle">French tokens are produced one step at a time from vocabulary probabilities.</text>
-        </g>
-
-        <path d="M665 267 C665 297 630 308 600 318" stroke="#8250df" stroke-width="2.5" marker-end="url(#seq2seq-arrow-purple)"></path>
-        <path d="M175 341 L190 341" stroke="#1a7f37" stroke-width="2.1" marker-end="url(#seq2seq-arrow)"></path>
-        <path d="M295 341 L310 341" stroke="#1a7f37" stroke-width="2.1" marker-end="url(#seq2seq-arrow)"></path>
-        <path d="M415 341 L430 341" stroke="#1a7f37" stroke-width="2.1" marker-end="url(#seq2seq-arrow)"></path>
-        <path d="M535 341 L550 341" stroke="#1a7f37" stroke-width="2.1" marker-end="url(#seq2seq-arrow)"></path>
-      </svg>
+      <img class="book-diagram" src="../diagrams/exports/rnn-encoder-decoder.svg" alt="Encoder decoder RNN translation flow">
       <figcaption>
         A classic seq2seq RNN compresses the source into hidden state, then decodes the target sequence token by token.
         Attention improves this by letting the decoder look back at specific encoder states instead of relying only on one final vector.
@@ -527,6 +408,13 @@ for t in range(T):
     <div class="callout">
       <strong>Key win:</strong> RNN parameter count does <em>not</em> grow with sequence length \(T\) the way a flattened dense model does.
     </div>
+
+    <figure>
+      <img class="book-diagram" src="../diagrams/exports/rnn-parameter-sharing.svg" alt="Parameter growth comparison between flattened ANN and RNN">
+      <figcaption>
+        RNNs save parameters by reusing the same weights at each time step. Computation still grows with sequence length, but the learned recurrent matrices do not.
+      </figcaption>
+    </figure>
 
     <h3>Concrete example + Python code (and a plot)</h3>
     <p>
@@ -700,6 +588,13 @@ logits = head(out[:, -1, :])</code></pre>
       “write this new information”, and sometimes “hide this internal memory from the output”.
     </div>
 
+    <figure>
+      <img class="book-diagram" src="../diagrams/exports/rnn-vanilla-memory-failure.svg" alt="Vanilla RNN memory overwrite and gradient chain">
+      <figcaption>
+        Gates are introduced because vanilla recurrence has no explicit keep/write control and because long recurrent chains are hard to train.
+      </figcaption>
+    </figure>
+
     <h2>10) Gates: learnable valves for memory</h2>
     <p>
       The next improvement is not “make the hidden state bigger” as the first move. A larger state can store more numbers,
@@ -756,59 +651,7 @@ logits = head(out[:, -1, :])</code></pre>
     </table>
 
     <figure>
-      <svg class="viz" viewBox="0 0 980 390" role="img" aria-label="Vanilla RNN GRU and LSTM memory comparison">
-        <defs>
-          <marker id="gate-arrow-blue" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
-            <path d="M0,0 L8,3 L0,6 Z" fill="#0969da"></path>
-          </marker>
-          <marker id="gate-arrow-purple" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
-            <path d="M0,0 L8,3 L0,6 Z" fill="#8250df"></path>
-          </marker>
-        </defs>
-        <text x="30" y="34" class="title">How recurrent memory becomes more controllable</text>
-        <text x="30" y="60" class="muted">Vanilla RNN overwrites one hidden state. GRU adds update/reset gates. LSTM separates long-term cell memory from exposed hidden state.</text>
-
-        <g transform="translate(48,112)">
-          <rect x="0" y="0" width="250" height="205" rx="16" fill="#eaf3ff" stroke="#0969da" stroke-width="1.6"></rect>
-          <text x="125" y="32" class="label" text-anchor="middle">Vanilla RNN</text>
-          <text x="125" y="58" class="muted" text-anchor="middle">one hidden state</text>
-          <rect x="42" y="82" width="166" height="52" rx="12" fill="#ffffff" stroke="#0969da"></rect>
-          <text x="125" y="114" class="label" text-anchor="middle">h_t = tanh(...)</text>
-          <path d="M24 108 L42 108" stroke="#0969da" stroke-width="2.2" marker-end="url(#gate-arrow-blue)"></path>
-          <path d="M208 108 L230 108" stroke="#0969da" stroke-width="2.2" marker-end="url(#gate-arrow-blue)"></path>
-          <text x="125" y="166" class="muted" text-anchor="middle">simple, but old memory</text>
-          <text x="125" y="186" class="muted" text-anchor="middle">is easy to overwrite</text>
-        </g>
-
-        <g transform="translate(365,112)">
-          <rect x="0" y="0" width="250" height="205" rx="16" fill="#f3f8f1" stroke="#1a7f37" stroke-width="1.6"></rect>
-          <text x="125" y="32" class="label" text-anchor="middle">GRU</text>
-          <text x="125" y="58" class="muted" text-anchor="middle">hidden state + gates</text>
-          <rect x="32" y="82" width="82" height="48" rx="12" fill="#ffffff" stroke="#1a7f37"></rect>
-          <rect x="136" y="82" width="82" height="48" rx="12" fill="#ffffff" stroke="#1a7f37"></rect>
-          <text x="73" y="112" class="label" text-anchor="middle">reset</text>
-          <text x="177" y="112" class="label" text-anchor="middle">update</text>
-          <path d="M24 106 L32 106" stroke="#1a7f37" stroke-width="2.2" marker-end="url(#gate-arrow-blue)"></path>
-          <path d="M218 106 L230 106" stroke="#1a7f37" stroke-width="2.2" marker-end="url(#gate-arrow-blue)"></path>
-          <text x="125" y="166" class="muted" text-anchor="middle">learns how much to keep</text>
-          <text x="125" y="186" class="muted" text-anchor="middle">and how much to rewrite</text>
-        </g>
-
-        <g transform="translate(682,112)">
-          <rect x="0" y="0" width="250" height="205" rx="16" fill="#f5f0ff" stroke="#8250df" stroke-width="1.6"></rect>
-          <text x="125" y="32" class="label" text-anchor="middle">LSTM</text>
-          <text x="125" y="58" class="muted" text-anchor="middle">cell state + hidden state</text>
-          <rect x="24" y="82" width="58" height="46" rx="10" fill="#ffffff" stroke="#8250df"></rect>
-          <rect x="96" y="82" width="58" height="46" rx="10" fill="#ffffff" stroke="#8250df"></rect>
-          <rect x="168" y="82" width="58" height="46" rx="10" fill="#ffffff" stroke="#8250df"></rect>
-          <text x="53" y="111" class="label" text-anchor="middle">forget</text>
-          <text x="125" y="111" class="label" text-anchor="middle">write</text>
-          <text x="197" y="111" class="label" text-anchor="middle">output</text>
-          <path d="M24 150 L226 150" stroke="#8250df" stroke-width="2.4" marker-end="url(#gate-arrow-purple)"></path>
-          <text x="125" y="171" class="muted" text-anchor="middle">separate long-term cell path</text>
-          <text x="125" y="190" class="muted" text-anchor="middle">helps memory persist</text>
-        </g>
-      </svg>
+      <img class="book-diagram" src="../diagrams/exports/rnn-memory-comparison.svg" alt="Vanilla RNN GRU and LSTM memory comparison">
       <figcaption>
         GRU and LSTM do not change the basic sequence loop. They change the cell used inside the loop so memory is easier to preserve.
       </figcaption>
@@ -861,6 +704,13 @@ logits = head(out[:, -1, :])</code></pre>
       part of the state. The reset gate gives the model a second useful behavior: when the current input starts a new local
       pattern, it can temporarily ignore older state while computing the candidate update.
     </p>
+
+    <figure>
+      <img class="book-diagram" src="../diagrams/exports/rnn-gru-flow.svg" alt="GRU reset and update gate equation flow">
+      <figcaption>
+        A GRU still has one memory vector, but the update gate makes the final state an explicit blend of old memory and candidate memory.
+      </figcaption>
+    </figure>
 
     <pre><code class="language-python">import torch
 import torch.nn as nn
@@ -932,6 +782,13 @@ logits = head(out[:, -1, :])</code></pre>
       <strong>LSTM mental model:</strong> “I keep a protected long-term notebook \(c_t\), decide what to erase, decide what
       to write, and decide how much of the notebook to show as \(h_t\).”
     </div>
+
+    <figure>
+      <img class="book-diagram" src="../diagrams/exports/rnn-lstm-flow.svg" alt="LSTM cell state equation flow with forget input candidate and output gates">
+      <figcaption>
+        LSTM explicitly separates the protected cell-memory update from the exposed hidden-state output.
+      </figcaption>
+    </figure>
 
     <pre><code class="language-python">import torch
 import torch.nn as nn
@@ -1060,6 +917,13 @@ print(out.shape)  # (B, T, 2*H): forward and backward states concatenated</code>
       <strong>Bridge to Transformers:</strong> GRU/LSTM make recurrent memory more controllable. Attention changes the shape of
       memory itself from “carry a state forward” to “look up the relevant token states when needed.”
     </div>
+
+    <figure>
+      <img class="book-diagram" src="../diagrams/exports/rnn-attention-bridge.svg" alt="Recurrent memory compared to attention lookup">
+      <figcaption>
+        Attention does not replace the idea of sequence-conditioned output; it replaces the memory interface from “carry everything forward” to “look up what is needed.”
+      </figcaption>
+    </figure>
 
     <h2>15) Quick mental model recap</h2>
     <ul>

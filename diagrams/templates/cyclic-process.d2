@@ -1,0 +1,24 @@
+classes: {
+  phase: {
+    style.fill: "#eaf3ff"
+    style.stroke: "#0969da"
+    style.stroke-width: 2
+  }
+  check: {
+    style.fill: "#fff8e6"
+    style.stroke: "#bf8700"
+    style.stroke-width: 2
+  }
+}
+
+direction: right
+
+Observe: "Observe" {class: phase}
+Decide: "Decide" {class: phase}
+Act: "Act" {class: phase}
+Measure: "Measure" {class: check}
+
+Observe -> Decide
+Decide -> Act
+Act -> Measure
+Measure -> Observe: "feedback"

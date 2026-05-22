@@ -1,0 +1,45 @@
+classes: {
+  source: {
+    style.fill: "#eaf3ff"
+    style.stroke: "#0969da"
+    style.stroke-width: 2
+  }
+  bottleneck: {
+    style.fill: "#fff8e6"
+    style.stroke: "#bf8700"
+    style.stroke-width: 2
+  }
+  attention: {
+    style.fill: "#f5f0ff"
+    style.stroke: "#8250df"
+    style.stroke-width: 2
+  }
+  decoder: {
+    style.fill: "#f3f8f1"
+    style.stroke: "#1a7f37"
+    style.stroke-width: 2
+  }
+}
+
+direction: down
+
+RNN_seq2seq: {
+  label: "RNN encoder-decoder bottleneck"
+  src: "source tokens\nmy name is dinesh" {class: source}
+  final: "one final hidden vector\nmust summarize everything" {class: bottleneck}
+  dec: "decoder\nrecovers details from one vector" {class: decoder}
+  src -> final: "encoder scan"
+  final -> dec: "single bridge"
+}
+
+Attention_bridge: {
+  label: "Attention bridge"
+  states: "all encoder states\nh1, h2, h3, h4" {class: source}
+  query: "decoder query\nwhat source information do I need now?" {class: attention}
+  context: "fresh context vector\nweighted source lookup" {class: attention}
+  out: "decoder step" {class: decoder}
+  query -> states: "score every source state"
+  states -> context: "weighted values"
+  query -> context
+  context -> out
+}

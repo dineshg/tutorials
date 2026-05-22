@@ -1,0 +1,43 @@
+classes: {
+  input: {
+    style.fill: "#eaf3ff"
+    style.stroke: "#0969da"
+    style.stroke-width: 2
+  }
+  state: {
+    style.fill: "#f5f0ff"
+    style.stroke: "#8250df"
+    style.stroke-width: 2
+  }
+  issue: {
+    style.fill: "#fff8e6"
+    style.stroke: "#bf8700"
+    style.stroke-width: 2
+  }
+  result: {
+    style.fill: "#f3f8f1"
+    style.stroke: "#1a7f37"
+    style.stroke-width: 2
+  }
+}
+
+direction: right
+
+early: "important early signal" {class: input}
+h1: "h1\nstores it" {class: state}
+middle: "many later tokens" {class: input}
+hmid: "h2 ... hT-1\nrepeated overwrites" {class: issue}
+late: "final step" {class: input}
+hT: "hT\nweak memory" {class: state}
+loss: "loss needs early signal" {class: result}
+
+early -> h1
+h1 -> middle: "hidden state must carry everything"
+middle -> hmid
+hmid -> late: "vanishing / exploding gradients"
+late -> hT
+hT -> loss
+h1 -> loss: "long dependency is hard" {
+  style.stroke: "#cf222e"
+  style.stroke-dash: 5
+}

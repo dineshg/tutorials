@@ -1,0 +1,44 @@
+classes: {
+  input: {
+    style.fill: "#eaf3ff"
+    style.stroke: "#0969da"
+    style.stroke-width: 2
+  }
+  state: {
+    style.fill: "#f5f0ff"
+    style.stroke: "#8250df"
+    style.stroke-width: 2
+  }
+  output: {
+    style.fill: "#f3f8f1"
+    style.stroke: "#1a7f37"
+    style.stroke-width: 2
+  }
+}
+
+direction: right
+
+x1: "x1\ninput" {class: input}
+h1: "same RNN cell\nh1" {class: state}
+y1: "y1" {class: output}
+x2: "x2\ninput" {class: input}
+h2: "same RNN cell\nh2" {class: state}
+y2: "y2" {class: output}
+x3: "x3\ninput" {class: input}
+h3: "same RNN cell\nh3" {class: state}
+y3: "y3" {class: output}
+xT: "xT\ninput" {class: input}
+hT: "same RNN cell\nhT" {class: state}
+yT: "yT" {class: output}
+
+x1 -> h1
+h1 -> y1
+h1 -> h2: "carry hidden state"
+x2 -> h2
+h2 -> y2
+h2 -> h3
+x3 -> h3
+h3 -> y3
+h3 -> hT: "..."
+xT -> hT
+hT -> yT

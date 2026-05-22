@@ -1,0 +1,62 @@
+classes: {
+  cell: {
+    style.fill: "#eaf3ff"
+    style.stroke: "#0969da"
+    style.stroke-width: 2
+  }
+  output: {
+    style.fill: "#f3f8f1"
+    style.stroke: "#1a7f37"
+    style.stroke-width: 2
+  }
+  bridge: {
+    style.fill: "#f5f0ff"
+    style.stroke: "#8250df"
+    style.stroke-width: 2
+  }
+}
+
+direction: right
+
+many_one: {
+  label: "Many-to-one: use the final state"
+  m1x1: "x1" {class: cell}
+  m1x2: "x2" {class: cell}
+  m1x3: "x3" {class: cell}
+  m1xT: "xT" {class: cell}
+  m1out: "final label\nor forecast" {class: output}
+  m1x1 -> m1x2
+  m1x2 -> m1x3
+  m1x3 -> m1xT
+  m1xT -> m1out: "loss here"
+}
+
+many_many: {
+  label: "Many-to-many: use each emitted state"
+  mmx1: "x1" {class: cell}
+  mmx2: "x2" {class: cell}
+  mmx3: "x3" {class: cell}
+  mmxT: "xT" {class: cell}
+  y1: "y1" {class: output}
+  y2: "y2" {class: output}
+  y3: "y3" {class: output}
+  yT: "yT" {class: output}
+  mmx1 -> mmx2
+  mmx2 -> mmx3
+  mmx3 -> mmxT
+  mmx1 -> y1
+  mmx2 -> y2
+  mmx3 -> y3
+  mmxT -> yT
+}
+
+seq2seq: {
+  label: "Seq2seq: encode source, then decode target"
+  encoder: "encoder\nsource sequence" {class: cell}
+  state: "context / state" {class: bridge}
+  decoder: "decoder\ntarget sequence" {class: cell}
+  out: "y1, y2, ..., EOS" {class: output}
+  encoder -> state
+  state -> decoder
+  decoder -> out
+}

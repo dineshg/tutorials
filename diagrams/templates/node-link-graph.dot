@@ -1,0 +1,28 @@
+digraph G {
+  graph [
+    rankdir=LR,
+    splines=true,
+    overlap=false,
+    bgcolor="transparent"
+  ];
+  node [
+    shape=box,
+    style="rounded,filled",
+    fillcolor="#eaf3ff",
+    color="#0969da",
+    penwidth=1.8,
+    fontname="Inter",
+    fontsize=14,
+    margin="0.15,0.10"
+  ];
+  edge [
+    color="#0969da",
+    fontname="Inter",
+    fontsize=12,
+    arrowsize=0.8,
+    penwidth=1.4
+  ];
+  A -> B [label="maps to"];
+  B -> C [label="implies"];
+  A -> C [label="shortcut"];
+}
