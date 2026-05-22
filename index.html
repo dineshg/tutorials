@@ -3,38 +3,37 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-  <title>Enterprise AI, Agents &amp; Applied ML — Tutorial Refined</title>
+  <title>Enterprise AI, Agents &amp; Applied ML</title>
   <link rel="stylesheet" href="assets/css/book.css?v=20260517-figures-code2" />
 </head>
 <body>
 
 <section class="tr-hero">
   <h1>Enterprise AI, Agents &amp; Applied ML</h1>
-  <p>A unified, GitHub‑style tutorial book that consolidates all the original
-     <code>pytorch/</code> and <code>Full_Stack/</code> material into a single
-     navigable structure — preserving the tutorial scope and theory while adding
-     new chapters and refreshed guidance for current methods (Transformers/Attention, modern
-     authentication, the 2025 MCP transport &amp; auth model, and modern LLM
-     alignment such as ORPO/GRPO/KTO).</p>
-  <div class="tr-hero-meta">6 parts · 50+ chapters · last refreshed 2026-05-17</div>
+  <p>A practical book for moving from enterprise AI delivery and backend
+     platform foundations into agent protocols, applied machine learning,
+     deep learning, LLM fine‑tuning, and alignment. It is organized as a
+     sequence of small-to-large examples: first the mental model, then the
+     implementation pattern, then the production tradeoffs.</p>
+  <div class="tr-hero-meta">6 parts · 50+ chapters · delivery, platform, agents, ML, deep learning, and reference material</div>
 </section>
 
 <div class="tr-paths">
-  <a class="tr-chip" href="content-map.html">Content map and duplicate ownership</a>
-  <a class="tr-chip" href="part1-enterprise-ai-delivery/index.html">📘 Delivery / Lead path</a>
-  <a class="tr-chip" href="part2-backend-platform-security/index.html">⚙️ Backend &amp; platform path</a>
-  <a class="tr-chip" href="part3-agent-protocols/index.html">🤖 Agent systems path</a>
-  <a class="tr-chip" href="part4-ml-foundations/index.html">📐 ML foundations path</a>
-  <a class="tr-chip" href="part5-deep-learning-and-llms/index.html">🧠 Deep learning &amp; LLM path</a>
-  <a class="tr-chip" href="part6-appendices/index.html">📎 Appendices</a>
+  <a class="tr-chip" href="content-map.html">Reading guide and concept map</a>
+  <a class="tr-chip" href="part1-enterprise-ai-delivery/index.html">Delivery / Lead path</a>
+  <a class="tr-chip" href="part2-backend-platform-security/index.html">Backend &amp; platform path</a>
+  <a class="tr-chip" href="part3-agent-protocols/index.html">Agent systems path</a>
+  <a class="tr-chip" href="part4-ml-foundations/index.html">ML foundations path</a>
+  <a class="tr-chip" href="part5-deep-learning-and-llms/index.html">Deep learning &amp; LLM path</a>
+  <a class="tr-chip" href="part6-appendices/index.html">Appendices</a>
 </div>
 
 <div class="tr-note" style="margin: 18px 0 6px;">
-  <strong>Book-wide map added</strong>
-  The <a href="content-map.html">content map</a> is the source of truth for
-  concept ownership. It explains where repeated ideas live, which chapter is
-  canonical, and which chapters intentionally revisit the same concept as an
-  implementation, enterprise, or reference view.
+  <strong>Book-wide concept map</strong>
+  The <a href="content-map.html">concept map</a> explains how the parts fit
+  together, which chapters provide the primary explanation for each major
+  concept, and where later chapters revisit the same idea as an implementation,
+  enterprise, or reference view.
 </div>
 
 <section class="tr-card" style="margin: 18px 0 6px;">
@@ -45,7 +44,7 @@
   learner, you almost certainly want to read the parts in a different order.</strong>
   Pick the path that matches your role:</p>
 
-  <h3>🌱 New to ML or just learning the field</h3>
+  <h3>New to ML or just learning the field</h3>
   <ol>
     <li><a href="part4-ml-foundations/index.html">Part IV — ML Foundations</a> (PyTorch, regression, classification, trees)</li>
     <li><a href="part5-deep-learning-and-llms/index.html">Part V — Deep Learning &amp; LLMs</a> in order: FFN → CNN → RNN → Transformers → fine‑tuning → alignment</li>
@@ -53,25 +52,25 @@
     <li><a href="part2-backend-platform-security/index.html">Part II</a> and <a href="part1-enterprise-ai-delivery/index.html">Part I</a> when you start shipping</li>
   </ol>
 
-  <h3>🔧 Backend / platform engineer learning AI</h3>
+  <h3>Backend / platform engineer learning AI</h3>
   <ol>
-    <li><a href="part2-backend-platform-security/index.html">Part II</a> chapters 1–5 (FastAPI, concurrency, background work) — already familiar territory</li>
-    <li><a href="part2-backend-platform-security/index.html">Part II</a> chapters 6–15 for the auth + identity + multi‑tenancy stack</li>
+    <li><a href="part2-backend-platform-security/index.html">Part II</a> chapters 1–6 (FastAPI, Pydantic contracts, concurrency, background work) — already familiar territory</li>
+    <li><a href="part2-backend-platform-security/index.html">Part II</a> chapters 7–16 for the auth + identity + multi‑tenancy stack</li>
     <li><a href="part3-agent-protocols/index.html">Part III</a> end‑to‑end (MCP → A2A → LangChain)</li>
     <li>Spot‑read <a href="part5-deep-learning-and-llms/11-transformers-and-attention.html">Transformers (Part V Ch. 11)</a>, <a href="part5-deep-learning-and-llms/12-llm-fine-tuning.html">fine‑tuning (Ch. 12)</a>, and <a href="part5-deep-learning-and-llms/13-modern-llm-alignment-orpo-grpo.html">alignment (Ch. 13)</a></li>
     <li><a href="part1-enterprise-ai-delivery/index.html">Part I</a> when you take your first AI project to production</li>
   </ol>
 
-  <h3>📑 Lead / Principal AI engineer or architect</h3>
+  <h3>Lead / Principal AI engineer or architect</h3>
   <ol>
     <li><a href="part1-enterprise-ai-delivery/index.html">Part I</a> end‑to‑end (delivery lifecycle)</li>
-    <li><a href="part2-backend-platform-security/06-sso-oauth2-oidc-primer.html">Part II Ch. 6–15</a> for the auth/identity story you'll review</li>
+    <li><a href="part2-backend-platform-security/06-sso-oauth2-oidc-primer.html">Part II Ch. 7–16</a> for the auth/identity story you'll review</li>
     <li><a href="part3-agent-protocols/index.html">Part III</a> for protocol‑level vocabulary in design reviews</li>
     <li><a href="part5-deep-learning-and-llms/11-transformers-and-attention.html">Transformers</a>, <a href="part5-deep-learning-and-llms/12-llm-fine-tuning.html">fine‑tuning</a>, <a href="part5-deep-learning-and-llms/13-modern-llm-alignment-orpo-grpo.html">alignment</a> as conceptual reference</li>
     <li><a href="part6-appendices/01-lead-ds-interview-talk-track.html">Appendix A</a> for a 60‑minute narrative covering all of the above</li>
   </ol>
 
-  <h3>📞 Preparing for a Lead DS / Lead AI interview</h3>
+  <h3>Preparing for a Lead DS / Lead AI interview</h3>
   <ol>
     <li><a href="part6-appendices/01-lead-ds-interview-talk-track.html">Appendix A — Lead DS interview talk track</a> (start here)</li>
     <li>Drill the <a href="part1-enterprise-ai-delivery/index.html">delivery lifecycle</a> and <a href="part2-backend-platform-security/09-authentication-deep-dive.html">auth deep‑dive</a></li>
@@ -108,14 +107,16 @@
   <article class="tr-card">
     <span class="tr-card-tag">part-ii · platform-engineering</span>
     <h3><a href="part2-backend-platform-security/index.html">Part II — Backend, Platform &amp; Security</a></h3>
-    <p>FastAPI fundamentals, concurrency &amp; user isolation, background
-       work, the full auth stack (OIDC/OAuth2/PKCE/JWT), workload identity,
-       multi‑tenancy, external integrations, GitHub governance, and
-       <em>modern auth additions</em> (Passkeys/WebAuthn, DPoP, mTLS).</p>
+    <p>FastAPI fundamentals, Pydantic data contracts, concurrency &amp; user
+       isolation, background work, the full auth stack
+       (OIDC/OAuth2/PKCE/JWT), workload identity, multi‑tenancy, external
+       integrations, GitHub governance, and <em>modern auth additions</em>
+       (Passkeys/WebAuthn, DPoP, mTLS).</p>
     <ol>
       <li><a href="part2-backend-platform-security/01-fastapi-uvicorn-basics.html">FastAPI &amp; Uvicorn basics</a></li>
       <li><a href="part2-backend-platform-security/02-http-methods.html">HTTP methods</a></li>
       <li><a href="part2-backend-platform-security/03-fastapi-request-mapping.html">FastAPI request mapping</a></li>
+      <li><a href="part2-backend-platform-security/04-pydantic-data-models.html">Pydantic data models</a></li>
       <li><a href="part2-backend-platform-security/04-concurrency-user-isolation.html">Concurrency &amp; user isolation</a></li>
       <li><a href="part2-backend-platform-security/05-background-tasks-and-retries.html">Background tasks &amp; retries</a></li>
       <li><a href="part2-backend-platform-security/06-sso-oauth2-oidc-primer.html">SSO / OAuth2 / OIDC primer</a></li>
@@ -127,7 +128,7 @@
       <li><a href="part2-backend-platform-security/12-tenant-iam-ad-groups.html">Tenant isolation, IAM &amp; AD groups</a></li>
       <li><a href="part2-backend-platform-security/13-external-service-integration.html">External service integration</a></li>
       <li><a href="part2-backend-platform-security/14-github-governance.html">GitHub governance &amp; CI</a></li>
-      <li><a href="part2-backend-platform-security/15-modern-auth-additions.html">Modern auth additions (Passkeys, DPoP, mTLS) <em>(NEW)</em></a></li>
+      <li><a href="part2-backend-platform-security/15-modern-auth-additions.html">Modern auth additions (Passkeys, DPoP, mTLS)</a></li>
     </ol>
   </article>
 
@@ -136,13 +137,14 @@
     <h3><a href="part3-agent-protocols/index.html">Part III — Agent Protocols &amp; Integration</a></h3>
     <p>MCP from first principles to the enterprise pattern, the A2A protocol
        for multi‑agent collaboration, plus a JS/TS primer and the
-       LangChain → LangGraph → Flowise journey. Includes a new chapter on
-       the 2025 MCP changes (Streamable HTTP, OAuth, elicitation).</p>
+       LangChain → LangGraph → Flowise journey. The MCP track includes
+       Streamable HTTP, OAuth, elicitation, structured output, and resource
+       links from the 2025 MCP updates.</p>
     <ol>
       <li><a href="part3-agent-protocols/01-mcp-fundamentals.html">MCP fundamentals</a></li>
       <li><a href="part3-agent-protocols/02-mcp-discovery-remote-auth.html">MCP discovery, remote &amp; auth</a></li>
       <li><a href="part3-agent-protocols/03-mcp-enterprise-pattern.html">MCP enterprise pattern</a></li>
-      <li><a href="part3-agent-protocols/04-mcp-2025-update.html">MCP 2025 update <em>(NEW)</em></a></li>
+      <li><a href="part3-agent-protocols/04-mcp-2025-update.html">MCP 2025 update</a></li>
       <li><a href="part3-agent-protocols/05-a2a-protocol.html">A2A protocol</a></li>
       <li><a href="part3-agent-protocols/06-javascript-typescript-primer.html">JavaScript &amp; TypeScript primer</a></li>
       <li><a href="part3-agent-protocols/07-langchain-langgraph-flowise.html">LangChain → LangGraph → Flowise</a></li>
@@ -168,12 +170,12 @@
     <span class="tr-card-tag">part-v · neural-nets-llms</span>
     <h3><a href="part5-deep-learning-and-llms/index.html">Part V — Deep Learning &amp; LLMs</a></h3>
     <p>From the single neuron to feed‑forward nets, CNNs, sequence models,
-       and into Transformers (new), LLM fine‑tuning and modern alignment
-       (ORPO, GRPO, KTO — new).</p>
+       and into Transformers, LLM fine‑tuning, and modern alignment
+       methods such as ORPO, GRPO, and KTO.</p>
     <ol>
       <li><a href="part5-deep-learning-and-llms/01-ffn-concepts.html">FFN concepts</a></li>
       <li><a href="part5-deep-learning-and-llms/02-ffn-training-debugging.html">FFN training &amp; debugging</a></li>
-      <li><a href="part5-deep-learning-and-llms/03-ffn-canonical-merged.html">FFN canonical (merged)</a></li>
+      <li><a href="part5-deep-learning-and-llms/03-ffn-canonical-merged.html">FFN single-chapter reference</a></li>
       <li><a href="part5-deep-learning-and-llms/04-cnn-convolution.html">CNN — convolution</a></li>
       <li><a href="part5-deep-learning-and-llms/05-cnn-architecture.html">CNN — architecture</a></li>
       <li><a href="part5-deep-learning-and-llms/06-cnn-pytorch-implementation.html">CNN — PyTorch implementation</a></li>
@@ -181,9 +183,9 @@
       <li><a href="part5-deep-learning-and-llms/08-forecasting-sequence-data.html">Forecasting &amp; sequence data</a></li>
       <li><a href="part5-deep-learning-and-llms/09-autoregressive-linear-model.html">Autoregressive linear model</a></li>
       <li><a href="part5-deep-learning-and-llms/10-recurrent-neural-networks.html">Recurrent neural networks</a></li>
-      <li><a href="part5-deep-learning-and-llms/11-transformers-and-attention.html">Transformers &amp; attention <em>(NEW)</em></a></li>
+      <li><a href="part5-deep-learning-and-llms/11-transformers-and-attention.html">Transformers &amp; attention</a></li>
       <li><a href="part5-deep-learning-and-llms/12-llm-fine-tuning.html">LLM fine‑tuning</a></li>
-      <li><a href="part5-deep-learning-and-llms/13-modern-llm-alignment-orpo-grpo.html">Modern LLM alignment: ORPO, GRPO, KTO <em>(NEW)</em></a></li>
+      <li><a href="part5-deep-learning-and-llms/13-modern-llm-alignment-orpo-grpo.html">Modern LLM alignment: ORPO, GRPO, KTO</a></li>
     </ol>
   </article>
 
@@ -200,6 +202,6 @@
 
 </div>
 
-<script src="assets/js/nav.js"></script>
+<script src="assets/js/nav.js?v=20260522-book-cleanup"></script>
 </body>
 </html>

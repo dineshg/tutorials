@@ -12,12 +12,13 @@
 <h1>MCP 2025 Update — Streamable HTTP, OAuth 2.1, Elicitation, Structured Output</h1>
 
 <div class="tr-update">
-  <strong>Why this chapter exists</strong>
-  Chapters 1–3 cover MCP from first principles using the original
-  <code>mcp[cli]</code> server and either stdio or HTTP+SSE transport. The MCP
-  spec versions <code>2025-03-26</code> and <code>2025-06-18</code> made several
-  important changes. This chapter is a focused diff so the rest of Part III
-  remains conceptually correct but you know what to use in production.
+  <strong>Where this chapter fits</strong>
+  Chapters 1–3 cover MCP from first principles using <code>mcp[cli]</code>
+  servers, local stdio transport, remote HTTP transport, authentication, and
+  an enterprise integration pattern. The MCP spec versions
+  <code>2025-03-26</code> and <code>2025-06-18</code> define the production-facing
+  transport, authorization, elicitation, structured-output, and resource-link
+  patterns used in this chapter.
 </div>
 
 <div class="tr-note">
@@ -31,7 +32,7 @@
 
 <h2>1) Transport: HTTP+SSE → Streamable HTTP</h2>
 
-<p>In the older spec, an MCP server over HTTP exposed two endpoints — a
+<p>In earlier MCP HTTP examples, an MCP server exposed two endpoints — a
 <code>POST /messages</code> for client‑to‑server requests and a parallel
 <code>GET /sse</code> Server‑Sent‑Events stream for server‑to‑client messages.
 This was hard to deploy behind enterprise load balancers (sticky sessions,
@@ -68,8 +69,9 @@ HTTP+SSE transport is deprecated.</p>
 
 <h2>2) Authorization: pinned to OAuth 2.1 + Protected Resource Metadata</h2>
 
-<p>Chapter 12.1 in the original tutorials sketched a “bearer + middleware”
-pattern. The 2025 spec formalizes this and is now an OAuth 2.1 profile:</p>
+<p>A simple “bearer + middleware” pattern is enough to understand the first
+version of MCP authentication. The 2025 spec formalizes the production version
+as an OAuth 2.1 profile:</p>
 
 <ul>
   <li>The MCP <em>server</em> is a protected resource. It publishes
@@ -129,8 +131,8 @@ human‑in‑the‑loop confirmations on destructive tools.</p>
 
 <h2>4) Structured tool output</h2>
 
-<p>In the original chapters, a tool returned text content and the LLM had to
-re‑parse it. The new spec lets a tool declare a JSON Schema for its return
+<p>Basic MCP tools can return text content, which the LLM then has to interpret.
+The structured-output model lets a tool declare a JSON Schema for its return
 value and emit <em>both</em> a human‑readable rendering and a structured
 result:</p>
 
@@ -208,6 +210,6 @@ the loop. This is the right primitive for RAG‑style answers.</p>
 </div>
 
 </div>
-<script src="../assets/js/nav.js"></script>
+<script src="../assets/js/nav.js?v=20260522-book-cleanup"></script>
 </body>
 </html>

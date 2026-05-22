@@ -7,7 +7,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>Updated Example: FastAPI → MCP Server → Salesforce</h1>
+        <h1>Enterprise Example: FastAPI → MCP Server → Salesforce</h1>
         <p style="font-size: 1.1em; color: #555; margin-bottom: 30px;">
             <strong>With Authentication and MCP Primitives: Tools / Resources / Prompts</strong>
         </p>
@@ -24,8 +24,8 @@
             </div>
 
             <div class="auth-step">
-                <h4>2. FastAPI → MCP server (service-to-service auth) 
-                    <span class="status added">✅ THIS IS WHAT WE ADD HERE</span>
+                <h4>2. FastAPI → MCP server (service-to-service auth)
+                    <span class="status added">internal boundary</span>
                 </h4>
                 <p>
                     Your FastAPI backend calls the MCP server using a <strong>separate internal Bearer token</strong> 
@@ -387,6 +387,6 @@ async def admin_salesforce_query(req: SoqlReq, ident=Depends(get_identity)):
 
     <script>
 </script>
-  <script src="../assets/js/nav.js"></script>
+  <script src="../assets/js/nav.js?v=20260522-book-cleanup"></script>
 </body>
 </html>

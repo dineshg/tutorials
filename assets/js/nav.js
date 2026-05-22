@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Tutorial Refined — book navigation injector.
+   Enterprise AI, Agents & Applied ML — book navigation injector.
    Loaded at the END of <body> on every chapter page. It builds a fixed
    header + collapsible left sidebar without modifying the chapter's own
    inline content/styles. The page's existing content remains intact and
@@ -147,18 +147,19 @@
         ["01-fastapi-uvicorn-basics.html",        "1. FastAPI & Uvicorn basics"],
         ["02-http-methods.html",                  "2. HTTP methods"],
         ["03-fastapi-request-mapping.html",       "3. FastAPI request mapping"],
-        ["04-concurrency-user-isolation.html",    "4. Concurrency & user isolation"],
-        ["05-background-tasks-and-retries.html",  "5. Background tasks & retries"],
-        ["06-sso-oauth2-oidc-primer.html",        "6. SSO / OAuth2 / OIDC primer"],
-        ["07-oidc-oauth2-pkce-fastapi.html",      "7. OIDC + OAuth2 + PKCE in FastAPI"],
-        ["08-registering-new-users.html",         "8. Registering new users"],
-        ["09-authentication-deep-dive.html",      "9. Authentication deep dive"],
-        ["15-modern-auth-additions.html",         "10. Modern auth additions (Passkeys, DPoP, mTLS)"],
-        ["10-enduser-vs-workload-identity.html",  "11. End-user vs workload identity"],
-        ["12-tenant-iam-ad-groups.html",          "12. Tenant isolation, IAM, AD groups"],
-        ["11-gcp-workload-identity.html",         "13. GCP workload identity"],
-        ["13-external-service-integration.html",  "14. External service integration"],
-        ["14-github-governance.html",             "15. GitHub governance & CI"]
+        ["04-pydantic-data-models.html",          "4. Pydantic data models"],
+        ["04-concurrency-user-isolation.html",    "5. Concurrency & user isolation"],
+        ["05-background-tasks-and-retries.html",  "6. Background tasks & retries"],
+        ["06-sso-oauth2-oidc-primer.html",        "7. SSO / OAuth2 / OIDC primer"],
+        ["07-oidc-oauth2-pkce-fastapi.html",      "8. OIDC + OAuth2 + PKCE in FastAPI"],
+        ["08-registering-new-users.html",         "9. Registering new users"],
+        ["09-authentication-deep-dive.html",      "10. Authentication deep dive"],
+        ["15-modern-auth-additions.html",         "11. Modern auth additions (Passkeys, DPoP, mTLS)"],
+        ["10-enduser-vs-workload-identity.html",  "12. End-user vs workload identity"],
+        ["12-tenant-iam-ad-groups.html",          "13. Tenant isolation, IAM, AD groups"],
+        ["11-gcp-workload-identity.html",         "14. GCP workload identity"],
+        ["13-external-service-integration.html",  "15. External service integration"],
+        ["14-github-governance.html",             "16. GitHub governance & CI"]
       ]},
     { id: "part3", title: "Part III — Agent Protocols & Integration",
       tag: "agents-mcp-a2a", folder: "part3-agent-protocols",
@@ -167,7 +168,7 @@
         ["01-mcp-fundamentals.html",            "1. MCP fundamentals"],
         ["02-mcp-discovery-remote-auth.html",   "2. MCP discovery, remote, auth"],
         ["03-mcp-enterprise-pattern.html",      "3. MCP enterprise pattern"],
-        ["04-mcp-2025-update.html",             "4. MCP 2025 update (Streamable HTTP, OAuth, elicitation) (NEW)"],
+        ["04-mcp-2025-update.html",             "4. MCP 2025 update (Streamable HTTP, OAuth, elicitation)"],
         ["05-a2a-protocol.html",                "5. A2A protocol"],
         ["06-javascript-typescript-primer.html","6. JavaScript & TypeScript primer"],
         ["07-langchain-langgraph-flowise.html", "7. LangChain → LangGraph → Flowise"]
@@ -188,7 +189,7 @@
         ["index.html",                          "Part overview"],
         ["01-ffn-concepts.html",                "1. FFN concepts"],
         ["02-ffn-training-debugging.html",      "2. FFN training & debugging"],
-        ["03-ffn-canonical-merged.html",        "3. FFN canonical reference (merged Ch. 1–2)"],
+        ["03-ffn-canonical-merged.html",        "3. FFN single-chapter reference"],
         ["04-cnn-convolution.html",             "4. CNN — convolution"],
         ["05-cnn-architecture.html",            "5. CNN — architecture"],
         ["06-cnn-pytorch-implementation.html",  "6. CNN — PyTorch implementation"],
@@ -196,9 +197,9 @@
         ["08-forecasting-sequence-data.html",   "8. Forecasting & sequence data"],
         ["09-autoregressive-linear-model.html", "9. Autoregressive linear model"],
         ["10-recurrent-neural-networks.html",   "10. Recurrent neural networks"],
-        ["11-transformers-and-attention.html",  "11. Transformers & attention (NEW)"],
+        ["11-transformers-and-attention.html",  "11. Transformers & attention"],
         ["12-llm-fine-tuning.html",             "12. LLM fine-tuning"],
-        ["13-modern-llm-alignment-orpo-grpo.html","13. Modern LLM alignment: ORPO, GRPO, KTO (NEW)"]
+        ["13-modern-llm-alignment-orpo-grpo.html","13. Modern LLM alignment: ORPO, GRPO, KTO"]
       ]},
     { id: "part6", title: "Part VI — Appendices",
       tag: "reference", folder: "part6-appendices",
@@ -225,15 +226,14 @@
       '<span>Enterprise AI, Agents &amp; Applied ML</span>' +
     '</a>' +
     '<span class="tr-spacer"></span>' +
-    '<span class="tr-meta">datascience_tutorial · v1.0</span>';
+    '<span class="tr-meta">tutorial book</span>';
 
   // ---------- 5. Build sidebar --------------------------------------------
   var sidebar = document.createElement("aside");
   sidebar.className = "tr-sidebar";
   var sb = '<h3 style="margin-top:0">Book</h3>' +
            '<ul><li><a href="' + assetBase + 'index.html">Home / Table of contents</a></li>' +
-           '<li><a href="' + assetBase + 'content-map.html">High-level content map</a></li>' +
-           '<li><a href="' + assetBase + 'README.md">README</a></li></ul>';
+           '<li><a href="' + assetBase + 'content-map.html">Reading guide and concept map</a></li></ul>';
   BOOK.forEach(function (part) {
     sb += '<h3>' + escapeHtml(part.title) + '</h3><ul>';
     part.chapters.forEach(function (c) {
@@ -250,7 +250,7 @@
   sidebar.innerHTML = sb;
 
   // ---------- 6. Build the layout shell. We move the existing <body>
-  //              children into .tr-content so original markup is preserved. -
+  //              children into .tr-content so each chapter's markup is kept. -
   var existing = [];
   while (document.body.firstChild) existing.push(document.body.removeChild(document.body.firstChild));
 
@@ -322,8 +322,7 @@
   var footer = document.createElement("footer");
   footer.className = "tr-footer";
   footer.innerHTML =
-    'Tutorial Refined — built from the original /pytorch tutorials. ' +
-    'Original scope and theory preserved; new chapters marked “(NEW)” add current methods.';
+    'Enterprise AI, Agents &amp; Applied ML — practical notes, examples, and reference material.';
   content.appendChild(footer);
 
   main.appendChild(content);

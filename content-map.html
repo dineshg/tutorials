@@ -3,24 +3,25 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-  <title>High-Level Content Map and Duplicate Ownership</title>
+  <title>Reading Guide and Concept Map</title>
   <link rel="stylesheet" href="assets/css/book.css?v=20260517-figures-code2" />
 </head>
 <body>
 
-<h1>High-Level Content Map and Duplicate Ownership</h1>
+<h1>Reading Guide and Concept Map</h1>
 
-<p>This page is the book-level map created after scanning every chapter. Its
-job is not to remove repeated material. Repetition is kept where it teaches a
-concept from a different angle, but each repeated area now has an explicit
-owner chapter, a reason for the later revisit, and a suggested reading order.</p>
+<p>This page is the book-level map. It explains the main spine of the book,
+where each concept is introduced, and where the same idea is revisited from an
+implementation, architecture, enterprise, or reference angle. Repetition is
+intentional when it helps a reader move from first intuition to production
+practice.</p>
 
 <div class="tr-note">
-  <strong>Rule used for this correction pass</strong>
-  No concept or factual detail is dropped. When the same idea appears in
-  multiple places, the most complete chapter becomes the canonical explanation;
-  nearby chapters are treated as introductions, applications, implementation
-  views, enterprise views, or reference editions.
+  <strong>How to use this map</strong>
+  For each major concept, start with the primary chapter, then follow the
+  related chapters when you want a second angle: a beginner introduction,
+  an applied implementation, an enterprise design pattern, or a reference
+  edition.
 </div>
 
 <h2>Book Spine</h2>
@@ -40,8 +41,8 @@ owner chapter, a reason for the later revisit, and a suggested reading order.</p
     </tr>
     <tr>
       <td><a href="part2-backend-platform-security/index.html">Part II</a></td>
-      <td>Backend runtime, HTTP/FastAPI mechanics, authentication, identity, tenancy, workload identity, external integrations, and governance.</td>
-      <td>Read in three blocks: runtime basics, auth identity, then tenancy/IAM/GCP implementation.</td>
+      <td>Backend runtime, HTTP/FastAPI mechanics, Pydantic data contracts, authentication, identity, tenancy, workload identity, external integrations, and governance.</td>
+      <td>Read in four blocks: runtime basics, Pydantic data boundaries, auth identity, then tenancy/IAM/GCP implementation.</td>
     </tr>
     <tr>
       <td><a href="part3-agent-protocols/index.html">Part III</a></td>
@@ -66,13 +67,13 @@ owner chapter, a reason for the later revisit, and a suggested reading order.</p
   </tbody>
 </table>
 
-<h2>Concept Ownership Map</h2>
+<h2>Concept Map</h2>
 <table>
   <thead>
     <tr>
       <th>Concept cluster</th>
-      <th>Canonical owner</th>
-      <th>Related chapters and why they repeat it</th>
+      <th>Primary chapter</th>
+      <th>Related chapters and why they revisit it</th>
     </tr>
   </thead>
   <tbody>
@@ -87,14 +88,19 @@ owner chapter, a reason for the later revisit, and a suggested reading order.</p
       <td>Ch. 1 introduces FastAPI/Uvicorn and briefly names methods. Ch. 2 owns HTTP verb semantics. Ch. 3 owns the exact mapping from raw HTTP to FastAPI function arguments.</td>
     </tr>
     <tr>
+      <td>Pydantic data modeling, dataclass bridge, validation, serialization, settings, aliases, and LLM output contracts</td>
+      <td><a href="part2-backend-platform-security/04-pydantic-data-models.html">Part II Ch. 4</a></td>
+      <td>Ch. 3 introduces Pydantic through a FastAPI request body. Ch. 4 gives the full explanation from Python classes/dataclasses through production API, settings, queue, and LLM validation patterns.</td>
+    </tr>
+    <tr>
       <td>OAuth2, OIDC, PKCE, bearer tokens, JWTs, opaque tokens, and API keys</td>
-      <td><a href="part2-backend-platform-security/09-authentication-deep-dive.html">Part II Ch. 9</a></td>
-      <td>Ch. 6 is the beginner primer, Ch. 7 is the FastAPI implementation, Ch. 8 is user bootstrap, and Ch. 15 adds modern sender-constrained and passwordless patterns. MCP auth chapters reference this theory instead of redefining it.</td>
+      <td><a href="part2-backend-platform-security/09-authentication-deep-dive.html">Part II Ch. 10</a></td>
+      <td>Ch. 7 is the beginner primer, Ch. 8 is the FastAPI implementation, Ch. 9 is user bootstrap, and Ch. 11 adds modern sender-constrained and passwordless patterns. MCP auth chapters reference this theory instead of redefining it.</td>
     </tr>
     <tr>
       <td>End-user identity, tenant isolation, IAM, AD/Workspace groups, and workload identity</td>
-      <td><a href="part2-backend-platform-security/10-enduser-vs-workload-identity.html">Part II Ch. 10</a></td>
-      <td>Ch. 12 applies the same three-lane model to AD groups and bootstrap policy. Ch. 11 implements it on GCP. Part I Ch. 6-7 mention it only at architecture-decision level.</td>
+      <td><a href="part2-backend-platform-security/10-enduser-vs-workload-identity.html">Part II Ch. 12</a></td>
+      <td>Ch. 13 applies the same three-lane model to AD groups and bootstrap policy. Ch. 14 implements it on GCP. Part I Ch. 6-7 mention it only at architecture-decision level.</td>
     </tr>
     <tr>
       <td>MCP mental model, resources, prompts, tools, discovery, remote servers, and auth</td>
@@ -109,7 +115,7 @@ owner chapter, a reason for the later revisit, and a suggested reading order.</p
     <tr>
       <td>Feed-forward neural networks, neurons, activations, backprop, batching, and debugging</td>
       <td><a href="part5-deep-learning-and-llms/01-ffn-concepts.html">Part V Ch. 1</a> and <a href="part5-deep-learning-and-llms/02-ffn-training-debugging.html">Ch. 2</a></td>
-      <td><a href="part5-deep-learning-and-llms/03-ffn-canonical-merged.html">Ch. 3</a> is the optional merged reference edition. It repeats the same concepts in one article for print/reference use.</td>
+      <td><a href="part5-deep-learning-and-llms/03-ffn-canonical-merged.html">Ch. 3</a> is the optional single-chapter reference edition. It repeats the same concepts in one article for print/reference use.</td>
     </tr>
     <tr>
       <td>CNN convolution, feature maps, pooling, implementation, dropout, and train/eval behavior</td>
@@ -129,18 +135,18 @@ owner chapter, a reason for the later revisit, and a suggested reading order.</p
   </tbody>
 </table>
 
-<h2>Duplicate Clusters Found by Scan</h2>
+<h2>Cross-Referenced Concept Clusters</h2>
 <table>
   <thead>
     <tr>
-      <th>High-overlap pages</th>
-      <th>Resolution</th>
+      <th>Related pages</th>
+      <th>How to read them</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>Part II Ch. 10 and Ch. 12: tenant identity, IAM, group gating.</td>
-      <td>Ch. 10 owns the three-lane model. Ch. 12 is the applied policy/bootstrap chapter.</td>
+      <td>Part II Ch. 12 and Ch. 13: tenant identity, IAM, group gating.</td>
+      <td>Ch. 12 owns the three-lane model. Ch. 13 is the applied policy/bootstrap chapter.</td>
     </tr>
     <tr>
       <td>Part III Ch. 1, Ch. 2, Ch. 3, and Ch. 4: MCP resources/prompts/tools, discovery, remote servers, auth, and enterprise patterns.</td>
@@ -148,7 +154,7 @@ owner chapter, a reason for the later revisit, and a suggested reading order.</p
     </tr>
     <tr>
       <td>Part V Ch. 1, Ch. 2, and Ch. 3: FFN concepts, training, batching, backprop, and debugging.</td>
-      <td>Ch. 1-2 are the teaching path. Ch. 3 is marked as an optional merged reference edition.</td>
+      <td>Ch. 1-2 are the teaching path. Ch. 3 is an optional single-article reference edition.</td>
     </tr>
     <tr>
       <td>Part V Ch. 6 and Ch. 7: dropout and train/eval behavior in CNN code.</td>
@@ -192,18 +198,19 @@ owner chapter, a reason for the later revisit, and a suggested reading order.</p
     <tr><td><a href="part2-backend-platform-security/01-fastapi-uvicorn-basics.html">1. FastAPI and Uvicorn basics</a></td><td>Introduces the server runtime, why FastAPI/Uvicorn fit, and the first API mental model.</td></tr>
     <tr><td><a href="part2-backend-platform-security/02-http-methods.html">2. HTTP methods</a></td><td>Owns HTTP verb semantics, common REST mappings, and PUT vs POST confusion.</td></tr>
     <tr><td><a href="part2-backend-platform-security/03-fastapi-request-mapping.html">3. FastAPI request mapping</a></td><td>Shows the exact path from raw HTTP request to FastAPI parameters and return value.</td></tr>
-    <tr><td><a href="part2-backend-platform-security/04-concurrency-user-isolation.html">4. Concurrency and user isolation</a></td><td>Explains async, concurrency vs parallelism, per-request identity, and why global mutable state breaks user isolation.</td></tr>
-    <tr><td><a href="part2-backend-platform-security/05-background-tasks-and-retries.html">5. Background tasks and retries</a></td><td>Owns background work, retries, idempotency, and async processing patterns for FastAPI systems.</td></tr>
-    <tr><td><a href="part2-backend-platform-security/06-sso-oauth2-oidc-primer.html">6. SSO / OAuth2 / OIDC primer</a></td><td>Beginner-friendly explanation of SSO, OAuth2, OIDC, and why applications delegate login.</td></tr>
-    <tr><td><a href="part2-backend-platform-security/07-oidc-oauth2-pkce-fastapi.html">7. OIDC + OAuth2 + PKCE in FastAPI</a></td><td>Implementation flow for Auth Code + PKCE, bearer tokens, token validation, and backend identity.</td></tr>
-    <tr><td><a href="part2-backend-platform-security/08-registering-new-users.html">8. Registering new users</a></td><td>Owns first-login bootstrap, user provisioning, and where registration actually lives.</td></tr>
-    <tr><td><a href="part2-backend-platform-security/09-authentication-deep-dive.html">9. Authentication deep dive</a></td><td>Canonical auth chapter for API keys, bearer tokens, JWT vs opaque tokens, introspection, JWKS, PKCE, MCP auth, and SQL auth.</td></tr>
-    <tr><td><a href="part2-backend-platform-security/15-modern-auth-additions.html">10. Modern auth additions</a></td><td>Extends auth with passkeys/WebAuthn, DPoP, mTLS sender-constrained tokens, and token exchange.</td></tr>
-    <tr><td><a href="part2-backend-platform-security/10-enduser-vs-workload-identity.html">11. End-user vs workload identity</a></td><td>Canonical three-lane identity model: end-user identity, app authorization/tenancy, and workload identity/IAM.</td></tr>
-    <tr><td><a href="part2-backend-platform-security/12-tenant-iam-ad-groups.html">12. Tenant isolation, IAM, AD groups</a></td><td>Applies the identity model to tenant isolation, IAM, group gating, and common mistakes.</td></tr>
-    <tr><td><a href="part2-backend-platform-security/11-gcp-workload-identity.html">13. GCP workload identity</a></td><td>Implements project setup, service accounts, Google identity, storage design, deployment, networking, and governance on GCP.</td></tr>
-    <tr><td><a href="part2-backend-platform-security/13-external-service-integration.html">14. External service integration</a></td><td>Compares API keys in Secret Manager with workload identity federation and service-account patterns.</td></tr>
-    <tr><td><a href="part2-backend-platform-security/14-github-governance.html">15. GitHub governance and CI</a></td><td>Owns rulesets, status checks, workflows, required workflows, scanning, runners, and merge enforcement.</td></tr>
+    <tr><td><a href="part2-backend-platform-security/04-pydantic-data-models.html">4. Pydantic data models</a></td><td>Canonical Pydantic chapter: Python classes, dataclasses, why Pydantic exists, BaseModel, validation, coercion vs strictness, aliases, serialization, settings, FastAPI, queues, and LLM outputs.</td></tr>
+    <tr><td><a href="part2-backend-platform-security/04-concurrency-user-isolation.html">5. Concurrency and user isolation</a></td><td>Explains async, concurrency vs parallelism, per-request identity, and why global mutable state breaks user isolation.</td></tr>
+    <tr><td><a href="part2-backend-platform-security/05-background-tasks-and-retries.html">6. Background tasks and retries</a></td><td>Owns background work, retries, idempotency, and async processing patterns for FastAPI systems.</td></tr>
+    <tr><td><a href="part2-backend-platform-security/06-sso-oauth2-oidc-primer.html">7. SSO / OAuth2 / OIDC primer</a></td><td>Beginner-friendly explanation of SSO, OAuth2, OIDC, and why applications delegate login.</td></tr>
+    <tr><td><a href="part2-backend-platform-security/07-oidc-oauth2-pkce-fastapi.html">8. OIDC + OAuth2 + PKCE in FastAPI</a></td><td>Implementation flow for Auth Code + PKCE, bearer tokens, token validation, and backend identity.</td></tr>
+    <tr><td><a href="part2-backend-platform-security/08-registering-new-users.html">9. Registering new users</a></td><td>Owns first-login bootstrap, user provisioning, and where registration actually lives.</td></tr>
+    <tr><td><a href="part2-backend-platform-security/09-authentication-deep-dive.html">10. Authentication deep dive</a></td><td>Canonical auth chapter for API keys, bearer tokens, JWT vs opaque tokens, introspection, JWKS, PKCE, MCP auth, and SQL auth.</td></tr>
+    <tr><td><a href="part2-backend-platform-security/15-modern-auth-additions.html">11. Modern auth additions</a></td><td>Extends auth with passkeys/WebAuthn, DPoP, mTLS sender-constrained tokens, and token exchange.</td></tr>
+    <tr><td><a href="part2-backend-platform-security/10-enduser-vs-workload-identity.html">12. End-user vs workload identity</a></td><td>Canonical three-lane identity model: end-user identity, app authorization/tenancy, and workload identity/IAM.</td></tr>
+    <tr><td><a href="part2-backend-platform-security/12-tenant-iam-ad-groups.html">13. Tenant isolation, IAM, AD groups</a></td><td>Applies the identity model to tenant isolation, IAM, group gating, and common mistakes.</td></tr>
+    <tr><td><a href="part2-backend-platform-security/11-gcp-workload-identity.html">14. GCP workload identity</a></td><td>Implements project setup, service accounts, Google identity, storage design, deployment, networking, and governance on GCP.</td></tr>
+    <tr><td><a href="part2-backend-platform-security/13-external-service-integration.html">15. External service integration</a></td><td>Compares API keys in Secret Manager with workload identity federation and service-account patterns.</td></tr>
+    <tr><td><a href="part2-backend-platform-security/14-github-governance.html">16. GitHub governance and CI</a></td><td>Owns rulesets, status checks, workflows, required workflows, scanning, runners, and merge enforcement.</td></tr>
   </tbody>
 </table>
 
@@ -239,7 +246,7 @@ owner chapter, a reason for the later revisit, and a suggested reading order.</p
   <tbody>
     <tr><td><a href="part5-deep-learning-and-llms/01-ffn-concepts.html">1. FFN concepts</a></td><td>Owns neurons, layers, feed-forward architecture, activation functions, vanishing gradients, softmax, and flattening images.</td></tr>
     <tr><td><a href="part5-deep-learning-and-llms/02-ffn-training-debugging.html">2. FFN training and debugging</a></td><td>Owns mini-batches, DataLoader, scalable training loops, logits vs probabilities, GPU handling, confusion matrices, and debugging.</td></tr>
-    <tr><td><a href="part5-deep-learning-and-llms/03-ffn-canonical-merged.html">3. FFN canonical merged</a></td><td>Optional reference edition that merges Ch. 1-2 into one publication-style article.</td></tr>
+    <tr><td><a href="part5-deep-learning-and-llms/03-ffn-canonical-merged.html">3. FFN single-chapter reference</a></td><td>Optional reference edition that presents Ch. 1-2 in one publication-style article.</td></tr>
     <tr><td><a href="part5-deep-learning-and-llms/04-cnn-convolution.html">4. CNN convolution</a></td><td>Owns convolution mechanics, output sizes, convolution modes, equations, cross-correlation, and sliding dot-product intuition.</td></tr>
     <tr><td><a href="part5-deep-learning-and-llms/05-cnn-architecture.html">5. CNN architecture</a></td><td>Owns channels, filters, feature maps, pooling, parameter sharing, and full CNN architecture.</td></tr>
     <tr><td><a href="part5-deep-learning-and-llms/06-cnn-pytorch-implementation.html">6. CNN PyTorch implementation</a></td><td>Owns Conv2d, nn.Module design, Sequential vs custom modules, model skeletons, dropout introduction, and convolution arithmetic.</td></tr>
@@ -262,6 +269,6 @@ owner chapter, a reason for the later revisit, and a suggested reading order.</p
   </tbody>
 </table>
 
-<script src="assets/js/nav.js"></script>
+<script src="assets/js/nav.js?v=20260522-book-cleanup"></script>
 </body>
 </html>

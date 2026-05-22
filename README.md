@@ -1,13 +1,15 @@
-# Tutorial Refined
+# Enterprise AI, Agents & Applied ML
 
-A unified, GitHub‑style tutorial book that consolidates the original
-`pytorch/` and `Full_Stack/` materials into a single navigable structure.
+This is a practical tutorial book for enterprise AI delivery, backend platform
+engineering, agent protocols, applied machine learning, deep learning, LLM
+fine‑tuning, and alignment. The chapters are organized as a progressive path:
+start with the mental model, move through small examples, then scale toward
+production patterns.
 
 📖 **Read it online:** <https://dineshg.github.io/tutorials/>
 
 > **Or open `index.html` in a browser** to read it locally. Every chapter
 > shares a fixed header, a left sidebar, breadcrumbs, and prev/next pagers.
-> The existing tutorial scope and theory were preserved — nothing was truncated.
 
 ## Hosting (GitHub Pages)
 
@@ -21,7 +23,7 @@ included so Pages serves all asset paths verbatim (no Jekyll processing).
 | Part | Folder | Theme |
 | --- | --- | --- |
 | I  | `part1-enterprise-ai-delivery/`        | Business pain → AI lead → HLD/LLD → ship |
-| II | `part2-backend-platform-security/`     | FastAPI, concurrency, auth, identity, GitHub governance |
+| II | `part2-backend-platform-security/`     | FastAPI, Pydantic data contracts, concurrency, auth, identity, GitHub governance |
 | III| `part3-agent-protocols/`               | MCP (incl. 2025 update), A2A, JS/TS, LangChain/LangGraph/Flowise |
 | IV | `part4-ml-foundations/`                | Geometry of ML, regression, classification, ensembles |
 | V  | `part5-deep-learning-and-llms/`        | FFN, CNN, RNN, Transformers, fine‑tuning, alignment |
@@ -38,19 +40,19 @@ The home page (`index.html`) lists explicit reading paths for:
 - Lead / Principal AI engineers (Part I → II → III → select V → Appendix A)
 - Lead DS interview prep (Appendix A first, then drill‑downs)
 
-## What was added vs. the originals
-
-The original tutorials were consolidated, then formatting and selected technical
-wording were refreshed without intentionally dropping theory. The following new
-chapters were added to fill gaps and cover current methods:
+## Major topics covered
 
 - `part2-backend-platform-security/15-modern-auth-additions.html`
   Passkeys / WebAuthn, DPoP sender‑constrained tokens, mTLS, token‑exchange (RFC 8693).
+- `part2-backend-platform-security/04-pydantic-data-models.html`
+  Full Pydantic section starting from Python classes and dataclasses, then
+  moving through BaseModel, validation, strict/lax coercion, aliases,
+  serialization, settings management, FastAPI contracts, queue/webhook
+  validation, and structured LLM outputs.
 - `part3-agent-protocols/04-mcp-2025-update.html`
   The MCP 2025‑03‑26 / 2025‑06‑18 changes: Streamable HTTP transport,
   OAuth 2.1 with Protected Resource Metadata, elicitation, structured
-  tool output, resource links. Placed immediately after the original three
-  MCP chapters so the MCP track is contiguous.
+  tool output, and resource links.
 - `part5-deep-learning-and-llms/11-transformers-and-attention.html`
   Self‑attention, multi‑head attention, encoder/decoder, KV cache,
   rotary positional embeddings, FlashAttention.
@@ -58,27 +60,22 @@ chapters were added to fill gaps and cover current methods:
   ORPO (odds‑ratio preference), GRPO (group‑relative policy optimization
   used by DeepSeek R1), KTO, RLAIF — the post‑PPO/DPO landscape.
 
-## Structural changes for learner flow (v1.1)
+## Learner flow
 
-- **Part III reordered** so the four MCP chapters are contiguous (1 → 4),
+- **Part III** keeps the four MCP chapters contiguous (1 → 4),
   followed by A2A, JS/TS primer, and LangChain.
-- **Part V Chapter 3** (FFN canonical merged) is now labelled and styled as
-  *optional reference* — it duplicates the FFN theory from Chapters 1 + 2.
-- **Appendices** (`Appendix A`, `Appendix B`) now have HTML wrappers that
-  render the `.md` and `.tex` source inline, so they are first‑class book
-  chapters with the shared header / sidebar / pager. The raw `.md` and
-  `.tex` files are still present for direct download.
-- **Each Part landing page** now shows a **Prerequisites** callout so a new
+- **Part V Chapter 3** is an optional single-chapter FFN reference. Read
+  Chapters 1 and 2 for the teaching path, or Chapter 3 when you want the same
+  FFN material in one article.
+- **Appendices** (`Appendix A`, `Appendix B`) provide interview and print/PDF
+  reference material.
+- **Each Part landing page** includes a **Prerequisites** callout so a new
   reader knows what they should already know before starting.
-
-Original folders such as `Lanchain_langraph_flowise/` (typo for
-"Langchain") and `7_Forecasting_RNN/` were normalized into clean,
-sequentially‑numbered chapter slots.
 
 ## Local viewing
 
 ```bash
-cd /Users/dineshgamage/Developer/datascience_tutorial
+cd /Users/dineshgamage/Developer/tutorial_refined
 python3 -m http.server 8080
 # then open http://localhost:8080/
 ```
@@ -88,15 +85,6 @@ opening `index.html` directly via `file://` also works in modern browsers.
 The Appendix A wrapper uses `fetch()` to load its markdown source, which
 requires HTTP — use the local server above if `file://` blocks the fetch.
 
-## File mapping (original → refined)
-
-A complete mapping from each original file path to its new location is
-preserved in the chapter file names: original ordering numbers and topics
-were maintained wherever possible (e.g. `5_1_*` → `01-ffn-concepts.html`,
-`5_2_*` → `02-ffn-training-debugging.html`, `5_*` → `03-ffn-canonical-merged.html`).
-
 ## License / authorship
 
-All original content remains the property of its author. The refined book
-chrome (CSS, navigation injector, index/part landing pages, and the four
-new chapters listed above) is provided as a structural overlay.
+All content remains the property of its author.
