@@ -11,8 +11,8 @@
 <h1>Part V — Deep Learning &amp; LLMs</h1>
 <p>From the single neuron all the way to modern LLM alignment. Feed‑forward
 networks (concepts, then training/debugging), CNNs (theory then PyTorch),
-forecasting and RNNs, then <strong>Transformers &amp; attention</strong>
-(the architectural bridge to LLMs) and <strong>modern LLM alignment</strong>
+forecasting, autoregressive baselines, RNNs with a step-by-step translation example, then <strong>Transformers &amp; attention</strong>
+as the bridge from cross-attention to self-attention and GPT-style generation, followed by <strong>modern LLM alignment</strong>
 beyond DPO.</p>
 
 <div class="tr-note">
@@ -27,8 +27,8 @@ beyond DPO.</p>
   <ul style="margin: 6px 0 0 18px">
     <li><strong>FFN track</strong> — Chapters 1, 2 (Chapter 3 is the single-chapter reference version).</li>
     <li><strong>CNN track</strong> — Chapters 4, 5, 6; Chapter 7 is the dropout/train-eval deep dive that expands the short dropout section in Chapter 6.</li>
-    <li><strong>Sequence track</strong> — Chapters 8, 9, 10.</li>
-    <li><strong>LLM track</strong> — Chapters 11, 12, 13.</li>
+    <li><strong>Sequence track</strong> — Chapters 8, 9, 10: sequence data, AR baselines, recurrent hidden state, language/speech/forecasting use cases, GRU/LSTM gates, and seq2seq translation.</li>
+    <li><strong>LLM track</strong> — Chapters 11, 12, 13: attention mechanics, decoder-only generation, fine-tuning, and alignment.</li>
   </ul>
 </div>
 
@@ -64,7 +64,7 @@ beyond DPO.</p>
     <tr>
       <td>Sequence forecasting</td>
       <td><a href="08-forecasting-sequence-data.html">Ch. 8</a></td>
-      <td>Ch. 9 implements the AR baseline, Ch. 10 moves to recurrent state, and Ch. 11 replaces recurrence with attention.</td>
+      <td>Ch. 9 implements the AR baseline, Ch. 10 moves from recurrent hidden state into GRU/LSTM memory and encoder-decoder translation, and Ch. 11 turns that bridge into cross-attention, self-attention, and causal GPT generation.</td>
     </tr>
     <tr>
       <td>LLM adaptation and alignment</td>

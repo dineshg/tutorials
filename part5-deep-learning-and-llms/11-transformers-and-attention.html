@@ -3,26 +3,402 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-  <title>Transformers &amp; Attention</title>
+  <title>Transformers &amp; Attention — From RNN Memory to GPT Generation</title>
+  <script>
+    window.MathJax = { tex: { inlineMath: [['\\(','\\)'], ['$', '$']] } };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
   <link rel="stylesheet" href="../assets/css/book.css?v=20260517-figures-code2" />
 </head>
 <body>
 <div class="ch">
 
-<h1>Transformers &amp; Attention</h1>
+<h1>Transformers &amp; Attention: from RNN memory to GPT generation</h1>
 
 <div class="tr-note">
   <strong>Where this fits</strong>
-  Chapter 10 (RNNs) gave you a sequence model that processes one token at a
-  time and keeps a hidden state. That gives you sequential dependence but
-  poor parallelism, vanishing gradients on long context, and an information
-  bottleneck through one hidden vector. The Transformer (Vaswani et al.,
-  2017) replaced the recurrent step with <em>attention</em> — every token
-  looks at every other token in parallel. Every modern LLM you'll fine‑tune
-  in Chapter 12 is a Transformer.
+  Chapter 10 gave you encoder-decoder RNNs: the encoder reads a sequence,
+  the decoder generates a sequence, and hidden state carries information
+  forward. This chapter keeps that mental model but removes the fragile
+  bottleneck. First the decoder learns to <em>look back</em> at encoder states
+  using cross-attention. Then tokens learn to look at other tokens in the same
+  sequence using self-attention. Finally, causal self-attention gives us
+  GPT-style next-token generation.
 </div>
 
-<h2>1) The intuition: a soft, content‑based dictionary lookup</h2>
+<p>
+  Read this chapter as one continuous design path. We are not introducing attention as a separate trick. We are answering
+  the question left open by GRU/LSTM: if a decoder needs a specific old token, why force that information to survive only
+  through recurrent memory? Cross-attention lets a decoder look up source states directly. Self-attention then applies the
+  same lookup idea inside a single sequence. Causal self-attention finally makes that lookup safe for next-token generation.
+</p>
+
+<h2>1) Start from the RNN problem: one vector is too small a bridge</h2>
+
+<p>
+  In the RNN translation chapter, the encoder read <code>my name is dinesh</code>
+  and passed a final hidden state to the decoder. That works as a first mental
+  model, but it has a bottleneck: the decoder must recover every useful source
+  detail from one vector. For a short sentence this is manageable. For a long
+  paragraph, one compressed state is a weak memory interface.
+</p>
+
+<p>
+  LSTMs reduce the damage because their cell state can preserve information better than a vanilla RNN or a GRU. But even
+  an LSTM encoder-decoder still asks the decoder to recover source details through recurrent state. The next idea is to keep
+  every encoder state available and let the decoder choose which ones matter at each output step.
+</p>
+
+<div class="grid">
+  <div class="card">
+    <h3>RNN seq2seq bottleneck</h3>
+    <ul>
+      <li>Encoder reads source tokens one by one.</li>
+      <li>Final hidden state summarizes the whole source.</li>
+      <li>Decoder depends heavily on that single summary.</li>
+      <li>Long-range details can fade through time.</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>Attention idea</h3>
+    <ul>
+      <li>Keep the encoder state at every source position.</li>
+      <li>At each decoder step, ask: “which source tokens matter now?”</li>
+      <li>Take a weighted average of the relevant source states.</li>
+      <li>The decoder gets a fresh context vector at every output step.</li>
+    </ul>
+  </div>
+</div>
+
+<figure>
+  <svg class="viz" viewBox="0 0 980 390" role="img" aria-label="RNN bottleneck compared with attention lookup">
+    <defs>
+      <marker id="attn-arrow-blue" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+        <path d="M0,0 L8,3 L0,6 Z" fill="#0969da"></path>
+      </marker>
+      <marker id="attn-arrow-purple" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+        <path d="M0,0 L8,3 L0,6 Z" fill="#8250df"></path>
+      </marker>
+    </defs>
+    <text x="28" y="34" class="title">From RNN bottleneck to attention</text>
+    <text x="28" y="60" class="muted">Attention does not force the decoder to depend on one final encoder vector.</text>
+
+    <text x="165" y="96" class="label" text-anchor="middle">RNN encoder-decoder</text>
+    <rect x="50" y="125" width="76" height="42" rx="8" fill="#eaf3ff" stroke="#0969da"></rect>
+    <rect x="140" y="125" width="76" height="42" rx="8" fill="#eaf3ff" stroke="#0969da"></rect>
+    <rect x="230" y="125" width="76" height="42" rx="8" fill="#eaf3ff" stroke="#0969da"></rect>
+    <text x="88" y="151" class="label" text-anchor="middle">my</text>
+    <text x="178" y="151" class="label" text-anchor="middle">name</text>
+    <text x="268" y="151" class="label" text-anchor="middle">...</text>
+    <path d="M306 146 L372 146" stroke="#0969da" stroke-width="2.4" marker-end="url(#attn-arrow-blue)"></path>
+    <rect x="378" y="110" width="126" height="72" rx="12" fill="#f5f0ff" stroke="#8250df"></rect>
+    <text x="441" y="140" class="label" text-anchor="middle">one final</text>
+    <text x="441" y="162" class="label" text-anchor="middle">hidden vector</text>
+    <path d="M504 146 L580 146" stroke="#8250df" stroke-width="2.4" marker-end="url(#attn-arrow-purple)"></path>
+    <rect x="586" y="125" width="98" height="42" rx="8" fill="#f3f8f1" stroke="#1a7f37"></rect>
+    <text x="635" y="151" class="label" text-anchor="middle">decoder</text>
+
+    <text x="175" y="238" class="label" text-anchor="middle">Attention bridge</text>
+    <rect x="50" y="268" width="76" height="42" rx="8" fill="#eaf3ff" stroke="#0969da"></rect>
+    <rect x="140" y="268" width="76" height="42" rx="8" fill="#eaf3ff" stroke="#0969da"></rect>
+    <rect x="230" y="268" width="76" height="42" rx="8" fill="#eaf3ff" stroke="#0969da"></rect>
+    <rect x="320" y="268" width="76" height="42" rx="8" fill="#eaf3ff" stroke="#0969da"></rect>
+    <text x="88" y="294" class="label" text-anchor="middle">h1</text>
+    <text x="178" y="294" class="label" text-anchor="middle">h2</text>
+    <text x="268" y="294" class="label" text-anchor="middle">h3</text>
+    <text x="358" y="294" class="label" text-anchor="middle">h4</text>
+    <rect x="586" y="268" width="98" height="42" rx="8" fill="#f3f8f1" stroke="#1a7f37"></rect>
+    <text x="635" y="294" class="label" text-anchor="middle">decoder</text>
+    <path d="M590 268 C510 218 360 232 91 268" stroke="#8250df" stroke-width="2.2" marker-end="url(#attn-arrow-purple)"></path>
+    <path d="M599 268 C520 235 410 245 180 268" stroke="#8250df" stroke-width="2.2" marker-end="url(#attn-arrow-purple)"></path>
+    <path d="M622 267 C565 245 500 252 358 268" stroke="#8250df" stroke-width="2.2" marker-end="url(#attn-arrow-purple)"></path>
+    <text x="535" y="236" class="muted" text-anchor="middle">decoder query looks back at all encoder states</text>
+  </svg>
+  <figcaption>
+    The key step from RNNs to attention is simple: keep all encoder states, then let the decoder choose which ones to use.
+  </figcaption>
+</figure>
+
+<h2>2) Cross-attention: the decoder asks the source sentence a question</h2>
+
+<p>
+  Cross-attention is the easiest form to understand after RNN translation.
+  The decoder is currently trying to produce a target token. It builds a
+  <strong>query</strong>: “what source information do I need right now?” The
+  encoder states provide <strong>keys</strong>: “what information can I match
+  against?” and <strong>values</strong>: “what information should I return if
+  matched?”
+</p>
+
+<div class="eq">
+  \[
+    Q = H_{\text{decoder}} W_Q,\quad
+    K = H_{\text{encoder}} W_K,\quad
+    V = H_{\text{encoder}} W_V
+  \]
+  \[
+    \text{CrossAttention}(Q,K,V)
+    = \text{softmax}\!\left(\frac{QK^\top}{\sqrt{d_k}}\right)V
+  \]
+</div>
+
+<table>
+  <tr><th>Object</th><th>Comes from</th><th>Meaning in translation</th></tr>
+  <tr>
+    <td>Query \(Q\)</td>
+    <td>Decoder hidden state</td>
+    <td>The output side asking what source context it needs for this target step.</td>
+  </tr>
+  <tr>
+    <td>Keys \(K\)</td>
+    <td>Encoder states</td>
+    <td>Search handles for each source token/state.</td>
+  </tr>
+  <tr>
+    <td>Values \(V\)</td>
+    <td>Encoder states</td>
+    <td>The information blended into the decoder context vector.</td>
+  </tr>
+</table>
+
+<p>
+  For the example <code>my name is dinesh</code> → <code>mon nom est dinesh</code>,
+  when the decoder is about to produce <code>dinesh</code>, its query should
+  strongly match the encoder state for the source name token. The attention
+  weights are learned, soft alignments; they are not hand-coded word links.
+</p>
+
+<div class="tr-tip">
+  <strong>What cross-attention fixes</strong>
+  The decoder no longer depends only on the final encoder hidden state. Each output step gets a fresh context vector
+  computed from all source positions. This is the direct answer to the seq2seq bottleneck.
+</div>
+
+<p>
+  Cross-attention still assumes two sides: a source memory and a decoder query. That is perfect for translation, but it
+  raises the next question: if attention is just content-based lookup, do we need a recurrent encoder at all? Could each
+  token in a sentence look directly at the other tokens and build its representation in parallel?
+</p>
+
+<h2>3) Self-attention: make every token both reader and memory</h2>
+
+<p>
+  Cross-attention has two sides: decoder queries, encoder keys/values.
+  Self-attention removes that separation. The same sequence supplies queries,
+  keys, and values:
+</p>
+
+<div class="eq">
+  \[
+    Q = XW_Q,\quad K = XW_K,\quad V = XW_V
+  \]
+</div>
+
+<p>
+  Now each token can ask every token in the same sequence for context. In an
+  encoder, this is usually bidirectional: every token can look left and right.
+  In a decoder-only language model, this must be causal: each position can
+  look only at itself and earlier positions.
+</p>
+
+<p>
+  This is the move from “decoder looks at encoder memory” to “tokens are the memory.” Self-attention removes the recurrent
+  scan inside the encoder because all token-to-token relationships can be scored at once. That is why Transformers train
+  so much more efficiently than RNNs on modern hardware. The price is that attention by itself has no sense of order and,
+  for generation, no built-in protection against peeking at future tokens. Those two pressures lead to positional encoding
+  and causal masking.
+</p>
+
+<figure>
+  <svg class="viz" viewBox="0 0 980 430" role="img" aria-label="Cross attention self attention and causal self attention patterns">
+    <text x="28" y="34" class="title">Attention patterns: cross, self, causal self</text>
+    <text x="28" y="60" class="muted">The same Q/K/V operation changes behavior depending on where Q, K, V come from and which positions are masked.</text>
+
+    <g transform="translate(35,105)">
+      <text x="130" y="-18" class="label" text-anchor="middle">Cross-attention</text>
+      <text x="130" y="7" class="muted" text-anchor="middle">decoder queries source memory</text>
+      <rect x="0" y="32" width="260" height="48" rx="10" fill="#f3f8f1" stroke="#1a7f37"></rect>
+      <text x="130" y="62" class="label" text-anchor="middle">decoder query: “what do I need?”</text>
+      <rect x="0" y="130" width="72" height="46" rx="8" fill="#eaf3ff" stroke="#0969da"></rect>
+      <rect x="94" y="130" width="72" height="46" rx="8" fill="#eaf3ff" stroke="#0969da"></rect>
+      <rect x="188" y="130" width="72" height="46" rx="8" fill="#eaf3ff" stroke="#0969da"></rect>
+      <text x="36" y="158" class="label" text-anchor="middle">src 1</text>
+      <text x="130" y="158" class="label" text-anchor="middle">src 2</text>
+      <text x="224" y="158" class="label" text-anchor="middle">src 3</text>
+      <path d="M130 80 L36 130" stroke="#8250df" stroke-width="2"></path>
+      <path d="M130 80 L130 130" stroke="#8250df" stroke-width="2"></path>
+      <path d="M130 80 L224 130" stroke="#8250df" stroke-width="2"></path>
+    </g>
+
+    <g transform="translate(365,105)">
+      <text x="130" y="-18" class="label" text-anchor="middle">Self-attention</text>
+      <text x="130" y="7" class="muted" text-anchor="middle">tokens read the same sequence</text>
+      <rect x="0" y="88" width="64" height="46" rx="8" fill="#f5f0ff" stroke="#8250df"></rect>
+      <rect x="98" y="88" width="64" height="46" rx="8" fill="#f5f0ff" stroke="#8250df"></rect>
+      <rect x="196" y="88" width="64" height="46" rx="8" fill="#f5f0ff" stroke="#8250df"></rect>
+      <text x="32" y="116" class="label" text-anchor="middle">tok 1</text>
+      <text x="130" y="116" class="label" text-anchor="middle">tok 2</text>
+      <text x="228" y="116" class="label" text-anchor="middle">tok 3</text>
+      <path d="M32 88 C45 35 115 35 130 88" stroke="#0969da" stroke-width="2" fill="none"></path>
+      <path d="M130 88 C145 35 215 35 228 88" stroke="#0969da" stroke-width="2" fill="none"></path>
+      <path d="M228 134 C195 195 65 195 32 134" stroke="#1a7f37" stroke-width="2" fill="none"></path>
+      <text x="130" y="225" class="muted" text-anchor="middle">no mask: each token may use all tokens</text>
+    </g>
+
+    <g transform="translate(695,105)">
+      <text x="130" y="-18" class="label" text-anchor="middle">Causal self-attention</text>
+      <text x="130" y="7" class="muted" text-anchor="middle">future positions are hidden</text>
+      <g transform="translate(42,40)">
+        <rect x="0" y="0" width="36" height="36" fill="#0969da" opacity=".85"></rect>
+        <rect x="42" y="0" width="36" height="36" fill="#f6f8fa" stroke="#d0d7de"></rect>
+        <rect x="84" y="0" width="36" height="36" fill="#f6f8fa" stroke="#d0d7de"></rect>
+        <rect x="126" y="0" width="36" height="36" fill="#f6f8fa" stroke="#d0d7de"></rect>
+        <rect x="0" y="42" width="36" height="36" fill="#0969da" opacity=".65"></rect>
+        <rect x="42" y="42" width="36" height="36" fill="#0969da" opacity=".85"></rect>
+        <rect x="84" y="42" width="36" height="36" fill="#f6f8fa" stroke="#d0d7de"></rect>
+        <rect x="126" y="42" width="36" height="36" fill="#f6f8fa" stroke="#d0d7de"></rect>
+        <rect x="0" y="84" width="36" height="36" fill="#0969da" opacity=".45"></rect>
+        <rect x="42" y="84" width="36" height="36" fill="#0969da" opacity=".65"></rect>
+        <rect x="84" y="84" width="36" height="36" fill="#0969da" opacity=".85"></rect>
+        <rect x="126" y="84" width="36" height="36" fill="#f6f8fa" stroke="#d0d7de"></rect>
+        <rect x="0" y="126" width="36" height="36" fill="#0969da" opacity=".35"></rect>
+        <rect x="42" y="126" width="36" height="36" fill="#0969da" opacity=".45"></rect>
+        <rect x="84" y="126" width="36" height="36" fill="#0969da" opacity=".65"></rect>
+        <rect x="126" y="126" width="36" height="36" fill="#0969da" opacity=".85"></rect>
+      </g>
+      <text x="122" y="226" class="muted" text-anchor="middle">lower triangle = visible context</text>
+    </g>
+  </svg>
+  <figcaption>
+    Cross-attention reads a separate memory. Self-attention reads the same sequence. Causal self-attention blocks the future.
+  </figcaption>
+</figure>
+
+<h2>4) Causal self-attention: the GPT training and generation mental model</h2>
+
+<p>
+  If self-attention lets every token look at every other token, a language generator needs one more rule: the future must
+  be invisible. GPT is a decoder-only Transformer: a stack of masked self-attention blocks plus feed-forward networks. It
+  is trained to predict the next token from the previous tokens. The important correction is that position \(t\) can attend
+  to positions \(\le t\), and its hidden state is used to predict token \(t+1\). It does not peek at future target tokens.
+</p>
+
+<table>
+  <tr><th>Prefix available at a position</th><th>Training target</th></tr>
+  <tr><td><code>my</code></td><td><code>name</code></td></tr>
+  <tr><td><code>my name</code></td><td><code>is</code></td></tr>
+  <tr><td><code>my name is</code></td><td><code>Dinesh</code></td></tr>
+  <tr><td><code>my name is Dinesh</code></td><td><code>&lt;EOS&gt;</code> or next punctuation/token</td></tr>
+</table>
+
+<div class="eq">
+  \[
+    p(x_{t+1}\mid x_1,\dots,x_t)
+    = \text{softmax}(W_{\text{vocab}} h_t)
+  \]
+</div>
+
+<p>
+  During training, the full sequence is processed in parallel with a causal
+  mask. During inference, generation is autoregressive: predict one token,
+  append it, then predict the next token from the extended prefix.
+</p>
+
+<table>
+  <tr><th>Phase</th><th>What the model receives</th><th>What it predicts</th><th>Why it matters</th></tr>
+  <tr>
+    <td>Training</td>
+    <td>A full token sequence, processed in parallel under a causal mask.</td>
+    <td>The next token for every visible prefix position.</td>
+    <td>Efficient learning: one forward pass creates many next-token training examples.</td>
+  </tr>
+  <tr>
+    <td>Inference step 1</td>
+    <td><code>[my, name, is]</code></td>
+    <td>A distribution where <code>Dinesh</code> may be the selected token.</td>
+    <td>The model emits one token, not a whole final sentence in one atomic action.</td>
+  </tr>
+  <tr>
+    <td>Inference step 2</td>
+    <td><code>[my, name, is, Dinesh]</code></td>
+    <td>The next distribution, perhaps selecting <code>.</code>.</td>
+    <td>The generated token becomes part of the next input prefix.</td>
+  </tr>
+  <tr>
+    <td>Stopping</td>
+    <td><code>[my, name, is, Dinesh, .]</code></td>
+    <td><code>&lt;EOS&gt;</code>, another token, or a stop caused by length limits.</td>
+    <td>Generation repeats until a stop condition is met.</td>
+  </tr>
+  <tr>
+    <td>KV caching</td>
+    <td>The new token plus cached keys/values from earlier positions.</td>
+    <td>The next-token distribution without recomputing all old attention states.</td>
+    <td>Same conceptual loop, much lower decode cost in real systems.</td>
+  </tr>
+</table>
+
+<figure>
+  <svg class="viz" viewBox="0 0 980 360" role="img" aria-label="GPT autoregressive generation loop">
+    <defs>
+      <marker id="gpt-loop-arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+        <path d="M0,0 L8,3 L0,6 Z" fill="#8250df"></path>
+      </marker>
+    </defs>
+    <text x="28" y="34" class="title">GPT generation loop</text>
+    <text x="28" y="60" class="muted">Training predicts every next token under a mask. Inference appends one sampled token at a time.</text>
+
+    <rect x="60" y="110" width="210" height="68" rx="12" fill="#eaf3ff" stroke="#0969da"></rect>
+    <text x="165" y="138" class="label" text-anchor="middle">input tokens</text>
+    <text x="165" y="160" class="muted" text-anchor="middle">my name is</text>
+
+    <rect x="355" y="95" width="245" height="98" rx="14" fill="#f5f0ff" stroke="#8250df" stroke-width="1.6"></rect>
+    <text x="478" y="127" class="label" text-anchor="middle">decoder-only Transformer</text>
+    <text x="478" y="151" class="muted" text-anchor="middle">masked self-attention</text>
+    <text x="478" y="174" class="muted" text-anchor="middle">logits at last position</text>
+
+    <rect x="690" y="110" width="210" height="68" rx="12" fill="#f3f8f1" stroke="#1a7f37"></rect>
+    <text x="795" y="138" class="label" text-anchor="middle">next-token distribution</text>
+    <text x="795" y="160" class="muted" text-anchor="middle">Dinesh, ., ...</text>
+
+    <path d="M270 144 L355 144" stroke="#0969da" stroke-width="2.4" marker-end="url(#gpt-loop-arrow)"></path>
+    <path d="M600 144 L690 144" stroke="#0969da" stroke-width="2.4" marker-end="url(#gpt-loop-arrow)"></path>
+    <path d="M795 178 C795 282 170 282 170 180" stroke="#8250df" stroke-width="2.6" fill="none" marker-end="url(#gpt-loop-arrow)"></path>
+    <text x="485" y="306" class="label" text-anchor="middle">sample / choose token, append to prefix, repeat until stop token or length limit</text>
+  </svg>
+  <figcaption>
+    The output token becomes part of the next input prefix. KV caching makes this efficient by reusing previous keys and values.
+  </figcaption>
+</figure>
+
+<pre><code class="language-python"># Conceptual GPT inference loop.
+# Real systems batch requests, keep per-layer KV caches, and use sampling controls.
+
+tokens = tokenize("my name is")
+
+while len(tokens) &lt; max_len:
+    logits = gpt(tokens)                        # simple mental model: full prefix
+    next_logits = logits[-1]                    # distribution for the next token
+    next_token = sample(next_logits, temperature=0.8, top_p=0.95)
+
+    tokens.append(next_token)                   # feed output back as input
+    if next_token == EOS_ID:
+        break</code></pre>
+
+<div class="tr-warn">
+  <strong>Training vs inference</strong>
+  Training can process all positions at once because the causal mask prevents
+  future leakage. Inference must generate one new token at a time because the
+  next input token does not exist until the model has produced it.
+</div>
+
+<p>
+  Now the architectural flow is complete enough to name the math. Cross-attention, self-attention, and causal self-attention
+  are not three unrelated mechanisms. They are the same query-key-value operation with different sources for \(Q,K,V\) and
+  different masks. The next section writes that common operation once.
+</p>
+
+<h2>5) The intuition: a soft, content-based dictionary lookup</h2>
 
 <p>Think of attention as a dictionary lookup that is differentiable.</p>
 <ul>
@@ -38,7 +414,7 @@
 <p>That's it. The whole Transformer is this operation, stacked, with a small
 feed‑forward network in between, and residual connections + LayerNorm.</p>
 
-<h2>2) Scaled dot‑product attention</h2>
+<h2>6) Scaled dot-product attention</h2>
 
 <p>Stack the queries, keys and values into matrices $Q \in \mathbb{R}^{n\times d_k}$,
 $K \in \mathbb{R}^{n\times d_k}$, $V \in \mathbb{R}^{n\times d_v}$ where $n$ is the
@@ -52,7 +428,7 @@ $\mathrm{Attention}(Q,K,V) = \mathrm{softmax}\!\left(\dfrac{QK^{\top}}{\sqrt{d_k
 dimension, which would push softmax into a near‑one‑hot regime and kill the
 gradients. Implemented in PyTorch:</p>
 
-<pre><code>import torch, torch.nn.functional as F
+<pre><code class="language-python">import torch, torch.nn.functional as F
 
 def scaled_dot_product_attention(Q, K, V, mask=None):
     d_k = Q.size(-1)
@@ -68,12 +444,18 @@ def scaled_dot_product_attention(Q, K, V, mask=None):
 $\le i$. The mask is the lower triangular matrix of ones; everything
 above the diagonal is set to $-\infty$ before softmax.</p>
 
-<pre><code>n = Q.size(-2)
+<pre><code class="language-python">n = Q.size(-2)
 causal = torch.tril(torch.ones(n, n, device=Q.device))
 out = scaled_dot_product_attention(Q, K, V, mask=causal)
 </code></pre>
 
-<h2>3) Multi‑head attention</h2>
+<p>
+  One attention operation gives one way to judge relevance. That is already more flexible than recurrent state, but language
+  has many relationships at once: subject-verb agreement, reference resolution, local syntax, topic, and formatting. This
+  leads directly to multi-head attention.
+</p>
+
+<h2>7) Multi-head attention</h2>
 
 <p>One attention head learns one notion of relevance. Real language has many
 in parallel — syntactic agreement, coreference, topic, etc. Multi‑head
@@ -85,7 +467,7 @@ $\mathrm{MHA}(X) = \big[\mathrm{head}_1; \dots; \mathrm{head}_h\big] W^{O},
 \quad \mathrm{head}_i = \mathrm{Attention}(XW_i^{Q}, XW_i^{K}, XW_i^{V})$
 </div>
 
-<pre><code>import torch, torch.nn as nn
+<pre><code class="language-python">import torch, torch.nn as nn
 
 class MultiHeadAttention(nn.Module):
     def __init__(self, d_model, n_heads):
@@ -122,7 +504,13 @@ class MultiHeadAttention(nn.Module):
   <code>is_causal=True</code> everywhere.
 </div>
 
-<h2>4) Position information: sinusoidal vs RoPE</h2>
+<p>
+  Multi-head attention can learn several kinds of relationships, but the operation still treats the input as a set unless
+  we give it position. If the tokens <code>my name is</code> are shuffled, self-attention alone has no built-in reason to know
+  the order changed. That is the next missing piece.
+</p>
+
+<h2>8) Position information: sinusoidal vs RoPE</h2>
 
 <p>Self‑attention is <em>permutation‑equivariant</em> — shuffle the input tokens
 and you get the same shuffled output. Language is not permutation‑invariant,
@@ -152,10 +540,16 @@ open‑weights LLMs use it. Variants like <strong>YaRN</strong> and
 <strong>NTK‑aware scaling</strong> stretch RoPE's effective range to extend a
 4k‑trained model to 32k+ tokens at inference.</p>
 
-<h2>5) The full Transformer block</h2>
+<p>
+  Once tokens can read each other and the model knows where those tokens sit, the rest of the Transformer block is engineering
+  around stable deep learning: residual connections preserve signal, LayerNorm controls scale, and the feed-forward network
+  transforms each token representation after attention has mixed context into it.
+</p>
+
+<h2>9) The full Transformer block</h2>
 
 <p>One block (decoder‑only flavor) is:</p>
-<pre><code>class Block(nn.Module):
+<pre><code class="language-python">class Block(nn.Module):
     def __init__(self, d_model, n_heads, d_ff):
         super().__init__()
         self.ln1 = nn.LayerNorm(d_model)
@@ -176,7 +570,13 @@ open‑weights LLMs use it. Variants like <strong>YaRN</strong> and
 a final LayerNorm and an unembedding (often tied to the input embedding),
 and you have a GPT‑style language model.</p>
 
-<h2>6) Encoder, decoder, encoder‑decoder</h2>
+<p>
+  The same block can be arranged into three families depending on what information is allowed to flow. If the whole input is
+  known, use bidirectional encoder attention. If the model must generate left-to-right, use causal decoder attention. If the
+  task has a separate source and target sequence, combine a bidirectional encoder, a causal decoder, and cross-attention.
+</p>
+
+<h2>10) Encoder, decoder, encoder-decoder</h2>
 <table>
   <tr><th>Variant</th><th>Attention pattern</th><th>Examples</th><th>Used for</th></tr>
   <tr>
@@ -196,7 +596,7 @@ and you have a GPT‑style language model.</p>
   </tr>
 </table>
 
-<h2>7) Inference: KV cache</h2>
+<h2>11) Inference: KV cache</h2>
 
 <p>At training time you process the whole sequence in parallel. At
 generation time you produce one token at a time. Naively you would
@@ -214,7 +614,26 @@ context length costs RAM (each extra token adds roughly
 <code>2 · n_layers · n_kv_heads · d_head · dtype_bytes</code> per request; with
 MQA/GQA, <code>n_kv_heads</code> can be smaller than the number of query heads).</p>
 
-<h2>8) Efficiency: FlashAttention, MQA, GQA, sliding window</h2>
+<pre><code class="language-python"># Cached decode sketch.
+# Prefill computes K/V for the prompt once. Each later step only computes
+# the new token's q/k/v and attends q_new against cached K/V.
+
+tokens = tokenize("my name is")
+logits, cache = gpt_prefill(tokens)          # cache stores per-layer K/V for the prompt
+next_token = sample(logits[-1])
+
+while next_token != EOS_ID:
+    tokens.append(next_token)
+    logits, cache = gpt_decode_step([next_token], cache=cache)
+    next_token = sample(logits[-1])</code></pre>
+
+<p>
+  KV caching fixes wasted recomputation during generation, but it does not make attention free. Long context still means
+  more cached keys and values to read, and full attention over long prompts still has heavy memory traffic. That pressure
+  is why modern LLM systems use optimized attention kernels and smaller key/value layouts.
+</p>
+
+<h2>12) Efficiency: FlashAttention, MQA, GQA, sliding window</h2>
 <ul>
   <li><strong>FlashAttention</strong> (Dao et al., 2022; v2 2023; v3 2024) computes the
       same softmax attention but tiles the work to keep $QK^{\top}$ in
@@ -233,7 +652,7 @@ MQA/GQA, <code>n_kv_heads</code> can be smaller than the number of query heads).
       token — more parameters, similar FLOPs.</li>
 </ul>
 
-<h2>9) Pulling it all together</h2>
+<h2>13) Pulling it all together</h2>
 <ol>
   <li>Embed tokens; add positional info (sinusoidal, learned, or RoPE).</li>
   <li>Stack $L$ Transformer blocks (pre‑norm + residual + GQA + SwiGLU/GELU FFN).</li>

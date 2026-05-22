@@ -266,8 +266,10 @@ print("First 5 preds:", preds[:5])</code></pre>
     <div class="card">
       <p>
         This tutorial intentionally starts with the simplest correct approach: an autoregressive baseline.
-        RNNs (and later, modern sequence models) shine when relationships are nonlinear and depend on longer context,
-        but the data-shape thinking (\(N \times T \times D\)) and the “no future leakage” rule stay the same.
+        RNNs (and later, modern sequence models) shine when relationships are nonlinear and depend on longer context.
+        Chapter 10 first treats this as recurrent state over time, then uses translation to show how token sequences become
+        embeddings and how a decoder produces one output token at a time. The data-shape thinking (\(N \times T \times D\))
+        and the “no future leakage” rule stay the same.
       </p>
       <p>
         A strong sequence model does not remove the need for a chronological validation split. If preprocessing, scaling,

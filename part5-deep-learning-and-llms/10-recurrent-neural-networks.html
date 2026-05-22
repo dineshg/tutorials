@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Section: Recurrent Neural Networks (RNNs) — The Elman Unit, Weight Sharing, and Cost Savings</title>
+  <title>Recurrent Neural Networks (RNNs) — Sequence Memory, GRU/LSTM, Translation, and Weight Sharing</title>
 
   <!-- Light theme -->
 <!-- MathJax for equations -->
@@ -17,18 +17,22 @@
 <body>
   <main class="wrap">
     <span class="badge">Sequence models</span>
-    <h1>Recurrent Neural Networks (RNNs): one “cell” reused across time</h1>
+    <h1>Recurrent Neural Networks (RNNs): from sequence memory to GRU/LSTM and translation</h1>
     <p class="subtitle">
-      A practical, code-oriented tutorial on <em>why</em> RNNs exist, <em>how</em> a basic RNN (Elman unit) computes outputs, and <em>how weight sharing saves huge numbers of parameters</em>.
+      A practical, code-oriented tutorial on <em>why</em> RNNs exist, <em>what goes in and comes out</em> at each time step,
+      how a basic Elman unit computes hidden state, how GRU/LSTM gates improve memory, and how recurrent weight sharing
+      keeps sequence models compact.
     </p>
 
     <div class="callout">
       <strong>Big idea:</strong> An RNN processes a sequence by applying the <em>same</em> small neural “cell” at every time step.
-      The cell carries a <em>hidden state</em> forward, so information can flow through time while using a tiny set of shared weights.
+      The cell carries a <em>hidden state</em> forward, so the output at time \(t\) can depend on both the current input \(x_t\)
+      and the memory of earlier inputs \(h_{t-1}\).
     </div>
 
     <h2>1) Why not just flatten sequence data into a giant vector?</h2>
     <p>
+      Sequence data is data where order matters: a time series, an audio waveform, a sentence, a video, or a stream of sensor readings.
       You can flatten a sequence \(X \in \mathbb{R}^{T \times D}\) into a single vector of length \(T\cdot D\) and feed it to a regular MLP.
       It works mechanically, but it’s usually a bad tradeoff:
     </p>
@@ -41,6 +45,54 @@
     <div class="callout">
       RNNs exploit the structure: <strong>the same computation repeats at every time step</strong>, just like CNN filters repeat across image locations.
     </div>
+
+    <h3>Where RNNs show up</h3>
+    <p>
+      RNNs are useful whenever the meaning of the current item depends on what came before it. Modern Transformers dominate
+      large-scale language modeling, but the RNN mental model is still important because it explains sequence memory, hidden
+      state, autoregressive decoding, and the historical path into attention.
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th>Problem family</th>
+          <th>Why sequence memory matters</th>
+          <th>Typical output shape</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Language modeling</td>
+          <td>Words depend on earlier words and phrase context.</td>
+          <td>Next-token distribution at each time step.</td>
+        </tr>
+        <tr>
+          <td>Speech recognition</td>
+          <td>Audio frames only make sense as an ordered waveform.</td>
+          <td>Characters, word pieces, or phoneme labels over time.</td>
+        </tr>
+        <tr>
+          <td>Machine translation</td>
+          <td>The target sentence depends on source order, grammar, and context.</td>
+          <td>A generated output sequence.</td>
+        </tr>
+        <tr>
+          <td>Stock or demand forecasting</td>
+          <td>Recent and older time steps can shape the next value.</td>
+          <td>One future value, a horizon of values, or a class label.</td>
+        </tr>
+        <tr>
+          <td>Music generation</td>
+          <td>Melody, rhythm, and harmony are sequential patterns.</td>
+          <td>Next note, chord, token, or audio event.</td>
+        </tr>
+        <tr>
+          <td>Video and sensor streams</td>
+          <td>Events unfold frame by frame or reading by reading.</td>
+          <td>Per-step labels, anomaly scores, or a final classification.</td>
+        </tr>
+      </tbody>
+    </table>
 
     <h2>2) The simplest RNN unit (Elman unit): equations and intuition</h2>
 
@@ -72,27 +124,73 @@
       <li>\(h_0\): initial hidden state (often zeros; sometimes learned)</li>
     </ul>
 
-    <div class="grid">
-      <figure>
-        <img
-          alt="RNN unrolled through time"
-          src="../assets/images/external/960px-Recurrent_neural_network_unfold.svg-4cef6e46bf-fallback.svg"
-        />
-        <figcaption>
-          Unrolling an RNN across time: the same cell and parameters are reused at each step.
-        </figcaption>
-      </figure>
+    <figure>
+      <svg class="viz" viewBox="0 0 960 330" role="img" aria-label="RNN unrolled through four time steps">
+        <defs>
+          <marker id="rnn-arrow-blue" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+            <path d="M0,0 L8,3 L0,6 Z" fill="#0969da"></path>
+          </marker>
+          <marker id="rnn-arrow-purple" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+            <path d="M0,0 L8,3 L0,6 Z" fill="#8250df"></path>
+          </marker>
+        </defs>
 
-      <figure>
-        <img
-          alt="Elman network diagram"
-          src="../assets/images/external/DiagramElmanNet_english-1e821cdb14-fallback.svg"
-        />
-        <figcaption>
-          The classic “Elman” recurrent network view: current input plus previous hidden state produce the next hidden state.
-        </figcaption>
-      </figure>
-    </div>
+        <text x="30" y="34" class="title">Unrolled RNN: one cell, reused weights, evolving hidden state</text>
+        <text x="30" y="60" class="muted">The boxes look repeated in the diagram, but they all represent the same learned parameters.</text>
+
+        <g>
+          <rect x="55" y="150" width="150" height="70" rx="12" fill="#eaf3ff" stroke="#0969da" stroke-width="1.5"></rect>
+          <text x="130" y="177" class="label" text-anchor="middle">RNN cell</text>
+          <text x="130" y="201" class="muted" text-anchor="middle">same Wxh, Whh</text>
+          <text x="130" y="245" class="label" text-anchor="middle">x1</text>
+          <text x="130" y="126" class="label" text-anchor="middle">y1</text>
+        </g>
+        <g>
+          <rect x="285" y="150" width="150" height="70" rx="12" fill="#f3f8f1" stroke="#1a7f37" stroke-width="1.5"></rect>
+          <text x="360" y="177" class="label" text-anchor="middle">RNN cell</text>
+          <text x="360" y="201" class="muted" text-anchor="middle">same Wxh, Whh</text>
+          <text x="360" y="245" class="label" text-anchor="middle">x2</text>
+          <text x="360" y="126" class="label" text-anchor="middle">y2</text>
+        </g>
+        <g>
+          <rect x="515" y="150" width="150" height="70" rx="12" fill="#fff8e6" stroke="#bf8700" stroke-width="1.5"></rect>
+          <text x="590" y="177" class="label" text-anchor="middle">RNN cell</text>
+          <text x="590" y="201" class="muted" text-anchor="middle">same Wxh, Whh</text>
+          <text x="590" y="245" class="label" text-anchor="middle">x3</text>
+          <text x="590" y="126" class="label" text-anchor="middle">y3</text>
+        </g>
+        <g>
+          <rect x="745" y="150" width="150" height="70" rx="12" fill="#f5f0ff" stroke="#8250df" stroke-width="1.5"></rect>
+          <text x="820" y="177" class="label" text-anchor="middle">RNN cell</text>
+          <text x="820" y="201" class="muted" text-anchor="middle">same Wxh, Whh</text>
+          <text x="820" y="245" class="label" text-anchor="middle">x4</text>
+          <text x="820" y="126" class="label" text-anchor="middle">y4</text>
+        </g>
+
+        <path d="M130 230 L130 222" stroke="#0969da" stroke-width="2.2" marker-end="url(#rnn-arrow-blue)"></path>
+        <path d="M360 230 L360 222" stroke="#0969da" stroke-width="2.2" marker-end="url(#rnn-arrow-blue)"></path>
+        <path d="M590 230 L590 222" stroke="#0969da" stroke-width="2.2" marker-end="url(#rnn-arrow-blue)"></path>
+        <path d="M820 230 L820 222" stroke="#0969da" stroke-width="2.2" marker-end="url(#rnn-arrow-blue)"></path>
+
+        <path d="M130 148 L130 132" stroke="#1a7f37" stroke-width="2.2" marker-end="url(#rnn-arrow-blue)"></path>
+        <path d="M360 148 L360 132" stroke="#1a7f37" stroke-width="2.2" marker-end="url(#rnn-arrow-blue)"></path>
+        <path d="M590 148 L590 132" stroke="#1a7f37" stroke-width="2.2" marker-end="url(#rnn-arrow-blue)"></path>
+        <path d="M820 148 L820 132" stroke="#1a7f37" stroke-width="2.2" marker-end="url(#rnn-arrow-blue)"></path>
+
+        <path d="M205 185 L285 185" stroke="#8250df" stroke-width="2.5" marker-end="url(#rnn-arrow-purple)"></path>
+        <path d="M435 185 L515 185" stroke="#8250df" stroke-width="2.5" marker-end="url(#rnn-arrow-purple)"></path>
+        <path d="M665 185 L745 185" stroke="#8250df" stroke-width="2.5" marker-end="url(#rnn-arrow-purple)"></path>
+        <text x="245" y="174" class="muted" text-anchor="middle">h1</text>
+        <text x="475" y="174" class="muted" text-anchor="middle">h2</text>
+        <text x="705" y="174" class="muted" text-anchor="middle">h3</text>
+
+        <rect x="44" y="278" width="868" height="34" rx="8" fill="#f6f8fa" stroke="#d0d7de"></rect>
+        <text x="478" y="300" class="muted" text-anchor="middle">Input changes at every step. Hidden state changes at every step. Learned weights stay shared.</text>
+      </svg>
+      <figcaption>
+        Unrolling shows the time loop explicitly: current input plus previous hidden state produces the next hidden state.
+      </figcaption>
+    </figure>
 
     <h3>“Single unit is used”: what that really means</h3>
     <p>
@@ -122,7 +220,253 @@
       <li><strong>Seq2seq (translation):</strong> outputs are also a sequence → you need stepwise predictions</li>
     </ul>
 
-    <h2>4) Pseudocode: forward pass through a sequence</h2>
+    <h3>Compact RNN summary</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Feature</th>
+          <th>Meaning</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Input type</td>
+          <td>Ordered data such as text, speech, time series, video frames, event streams, or sensor readings.</td>
+        </tr>
+        <tr>
+          <td>Core mechanism</td>
+          <td>Reuse one learned cell through time while carrying hidden state forward.</td>
+        </tr>
+        <tr>
+          <td>Memory</td>
+          <td>The hidden state \(h_t\) summarizes what the model has retained up to step \(t\).</td>
+        </tr>
+        <tr>
+          <td>Output</td>
+          <td>Can be one final prediction, one prediction per time step, or a generated sequence from a decoder.</td>
+        </tr>
+        <tr>
+          <td>Strength</td>
+          <td>Handles variable-length ordered inputs with shared parameters rather than a fixed flattened vector.</td>
+        </tr>
+        <tr>
+          <td>Main challenges</td>
+          <td>Vanishing/exploding gradients, sequential training cost, and pressure to compress long context into state.</td>
+        </tr>
+        <tr>
+          <td>Common variants</td>
+          <td>LSTM, GRU, bidirectional RNN/GRU/LSTM, encoder-decoder RNNs, and attention-augmented seq2seq models.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>4) Practical seq2seq example: translating “my name is dinesh”</h2>
+    <p>
+      A useful way to understand RNN inputs and outputs is to walk through a tiny machine-translation problem:
+      translate <strong>“my name is dinesh”</strong> into <strong>“mon nom est dinesh”</strong>. A classic RNN translation
+      system uses an <strong>encoder</strong> RNN to read the source sentence and a <strong>decoder</strong> RNN to generate
+      the target sentence. The French target is a literal teaching example; an idiomatic translation might be
+      <em>“je m’appelle Dinesh”</em>, but the literal four-token target makes the step-by-step alignment easier to see.
+    </p>
+
+    <div class="callout blue">
+      <strong>What the model sees:</strong> not raw text. Text is tokenized into IDs, IDs are looked up in an embedding table,
+      and the RNN receives one dense vector per time step.
+    </div>
+
+    <h3>Step A: text becomes tokens, token IDs, then embeddings</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Stage</th>
+          <th>Example</th>
+          <th>Shape / meaning</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Source tokens</td>
+          <td><code>["my", "name", "is", "dinesh", "&lt;EOS&gt;"]</code></td>
+          <td>A finite sequence ending with an explicit end-of-sentence marker.</td>
+        </tr>
+        <tr>
+          <td>Token IDs</td>
+          <td><code>[17, 241, 9, 5021, 2]</code></td>
+          <td>Integer vocabulary indices. The actual numbers are arbitrary.</td>
+        </tr>
+        <tr>
+          <td>Embeddings</td>
+          <td><code>[0.12, -0.33, 0.45, ...]</code> for each token</td>
+          <td>If embedding size is \(D=300\), each time step gives the RNN one vector in \(\mathbb{R}^{300}\).</td>
+        </tr>
+        <tr>
+          <td>Padded batch</td>
+          <td><code>["my", "name", "is", "dinesh", "&lt;EOS&gt;", "&lt;PAD&gt;", ...]</code></td>
+          <td>Padding makes examples in a batch the same length. Padding positions are masked or ignored; they are not extra meaning.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <pre><code class="language-python">import torch
+import torch.nn as nn
+
+src_tokens = ["my", "name", "is", "dinesh", "&lt;EOS&gt;", "&lt;PAD&gt;", "&lt;PAD&gt;", "&lt;PAD&gt;", "&lt;PAD&gt;", "&lt;PAD&gt;"]
+src_ids = torch.tensor([[17, 241, 9, 5021, 2, 0, 0, 0, 0, 0]])  # (batch=1, T=10)
+
+embedding = nn.Embedding(num_embeddings=10_000, embedding_dim=300, padding_idx=0)
+x = embedding(src_ids)  # (1, 10, 300)
+
+print(x.shape)  # one 300-dimensional input vector per time step</code></pre>
+
+    <h3>Step B: encoder RNN reads the English sentence</h3>
+    <p>
+      The encoder consumes one embedding at a time and updates hidden state. If a 10-step tensor is used for batching,
+      the meaningful tokens occupy the early positions and the remaining positions are padding. In production code, lengths
+      or masks prevent padding from contributing to the loss and, depending on implementation, from changing the final state.
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th>Encoder step</th>
+          <th>Input token</th>
+          <th>Hidden-state interpretation</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>1</td><td><code>my</code></td><td>Starts the sentence and records a possessive cue.</td></tr>
+        <tr><td>2</td><td><code>name</code></td><td>Builds the phrase “my name” and the identity context.</td></tr>
+        <tr><td>3</td><td><code>is</code></td><td>Adds the grammatical relation that links phrase to value.</td></tr>
+        <tr><td>4</td><td><code>dinesh</code></td><td>Stores the name entity that should be copied or transliterated.</td></tr>
+        <tr><td>5</td><td><code>&lt;EOS&gt;</code></td><td>Marks that the source sentence is complete.</td></tr>
+        <tr><td>6-10</td><td><code>&lt;PAD&gt;</code></td><td>Ignored by masks/lengths; present only so the batch has a rectangular tensor shape.</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Step C: decoder RNN generates French one token at a time</h3>
+    <p>
+      The decoder starts from the encoder’s final meaning representation. At each step it receives the previous French token
+      and predicts a probability distribution over the French vocabulary. During training, it often receives the true previous
+      token as input (<em>teacher forcing</em>). During inference, it feeds its own previous prediction back in.
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th>Decoder step</th>
+          <th>Decoder input</th>
+          <th>Prediction</th>
+          <th>Why it happens</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>1</td><td><code>&lt;SOS&gt;</code></td><td><code>mon</code></td><td>The start token asks the decoder to begin the translation.</td></tr>
+        <tr><td>2</td><td><code>mon</code></td><td><code>nom</code></td><td>The decoder continues the French phrase “mon nom”.</td></tr>
+        <tr><td>3</td><td><code>nom</code></td><td><code>est</code></td><td>The model emits the linking verb.</td></tr>
+        <tr><td>4</td><td><code>est</code></td><td><code>dinesh</code></td><td>The name entity is carried through from the encoded source context.</td></tr>
+        <tr><td>5</td><td><code>dinesh</code></td><td><code>&lt;EOS&gt;</code></td><td>The decoder decides the target sentence is complete.</td></tr>
+        <tr><td>6-10</td><td><code>&lt;PAD&gt;</code></td><td>ignored</td><td>Padding positions are ignored when batching fixed-length targets.</td></tr>
+      </tbody>
+    </table>
+
+    <figure>
+      <svg class="viz" viewBox="0 0 960 430" role="img" aria-label="Encoder decoder RNN translation flow">
+        <defs>
+          <marker id="seq2seq-arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+            <path d="M0,0 L8,3 L0,6 Z" fill="#0969da"></path>
+          </marker>
+          <marker id="seq2seq-arrow-purple" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+            <path d="M0,0 L8,3 L0,6 Z" fill="#8250df"></path>
+          </marker>
+        </defs>
+
+        <text x="30" y="34" class="title">Encoder-decoder RNN for translation</text>
+        <text x="30" y="60" class="muted">The encoder reads English. The decoder writes French. Hidden state is the bridge.</text>
+
+        <text x="82" y="100" class="label" text-anchor="middle">English tokens</text>
+        <g>
+          <rect x="32" y="118" width="100" height="42" rx="10" fill="#eaf3ff" stroke="#0969da"></rect>
+          <rect x="142" y="118" width="100" height="42" rx="10" fill="#eaf3ff" stroke="#0969da"></rect>
+          <rect x="252" y="118" width="100" height="42" rx="10" fill="#eaf3ff" stroke="#0969da"></rect>
+          <rect x="362" y="118" width="100" height="42" rx="10" fill="#eaf3ff" stroke="#0969da"></rect>
+          <rect x="472" y="118" width="100" height="42" rx="10" fill="#f6f8fa" stroke="#d0d7de"></rect>
+          <text x="82" y="145" class="label" text-anchor="middle">my</text>
+          <text x="192" y="145" class="label" text-anchor="middle">name</text>
+          <text x="302" y="145" class="label" text-anchor="middle">is</text>
+          <text x="412" y="145" class="label" text-anchor="middle">dinesh</text>
+          <text x="522" y="145" class="muted" text-anchor="middle">EOS</text>
+        </g>
+
+        <g>
+          <rect x="78" y="205" width="100" height="54" rx="12" fill="#dbeafe" stroke="#0969da" stroke-width="1.5"></rect>
+          <rect x="198" y="205" width="100" height="54" rx="12" fill="#dbeafe" stroke="#0969da" stroke-width="1.5"></rect>
+          <rect x="318" y="205" width="100" height="54" rx="12" fill="#dbeafe" stroke="#0969da" stroke-width="1.5"></rect>
+          <rect x="438" y="205" width="100" height="54" rx="12" fill="#dbeafe" stroke="#0969da" stroke-width="1.5"></rect>
+          <text x="128" y="236" class="label" text-anchor="middle">enc</text>
+          <text x="248" y="236" class="label" text-anchor="middle">enc</text>
+          <text x="368" y="236" class="label" text-anchor="middle">enc</text>
+          <text x="488" y="236" class="label" text-anchor="middle">enc</text>
+          <path d="M178 232 L198 232" stroke="#0969da" stroke-width="2.2" marker-end="url(#seq2seq-arrow)"></path>
+          <path d="M298 232 L318 232" stroke="#0969da" stroke-width="2.2" marker-end="url(#seq2seq-arrow)"></path>
+          <path d="M418 232 L438 232" stroke="#0969da" stroke-width="2.2" marker-end="url(#seq2seq-arrow)"></path>
+        </g>
+
+        <rect x="590" y="197" width="150" height="70" rx="14" fill="#f5f0ff" stroke="#8250df" stroke-width="1.7"></rect>
+        <text x="665" y="225" class="label" text-anchor="middle">context</text>
+        <text x="665" y="247" class="muted" text-anchor="middle">final hidden state</text>
+        <path d="M538 232 L590 232" stroke="#8250df" stroke-width="2.5" marker-end="url(#seq2seq-arrow-purple)"></path>
+
+        <g>
+          <rect x="70" y="318" width="105" height="46" rx="10" fill="#f3f8f1" stroke="#1a7f37"></rect>
+          <rect x="190" y="318" width="105" height="46" rx="10" fill="#f3f8f1" stroke="#1a7f37"></rect>
+          <rect x="310" y="318" width="105" height="46" rx="10" fill="#f3f8f1" stroke="#1a7f37"></rect>
+          <rect x="430" y="318" width="105" height="46" rx="10" fill="#f3f8f1" stroke="#1a7f37"></rect>
+          <rect x="550" y="318" width="105" height="46" rx="10" fill="#f6f8fa" stroke="#d0d7de"></rect>
+          <text x="122" y="346" class="label" text-anchor="middle">mon</text>
+          <text x="242" y="346" class="label" text-anchor="middle">nom</text>
+          <text x="362" y="346" class="label" text-anchor="middle">est</text>
+          <text x="482" y="346" class="label" text-anchor="middle">dinesh</text>
+          <text x="602" y="346" class="muted" text-anchor="middle">EOS</text>
+          <text x="362" y="394" class="muted" text-anchor="middle">French tokens are produced one step at a time from vocabulary probabilities.</text>
+        </g>
+
+        <path d="M665 267 C665 297 630 308 600 318" stroke="#8250df" stroke-width="2.5" marker-end="url(#seq2seq-arrow-purple)"></path>
+        <path d="M175 341 L190 341" stroke="#1a7f37" stroke-width="2.1" marker-end="url(#seq2seq-arrow)"></path>
+        <path d="M295 341 L310 341" stroke="#1a7f37" stroke-width="2.1" marker-end="url(#seq2seq-arrow)"></path>
+        <path d="M415 341 L430 341" stroke="#1a7f37" stroke-width="2.1" marker-end="url(#seq2seq-arrow)"></path>
+        <path d="M535 341 L550 341" stroke="#1a7f37" stroke-width="2.1" marker-end="url(#seq2seq-arrow)"></path>
+      </svg>
+      <figcaption>
+        A classic seq2seq RNN compresses the source into hidden state, then decodes the target sequence token by token.
+        Attention improves this by letting the decoder look back at specific encoder states instead of relying only on one final vector.
+      </figcaption>
+    </figure>
+
+    <pre><code class="language-python"># Decoder inference sketch: generate French tokens autoregressively.
+# This is conceptual pseudocode; real systems use batching, masks, beam search,
+# and often attention over all encoder states.
+
+prev_token = SOS_ID
+hidden = encoder_final_hidden
+generated = []
+
+for _ in range(max_target_len):
+    prev_emb = target_embedding(torch.tensor([[prev_token]]))  # (1, 1, D)
+    decoder_out, hidden = decoder_rnn(prev_emb, hidden)
+    logits = output_projection(decoder_out[:, -1, :])          # (1, vocab_size)
+    next_token = int(logits.argmax(dim=-1).item())
+
+    if next_token == EOS_ID:
+        break
+
+    generated.append(next_token)
+    prev_token = next_token  # feed the model's own prediction back in</code></pre>
+
+    <div class="callout green">
+      <strong>What actually learns:</strong> gradients flow through the unrolled encoder and decoder during training.
+      The model adjusts embeddings, recurrent weights, and output-projection weights so that the right target token receives
+      higher probability at each decoder step.
+    </div>
+
+    <h2>5) Pseudocode: forward pass through a sequence</h2>
     <pre><code class="language-python"># Given:
 #   X: shape (T, D)
 #   h0: shape (M,)   (often zeros)
@@ -140,7 +484,7 @@ for t in range(T):
 
 # For many-to-one tasks, you would use y_hats[-1] and ignore the rest.</code></pre>
 
-    <h2>5) Cost savings: RNN vs flattened ANN</h2>
+    <h2>6) Cost savings: RNN vs flattened ANN</h2>
     <p>
       Let:
     </p>
@@ -224,7 +568,7 @@ plt.show()</code></pre>
       matching the intuition from the transcript.
     </p>
 
-    <h2>6) Coding it in PyTorch: manual loop (to really see weight sharing)</h2>
+    <h2>7) Coding it in PyTorch: manual loop (to really see weight sharing)</h2>
     <p>
       The fastest way to “get” RNNs is to implement the loop yourself once.
       Below is a minimal RNN cell you can train like any other module.
@@ -292,7 +636,7 @@ probs  = torch.sigmoid(logits)   # if binary classification</code></pre>
       then used repeatedly inside the time loop. That’s the “single unit reused” idea in code.
     </div>
 
-    <h2>7) Using PyTorch’s built-in <span class="kbd">nn.RNN</span> (recommended for real projects)</h2>
+    <h2>8) Using PyTorch’s built-in <span class="kbd">nn.RNN</span> (recommended for real projects)</h2>
     <p>
       PyTorch provides <code>torch.nn.RNN</code> which handles the looping internally and exposes standardized weights
       (e.g., <code>weight_ih_l0</code>, <code>weight_hh_l0</code>) and batch/sequence layouts. 
@@ -325,19 +669,414 @@ logits = head(out[:, -1, :])</code></pre>
       the official docs are the source of truth. 
     </p>
 
+    <div class="callout">
+      <strong>Why the next section exists:</strong> <code>nn.RNN</code> gives you a clean implementation of the vanilla
+      recurrence, but it does not change the recurrence itself. There is still only one hidden vector, and every new token
+      can overwrite it. That is enough for short dependencies and for learning the idea, but it is too blunt when the model
+      must remember something for many steps while also reacting to new input.
+    </div>
+
     <div class="hr"></div>
 
-    <h2>8) Quick mental model recap</h2>
+    <h2>9) Why vanilla RNN memory breaks: overwriting and gradient chains</h2>
+    <p>
+      A vanilla RNN has only one state vector \(h_t\). Every step computes a new state from the current input and the previous
+      state:
+    </p>
+    <div class="eq">
+      \[
+        h_t = \tanh(W_{xh}x_t + W_{hh}h_{t-1} + b_h)
+      \]
+    </div>
+    <p>
+      That compact formula is elegant, but it gives the model no explicit mechanism for deciding <em>how much old information
+      to keep</em> and <em>how much new information to write</em>. The new candidate state can overwrite the old state too
+      aggressively. During backpropagation through time, gradients also repeatedly multiply through recurrent transformations.
+      Those products can shrink toward zero (<strong>vanishing gradients</strong>) or grow too large
+      (<strong>exploding gradients</strong>).
+    </p>
+    <div class="callout">
+      <strong>The missing idea:</strong> a good sequence model needs a learnable way to say “keep this memory”, “forget this part”,
+      “write this new information”, and sometimes “hide this internal memory from the output”.
+    </div>
+
+    <h2>10) Gates: learnable valves for memory</h2>
+    <p>
+      The next improvement is not “make the hidden state bigger” as the first move. A larger state can store more numbers,
+      but it still gives the model no explicit instruction for <em>which</em> numbers should be preserved, overwritten,
+      or exposed. GRUs and LSTMs solve that problem by adding <strong>gates</strong>. A gate is usually a sigmoid output:
+    </p>
+    <div class="eq">
+      \[
+        \sigma(a) \in (0,1)
+      \]
+    </div>
+    <p>
+      Because a gate is between 0 and 1, it behaves like a soft valve:
+    </p>
+    <ul>
+      <li>A value near 0 means “block this signal”.</li>
+      <li>A value near 1 means “let this signal pass”.</li>
+      <li>Intermediate values blend old and new information.</li>
+    </ul>
+
+    <p>
+      The progression is:
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th>Model</th>
+          <th>Problem it fixes</th>
+          <th>Remaining pressure that leads to the next idea</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Vanilla RNN</td>
+          <td>Introduces hidden state and weight sharing through time.</td>
+          <td>The hidden state is overwritten by a single update rule, and long gradients are fragile.</td>
+        </tr>
+        <tr>
+          <td>GRU</td>
+          <td>Adds reset/update gates so the model can keep old state or write new state selectively.</td>
+          <td>There is still one vector doing two jobs: long-term memory and exposed hidden representation.</td>
+        </tr>
+        <tr>
+          <td>LSTM</td>
+          <td>Separates protected cell memory \(c_t\) from exposed hidden state \(h_t\).</td>
+          <td>The computation is still sequential, and seq2seq still pressures memory into recurrent states.</td>
+        </tr>
+        <tr>
+          <td>Attention</td>
+          <td>Lets the decoder look up relevant states directly instead of relying only on what survived in memory.</td>
+          <td>The Transformer generalizes lookup so all tokens can read context directly and train in parallel.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <figure>
+      <svg class="viz" viewBox="0 0 980 390" role="img" aria-label="Vanilla RNN GRU and LSTM memory comparison">
+        <defs>
+          <marker id="gate-arrow-blue" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+            <path d="M0,0 L8,3 L0,6 Z" fill="#0969da"></path>
+          </marker>
+          <marker id="gate-arrow-purple" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+            <path d="M0,0 L8,3 L0,6 Z" fill="#8250df"></path>
+          </marker>
+        </defs>
+        <text x="30" y="34" class="title">How recurrent memory becomes more controllable</text>
+        <text x="30" y="60" class="muted">Vanilla RNN overwrites one hidden state. GRU adds update/reset gates. LSTM separates long-term cell memory from exposed hidden state.</text>
+
+        <g transform="translate(48,112)">
+          <rect x="0" y="0" width="250" height="205" rx="16" fill="#eaf3ff" stroke="#0969da" stroke-width="1.6"></rect>
+          <text x="125" y="32" class="label" text-anchor="middle">Vanilla RNN</text>
+          <text x="125" y="58" class="muted" text-anchor="middle">one hidden state</text>
+          <rect x="42" y="82" width="166" height="52" rx="12" fill="#ffffff" stroke="#0969da"></rect>
+          <text x="125" y="114" class="label" text-anchor="middle">h_t = tanh(...)</text>
+          <path d="M24 108 L42 108" stroke="#0969da" stroke-width="2.2" marker-end="url(#gate-arrow-blue)"></path>
+          <path d="M208 108 L230 108" stroke="#0969da" stroke-width="2.2" marker-end="url(#gate-arrow-blue)"></path>
+          <text x="125" y="166" class="muted" text-anchor="middle">simple, but old memory</text>
+          <text x="125" y="186" class="muted" text-anchor="middle">is easy to overwrite</text>
+        </g>
+
+        <g transform="translate(365,112)">
+          <rect x="0" y="0" width="250" height="205" rx="16" fill="#f3f8f1" stroke="#1a7f37" stroke-width="1.6"></rect>
+          <text x="125" y="32" class="label" text-anchor="middle">GRU</text>
+          <text x="125" y="58" class="muted" text-anchor="middle">hidden state + gates</text>
+          <rect x="32" y="82" width="82" height="48" rx="12" fill="#ffffff" stroke="#1a7f37"></rect>
+          <rect x="136" y="82" width="82" height="48" rx="12" fill="#ffffff" stroke="#1a7f37"></rect>
+          <text x="73" y="112" class="label" text-anchor="middle">reset</text>
+          <text x="177" y="112" class="label" text-anchor="middle">update</text>
+          <path d="M24 106 L32 106" stroke="#1a7f37" stroke-width="2.2" marker-end="url(#gate-arrow-blue)"></path>
+          <path d="M218 106 L230 106" stroke="#1a7f37" stroke-width="2.2" marker-end="url(#gate-arrow-blue)"></path>
+          <text x="125" y="166" class="muted" text-anchor="middle">learns how much to keep</text>
+          <text x="125" y="186" class="muted" text-anchor="middle">and how much to rewrite</text>
+        </g>
+
+        <g transform="translate(682,112)">
+          <rect x="0" y="0" width="250" height="205" rx="16" fill="#f5f0ff" stroke="#8250df" stroke-width="1.6"></rect>
+          <text x="125" y="32" class="label" text-anchor="middle">LSTM</text>
+          <text x="125" y="58" class="muted" text-anchor="middle">cell state + hidden state</text>
+          <rect x="24" y="82" width="58" height="46" rx="10" fill="#ffffff" stroke="#8250df"></rect>
+          <rect x="96" y="82" width="58" height="46" rx="10" fill="#ffffff" stroke="#8250df"></rect>
+          <rect x="168" y="82" width="58" height="46" rx="10" fill="#ffffff" stroke="#8250df"></rect>
+          <text x="53" y="111" class="label" text-anchor="middle">forget</text>
+          <text x="125" y="111" class="label" text-anchor="middle">write</text>
+          <text x="197" y="111" class="label" text-anchor="middle">output</text>
+          <path d="M24 150 L226 150" stroke="#8250df" stroke-width="2.4" marker-end="url(#gate-arrow-purple)"></path>
+          <text x="125" y="171" class="muted" text-anchor="middle">separate long-term cell path</text>
+          <text x="125" y="190" class="muted" text-anchor="middle">helps memory persist</text>
+        </g>
+      </svg>
+      <figcaption>
+        GRU and LSTM do not change the basic sequence loop. They change the cell used inside the loop so memory is easier to preserve.
+      </figcaption>
+    </figure>
+
+    <p class="muted">
+      Historical note: LSTM was introduced before GRU. This chapter teaches GRU first because it is the simpler gated cell
+      to understand, then LSTM as the more explicit long-term-memory design.
+    </p>
+
+    <h2>11) GRU: the simpler gated memory cell</h2>
+    <p>
+      A <strong>Gated Recurrent Unit</strong> is the smallest useful step beyond the vanilla RNN. It keeps one state,
+      \(h_t\), like a vanilla RNN, but adds two gates:
+    </p>
+    <ul>
+      <li><strong>Reset gate \(r_t\):</strong> controls how much of the previous state is used when computing the new candidate.</li>
+      <li><strong>Update gate \(z_t\):</strong> controls how much old state is kept versus how much candidate state is written.</li>
+    </ul>
+    <p>
+      One common convention, matching PyTorch’s documentation, is:
+    </p>
+    <div class="eq">
+      \[
+        r_t = \sigma(W_{ir}x_t + b_{ir} + W_{hr}h_{t-1} + b_{hr})
+      \]
+      \[
+        z_t = \sigma(W_{iz}x_t + b_{iz} + W_{hz}h_{t-1} + b_{hz})
+      \]
+      \[
+        n_t = \tanh(W_{in}x_t + b_{in} + r_t \odot (W_{hn}h_{t-1} + b_{hn}))
+      \]
+      \[
+        h_t = (1 - z_t) \odot n_t + z_t \odot h_{t-1}
+      \]
+    </div>
+    <p>
+      With this convention, if \(z_t\) is close to 1, the GRU mostly keeps the old state. If \(z_t\) is close to 0,
+      it mostly writes the candidate \(n_t\). That “keep vs update” interpolation is the key mental model.
+    </p>
+
+    <div class="callout green">
+      <strong>GRU mental model:</strong> “I have one memory vector. At each step I learn whether to keep it, partially reset it,
+      or overwrite parts of it with the new candidate.”
+    </div>
+
+    <p>
+      This directly addresses the first failure mode of a vanilla RNN: accidental overwrite. If the model sees an important
+      token early in a sequence, the update gate can keep that memory alive while less important later tokens only adjust
+      part of the state. The reset gate gives the model a second useful behavior: when the current input starts a new local
+      pattern, it can temporarily ignore older state while computing the candidate update.
+    </p>
+
+    <pre><code class="language-python">import torch
+import torch.nn as nn
+
+B, T, D = 32, 100, 10     # batch, sequence length, input features
+H = 64                    # hidden size
+
+gru = nn.GRU(
+    input_size=D,
+    hidden_size=H,
+    num_layers=1,
+    batch_first=True,
+)
+
+x = torch.randn(B, T, D)
+out, h_n = gru(x)
+
+print(out.shape)  # (B, T, H): hidden state at every time step
+print(h_n.shape)  # (1, B, H): final hidden state for the last layer
+
+# Many-to-one classifier: use the final time-step representation
+head = nn.Linear(H, 1)
+logits = head(out[:, -1, :])</code></pre>
+
+    <div class="callout orange">
+      <strong>Why move from GRU to LSTM?</strong> A GRU is compact and often very strong, but its single state vector still has
+      to be both the long-term memory and the visible representation passed onward. If you want a more explicit design where
+      long-term memory can be preserved while only part of it is exposed at the current step, you need a separate memory path.
+      That is the reason for the LSTM cell state.
+    </div>
+
+    <h2>12) LSTM: separate long-term memory from exposed hidden state</h2>
+    <p>
+      A <strong>Long Short-Term Memory</strong> cell takes the gating idea further by adding a separate <strong>cell state</strong>,
+      \(c_t\), alongside the hidden state, \(h_t\). The cell state is the long-term memory path. The hidden state is the exposed
+      representation used for outputs and for the next recurrent computation.
+    </p>
+    <p>
+      LSTMs use three main gates plus a candidate update:
+    </p>
+    <ul>
+      <li><strong>Forget gate \(f_t\):</strong> how much old cell memory \(c_{t-1}\) to keep.</li>
+      <li><strong>Input/write gate \(i_t\):</strong> how much new candidate information to write.</li>
+      <li><strong>Candidate \(g_t\):</strong> proposed new content for the cell memory.</li>
+      <li><strong>Output gate \(o_t\):</strong> how much cell memory to expose as hidden state \(h_t\).</li>
+    </ul>
+    <div class="eq">
+      \[
+        f_t = \sigma(W_{if}x_t + b_{if} + W_{hf}h_{t-1} + b_{hf})
+      \]
+      \[
+        i_t = \sigma(W_{ii}x_t + b_{ii} + W_{hi}h_{t-1} + b_{hi})
+      \]
+      \[
+        g_t = \tanh(W_{ig}x_t + b_{ig} + W_{hg}h_{t-1} + b_{hg})
+      \]
+      \[
+        o_t = \sigma(W_{io}x_t + b_{io} + W_{ho}h_{t-1} + b_{ho})
+      \]
+      \[
+        c_t = f_t \odot c_{t-1} + i_t \odot g_t
+      \]
+      \[
+        h_t = o_t \odot \tanh(c_t)
+      \]
+    </div>
+
+    <div class="callout blue">
+      <strong>LSTM mental model:</strong> “I keep a protected long-term notebook \(c_t\), decide what to erase, decide what
+      to write, and decide how much of the notebook to show as \(h_t\).”
+    </div>
+
+    <pre><code class="language-python">import torch
+import torch.nn as nn
+
+B, T, D = 32, 100, 10
+H = 64
+
+lstm = nn.LSTM(
+    input_size=D,
+    hidden_size=H,
+    num_layers=1,
+    batch_first=True,
+)
+
+x = torch.randn(B, T, D)
+out, (h_n, c_n) = lstm(x)
+
+print(out.shape)  # (B, T, H): hidden state at every time step
+print(h_n.shape)  # (1, B, H): final hidden state
+print(c_n.shape)  # (1, B, H): final cell state
+
+head = nn.Linear(H, 1)
+logits = head(out[:, -1, :])</code></pre>
+
+    <p>
+      Compared with a GRU, the LSTM is more explicit: one gate forgets old cell memory, one gate writes new cell memory, and
+      one gate controls what part of the internal memory becomes visible as \(h_t\). That makes the design easier to reason
+      about for long dependencies, but it also adds parameters and computation. In practice, GRU is often a good first gated
+      baseline; LSTM is the stronger choice when you want the separate cell-memory path and can afford the extra complexity.
+    </p>
+
+    <div class="callout">
+      <strong>Why LSTM still does not finish the story:</strong> LSTMs make recurrence better, but they are still recurrent.
+      Step \(t\) still waits for step \(t-1\), and an encoder-decoder LSTM still tends to compress source information into
+      recurrent states. The next idea is not another gate; it is a different memory interface: direct lookup over earlier
+      token states.
+    </div>
+
+    <h2>13) GRU vs LSTM vs vanilla RNN: when to use which</h2>
+    <p>
+      The choice is therefore not a popularity contest. It follows the problem you are trying to solve. Use the simplest
+      recurrent cell that carries enough memory for the task, then move to the next mechanism only when the limitation becomes
+      the bottleneck.
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th>Cell</th>
+          <th>State carried through time</th>
+          <th>Memory control</th>
+          <th>Practical use</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Vanilla RNN</td>
+          <td>One hidden state \(h_t\)</td>
+          <td>No explicit gates</td>
+          <td>Best for teaching and very short dependencies; rarely the strongest production choice.</td>
+        </tr>
+        <tr>
+          <td>GRU</td>
+          <td>One hidden state \(h_t\)</td>
+          <td>Reset and update gates</td>
+          <td>Simpler than LSTM, fewer parameters, often a strong baseline for sequence classification/forecasting.</td>
+        </tr>
+        <tr>
+          <td>LSTM</td>
+          <td>Hidden state \(h_t\) plus cell state \(c_t\)</td>
+          <td>Forget, input/write, candidate, output gates</td>
+          <td>More explicit memory control; useful when long dependencies matter and recurrence is still appropriate.</td>
+        </tr>
+        <tr>
+          <td>Attention/Transformer</td>
+          <td>Token representations plus attention over context</td>
+          <td>Content-based lookup instead of recurrent compression</td>
+          <td>Dominant for LLMs because training parallelizes and each token can directly access relevant context.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Bidirectional recurrent models</h3>
+    <p>
+      After gates, another natural question is direction: if the entire input sentence is already known, why should the model
+      only read left-to-right? A bidirectional RNN/GRU/LSTM runs one recurrent model left-to-right and another right-to-left,
+      then combines their representations. This is useful when the full input sequence is known, such as classification,
+      tagging, or embedding a sentence. It is not valid for pure left-to-right generation, because a generator cannot use
+      future tokens that have not been produced yet.
+    </p>
+
+    <pre><code class="language-python">import torch
+import torch.nn as nn
+
+B, T, D = 32, 100, 10
+H = 64
+
+encoder = nn.LSTM(
+    input_size=D,
+    hidden_size=H,
+    batch_first=True,
+    bidirectional=True,
+)
+
+x = torch.randn(B, T, D)
+out, (h_n, c_n) = encoder(x)
+
+print(out.shape)  # (B, T, 2*H): forward and backward states concatenated</code></pre>
+
+    <h2>14) Why attention still mattered after GRU/LSTM</h2>
+    <p>
+      At this point the story has fixed three problems: weight sharing made sequence models compact, gates made memory
+      controllable, and bidirectionality let encoders use both left and right context when the full input is known. But
+      none of these changes remove the deepest recurrent limitation:
+    </p>
+    <ul>
+      <li><strong>Sequential compute:</strong> step \(t\) depends on \(t-1\), so training cannot parallelize across time as easily as Transformers.</li>
+      <li><strong>Compression pressure:</strong> encoder-decoder recurrence still tends to squeeze a whole source sequence through hidden states.</li>
+      <li><strong>Long-context access:</strong> a decoder may need a specific old token directly, not just whatever survived in state.</li>
+    </ul>
+    <p>
+      Attention keeps the useful idea of sequence-conditioned output, but changes the memory interface. Instead of asking one
+      hidden state to carry everything, the decoder can look back at all encoder states. The Transformer then takes the next step:
+      it uses self-attention so tokens can read other tokens directly.
+    </p>
+    <div class="callout orange">
+      <strong>Bridge to Transformers:</strong> GRU/LSTM make recurrent memory more controllable. Attention changes the shape of
+      memory itself from “carry a state forward” to “look up the relevant token states when needed.”
+    </div>
+
+    <h2>15) Quick mental model recap</h2>
     <ul>
       <li><strong>RNN = MLP cell + memory.</strong> The “memory” is the hidden state \(h_t\).</li>
       <li><strong>One cell reused at every time step.</strong> Same weights, new data + updated state.</li>
-      <li><strong>Outputs at every step are optional.</strong> Many tasks use only the last output.</li>
+      <li><strong>GRU = RNN + keep/reset gates.</strong> It has one hidden state but learns how much old state to preserve.</li>
+      <li><strong>LSTM = RNN + protected cell state.</strong> It separates long-term cell memory \(c_t\) from exposed hidden state \(h_t\).</li>
+      <li><strong>Outputs at every step are optional.</strong> Many tasks use only the last output; translation uses stepwise decoder outputs.</li>
       <li><strong>Cost savings come from sharing.</strong> Parameter count doesn’t blow up with \(T\).</li>
+      <li><strong>Padding is not meaning.</strong> Padding makes rectangular tensors; masks/lengths stop it from affecting learning.</li>
+      <li><strong>Encoder-decoder RNNs are historical but important.</strong> They explain the vocabulary of hidden state, teacher forcing, autoregressive decoding, and attention.</li>
     </ul>
 
     <div class="callout">
-      Next steps (typical): training details, backprop through time (BPTT), and why vanilla RNNs struggle with long sequences
-      (vanishing/exploding gradients) — which motivates LSTMs/GRUs.
+      Next step: the Transformer chapter keeps tokens, embeddings, decoder outputs, and autoregressive generation. It first fixes
+      the RNN encoder-decoder bottleneck with cross-attention, then generalizes the idea into self-attention and GPT-style
+      causal generation.
     </div>
   </main>
   <script src="../assets/js/nav.js?v=20260522-book-cleanup"></script>

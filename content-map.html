@@ -125,7 +125,7 @@ practice.</p>
     <tr>
       <td>Sequence forecasting, autoregressive windows, leakage, recursion, RNNs, and Transformers</td>
       <td><a href="part5-deep-learning-and-llms/08-forecasting-sequence-data.html">Part V Ch. 8</a></td>
-      <td>Ch. 9 implements the autoregressive linear baseline. Ch. 10 replaces a fixed window with recurrent state. Ch. 11 replaces recurrence with attention and becomes the bridge into LLMs.</td>
+      <td>Ch. 9 implements the autoregressive linear baseline. Ch. 10 replaces a fixed window with recurrent state, builds from vanilla RNN into GRU/LSTM gates, then uses encoder-decoder translation to show tokens, embeddings, padding, teacher forcing, and autoregressive decoding. Ch. 11 builds from that translation model into cross-attention, self-attention, causal masking, and GPT generation.</td>
     </tr>
     <tr>
       <td>LLM adaptation, SFT, PEFT, LoRA/QLoRA, DPO/RLHF, ORPO, KTO, GRPO, RLAIF</td>
@@ -253,8 +253,8 @@ practice.</p>
     <tr><td><a href="part5-deep-learning-and-llms/07-cnn-dropout-train-eval.html">7. CNN dropout and train/eval</a></td><td>Deep dive for dropout masks, inverted scaling, train/eval mode, flattening, and common confusions.</td></tr>
     <tr><td><a href="part5-deep-learning-and-llms/08-forecasting-sequence-data.html">8. Forecasting and sequence data</a></td><td>Owns sequence representation, forecasting horizon, AR baseline, leakage, recursive forecasting, and the RNN preview.</td></tr>
     <tr><td><a href="part5-deep-learning-and-llms/09-autoregressive-linear-model.html">9. Autoregressive linear model</a></td><td>Owns windowed dataset construction, chronological split, AR model in PyTorch, full-batch training, and correct recursive forecasting.</td></tr>
-    <tr><td><a href="part5-deep-learning-and-llms/10-recurrent-neural-networks.html">10. Recurrent neural networks</a></td><td>Owns Elman RNN equations, many-to-one vs many-to-many, manual loop, nn.RNN, hidden state, and recurrent weight sharing.</td></tr>
-    <tr><td><a href="part5-deep-learning-and-llms/11-transformers-and-attention.html">11. Transformers and attention</a></td><td>Owns scaled dot-product attention, multi-head attention, positional encoding/RoPE, Transformer blocks, encoder/decoder variants, KV cache, and why Transformers won.</td></tr>
+    <tr><td><a href="part5-deep-learning-and-llms/10-recurrent-neural-networks.html">10. Recurrent neural networks</a></td><td>Owns Elman RNN equations, sequence use cases such as language modeling, speech recognition, machine translation, forecasting, music generation, video/sensor streams, many-to-one vs many-to-many, tokenization and embeddings for sequence inputs, GRU update/reset gates, LSTM cell state and gates, bidirectional recurrence, encoder-decoder translation, padding/masking, teacher forcing, autoregressive decoding, manual loop, nn.RNN/GRU/LSTM, hidden state, and recurrent weight sharing.</td></tr>
+    <tr><td><a href="part5-deep-learning-and-llms/11-transformers-and-attention.html">11. Transformers and attention</a></td><td>Owns the RNN-to-attention bridge, cross-attention, self-attention, causal masking, GPT next-token training and generation, scaled dot-product attention, multi-head attention, positional encoding/RoPE, Transformer blocks, encoder/decoder variants, KV cache, and why Transformers won.</td></tr>
     <tr><td><a href="part5-deep-learning-and-llms/12-llm-fine-tuning.html">12. LLM fine-tuning</a></td><td>Owns SFT, data formats, Hugging Face/OpenAI fine-tuning, label masking, PEFT, LoRA/QLoRA, evaluation, DPO, and classic RLHF introduction.</td></tr>
     <tr><td><a href="part5-deep-learning-and-llms/13-modern-llm-alignment-orpo-grpo.html">13. Modern LLM alignment</a></td><td>Owns the comparison of DPO, ORPO, KTO, GRPO, RLAIF, PPO-style RLHF, and the decision framework for preference alignment.</td></tr>
   </tbody>
