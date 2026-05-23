@@ -3,10 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Forecasting (Next Section): Coding an Autoregressive Linear Model in PyTorch</title>
+  <title>Forecasting (Code): Coding an Autoregressive Linear Model in PyTorch</title>
 
-  <!-- Light theme, readable code blocks -->
-<!-- MathJax for equations -->
+  <!-- MathJax for equations -->
   <script>
     window.MathJax = { tex: { inlineMath: [['\\(','\\)'], ['$', '$']] } };
   </script>
@@ -15,153 +14,278 @@
 </head>
 
 <body>
-<main>
+<main class="wrap">
   <header class="card">
     <h1>Forecasting (Code): Autoregressive Linear Model in PyTorch</h1>
     <p class="muted">
-      Goal: implement an <b>autoregressive (AR)</b> linear model for time-series prediction, and learn the
-      <b>right vs wrong</b> way to forecast multiple steps ahead.
+      Goal: implement an <strong>autoregressive (AR)</strong> linear model for time-series prediction, then evaluate it
+      in the right way for a multi-step forecast.
     </p>
   </header>
 
   <section>
-    <h2>1) The setup</h2>
+    <h2>1) What this chapter is building</h2>
     <div class="card">
       <p>
-        We’ll build a synthetic dataset: a sine wave (optionally with noise), then create supervised learning
-        examples by sliding a window of length <b>T</b>.
+        Chapter 8 introduced the concept: turn a time series into supervised windows, train a simple baseline, and be careful
+        not to leak future values. Here we implement that baseline in PyTorch.
       </p>
-
+      <p>
+        The model is intentionally simple:
+      </p>
       <div class="eq">
-        <div><b>Windowing idea</b></div>
-        <div>
-          Input: \(\;X_t = [x_t, x_{t+1}, \dots, x_{t+T-1}]\;\) (shape \(T\))<br/>
-          Target: \(\;y_t = x_{t+T}\;\)
-        </div>
+        \[
+          \hat{x}_{t} = b + w_1x_{t-1} + w_2x_{t-2} + \dots + w_Tx_{t-T}
+        \]
       </div>
-
-      <p class="muted">
-        This “AR(T)” model is just linear regression where the “features” are the previous T time steps.
+      <p>
+        That is just a linear layer from a lookback window of length \(T\) to one scalar prediction. The point is not that
+        this model is always powerful. The point is that it is the cleanest baseline for learning the mechanics of forecasting:
+        windowing, chronological splitting, training, and recursive evaluation.
       </p>
     </div>
 
-    <div class="card">
-      <h3>Optional visual: sine wave</h3>
-      <p class="muted">A sine wave is periodic, which makes it great for controlled experiments.</p>
-      <img
-        src="../assets/images/external/Sine_wave-abf800537c-fallback.svg"
-        alt="Sine wave plot"
-      />
-    </div>
+    <figure>
+      <svg class="viz" viewBox="0 0 980 285" role="img" aria-label="Autoregressive linear model maps a lookback window to next value">
+        <defs>
+          <marker id="ar-code-arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+            <path d="M0,0 L8,3 L0,6 Z" fill="#0969da"></path>
+          </marker>
+        </defs>
+        <text x="30" y="34" class="title">Autoregressive linear model</text>
+        <text x="30" y="60" class="muted">The previous T values become the feature vector for one next-step prediction.</text>
+
+        <g transform="translate(70,118)">
+          <rect x="0" y="0" width="72" height="52" rx="10" fill="#eaf3ff" stroke="#0969da"></rect>
+          <rect x="92" y="0" width="72" height="52" rx="10" fill="#eaf3ff" stroke="#0969da"></rect>
+          <rect x="184" y="0" width="72" height="52" rx="10" fill="#eaf3ff" stroke="#0969da"></rect>
+          <rect x="276" y="0" width="72" height="52" rx="10" fill="#eaf3ff" stroke="#0969da"></rect>
+          <text x="36" y="32" class="label" text-anchor="middle">x[t-3]</text>
+          <text x="128" y="32" class="label" text-anchor="middle">x[t-2]</text>
+          <text x="220" y="32" class="label" text-anchor="middle">x[t-1]</text>
+          <text x="312" y="32" class="label" text-anchor="middle">x[t]</text>
+          <text x="174" y="88" class="muted" text-anchor="middle">input vector shape: (T,)</text>
+        </g>
+
+        <rect x="505" y="112" width="150" height="64" rx="14" fill="#f5f0ff" stroke="#8250df"></rect>
+        <text x="580" y="138" class="label" text-anchor="middle">nn.Linear</text>
+        <text x="580" y="160" class="muted" text-anchor="middle">T -> 1</text>
+
+        <rect x="760" y="112" width="116" height="64" rx="14" fill="#f3f8f1" stroke="#1a7f37"></rect>
+        <text x="818" y="138" class="label" text-anchor="middle">xhat[t+1]</text>
+        <text x="818" y="160" class="muted" text-anchor="middle">next value</text>
+
+        <path d="M420 144 L505 144 M655 144 L760 144" stroke="#0969da" stroke-width="2.5" marker-end="url(#ar-code-arrow)"></path>
+      </svg>
+      <figcaption>
+        This is a regular supervised model. What makes it time-series forecasting is how the supervised examples are constructed and evaluated.
+      </figcaption>
+    </figure>
   </section>
 
   <section>
-    <h2>2) Build the dataset (windowing)</h2>
+    <h2>2) Create a controlled time series</h2>
     <div class="card">
       <p>
-        We create a length-1000 series, then produce \((X, y)\) pairs using a sliding window.
-        This is exactly where off-by-one mistakes love to hide—so we’ll write it clearly.
+        A sine wave is useful because it is periodic, smooth, and easy to debug. We can add noise later to make the problem
+        more realistic. Starting clean is a good engineering habit: if the simple case fails, the bug is probably in the data
+        shaping or evaluation logic.
       </p>
+      <img
+        src="../assets/images/external/Sine_wave-abf800537c-fallback.svg"
+        alt="Sine wave plot"
+        style="max-width:720px; width:100%; border:1px solid var(--border); border-radius:12px;"
+      />
     </div>
 
-<pre><code># --- Imports ---
+<pre><code class="language-python"># --- Imports ---
 import numpy as np
 import torch
 import torch.nn as nn
 import matplotlib.pyplot as plt
 
-# Reproducibility
 np.random.seed(0)
 torch.manual_seed(0)
 
 # --- 1) Create a synthetic time series ---
 N = 1000
 omega = 0.1
-series = np.sin(omega * np.arange(N))
+t = np.arange(N)
+series = np.sin(omega * t).astype(np.float32)
 
-# OPTIONAL: add noise (uncomment to test realistic behavior)
+# Optional: make the task more realistic after the clean version works.
 # noise_std = 0.2
-# series = series + noise_std * np.random.randn(N)
+# series = (series + noise_std * np.random.randn(N)).astype(np.float32)
 
-plt.figure()
+plt.figure(figsize=(10, 3))
 plt.plot(series)
 plt.title("Synthetic time series")
-plt.xlabel("t")
+plt.xlabel("time index")
 plt.ylabel("x[t]")
-plt.show()
-
-# --- 2) Turn the series into supervised learning data ---
-T = 10  # use previous 10 steps to predict the next step
-
-X_list, y_list = [], []
-# t goes from 0 to N - T - 1 so that y[t] = series[t+T] is valid
-for t in range(0, N - T):
-    X_list.append(series[t : t + T])      # length T
-    y_list.append(series[t + T])          # scalar target
-
-X = np.array(X_list)          # shape: (N-T, T)
-y = np.array(y_list).reshape(-1, 1)  # shape: (N-T, 1)
-
-print("X shape:", X.shape, "y shape:", y.shape)
-</code></pre>
-
-    <div class="card warn">
-      <p><b>Important:</b> For time series, do <b>not</b> shuffle before splitting into train/validation.
-      Your “validation” should be in the future relative to training.</p>
-    </div>
+plt.show()</code></pre>
   </section>
 
   <section>
-    <h2>3) Train/validation split (chronological)</h2>
-<pre><code># Chronological split: first half train, second half validation
-split = len(X) // 2
-X_train, y_train = X[:split], y[:split]
-X_val,   y_val   = X[split:], y[split:]
-
-# Convert to torch tensors
-X_train_t = torch.tensor(X_train, dtype=torch.float32)
-y_train_t = torch.tensor(y_train, dtype=torch.float32)
-X_val_t   = torch.tensor(X_val,   dtype=torch.float32)
-y_val_t   = torch.tensor(y_val,   dtype=torch.float32)
-</code></pre>
-  </section>
-
-  <section>
-    <h2>4) The AR model in PyTorch</h2>
+    <h2>3) Build the dataset by windowing</h2>
     <div class="card">
       <p>
-        The AR(T) linear model is literally one layer:
-        it maps \( \mathbb{R}^T \rightarrow \mathbb{R} \).
+        Windowing is where most forecasting bugs begin. For each target time, the model should only see values before that
+        target. If \(T=10\), then one example looks like this:
       </p>
-
       <div class="eq">
-        \( \hat{x}_{t+T} = b + \sum_{i=0}^{T-1} w_i \, x_{t+i} \)
+        <div><strong>Input:</strong> \([x_t, x_{t+1}, \dots, x_{t+T-1}]\)</div>
+        <div><strong>Target:</strong> \(x_{t+T}\)</div>
       </div>
+      <p>
+        The input has shape \((T,)\). The target is one scalar. Once we stack all windows, \(X\) has shape
+        \((\text{num_windows}, T)\) and \(y\) has shape \((\text{num_windows}, 1)\).
+      </p>
     </div>
 
-<pre><code># Model: linear regression on the window
-model = nn.Linear(T, 1)
+<pre><code class="language-python">def make_windows(series: np.ndarray, lookback: int):
+    """
+    X[i] = series[i : i+lookback]
+    y[i] = series[i+lookback]
+
+    Also returns target_times so we can split by the target's time index.
+    """
+    series = np.asarray(series, dtype=np.float32)
+    if len(series) &lt;= lookback:
+        raise ValueError("series is too short for the chosen lookback")
+
+    X, y, target_times = [], [], []
+    for start in range(len(series) - lookback):
+        end = start + lookback
+        X.append(series[start:end])
+        y.append(series[end])
+        target_times.append(end)
+
+    X = np.asarray(X, dtype=np.float32)
+    y = np.asarray(y, dtype=np.float32).reshape(-1, 1)
+    target_times = np.asarray(target_times)
+    return X, y, target_times
+
+T = 10
+X, y, target_times = make_windows(series, lookback=T)
+
+print("X shape:", X.shape)  # (N-T, T)
+print("y shape:", y.shape)  # (N-T, 1)
+print("First window:", X[0])
+print("First target:", y[0, 0])</code></pre>
+
+    <div class="card">
+      <h3>A tiny off-by-one sanity check</h3>
+      <p>
+        If `series = [0, 1, 2, 3, 4]` and `T = 2`, the windows should be:
+      </p>
+      <table>
+        <thead><tr><th>Input window</th><th>Target</th></tr></thead>
+        <tbody>
+          <tr><td>[0, 1]</td><td>2</td></tr>
+          <tr><td>[1, 2]</td><td>3</td></tr>
+          <tr><td>[2, 3]</td><td>4</td></tr>
+        </tbody>
+      </table>
+      <p class="mini">
+        If your code produces a different table, fix the indexing before training anything.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <h2>4) Chronological split: split by time, not randomly</h2>
+    <div class="card warn">
+      <p>
+        For time series, do <strong>not</strong> randomly shuffle examples before deciding train and validation. A forecast
+        should train on the past and validate on the future.
+      </p>
+    </div>
+
+    <div class="card">
+      <p>
+        A subtle but important point: split according to the <strong>target time</strong>. The first validation example may use
+        a lookback window that contains the last observed training values. That is not leakage; at the validation forecast origin,
+        those historical values are known. Leakage begins when you use true values after the forecast origin while rolling forward.
+      </p>
+    </div>
+
+<pre><code class="language-python"># Target times before this point are training targets.
+split_time = int(0.6 * N)
+
+train_mask = target_times &lt; split_time
+val_mask = target_times &gt;= split_time
+
+X_train, y_train = X[train_mask], y[train_mask]
+X_val, y_val = X[val_mask], y[val_mask]
+target_times_val = target_times[val_mask]
+
+print("train:", X_train.shape, y_train.shape)
+print("val:", X_val.shape, y_val.shape)
+
+# Convert to torch tensors.
+X_train_t = torch.tensor(X_train, dtype=torch.float32)
+y_train_t = torch.tensor(y_train, dtype=torch.float32)
+X_val_t = torch.tensor(X_val, dtype=torch.float32)
+y_val_t = torch.tensor(y_val, dtype=torch.float32)</code></pre>
+
+    <div class="card">
+      <h3>Where scaling belongs</h3>
+      <p>
+        If you standardize the series, fit the mean and standard deviation on the training period only, then apply those same
+        statistics to validation/test. Fitting a scaler on the full series leaks future distribution information.
+      </p>
+<pre><code class="language-python"># Optional scaling pattern. Fit only on observed training history.
+train_values_for_scaler = series[:split_time]
+mean = train_values_for_scaler.mean()
+std = train_values_for_scaler.std() + 1e-8
+
+series_scaled = (series - mean) / std
+# Then rebuild windows from series_scaled using the same function.</code></pre>
+    </div>
+  </section>
+
+  <section>
+    <h2>5) Define the AR model in PyTorch</h2>
+    <div class="card">
+      <p>
+        The AR(\(T\)) linear model is one layer:
+      </p>
+      <div class="eq">
+        \[
+          \hat{x}_{t+T} = b + \sum_{i=0}^{T-1} w_i x_{t+i}
+        \]
+      </div>
+      <p>
+        In PyTorch, `nn.Linear(T, 1)` stores the \(T\) lag weights plus one bias. It receives a batch of windows with shape
+        \((B,T)\) and returns \((B,1)\).
+      </p>
+    </div>
+
+<pre><code class="language-python">model = nn.Linear(T, 1)
 
 loss_fn = nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.05)
-</code></pre>
+
+print(model)
+print("weight shape:", model.weight.shape)  # (1, T)
+print("bias shape:", model.bias.shape)      # (1,)</code></pre>
   </section>
 
   <section>
-    <h2>5) Training loop (full-batch gradient descent)</h2>
+    <h2>6) Train with full-batch gradient descent</h2>
     <div class="card">
       <p>
-        Because this dataset is small, we can do “full GD” (use all training data each step).
-        For bigger datasets you’d use mini-batches, but the forecasting logic below stays the same.
+        Because this dataset is small, we can use all training windows each step. For larger datasets, you would use mini-batches
+        with a `DataLoader`. The forecasting logic below is unchanged.
       </p>
     </div>
 
-<pre><code>def train_full_gd(model, Xtr, ytr, epochs=300):
+<pre><code class="language-python">def train_full_gd(model, Xtr, ytr, epochs=300):
     losses = []
     for epoch in range(epochs):
-        model.train()  # good habit (matters for dropout/batchnorm later)
+        model.train()
 
-        pred = model(Xtr)                 # shape: (n, 1)
+        pred = model(Xtr)          # (num_train_windows, 1)
         loss = loss_fn(pred, ytr)
 
         optimizer.zero_grad()
@@ -173,113 +297,189 @@ optimizer = torch.optim.Adam(model.parameters(), lr=0.05)
 
 losses = train_full_gd(model, X_train_t, y_train_t, epochs=300)
 
-plt.figure()
+plt.figure(figsize=(8, 3))
 plt.plot(losses)
 plt.title("Training loss (MSE)")
 plt.xlabel("epoch")
 plt.ylabel("loss")
-plt.show()
-</code></pre>
+plt.show()</code></pre>
+
+    <div class="card">
+      <h3>Check the learned lag weights</h3>
+      <p>
+        A linear AR model is interpretable. The learned weights show which lags are useful. For a clean sine wave, only a
+        small number of lags are theoretically necessary, although a larger lookback can still learn a good recurrence.
+      </p>
+<pre><code class="language-python">with torch.no_grad():
+    weights = model.weight.detach().cpu().numpy().ravel()
+    bias = float(model.bias.detach().cpu())
+
+print("bias:", bias)
+print("lag weights:", np.round(weights, 3))</code></pre>
+    </div>
   </section>
 
   <section>
-    <h2>6) Forecasting: the “wrong” way vs the correct way</h2>
+    <h2>7) One-step validation vs real multi-step forecasting</h2>
 
     <div class="card warn">
-      <h3>The wrong way (looks great, but it’s cheating for multi-step forecasting)</h3>
+      <h3>The wrong answer to the wrong question</h3>
       <p>
-        This method uses the true validation windows \(X_{\text{val}}\) at every step.
-        That means each prediction is effectively <b>1-step-ahead</b> using real history.
+        If you run `model(X_val_t)`, every validation prediction receives a window containing true historical values from
+        the validation period. That is a valid <strong>one-step-ahead</strong> evaluation, but it is not a valid 50-step
+        forecast from a single origin.
       </p>
-      <p class="muted">
-        It answers: “How good is the model at 1-step prediction if I always give it correct inputs?”
-        It does <b>not</b> answer: “How good is the model at forecasting 50 steps into the future?”
+      <p>
+        It answers: “How good is the model if the latest real observation is always available before each prediction?”
+        It does not answer: “What happens if I stand at the split point and forecast the next 50 unknown values?”
       </p>
     </div>
 
-<pre><code># WRONG for multi-step: uses ground-truth inputs each time ("teacher forcing"-like)
+<pre><code class="language-python"># One-step-ahead validation. Useful, but not a multi-step forecast.
 model.eval()
 with torch.no_grad():
-    wrong_preds = []
-    for i in range(len(X_val_t)):
-        # X_val_t[i] has shape (T,), but model expects (batch, T)
-        p = model(X_val_t[i].view(1, -1))  # (1, 1)
-        wrong_preds.append(p.item())
+    one_step_preds = model(X_val_t).squeeze(1).cpu().numpy()
 
-plt.figure()
-plt.plot(y_val_t.numpy(), label="target")
-plt.plot(wrong_preds, label="wrong forecast (cheating)")
-plt.title("Validation: wrong vs target")
+plt.figure(figsize=(10, 3))
+plt.plot(y_val.squeeze(), label="target")
+plt.plot(one_step_preds, label="one-step predictions")
+plt.title("One-step validation: true windows are supplied each step")
 plt.legend()
-plt.show()
-</code></pre>
+plt.show()</code></pre>
 
     <div class="card ok">
-      <h3>The correct way (recursive / roll-forward forecasting)</h3>
+      <h3>The correct recursive forecast</h3>
       <p>
-        Once you move into the future, you don’t have the true \(x_{t}\) anymore — you only have your
-        <b>previous predictions</b>. So after predicting one step, you must feed it back in to predict the next.
+        For a multi-step forecast, start from one known lookback window. Predict the next value, append that prediction to
+        the window, drop the oldest value, and repeat.
       </p>
     </div>
 
-<pre><code># CORRECT multi-step forecast: use your own predictions as future inputs
-model.eval()
-with torch.no_grad():
-    correct_preds = []
+<pre><code class="language-python">def recursive_forecast_torch(model, start_window, horizon):
+    """
+    start_window: shape (T,), the last known values at the forecast origin.
+    horizon: number of future steps to predict.
+    """
+    model.eval()
+    window = torch.tensor(start_window, dtype=torch.float32).clone()
+    preds = []
 
-    # Start from the *first* validation input window
-    last_x = X_val_t[0].clone()  # shape: (T,)
+    with torch.no_grad():
+        for _ in range(horizon):
+            y_hat = model(window.view(1, -1))       # (1, 1)
+            y_scalar = y_hat.view(())               # scalar tensor
+            preds.append(float(y_scalar))
 
-    for _ in range(len(y_val_t)):
-        p = model(last_x.view(1, -1))      # shape: (1, 1)
-        correct_preds.append(p.item())
+            # Drop oldest value and append the model's prediction.
+            window = torch.cat([window[1:], y_scalar.view(1)])
 
-        # Update the window: drop oldest, append newest prediction
-        # Keep everything as torch tensors
-        last_x = torch.cat([last_x[1:], p.view(-1)])  # (T-1,) + (1,) -> (T,)
+    return np.asarray(preds, dtype=np.float32)
 
-plt.figure()
-plt.plot(y_val_t.numpy(), label="target")
-plt.plot(correct_preds, label="correct forecast (recursive)")
-plt.title("Validation: correct vs target")
+horizon = len(y_val)
+start_window = X_val[0]  # known context at the first validation target
+recursive_preds = recursive_forecast_torch(model, start_window, horizon=horizon)
+
+plt.figure(figsize=(10, 3))
+plt.plot(y_val.squeeze(), label="target")
+plt.plot(recursive_preds, label="recursive forecast")
+plt.title("Recursive validation: predictions feed future predictions")
 plt.legend()
-plt.show()
-</code></pre>
+plt.show()</code></pre>
+
+    <figure>
+      <svg class="viz" viewBox="0 0 980 310" role="img" aria-label="Teacher-forced one-step validation compared with recursive forecasting">
+        <defs>
+          <marker id="wrong-right-arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+            <path d="M0,0 L8,3 L0,6 Z" fill="#0969da"></path>
+          </marker>
+        </defs>
+        <text x="30" y="34" class="title">Two validation modes answer different questions</text>
+        <text x="30" y="60" class="muted">One-step validation is not bad; it is just not the same as a long-horizon forecast.</text>
+
+        <g transform="translate(70,112)">
+          <text x="172" y="-18" class="label" text-anchor="middle">one-step / true-window mode</text>
+          <rect x="0" y="22" width="96" height="48" rx="10" fill="#eaf3ff" stroke="#0969da"></rect>
+          <rect x="118" y="22" width="96" height="48" rx="10" fill="#eaf3ff" stroke="#0969da"></rect>
+          <rect x="236" y="22" width="96" height="48" rx="10" fill="#eaf3ff" stroke="#0969da"></rect>
+          <text x="48" y="52" class="label" text-anchor="middle">true x</text>
+          <text x="166" y="52" class="label" text-anchor="middle">true x</text>
+          <text x="284" y="52" class="label" text-anchor="middle">true x</text>
+          <path d="M48 70 L48 116 M166 70 L166 116 M284 70 L284 116" stroke="#0969da" stroke-width="2.2" marker-end="url(#wrong-right-arrow)"></path>
+          <text x="172" y="146" class="muted" text-anchor="middle">measures one-step prediction quality</text>
+        </g>
+
+        <g transform="translate(570,112)">
+          <text x="172" y="-18" class="label" text-anchor="middle">recursive forecast mode</text>
+          <rect x="0" y="22" width="96" height="48" rx="10" fill="#eaf3ff" stroke="#0969da"></rect>
+          <rect x="118" y="22" width="96" height="48" rx="10" fill="#f3f8f1" stroke="#1a7f37"></rect>
+          <rect x="236" y="22" width="96" height="48" rx="10" fill="#f3f8f1" stroke="#1a7f37"></rect>
+          <text x="48" y="52" class="label" text-anchor="middle">true x</text>
+          <text x="166" y="52" class="label" text-anchor="middle">xhat</text>
+          <text x="284" y="52" class="label" text-anchor="middle">xhat</text>
+          <path d="M96 46 L118 46 M214 46 L236 46" stroke="#1a7f37" stroke-width="2.2" marker-end="url(#wrong-right-arrow)"></path>
+          <text x="172" y="146" class="muted" text-anchor="middle">measures long-horizon drift and compounding error</text>
+        </g>
+      </svg>
+      <figcaption>
+        The “wrong” plot can look excellent because every step gets true context. The recursive plot is the honest simulation of standing at one origin and rolling forward.
+      </figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <h2>8) Compare metrics</h2>
+    <div class="card">
+      <p>
+        Use the same target array for both predictions. The one-step result is usually better because it receives true
+        validation inputs at every step. The recursive forecast is the harder and more realistic multi-step test.
+      </p>
+    </div>
+
+<pre><code class="language-python">def mae(y_true, y_pred):
+    return np.mean(np.abs(y_true - y_pred))
+
+def rmse(y_true, y_pred):
+    return np.sqrt(np.mean((y_true - y_pred) ** 2))
+
+y_true = y_val.squeeze()
+
+print("One-step MAE:", mae(y_true, one_step_preds))
+print("One-step RMSE:", rmse(y_true, one_step_preds))
+print("Recursive MAE:", mae(y_true, recursive_preds))
+print("Recursive RMSE:", rmse(y_true, recursive_preds))</code></pre>
 
     <div class="card">
       <h3>What you should observe</h3>
       <ul>
-        <li><b>No-noise sine wave:</b> both methods can look nearly perfect.</li>
-        <li>
-          <b>Noisy sine wave:</b> the “wrong” method often still looks great, while the recursive method degrades,
-          because small errors compound as you roll forward.
-        </li>
+        <li><strong>No-noise sine wave:</strong> both methods can look nearly perfect because the signal follows a clean recurrence.</li>
+        <li><strong>Noisy sine wave:</strong> one-step validation often still looks good, while recursive forecasting drifts as errors compound.</li>
+        <li><strong>Real business series:</strong> regime changes, promotions, holidays, missing data, and exogenous variables often matter more than model complexity.</li>
       </ul>
     </div>
   </section>
 
   <section>
-    <h2>7) Why can a linear AR model predict a sine wave so well?</h2>
+    <h2>9) Why can a linear AR model predict a sine wave so well?</h2>
     <div class="card">
       <p>
-        A sine wave has an exact <b>2-step linear recurrence</b>. You can write:
+        A sine wave has an exact <strong>2-step linear recurrence</strong>. If \(x_t = \sin(\omega t)\), then:
       </p>
 
       <div class="eq">
-        If \(x_t = \sin(\omega t)\), then<br/>
         \[
           x_{t+1} = 2\cos(\omega)\,x_t - x_{t-1}
         \]
       </div>
 
-      <p class="muted">
-        This means an AR(2) model (two past values) can represent the sine wave perfectly (in the no-noise case).
-        Noise breaks the exact recurrence, which is why recursive forecasting becomes imperfect.
+      <p>
+        This means an AR(2) model can represent a clean sine wave perfectly. Using \(T=10\) gives the model more lags than it
+        strictly needs, but the linear layer can learn weights that implement the recurrence. Noise breaks the exact recurrence,
+        which is why recursive forecasting becomes imperfect.
       </p>
     </div>
 
     <div class="card">
-      <h3>Sketch of the derivation (optional)</h3>
+      <h3>Sketch of the derivation</h3>
       <p>
         Use the identity:
         \[
@@ -293,28 +493,50 @@ plt.show()
         \[
           \sin(\omega(t+1)) = 2\cos(\omega)\sin(\omega t) - \sin(\omega(t-1))
         \]
-        which is exactly the AR(2) recurrence.
       </p>
     </div>
   </section>
 
   <section>
-    <h2>8) Common gotchas (quick checklist)</h2>
+    <h2>10) Extending the baseline</h2>
+    <div class="card">
+      <p>
+        The same shape logic extends naturally:
+      </p>
+      <ul>
+        <li><strong>More input features:</strong> use \(D>1\), such as demand plus price, holiday flag, and weather.</li>
+        <li><strong>Multi-output forecasting:</strong> change the output layer from `nn.Linear(T, 1)` to `nn.Linear(T, H)`.</li>
+        <li><strong>Nonlinear baseline:</strong> replace the single linear layer with a small MLP.</li>
+        <li><strong>RNN baseline:</strong> keep the sequence axis instead of flattening the lookback into one vector.</li>
+      </ul>
+    </div>
+
+<pre><code class="language-python"># Multi-output direct forecast sketch:
+# input window -> next H values at once.
+H = 24
+multi_output_model = nn.Linear(T, H)
+
+# For this model, y would need shape (num_windows, H), not (num_windows, 1).</code></pre>
+  </section>
+
+  <section>
+    <h2>11) Common gotchas checklist</h2>
     <div class="card">
       <ul>
-        <li><b>Shape mistakes:</b> a single window is shape \((T,)\), but the model expects \((1, T)\).</li>
-        <li><b>Random train/test split:</b> don’t do it for forecasting—split chronologically.</li>
-        <li><b>Evaluating only 1-step ahead:</b> can be useful, but it’s not the same as multi-step forecasting.</li>
-        <li><b>Error compounding:</b> recursive forecasting will drift if the model is slightly wrong.</li>
-        <li><b>Scaling leakage:</b> fit scalers on the training period only, then transform validation/test periods with those training statistics.</li>
+        <li><strong>Shape mistakes:</strong> one window is shape \((T,)\), but the model expects a batch shape \((1,T)\).</li>
+        <li><strong>Random split:</strong> do not randomly mix future windows into training for forecasting evaluation.</li>
+        <li><strong>Scaling leakage:</strong> fit scalers on training history only.</li>
+        <li><strong>One-step vs multi-step confusion:</strong> one-step validation can be useful, but it is not a long-horizon forecast.</li>
+        <li><strong>Error compounding:</strong> recursive forecasts drift if early predictions are wrong.</li>
+        <li><strong>Unknown future features:</strong> do not feed true future weather, demand, sensor values, or target values unless they would be known at forecast time.</li>
       </ul>
     </div>
   </section>
 
   <footer class="card">
     <p class="muted">
-      Next natural step: replace the fixed linear window with recurrent hidden state. The next chapter shows how an RNN
-      processes time-series inputs and then extends the same step-by-step idea to text translation.
+      Next natural step: replace the fixed linear window with recurrent hidden state. Chapter 10 shows how an RNN processes
+      sequence inputs, then extends the same step-by-step idea to text translation and autoregressive decoding.
     </p>
   </footer>
 </main>
