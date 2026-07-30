@@ -1,0 +1,831 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-part4-ml-foundations/linear-classification" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.10.2">
+<title data-rh="true">Linear Classification in PyTorch | Enterprise AI, Agents &amp; Applied ML</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://dineshg.github.io/tutorials/part4-ml-foundations/04-linear-classification"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="keywords" content="enterprise AI, machine learning, deep learning, LLM, FastAPI, Pydantic, MCP, authentication"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Linear Classification in PyTorch | Enterprise AI, Agents &amp; Applied ML"><meta data-rh="true" name="description" content="A student-friendly chapter that explains linear decision boundaries, logistic regression, and a complete PyTorch training loop end-to-end. Diagrams are saved locally under assets/images/ch4 (downloaded from Wikimedia..."><meta data-rh="true" property="og:description" content="A student-friendly chapter that explains linear decision boundaries, logistic regression, and a complete PyTorch training loop end-to-end. Diagrams are saved locally under assets/images/ch4 (downloaded from Wikimedia..."><link data-rh="true" rel="icon" href="/tutorials/img/favicon.svg"><link data-rh="true" rel="canonical" href="https://dineshg.github.io/tutorials/part4-ml-foundations/04-linear-classification"><link data-rh="true" rel="alternate" href="https://dineshg.github.io/tutorials/part4-ml-foundations/04-linear-classification" hreflang="en"><link data-rh="true" rel="alternate" href="https://dineshg.github.io/tutorials/part4-ml-foundations/04-linear-classification" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Part IV - ML Foundations","item":"https://dineshg.github.io/tutorials/part4-ml-foundations/overview"},{"@type":"ListItem","position":2,"name":"4. Linear classification","item":"https://dineshg.github.io/tutorials/part4-ml-foundations/04-linear-classification"}]}</script><script>window.MathJax={startup:{typeset:!1},tex:{inlineMath:[["\\(","\\)"],["$","$"]],displayMath:[["\\[","\\]"],["$$","$$"]],processEscapes:!0},options:{skipHtmlTags:["script","noscript","style","textarea","pre","code"]}}</script>
+<link rel="stylesheet" href="/tutorials/css/book.css">
+<link rel="stylesheet" href="/tutorials/vendor/highlight.js/11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.18.1/dist/katex.min.css" integrity="sha384-5TcZemv2l/9On385z///+d7MSYlvIEw9FuZTIdZ14vJLqWphw7e7ZPuOiCHJcFCP" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-mml-chtml.js" defer="defer"></script><link rel="stylesheet" href="/tutorials/assets/css/styles.003aa738.css">
+<script src="/tutorials/assets/js/runtime~main.98c31d90.js" defer="defer"></script>
+<script src="/tutorials/assets/js/main.bd80017b.js" defer="defer"></script>
+</head>
+<body>
+<svg style="display: none;"><defs>
+<symbol id="theme-svg-external-link" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")),document.documentElement.setAttribute("data-theme-choice",t||"system")}(),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top"><div class="navbar__inner"><div class="theme-layout-navbar-left navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/tutorials/"><b class="navbar__title text--truncate">Enterprise AI Book</b></a><a class="navbar__item navbar__link" href="/tutorials/">Read</a><a class="navbar__item navbar__link" href="/tutorials/content-map">Concept map</a><a class="navbar__item navbar__link" href="/tutorials/part5-deep-learning-and-llms/10-recurrent-neural-networks">Deep learning</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><div class="navbar__item book-search-navbar-item"><button type="button" class="book-search-trigger" aria-label="Search the book">Search <kbd>Ctrl K</kbd></button></div><a href="https://github.com/dineshg/tutorials" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type="button" disabled="" title="system mode" aria-label="Switch between dark and light mode (currently system mode)"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill="currentColor" d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill="currentColor" d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill="currentColor" d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"></path></svg></button></div><div class="navbarSearchContainer_Bca1"></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class="docsWrapper_hBAB"><button aria-label="Scroll back to top" class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type="button"></button><div class="docRoot_UBD9"><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class="sidebarViewport_aRkj"><div class="sidebar_njMd"><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/tutorials/"><span class="linkLabel_WmDU">Book home</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/tutorials/content-map"><span class="linkLabel_WmDU">Reading guide and concept map</span></a></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-blue"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part1-enterprise-ai-delivery/overview"><span class="categoryLinkLabel_W154">Part I - Enterprise AI Delivery</span></a><button aria-label="Expand sidebar category &#x27;Part I - Enterprise AI Delivery&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-teal"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part2-backend-platform-security/overview"><span class="categoryLinkLabel_W154">Part II - Backend, Platform &amp; Security</span></a><button aria-label="Expand sidebar category &#x27;Part II - Backend, Platform &amp; Security&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-violet"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part3-agent-protocols/overview"><span class="categoryLinkLabel_W154">Part III - Agent Protocols</span></a><button aria-label="Expand sidebar category &#x27;Part III - Agent Protocols&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item sidebar-category sidebar-category-amber"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--active" href="/tutorials/part4-ml-foundations/overview"><span class="categoryLinkLabel_W154">Part IV - ML Foundations</span></a><button aria-label="Collapse sidebar category &#x27;Part IV - ML Foundations&#x27;" aria-expanded="true" type="button" class="clean-btn menu__caret"></button></div><ul class="menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part4-ml-foundations/01-introduction-pytorch"><span class="linkLabel_WmDU">1. PyTorch foundations</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part4-ml-foundations/02-ml-as-geometry"><span class="linkLabel_WmDU">2. Machine learning as geometry</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part4-ml-foundations/03-linear-regression"><span class="linkLabel_WmDU">3. Linear regression</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link menu__link--active" aria-current="page" tabindex="0" href="/tutorials/part4-ml-foundations/04-linear-classification"><span class="linkLabel_WmDU">4. Linear classification</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part4-ml-foundations/05-trees-bagging-boosting"><span class="linkLabel_WmDU">5. Trees, bagging, and boosting</span></a></li></ul></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-coral"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part5-deep-learning-and-llms/overview"><span class="categoryLinkLabel_W154">Part V - Deep Learning &amp; LLMs</span></a><button aria-label="Expand sidebar category &#x27;Part V - Deep Learning &amp; LLMs&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-slate"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part6-appendices/overview"><span class="categoryLinkLabel_W154">Part VI - Appendices</span></a><button aria-label="Expand sidebar category &#x27;Part VI - Appendices&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li></ul></nav><button type="button" title="Collapse sidebar" aria-label="Collapse sidebar" class="button button--secondary button--outline collapseSidebarButton_PEFL"><svg width="20" height="20" aria-hidden="true" class="collapseSidebarButtonIcon_kv0_"><g fill="#7a7a7a"><path d="M9.992 10.023c0 .2-.062.399-.172.547l-4.996 7.492a.982.982 0 01-.828.454H1c-.55 0-1-.453-1-1 0-.2.059-.403.168-.551l4.629-6.942L.168 3.078A.939.939 0 010 2.528c0-.548.45-.997 1-.997h2.996c.352 0 .649.18.828.45L9.82 9.472c.11.148.172.347.172.55zm0 0"></path><path d="M19.98 10.023c0 .2-.058.399-.168.547l-4.996 7.492a.987.987 0 01-.828.454h-3c-.547 0-.996-.453-.996-1 0-.2.059-.403.168-.551l4.625-6.942-4.625-6.945a.939.939 0 01-.168-.55 1 1 0 01.996-.997h3c.348 0 .649.18.828.45l4.996 7.492c.11.148.168.347.168.55zm0 0"></path></g></svg></button></div></div></aside><main class="docMainContainer_TBSr"><div class="container padding-top--md padding-bottom--lg"><div class="row"><div class="col"><div class="docItemContainer_Djhp"><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label="Breadcrumbs"><ul class="breadcrumbs"><li class="breadcrumbs__item"><a aria-label="Home page" class="breadcrumbs__link" href="/tutorials/"><svg viewBox="0 0 24 24" class="breadcrumbHomeIcon_YNFT"><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill="currentColor"></path></svg></a></li><li class="breadcrumbs__item"><a class="breadcrumbs__link" href="/tutorials/part4-ml-foundations/overview"><span>Part IV - ML Foundations</span></a></li><li class="breadcrumbs__item breadcrumbs__item--active"><span class="breadcrumbs__link">4. Linear classification</span></li></ul></nav><div class="theme-doc-markdown markdown"><article class="book-article tr-content" data-book-part="part4" data-book-accent="amber"><header class="articleHeader_jX4Y"><span class="partLabel_DqKR">Part IV - Machine Learning Foundations</span><h1>Linear Classification in PyTorch</h1><div class="articleMeta_jfH_"><span>12<!-- --> min read</span><span aria-hidden="true">·</span><span>12<!-- --> sections</span></div></header><details class="chapterToc_aQjS"><summary>On this page</summary><nav aria-label="On this page"><a href="#1-the-ml-workflow-what-happens-inside-fitpredictscore">1) The ML Workflow: What Happens Inside fitpredictscore?</a><a href="#2-classification-accuracy-and-error">2) Classification Accuracy and Error</a><a href="#3-geometry-linear-decision-boundary-and-the-logit">3) Geometry: Linear Decision Boundary and the Logit</a><a href="#4-step-function-vs-sigmoid-logistic-regression">4) Step Function vs Sigmoid: Logistic Regression</a><a href="#5-training-loss-functions-gradients-and-learning-rate">5) Training: Loss Functions, Gradients, and Learning Rate</a><a href="#6-dataset-breast-cancer-scikit-learn-preprocessing">6) Dataset: Breast Cancer (scikit-learn) + Preprocessing</a><a href="#7-pytorch-implementation-logistic-regression-end-to-end">7) PyTorch Implementation: Logistic Regression End-to-End</a><a href="#8-a-better-logistic-regression-in-pytorch-bcewithlogitsloss">8) A Better Logistic Regression in PyTorch: BCEWithLogitsLoss</a><a href="#9-saving-and-loading-models-and-downloading-from-colab">9) Saving and Loading Models (and Downloading from Colab)</a><a href="#10-why-logistic-regression-is-a-neuron">10) Why Logistic Regression is a “Neuron”</a><a href="#11-train-validation-test-why-splits-exist-and-how-kaggle-changes-the-words">11) Train / Validation / Test: Why Splits Exist (and How Kaggle Changes the Words)</a><a href="#12-summary-exercises">12) Summary + Exercises</a></nav></details><div class="articleBody_b2wt"><div class="container">
+    <header>
+      
+      <p>
+        A student-friendly chapter that explains linear decision boundaries, logistic regression, and a complete
+        PyTorch training loop end-to-end.
+        Diagrams are saved locally under <code>assets/images/ch4</code> (downloaded from Wikimedia Commons) so the
+        page works offline.
+      </p>
+      <div class="badge">Light theme • VSCode-like code blocks • LaTeX via KaTeX • Offline diagrams</div>
+
+      <nav class="toc" aria-label="Table of contents">
+        <a href="#workflow">1) The ML workflow and what happens inside fit/predict/score</a>
+        <a href="#accuracy">2) Accuracy, error, train vs test</a>
+        <a href="#geometry">3) Linear decision boundaries and the logit</a>
+        <a href="#sigmoid">4) Step vs sigmoid, logistic regression</a>
+        <a href="#training">5) Training: loss, gradient descent, learning rate</a>
+        <a href="#dataset">6) Dataset: Breast cancer (scikit-learn) + preprocessing</a>
+        <a href="#pytorch">7) PyTorch implementation: BCE, Adam, training loop, accuracy</a>
+        <a href="#stability">8) Better logistic regression: BCEWithLogitsLoss</a>
+        <a href="#save">9) Saving/loading models (state_dict) + Colab download</a>
+        <a href="#neuron">10) Why logistic regression is a “neuron”</a>
+        <a href="#splits">11) Train/validation/test, Kaggle, cross-validation, hyperparameters</a>
+        <a href="#summary">12) Summary + exercises</a>
+      </nav>
+    </header>
+
+    <div class="callout.green">
+      <div class="title">What you’ll build (and the math behind it)</div>
+      <ul>
+        <li>
+          A <strong>linear classifier</strong> with logit $a = w^\top x + b$ and probability
+          $p = \sigma(a)$.
+        </li>
+        <li>
+          A training objective (binary cross-entropy) and a training loop that minimizes it:
+          $$\theta^* = \arg\min_{\theta} \frac{1}{n}\sum_{i=1}^{n} \ell\bigl(a_i(\theta), y_i\bigr).$$
+        </li>
+        <li>
+          Practical evaluation: accuracy on train vs test, and how to spot overfitting.
+        </li>
+      </ul>
+      <p class="mini">
+        Notation used throughout: $x\in\mathbb{R}^D$ (features), $y\in\{0,1\}$ (label),
+        $w\in\mathbb{R}^D$ (weights), $b\in\mathbb{R}$ (bias).
+      </p>
+    </div>
+
+    <!-- ===================================================== -->
+    <section id="workflow">
+      <h2 id="1-the-ml-workflow-what-happens-inside-fitpredictscore">1) The ML Workflow: What Happens Inside <span class="pill">fit</span><span class="pill">predict</span><span class="pill">score</span>?</h2>
+
+      <p>
+        A typical scikit-learn-style workflow follows the same outer structure for many models:
+      </p>
+
+      <ol>
+        <li>Load data into inputs \(X\) and targets \(y\).</li>
+        <li>Instantiate a model (e.g., logistic regression, linear regression, etc.).</li>
+        <li>Train it with something like <code>model.fit(X, y)</code>.</li>
+        <li>Make predictions with <code>model.predict(X)</code> (on train or on new/test data).</li>
+        <li>Evaluate with <code>model.score(X, y)</code>.</li>
+      </ol>
+
+      <div class="callout.blue">
+        <div class="title">Why this question matters</div>
+        <p>
+          On the surface, “linear regression” and “logistic regression” can look identical in code:
+          you mostly change the class name. The difference is what the model computes, what loss it minimizes,
+          and how training updates parameters. <strong>The inside of these functions is where the real meaning is.</strong>
+        </p>
+        <p class="mini">
+          In math terms, <span class="pill">fit</span> is “choose parameters to minimize a loss”,
+          <span class="pill">predict</span> is “run the model forward”, and <span class="pill">score</span>
+          is “compute a metric”. For classification, the most common metric is accuracy.
+        </p>
+      </div>
+    </section>
+
+    <!-- ===================================================== -->
+    <section id="accuracy">
+      <h2 id="2-classification-accuracy-and-error">2) Classification Accuracy and Error</h2>
+
+      <p>
+        In binary classification (e.g., spam vs not-spam), every prediction is either correct or incorrect.
+      </p>
+
+      <p>
+        $$\text{accuracy}=\frac{\#\text{correct}}{\#\text{total}}, \qquad
+          \text{error}=\frac{\#\text{wrong}}{\#\text{total}}=1-\text{accuracy}.$$
+      </p>
+
+      <p>
+        Equivalently, using an indicator function $\mathbf{1}[\cdot]$:
+        $$\text{accuracy} = \frac{1}{n}\sum_{i=1}^{n}\mathbf{1}[\hat{y}_i = y_i].$$
+      </p>
+
+      <div class="callout.green">
+        <div class="title">Train vs test accuracy</div>
+        <p>
+          You can compute accuracy on the training set and on a held-out test set:
+          <strong>train accuracy</strong> measures how well you fit the seen data,
+          while <strong>test accuracy</strong> estimates how well you generalize to unseen data.
+        </p>
+        <p class="mini">
+          Note: if classes are highly imbalanced (e.g., 99% of samples are class 0), accuracy can be misleading.
+          It’s still a good starting point, but you may later want precision/recall or ROC-AUC.
+        </p>
+      </div>
+    </section>
+
+    <!-- ===================================================== -->
+    <section id="geometry">
+      <h2 id="3-geometry-linear-decision-boundary-and-the-logit">3) Geometry: Linear Decision Boundary and the Logit</h2>
+
+      <p>
+        A linear classifier draws a boundary in feature space.
+        For a 2D input \(x=(x_1,x_2)\), the boundary is a line:
+      </p>
+
+      <p>
+        $$w_1x_1+w_2x_2+b=0.$$
+      </p>
+
+      <p>
+        This form generalizes cleanly to higher dimensions (where the boundary is a hyperplane).
+        It also connects directly to the key scalar quantity the model computes:
+      </p>
+
+      <p>
+        $$a=w^\top x + b,$$
+      </p>
+
+      <p>
+        where \(a\) is commonly called the <strong>activation</strong> or <strong>logit</strong>.
+      </p>
+
+      <div class="callout.blue">
+        <div class="title">Signed distance intuition</div>
+        <p>
+          The value $a = w^\top x + b$ tells you which side of the boundary you’re on.
+          If you normalize by $\lVert w\rVert$, then $\frac{a}{\lVert w\rVert}$ is proportional to the signed distance
+          from the point to the hyperplane.
+        </p>
+      </div>
+
+      <div class="callout.orange">
+        <div class="title">Why not just use \(y=mx+b\)?</div>
+        <p>
+          In classification, the axes are features \(x_1,x_2,\dots\). The label \(y\) is <em>not an axis</em>.
+          The vector form \(w^\top x+b\) works for any number of features \(D\), not just 2.
+        </p>
+      </div>
+
+      <h3 id="from-geometry-to-prediction-sign-test">From geometry to prediction (sign test)</h3>
+      <p>
+        If a point is not on the boundary, then \(a=w^\top x+b\) will be either positive or negative.
+        One side of the hyperplane always yields \(a&gt;0\), the other yields \(a&lt;0\).
+      </p>
+
+      <p>
+        $$\hat{y}=\begin{cases}
+          1 &amp; \text{if } a&gt;0 \\
+          0 &amp; \text{if } a\le 0
+        \end{cases}$$
+      </p>
+
+      <figure>
+        <!-- Wikimedia image (decision boundaries / hyperplanes) -->
+        <img alt="SVM separating hyperplanes diagram (used here to visualize linear decision boundaries)" src="/tutorials/images/ch4/svm-separating-hyperplanes.svg">
+        <figcaption>
+          Wikimedia diagram illustrating separating hyperplanes (used here purely as a visual intuition for linear decision boundaries).
+          The lecture’s key idea matches the hyperplane form \(w^\top x + b = 0\).
+        </figcaption>
+      </figure>
+    </section>
+
+    <!-- ===================================================== -->
+    <section id="sigmoid">
+      <h2 id="4-step-function-vs-sigmoid-logistic-regression">4) Step Function vs Sigmoid: Logistic Regression</h2>
+
+      <p>
+        The sign test is like a hard “step function.” In deep learning we prefer smooth differentiable functions,
+        so we often map the logit \(a\) through a sigmoid:
+      </p>
+
+      <p>
+        $$\sigma(a)=\frac{1}{1+e^{-a}} \in (0,1).$$
+      </p>
+
+      <p>
+        We interpret \(p=\sigma(a)\) as a probability:
+      </p>
+
+      <p>
+        $$p(y=1\mid x)=\sigma(w^\top x + b).$$
+      </p>
+
+      <p>
+        A useful identity: the log-odds are linear in $x$:
+        $$\log\frac{p}{1-p} = w^\top x + b.$$
+        This is one reason logistic regression is so interpretable.
+      </p>
+
+      <p>
+        And convert to a class prediction by thresholding:
+      </p>
+
+      <p>
+        $$\hat{y}=\mathbf{1}[p\ge 0.5].$$
+      </p>
+
+      <div class="callout.purple">
+        <div class="title">Terminology you’ll see</div>
+        <ul>
+          <li><strong>Logistic function</strong> = sigmoid function.</li>
+          <li><strong>Logit</strong> = the sigmoid input \(a=w^\top x+b\).</li>
+          <li><strong>Logistic regression</strong> = linear model + sigmoid for binary classification.</li>
+        </ul>
+      </div>
+
+      <figure>
+        <img alt="Sigmoid function plot" src="/tutorials/images/ch4/sigmoid-function.svg">
+        <figcaption>
+          Sigmoid curve from Wikimedia. It smoothly maps any real logit \(a\) to a probability in \((0,1)\).
+          Note: \(a=0 \Rightarrow \sigma(a)=0.5\).
+        </figcaption>
+      </figure>
+    </section>
+
+    <!-- ===================================================== -->
+    <section id="training">
+      <h2 id="5-training-loss-functions-gradients-and-learning-rate">5) Training: Loss Functions, Gradients, and Learning Rate</h2>
+
+      <h3 id="regression-vs-classification-why-the-loss-changes">Regression vs classification: why the loss changes</h3>
+      <p>
+        In regression, targets \(y\in\mathbb{R}\), predictions \(\hat{y}\in\mathbb{R}\), so losses like mean squared error (MSE) make sense:
+      </p>
+      <p>
+        $$\text{MSE}=\frac{1}{n}\sum_{i=1}^{n}(y_i-\hat{y}_i)^2.$$
+      </p>
+
+      <p>
+        In binary classification, the model outputs probabilities, and a standard loss is <strong>binary cross-entropy</strong>:
+      </p>
+      <p>
+        $$\mathcal{L}_{\text{BCE}} = -\frac{1}{n}\sum_{i=1}^{n}\left[y_i\log(p_i) + (1-y_i)\log(1-p_i)\right],\quad p_i=\sigma(a_i).$$
+      </p>
+
+      <div class="callout.purple">
+        <div class="title">Where BCE comes from (one sentence)</div>
+        <p>
+          If you assume $y\mid x$ follows a Bernoulli distribution with probability $p=\sigma(w^\top x+b)$,
+          then minimizing BCE is exactly minimizing the <strong>negative log-likelihood</strong>.
+        </p>
+      </div>
+
+      <div class="callout.blue">
+        <div class="title">Loss / cost / objective</div>
+        <p>
+          The lecture used these words interchangeably: they all mean “the scalar we minimize during training.”
+        </p>
+      </div>
+
+      <h3 id="how-does-a-model-learn">How does a model learn?</h3>
+      <p>
+        PyTorch uses <strong>automatic differentiation</strong> to compute gradients of the loss with respect to parameters
+        \(w\) and \(b\). Gradient descent updates parameters iteratively:
+      </p>
+
+      <p>
+        $$w \leftarrow w - \eta \frac{\partial \mathcal{L}}{\partial w},\qquad
+          b \leftarrow b - \eta \frac{\partial \mathcal{L}}{\partial b},$$
+      </p>
+
+      <p>
+        where \(\eta\) is the <strong>learning rate</strong>.
+      </p>
+
+      <div class="callout.orange">
+        <div class="title">Learning rate is a hyperparameter</div>
+        <p>
+          It is not learned by the model; you choose it (often by trial + intuition).
+          A common starting sweep is \(10^{-1},10^{-2},10^{-3},\dots\).
+        </p>
+      </div>
+
+      <figure>
+        <img alt="Gradient descent animation" src="/tutorials/images/ch4/gradient-descent.gif">
+        <figcaption>
+          Gradient descent animation (Wikimedia). It shows repeated steps moving “downhill” along the loss landscape.
+          The step size relates to the learning rate.
+        </figcaption>
+      </figure>
+    </section>
+
+    <!-- ===================================================== -->
+    <section id="dataset">
+      <h2 id="6-dataset-breast-cancer-scikit-learn-preprocessing">6) Dataset: Breast Cancer (scikit-learn) + Preprocessing</h2>
+
+      <p>
+        The lecture uses the well-known breast cancer dataset included in scikit-learn.
+        Loading it is a single function call (no manual download needed):
+      </p>
+
+      <ul>
+        <li>Inputs: <code>data.data</code> \(\rightarrow X\)</li>
+        <li>Targets: <code>data.target</code> \(\rightarrow y\) (0/1)</li>
+        <li>Names: <code>data.target_names</code>, <code>data.feature_names</code></li>
+      </ul>
+
+      <div class="callout.green">
+        <div class="title">Two preprocessing steps from the lecture</div>
+        <ol>
+          <li><strong>Train/test split</strong> so we can evaluate on unseen data.</li>
+          <li><strong>Standardization</strong> with <code>StandardScaler</code>:
+            fit on train only, then transform train and test using the train mean/std.</li>
+        </ol>
+        <p class="mini">
+          Standardization is: $$x' = \frac{x-\mu}{\sigma}$$
+          computed per feature (dimension). It helps optimization because different features can start on very different scales.
+        </p>
+      </div>
+    </section>
+
+    <!-- ===================================================== -->
+    <section id="pytorch">
+      <h2 id="7-pytorch-implementation-logistic-regression-end-to-end">7) PyTorch Implementation: Logistic Regression End-to-End</h2>
+
+      <p>
+        We will implement the lecture’s PyTorch pipeline:
+        load data, split, scale, build model, train with gradient descent, then evaluate accuracy.
+      </p>
+
+      <div class="codeblock">
+        <div class="codebar">
+          <div class="left">
+            <div class="dots"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span></div>
+            <span class="lang">Python</span>
+            <span class="mini">Load + split + scale</span>
+          </div>
+          
+        </div>
+        <div class="editor">
+          <div class="gutter"></div>
+          <pre data-ln=""><code id="code-data" class="language-python">import numpy as np
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+
+# 1) Load data (built into sklearn)
+data = load_breast_cancer()
+X = data.data               # shape (n, D)
+y = data.target             # shape (n,), values in {0,1}
+
+# (Optional inspection)
+print("X shape:", X.shape)  # e.g., (569, 30)
+print("y shape:", y.shape)
+print("target names:", data.target_names)  # e.g., ['malignant', 'benign']
+
+# 2) Train/test split (test_size ~ 33% as in the lecture)
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.33, random_state=123, stratify=y
+)
+
+# 3) Standardize features
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)   # fit only on train
+X_test  = scaler.transform(X_test)        # transform test using train stats
+
+n, D = X_train.shape
+print("train:", X_train.shape, "test:", X_test.shape)</code></pre>
+        </div>
+      </div>
+
+      <h3 id="model-linear-layer-sigmoid">Model: Linear layer + sigmoid</h3>
+      <p>
+        The lecture builds a logistic regression model as:
+      </p>
+      <p>
+        $$p=\sigma(w^\top x+b),$$
+      </p>
+      <p>
+        which in PyTorch can be represented as <code>nn.Linear(D,1)</code> then <code>nn.Sigmoid()</code>, wrapped in <code>nn.Sequential</code>.
+      </p>
+
+      <div class="callout.orange">
+        <div class="title">Shape sanity check</div>
+        <p>
+          For binary classification, it’s common to keep outputs as shape $(n,1)$.
+          That’s why the targets are reshaped with <code>.view(-1, 1)</code>.
+        </p>
+      </div>
+
+      <div class="codeblock">
+        <div class="codebar">
+          <div class="left">
+            <div class="dots"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span></div>
+            <span class="lang">Python</span>
+            <span class="mini">Model + loss + optimizer + tensor conversion</span>
+          </div>
+          
+        </div>
+        <div class="editor">
+          <div class="gutter"></div>
+          <pre data-ln=""><code id="code-model" class="language-python">import torch
+import torch.nn as nn
+
+# Logistic regression = Linear + Sigmoid
+model = nn.Sequential(
+    nn.Linear(D, 1),
+    nn.Sigmoid()
+)
+
+# Binary cross entropy loss (for probabilities)
+criterion = nn.BCELoss()
+
+# Adam optimizer (common default in deep learning)
+optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+
+# Convert numpy -&gt; torch tensors (float32)
+X_train_t = torch.from_numpy(X_train.astype(np.float32))
+X_test_t  = torch.from_numpy(X_test.astype(np.float32))
+
+# IMPORTANT in PyTorch: y should be shape (n, 1) for this setup
+y_train_t = torch.from_numpy(y_train.astype(np.float32)).view(-1, 1)
+y_test_t  = torch.from_numpy(y_test.astype(np.float32)).view(-1, 1)</code></pre>
+        </div>
+      </div>
+
+      <h3 id="training-loop-gradient-descent-with-autograd">Training loop (gradient descent with autograd)</h3>
+      <p>
+        The lecture’s loop is the standard PyTorch pattern:
+        zero gradients → forward pass → loss → backward → optimizer step.
+      </p>
+
+      <div class="codeblock">
+        <div class="codebar">
+          <div class="left">
+            <div class="dots"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span></div>
+            <span class="lang">Python</span>
+            <span class="mini">Train + track train/test loss (per epoch)</span>
+          </div>
+          
+        </div>
+        <div class="editor">
+          <div class="gutter"></div>
+          <pre data-ln=""><code id="code-train" class="language-python">train_losses = []
+test_losses = []
+
+epochs = 300
+
+for epoch in range(epochs):
+    # ---- TRAIN step ----
+    optimizer.zero_grad()
+    p_train = model(X_train_t)                 # probabilities in (0,1)
+    loss_train = criterion(p_train, y_train_t)
+    loss_train.backward()
+    optimizer.step()
+
+    # ---- EVAL losses (no gradient needed) ----
+    with torch.no_grad():
+        p_test = model(X_test_t)
+        loss_test = criterion(p_test, y_test_t)
+
+    train_losses.append(loss_train.item())
+    test_losses.append(loss_test.item())
+
+    if (epoch+1) % 50 == 0:
+        print(f"epoch {epoch+1:4d}  train_loss={loss_train.item():.4f}  test_loss={loss_test.item():.4f}")</code></pre>
+        </div>
+      </div>
+
+      <div class="callout.red">
+        <div class="title">Why “test loss increasing” matters</div>
+        <p>
+          If training loss keeps decreasing but test/validation loss starts increasing,
+          you may be overfitting (memorizing train patterns that don’t generalize).
+        </p>
+      </div>
+
+      <figure>
+        <img alt="Overfitting curves: training error decreases while validation error increases" src="/tutorials/images/ch4/overfitting.png">
+        <figcaption>
+          Wikimedia overfitting diagram: blue = training error, red = validation error over epochs.
+          This matches the lecture’s explanation of monitoring loss curves to detect overfitting.
+        </figcaption>
+      </figure>
+
+      <h3 id="accuracy-computation-and-the-mean-of-booleans-trick">Accuracy computation (and the “mean of booleans” trick)</h3>
+      <p>
+        The model outputs probabilities. For predictions, round to 0/1:
+      </p>
+      <p>
+        $$\hat{y}=\text{round}(p).$$
+      </p>
+      <p>
+        Then accuracy is the mean of element-wise equality:
+        in Python, <code>True</code> behaves like 1 and <code>False</code> like 0.
+      </p>
+
+      <div class="codeblock">
+        <div class="codebar">
+          <div class="left">
+            <div class="dots"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span></div>
+            <span class="lang">Python</span>
+            <span class="mini">Train/test accuracy</span>
+          </div>
+          
+        </div>
+        <div class="editor">
+          <div class="gutter"></div>
+          <pre data-ln=""><code id="code-acc" class="language-python">with torch.no_grad():
+    p_train = model(X_train_t).numpy()
+    p_test  = model(X_test_t).numpy()
+
+# probabilities -&gt; class predictions
+yhat_train = np.round(p_train)
+yhat_test  = np.round(p_test)
+
+train_acc = (yhat_train.reshape(-1) == y_train).mean()
+test_acc  = (yhat_test.reshape(-1)  == y_test).mean()
+
+print("train accuracy:", train_acc)
+print("test  accuracy:", test_acc)</code></pre>
+        </div>
+      </div>
+
+      <div class="callout.blue">
+        <div class="title">Lecture exercise (kept, but made explicit)</div>
+        <p>
+          Modify the training loop to also compute accuracy each epoch (train and test),
+          store them in arrays, and plot accuracy vs epoch. You should typically see loss go down while accuracy goes up.
+        </p>
+      </div>
+    </section>
+
+    <!-- ===================================================== -->
+    <section id="stability">
+      <h2 id="8-a-better-logistic-regression-in-pytorch-bcewithlogitsloss">8) A Better Logistic Regression in PyTorch: <code>BCEWithLogitsLoss</code></h2>
+
+      <p>
+        The lecture points out a practical numerical-stability issue:
+        explicitly computing sigmoid uses exponentials, and BCE uses logs.
+        PyTorch provides a stable combined loss that works directly on logits.
+      </p>
+
+      <p>
+        Conceptually, it’s still the same loss, just computed in a numerically stable way.
+        For a single logit $a$ and label $y\in\{0,1\}$, one stable form is:
+        $$\ell(a,y)=\max(a,0) - a\,y + \log\left(1+e^{-|a|}\right).$$
+      </p>
+
+      <p>
+        Instead of computing \(p=\sigma(a)\) then BCE, we keep the model output as:
+      </p>
+      <p>
+        $$a=w^\top x+b\quad\text{(logit)},$$
+      </p>
+      <p>
+        and use <code>nn.BCEWithLogitsLoss</code>.
+      </p>
+
+      <div class="codeblock">
+        <div class="codebar">
+          <div class="left">
+            <div class="dots"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span></div>
+            <span class="lang">Python</span>
+            <span class="mini">Stable version: logits + BCEWithLogitsLoss</span>
+          </div>
+          
+        </div>
+        <div class="editor">
+          <div class="gutter"></div>
+          <pre data-ln=""><code id="code-logits" class="language-python"># Model now outputs logits (no Sigmoid layer!)
+model = nn.Linear(D, 1)
+
+# Stable combined loss
+criterion = nn.BCEWithLogitsLoss()
+
+optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+
+# Training loop is the same shape, but now model(X) returns logits
+for epoch in range(epochs):
+    optimizer.zero_grad()
+    logits_train = model(X_train_t)                 # any real number
+    loss_train = criterion(logits_train, y_train_t)
+    loss_train.backward()
+    optimizer.step()
+
+# Predictions: logits &gt; 0  &lt;=&gt;  sigmoid(logits) &gt; 0.5
+with torch.no_grad():
+    logits_test = model(X_test_t).numpy()
+yhat_test = (logits_test &gt; 0).astype(np.int64).reshape(-1)</code></pre>
+        </div>
+      </div>
+
+      <div class="callout.purple">
+        <div class="title">Prediction rule without sigmoid</div>
+        <p>
+          Because \(\sigma(a)\ge 0.5 \iff a\ge 0\), you can classify directly using the sign of the logit:
+          \(a&gt;0 \Rightarrow \hat{y}=1\), else \(\hat{y}=0\).
+        </p>
+      </div>
+    </section>
+
+    <!-- ===================================================== -->
+    <section id="save">
+      <h2 id="9-saving-and-loading-models-and-downloading-from-colab">9) Saving and Loading Models (and Downloading from Colab)</h2>
+
+      <h3 id="the-key-object-state-dict">The key object: <code>state_dict</code></h3>
+      <p>
+        In PyTorch, a model’s parameters live in an ordered dictionary returned by:
+      </p>
+      <p>
+        $$\texttt{model.state\_dict()} \Rightarrow \{\text{weights},\text{biases},\dots\}.$$
+      </p>
+
+      <div class="codeblock">
+        <div class="codebar">
+          <div class="left">
+            <div class="dots"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span></div>
+            <span class="lang">Python</span>
+            <span class="mini">Save + reload (recommended pattern)</span>
+          </div>
+          
+        </div>
+        <div class="editor">
+          <div class="gutter"></div>
+          <pre data-ln=""><code id="code-save" class="language-python"># Save
+torch.save(model.state_dict(), "mymodel.pt")
+
+# Recreate the same architecture (must match!)
+model2 = nn.Sequential(
+    nn.Linear(D, 1),
+    nn.Sigmoid()
+)
+
+# Load weights
+state = torch.load("mymodel.pt", map_location="cpu")
+model2.load_state_dict(state)
+model2.eval()
+
+# Verify identical accuracy (example)
+with torch.no_grad():
+    p_test2 = model2(X_test_t).numpy()
+yhat_test2 = np.round(p_test2).reshape(-1)
+print("test accuracy (reloaded):", (yhat_test2 == y_test).mean())</code></pre>
+        </div>
+      </div>
+
+      <h3 id="colab-download">Colab download</h3>
+      <p>
+        The lecture gave two ways:
+      </p>
+      <ol>
+        <li>Use the Colab file browser sidebar and click “Download” on <code>mymodel.pt</code>.</li>
+        <li>Use code: <code>from google.colab import files; files.download("mymodel.pt")</code>.</li>
+      </ol>
+    </section>
+
+    <!-- ===================================================== -->
+    <section id="neuron">
+      <h2 id="10-why-logistic-regression-is-a-neuron">10) Why Logistic Regression is a “Neuron”</h2>
+
+      <p>
+        A single neuron-like computation in deep learning is:
+      </p>
+      <p>
+        $$a=\sum_{i=1}^{D} w_i x_i + b,\qquad \hat{y}=\sigma(a)\ \text{(then threshold)}.$$
+      </p>
+
+      <p>
+        So logistic regression has the same mathematical shape as a simple artificial neuron: a weighted sum + bias,
+        followed by a nonlinear activation. Deep networks stack many such units, but the biology analogy should not be
+        pushed too far; artificial neurons are engineering abstractions, not faithful biological neuron simulations.
+      </p>
+
+      <p>
+        The lecture’s biological analogy:
+      </p>
+      <ul>
+        <li>Inputs \(x_i\) correspond to signals from many incoming connections (dendrites).</li>
+        <li>Weights \(w_i\) represent connection strengths (strong vs weak).</li>
+        <li>The sign of \(w_i\) represents excitatory (positive) vs inhibitory (negative) influence.</li>
+        <li>A threshold-like effect resembles the “all-or-nothing” firing behavior.</li>
+      </ul>
+
+      <div class="callout.green">
+        <div class="title">Interpretation of weights (kept from lecture)</div>
+        <p>
+          If \(w_i\approx 0\), feature \(x_i\) has little effect on the output. If \(|w_i|\) is large,
+          small changes in \(x_i\) strongly affect the output. The sign determines direction of influence.
+        </p>
+      </div>
+    </section>
+
+    <!-- ===================================================== -->
+    <section id="splits">
+      <h2 id="11-train-validation-test-why-splits-exist-and-how-kaggle-changes-the-words">11) Train / Validation / Test: Why Splits Exist (and How Kaggle Changes the Words)</h2>
+
+      <h3 id="why-split-at-all">Why split at all?</h3>
+      <p>
+        The whole point of a classifier is to work on <em>future</em> unseen data.
+        If you only measure performance on past seen data, you can fool yourself.
+      </p>
+
+      <div class="callout.red">
+        <div class="title">Overfitting intuition (from lecture)</div>
+        <p>
+          Complex models can fit training data extremely well but generalize poorly.
+          We want a model that balances being expressive enough to learn patterns,
+          but not so expressive that it memorizes noise.
+        </p>
+      </div>
+
+      <figure>
+        <img alt="Bias and variance contributing to total error (bias-variance tradeoff intuition)" src="/tutorials/images/ch4/bias-variance-total-error-local.svg">
+        <figcaption>
+          Local bias-variance diagram: total error is a combination of bias and variance (and irreducible noise).
+          This supports the lecture’s “not too simple, not too complex” message.
+        </figcaption>
+      </figure>
+
+      <h3 id="train-vs-validation-vs-test-the-naming-confusion">Train vs validation vs test: the naming confusion</h3>
+      <p>
+        If you only split into two sets, the “test” set is effectively acting as a validation set
+        (you are using it to validate generalization). That’s why people sometimes say
+        “train/validation” and sometimes “train/test” for the same two-way split.
+      </p>
+
+      <h3 id="kaggle-contest-semantics-from-the-lecture">Kaggle contest semantics (from the lecture)</h3>
+      <ul>
+        <li>Kaggle provides a labeled “train” set and an unlabeled “test” set.</li>
+        <li>You can’t compute test accuracy yourself (labels are hidden).</li>
+        <li>So you split Kaggle’s train into <strong>train + validation</strong> to tune choices.</li>
+        <li>Public leaderboard vs private leaderboard: private is used for final ranking to reduce overfitting to the public test feedback.</li>
+      </ul>
+
+      <h3 id="cross-validation-kept-with-clean-wording">Cross-validation (kept, with clean wording)</h3>
+      <p>
+        A common classical ML approach is \(k\)-fold cross-validation:
+        split data into \(k\) parts, train on \(k-1\), validate on the remaining part,
+        repeat \(k\) times, then summarize validation performance.
+        The lecture notes it’s less common in deep learning due to large datasets and long training times.
+      </p>
+
+      <h3 id="what-is-validation-used-for">What is validation used for?</h3>
+      <p>
+        Validation performance is how you choose <strong>hyperparameters</strong>:
+        learning rate, optimizer type, feature subsets, model architecture, number of layers/units,
+        activation choices, etc. You can’t just “gradient descent” on architecture, so you use
+        trial-and-error guided by validation scores.
+      </p>
+
+      <figure>
+        <img alt="Learning curve (training vs validation score vs amount of training data)" src="/tutorials/images/ch4/learning-curves-naive-bayes.svg">
+        <figcaption>
+          Local learning-curve diagram: training vs validation score as training data grows.
+          This supports the lecture’s point that validation helps diagnose bias/variance issues and whether more data would help.
+        </figcaption>
+      </figure>
+    </section>
+
+    <!-- ===================================================== -->
+    <section id="summary">
+      <h2 id="12-summary-exercises">12) Summary + Exercises</h2>
+
+      <div class="callout.blue">
+        <div class="title">What you should now understand (directly from lecture topics)</div>
+        <ul>
+          <li>What a linear classifier is: boundary \(w^\top x+b=0\), logit \(a=w^\top x+b\).</li>
+          <li>How predictions work: sign test or sigmoid + threshold.</li>
+          <li>Why logistic regression is linear + sigmoid, and why “logit” matters.</li>
+          <li>Why classification uses cross-entropy (binary cross entropy for two classes).</li>
+          <li>The PyTorch training loop pattern: zero_grad → forward → loss → backward → step.</li>
+          <li>Why scaling (StandardScaler) and train/test split matter.</li>
+          <li>How to compute accuracy correctly (including the boolean-mean trick).</li>
+          <li>How to save/load models using <code>state_dict</code>.</li>
+          <li>Why BCEWithLogitsLoss is numerically safer than sigmoid + BCELoss.</li>
+          <li>Train/validation/test semantics, Kaggle workflow, and what validation is for (hyperparameter tuning).</li>
+        </ul>
+      </div>
+
+      <div class="callout.green">
+        <div class="title">Exercises (from the lecture, made precise)</div>
+        <ol>
+          <li>
+            During training, compute <strong>train accuracy</strong> and <strong>test accuracy</strong> each epoch.
+            Store them in arrays and plot them later (or print every N epochs). Verify: loss ↓ tends to imply accuracy ↑.
+          </li>
+          <li>
+            Switch from <code>nn.Sequential(Linear,Sigmoid)</code> + <code>BCELoss</code> to <code>Linear</code> + <code>BCEWithLogitsLoss</code>.
+            Confirm you get similar accuracy, and change prediction rule to <code>(logits &gt; 0)</code>.
+          </li>
+          <li>
+            Experiment with learning rates \(10^{-2}, 10^{-3}, 10^{-4}\) and compare convergence behavior and final test accuracy.
+          </li>
+        </ol>
+      </div>
+
+      <p class="mini">
+        Image sources:
+        <a href="https://commons.wikimedia.org/wiki/Special:FilePath/Svm%20separating%20hyperplanes%20%28SVG%29.svg">SVM hyperplanes</a>,
+        <a href="https://commons.wikimedia.org/wiki/Special:FilePath/Sigmoid-function.svg">Sigmoid</a>,
+        <a href="https://commons.wikimedia.org/wiki/Special:FilePath/Gradient%20descent.gif">Gradient descent</a>,
+        <a href="https://commons.wikimedia.org/wiki/Special:FilePath/Overfitting.png">Overfitting</a>,
+        <a href="https://commons.wikimedia.org/wiki/Special:FilePath/Bias%20and%20variance%20contributing%20to%20total%20error.svg">Bias-variance</a>,
+        <a href="https://commons.wikimedia.org/wiki/Special:FilePath/Learning%20Curves%20%28Naive%20Bayes%29.png">Learning curves</a>.
+      </p>
+    </section>
+  </div></div></article></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col noPrint_WFHX"></div><div class="col lastUpdated_JAkA"><span class="theme-last-updated">Last updated<!-- --> on <b><time datetime="2026-07-30T01:42:42.000Z" itemprop="dateModified">Jul 30, 2026</time></b></span></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/tutorials/part4-ml-foundations/03-linear-regression"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">3. Linear regression</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/tutorials/part4-ml-foundations/05-trees-bagging-boosting"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">5. Trees, bagging, and boosting</div></a></nav></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer"><div class="container container-fluid"><div class="row footer__links"><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Study</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/tutorials/">Book home</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/content-map">Reading guide</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/labs/rnn">Interactive RNN lab</a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Core tracks</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/tutorials/part2-backend-platform-security/overview">Backend and security</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/part3-agent-protocols/overview">Agent protocols</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/part5-deep-learning-and-llms/overview">Deep learning and LLMs</a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright">Enterprise AI, Agents & Applied ML - 2026</div></div></div></footer></div>
+</body>
+</html>

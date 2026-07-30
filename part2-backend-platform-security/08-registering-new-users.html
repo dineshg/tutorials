@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-part2-backend-platform-security/registering-new-users" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.10.2">
+<title data-rh="true">First Login and User Provisioning with OIDC and FastAPI | Enterprise AI, Agents &amp; Applied ML</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://dineshg.github.io/tutorials/part2-backend-platform-security/08-registering-new-users"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="keywords" content="enterprise AI, machine learning, deep learning, LLM, FastAPI, Pydantic, MCP, authentication"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="First Login and User Provisioning with OIDC and FastAPI | Enterprise AI, Agents &amp; Applied ML"><meta data-rh="true" name="description" content="Authentication proves an external identity; provisioning creates the application account, tenant membership, and starting authorization state."><meta data-rh="true" property="og:description" content="Authentication proves an external identity; provisioning creates the application account, tenant membership, and starting authorization state."><link data-rh="true" rel="icon" href="/tutorials/img/favicon.svg"><link data-rh="true" rel="canonical" href="https://dineshg.github.io/tutorials/part2-backend-platform-security/08-registering-new-users"><link data-rh="true" rel="alternate" href="https://dineshg.github.io/tutorials/part2-backend-platform-security/08-registering-new-users" hreflang="en"><link data-rh="true" rel="alternate" href="https://dineshg.github.io/tutorials/part2-backend-platform-security/08-registering-new-users" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Part II - Backend, Platform & Security","item":"https://dineshg.github.io/tutorials/part2-backend-platform-security/overview"},{"@type":"ListItem","position":2,"name":"9. First login and user provisioning","item":"https://dineshg.github.io/tutorials/part2-backend-platform-security/08-registering-new-users"}]}</script><script>window.MathJax={startup:{typeset:!1},tex:{inlineMath:[["\\(","\\)"],["$","$"]],displayMath:[["\\[","\\]"],["$$","$$"]],processEscapes:!0},options:{skipHtmlTags:["script","noscript","style","textarea","pre","code"]}}</script>
+<link rel="stylesheet" href="/tutorials/css/book.css">
+<link rel="stylesheet" href="/tutorials/vendor/highlight.js/11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.18.1/dist/katex.min.css" integrity="sha384-5TcZemv2l/9On385z///+d7MSYlvIEw9FuZTIdZ14vJLqWphw7e7ZPuOiCHJcFCP" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-mml-chtml.js" defer="defer"></script><link rel="stylesheet" href="/tutorials/assets/css/styles.003aa738.css">
+<script src="/tutorials/assets/js/runtime~main.98c31d90.js" defer="defer"></script>
+<script src="/tutorials/assets/js/main.bd80017b.js" defer="defer"></script>
+</head>
+<body>
+<svg style="display: none;"><defs>
+<symbol id="theme-svg-external-link" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")),document.documentElement.setAttribute("data-theme-choice",t||"system")}(),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top"><div class="navbar__inner"><div class="theme-layout-navbar-left navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/tutorials/"><b class="navbar__title text--truncate">Enterprise AI Book</b></a><a class="navbar__item navbar__link" href="/tutorials/">Read</a><a class="navbar__item navbar__link" href="/tutorials/content-map">Concept map</a><a class="navbar__item navbar__link" href="/tutorials/part5-deep-learning-and-llms/10-recurrent-neural-networks">Deep learning</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><div class="navbar__item book-search-navbar-item"><button type="button" class="book-search-trigger" aria-label="Search the book">Search <kbd>Ctrl K</kbd></button></div><a href="https://github.com/dineshg/tutorials" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type="button" disabled="" title="system mode" aria-label="Switch between dark and light mode (currently system mode)"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill="currentColor" d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill="currentColor" d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill="currentColor" d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"></path></svg></button></div><div class="navbarSearchContainer_Bca1"></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class="docsWrapper_hBAB"><button aria-label="Scroll back to top" class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type="button"></button><div class="docRoot_UBD9"><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class="sidebarViewport_aRkj"><div class="sidebar_njMd"><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/tutorials/"><span class="linkLabel_WmDU">Book home</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/tutorials/content-map"><span class="linkLabel_WmDU">Reading guide and concept map</span></a></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-blue"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part1-enterprise-ai-delivery/overview"><span class="categoryLinkLabel_W154">Part I - Enterprise AI Delivery</span></a><button aria-label="Expand sidebar category &#x27;Part I - Enterprise AI Delivery&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item sidebar-category sidebar-category-teal"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--active" href="/tutorials/part2-backend-platform-security/overview"><span class="categoryLinkLabel_W154">Part II - Backend, Platform &amp; Security</span></a><button aria-label="Collapse sidebar category &#x27;Part II - Backend, Platform &amp; Security&#x27;" aria-expanded="true" type="button" class="clean-btn menu__caret"></button></div><ul class="menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/01-fastapi-uvicorn-basics"><span class="linkLabel_WmDU">1. FastAPI and Uvicorn basics</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/02-http-methods"><span class="linkLabel_WmDU">2. HTTP methods</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/03-fastapi-request-mapping"><span class="linkLabel_WmDU">3. FastAPI request mapping</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/04-pydantic-data-models"><span class="linkLabel_WmDU">4. Pydantic data models</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/04-concurrency-user-isolation"><span class="linkLabel_WmDU">5. Concurrency and user isolation</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/05-background-tasks-and-retries"><span class="linkLabel_WmDU">6. Background tasks and retries</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/06-sso-oauth2-oidc-primer"><span class="linkLabel_WmDU">7. SSO, OAuth 2.0, and OIDC primer</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/07-oidc-oauth2-pkce-fastapi"><span class="linkLabel_WmDU">8. OIDC, OAuth 2.0, and PKCE in FastAPI</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link menu__link--active" aria-current="page" tabindex="0" href="/tutorials/part2-backend-platform-security/08-registering-new-users"><span class="linkLabel_WmDU">9. First login and user provisioning</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/09-authentication-deep-dive"><span class="linkLabel_WmDU">10. Authentication deep dive</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/15-modern-auth-additions"><span class="linkLabel_WmDU">11. Passkeys, DPoP, mTLS, and token exchange</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/10-enduser-vs-workload-identity"><span class="linkLabel_WmDU">12. End-user vs workload identity</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/12-tenant-iam-ad-groups"><span class="linkLabel_WmDU">13. Tenant isolation, IAM, and groups</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/11-gcp-workload-identity"><span class="linkLabel_WmDU">14. GCP workload identity</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/13-external-service-integration"><span class="linkLabel_WmDU">15. Cross-cloud service integration</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/14-github-governance"><span class="linkLabel_WmDU">16. GitHub governance and CI</span></a></li></ul></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-violet"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part3-agent-protocols/overview"><span class="categoryLinkLabel_W154">Part III - Agent Protocols</span></a><button aria-label="Expand sidebar category &#x27;Part III - Agent Protocols&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-amber"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part4-ml-foundations/overview"><span class="categoryLinkLabel_W154">Part IV - ML Foundations</span></a><button aria-label="Expand sidebar category &#x27;Part IV - ML Foundations&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-coral"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part5-deep-learning-and-llms/overview"><span class="categoryLinkLabel_W154">Part V - Deep Learning &amp; LLMs</span></a><button aria-label="Expand sidebar category &#x27;Part V - Deep Learning &amp; LLMs&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-slate"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part6-appendices/overview"><span class="categoryLinkLabel_W154">Part VI - Appendices</span></a><button aria-label="Expand sidebar category &#x27;Part VI - Appendices&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li></ul></nav><button type="button" title="Collapse sidebar" aria-label="Collapse sidebar" class="button button--secondary button--outline collapseSidebarButton_PEFL"><svg width="20" height="20" aria-hidden="true" class="collapseSidebarButtonIcon_kv0_"><g fill="#7a7a7a"><path d="M9.992 10.023c0 .2-.062.399-.172.547l-4.996 7.492a.982.982 0 01-.828.454H1c-.55 0-1-.453-1-1 0-.2.059-.403.168-.551l4.629-6.942L.168 3.078A.939.939 0 010 2.528c0-.548.45-.997 1-.997h2.996c.352 0 .649.18.828.45L9.82 9.472c.11.148.172.347.172.55zm0 0"></path><path d="M19.98 10.023c0 .2-.058.399-.168.547l-4.996 7.492a.987.987 0 01-.828.454h-3c-.547 0-.996-.453-.996-1 0-.2.059-.403.168-.551l4.625-6.942-4.625-6.945a.939.939 0 01-.168-.55 1 1 0 01.996-.997h3c.348 0 .649.18.828.45l4.996 7.492c.11.148.168.347.168.55zm0 0"></path></g></svg></button></div></div></aside><main class="docMainContainer_TBSr"><div class="container padding-top--md padding-bottom--lg"><div class="row"><div class="col"><div class="docItemContainer_Djhp"><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label="Breadcrumbs"><ul class="breadcrumbs"><li class="breadcrumbs__item"><a aria-label="Home page" class="breadcrumbs__link" href="/tutorials/"><svg viewBox="0 0 24 24" class="breadcrumbHomeIcon_YNFT"><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill="currentColor"></path></svg></a></li><li class="breadcrumbs__item"><a class="breadcrumbs__link" href="/tutorials/part2-backend-platform-security/overview"><span>Part II - Backend, Platform &amp; Security</span></a></li><li class="breadcrumbs__item breadcrumbs__item--active"><span class="breadcrumbs__link">9. First login and user provisioning</span></li></ul></nav><div class="theme-doc-markdown markdown"><article class="book-article tr-content" data-book-part="part2" data-book-accent="teal"><header class="articleHeader_jX4Y"><span class="partLabel_DqKR">Part II - Backend, Platform &amp; Security</span><h1>First Login and User Provisioning</h1><div class="articleMeta_jfH_"><span>6<!-- --> min read</span><span aria-hidden="true">·</span><span>6<!-- --> sections</span></div></header><details class="chapterToc_aQjS"><summary>On this page</summary><nav aria-label="On this page"><a href="#1-new-user-sign-in-flow-react-google-oidc-fastapi">1. New User Sign-In Flow (React + Google OIDC + FastAPI)</a><a href="#2-example-fastapi-endpoint-for-user-provisioning">2. Example FastAPI Endpoint for User Provisioning</a><a href="#3-where-registration-actually-lives">3. Where &quot;Registration&quot; Actually Lives</a><a href="#4-choose-a-provisioning-policy-explicitly">4. Choose a Provisioning Policy Explicitly</a><a href="#5-make-first-login-race-safe">5. Make First Login Race-Safe</a><a href="#6-sign-in-is-ongoing-reconciliation">6. Sign-In Is Ongoing Reconciliation</a></nav></details><div class="articleBody_b2wt"><p class="lead">Authentication proves an external identity; provisioning creates the application account, tenant membership, and starting authorization state.</p>
+
+    <div class="tr-note">
+        <strong>Where this fits</strong>
+        The preceding chapters established OIDC Authorization Code with PKCE
+        and API token validation. This chapter begins after a token has been
+        validated. It explains just-in-time provisioning without confusing an
+        identity-provider account, an application user, and a tenant
+        membership.
+    </div>
+
+    <p class="note">Assume the organisation's Google Workspace policy already allows this person to authenticate. That permission does not by itself grant access to this application or any tenant data.</p>
+
+    <figure class="figure-card">
+        <svg viewBox="0 0 1000 330" role="img" aria-labelledby="provision-title provision-desc">
+            <title id="provision-title">First-login authentication and provisioning state machine</title>
+            <desc id="provision-desc">The browser authenticates with the identity provider, the API validates a token, then an atomic bootstrap either returns an existing user or creates an allowed tenant membership.</desc>
+            <defs>
+                <marker id="provision-arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 Z" fill="#1769e0"></path>
+                </marker>
+            </defs>
+            <rect x="25" y="70" width="170" height="90" rx="12" fill="#e8f2ff" stroke="#1769e0" stroke-width="2"></rect>
+            <text x="110" y="106" text-anchor="middle" font-size="17" font-weight="700" fill="#162033">Browser</text>
+            <text x="110" y="134" text-anchor="middle" font-size="14" fill="#4f6078">Auth Code + PKCE</text>
+
+            <rect x="270" y="70" width="190" height="90" rx="12" fill="#f1ecff" stroke="#7548d8" stroke-width="2"></rect>
+            <text x="365" y="106" text-anchor="middle" font-size="17" font-weight="700" fill="#162033">Identity provider</text>
+            <text x="365" y="134" text-anchor="middle" font-size="14" fill="#4f6078">authenticate identity</text>
+
+            <rect x="535" y="70" width="190" height="90" rx="12" fill="#fff6df" stroke="#bf8700" stroke-width="2"></rect>
+            <text x="630" y="106" text-anchor="middle" font-size="17" font-weight="700" fill="#162033">FastAPI boundary</text>
+            <text x="630" y="134" text-anchor="middle" font-size="14" fill="#4f6078">verify iss, aud, exp, sub</text>
+
+            <rect x="800" y="35" width="175" height="90" rx="12" fill="#e9fbf2" stroke="#14875a" stroke-width="2"></rect>
+            <text x="887" y="71" text-anchor="middle" font-size="17" font-weight="700" fill="#162033">Existing user</text>
+            <text x="887" y="99" text-anchor="middle" font-size="14" fill="#4f6078">refresh last login</text>
+
+            <rect x="800" y="195" width="175" height="100" rx="12" fill="#fcebea" stroke="#cf222e" stroke-width="2"></rect>
+            <text x="887" y="229" text-anchor="middle" font-size="17" font-weight="700" fill="#162033">New identity</text>
+            <text x="887" y="256" text-anchor="middle" font-size="14" fill="#4f6078">policy + atomic upsert</text>
+            <text x="887" y="278" text-anchor="middle" font-size="14" fill="#4f6078">or deny</text>
+
+            <line x1="195" y1="115" x2="270" y2="115" stroke="#1769e0" stroke-width="3" marker-end="url(#provision-arrow)"></line>
+            <line x1="460" y1="115" x2="535" y2="115" stroke="#1769e0" stroke-width="3" marker-end="url(#provision-arrow)"></line>
+            <path d="M725 105 C755 90 765 80 800 80" fill="none" stroke="#14875a" stroke-width="3" marker-end="url(#provision-arrow)"></path>
+            <path d="M725 130 C760 155 770 225 800 240" fill="none" stroke="#cf222e" stroke-width="3" marker-end="url(#provision-arrow)"></path>
+            <text x="752" y="76" font-size="13" fill="#14875a">found</text>
+            <text x="748" y="201" font-size="13" fill="#cf222e">not found</text>
+        </svg>
+        <figcaption>
+            Identity verification precedes provisioning. The create-or-return
+            step must be atomic because two browser requests can arrive for
+            the same first login.
+        </figcaption>
+    </figure>
+
+    <hr>
+
+    <h2 id="1-new-user-sign-in-flow-react-google-oidc-fastapi">1. New User Sign-In Flow (React + Google OIDC + FastAPI)</h2>
+
+    <div class="highlight-box">
+        <strong>Key idea:</strong> The login page doesn't "register" the user with Google—Google already knows them. Your app "registers" the user by provisioning a record in your database the first time your backend sees a valid identity.
+    </div>
+    
+    <ol>
+        <li><strong>User clicks "Sign in with Google"</strong>
+            <p>React starts OIDC Authorization Code + PKCE by redirecting the browser to Google's authorization endpoint.</p>
+            <p><em>Outcome: user authenticates with Google (SSO).</em></p>
+        </li>
+        <li><strong>The registered client completes the code exchange</strong>
+            <p>In a browser-only public-client design, React can exchange the authorization code using its PKCE verifier and keep tokens in memory. In a backend-for-frontend design, the backend completes the exchange and gives the browser an HTTP-only session cookie.</p>
+            <p>The credential sent to your API must be an <strong>access token issued for that API's audience</strong>. An OIDC ID token describes the login result for its client; it is not a general-purpose API bearer token. A Google-only application may instead validate the login at its backend and mint an application session.</p>
+        </li>
+        <li><strong>React calls a bootstrap endpoint on your API</strong>
+            <p>Right after login, the frontend calls something like:</p>
+            <ul>
+                <li><code>POST /auth/bootstrap</code> for an operation that may create or update application records, then</li>
+                <li><code>GET /me</code> for later read-only profile retrieval.</li>
+            </ul>
+            <p>with:</p>
+            <pre><code>Authorization: Bearer &lt;access_token&gt;</code></pre>
+            <p><em>Purpose: let the backend validate the token and decide what to do with this identity.</em></p>
+        </li>
+        <li><strong>FastAPI validates token and extracts stable identity</strong>
+            <p>Backend verifies the token (signature + issuer/audience/expiry), then reads claims like:</p>
+            <ul>
+                <li><code>sub</code> → stable user identifier at this IdP</li>
+                <li><code>email</code> and <code>email_verified</code> → optional policy inputs, never the stable primary key</li>
+            </ul>
+        </li>
+        <li><strong>Backend checks if the user already exists in your DB</strong>
+            <p>Backend looks up by a stable key like <code>(issuer, sub)</code> (best practice), optionally storing email too.</p>
+            <p><strong>Case A: user exists</strong></p>
+            <ul>
+                <li>Return user profile + tenant info.</li>
+                <li>Frontend proceeds normally.</li>
+            </ul>
+            <p><strong>Case B: user is new</strong></p>
+            <ul>
+                <li>This is where "registration" happens (provisioning).</li>
+            </ul>
+        </li>
+    </ol>
+
+    <hr>
+
+    <h2 id="2-example-fastapi-endpoint-for-user-provisioning">2. Example FastAPI Endpoint for User Provisioning</h2>
+    <p>This endpoint is the bootstrap call that validates the Bearer token, looks up the user, creates the DB row if missing, and returns user details.</p>
+    <p class="callout warn">The code below is a teaching scaffold. The industry-standard version verifies the token against JWKS/OIDC discovery, stores users in a real database with a unique constraint on <code>(issuer, subject)</code>, performs the create-or-return logic in a transaction/upsert, and records audit fields such as <code>created_at</code> and <code>last_login_at</code>.</p>
+    <pre><code class="language-python"><span style="color: #0000ff;">from</span> fastapi <span style="color: #0000ff;">import</span> FastAPI, Depends, HTTPException
+<span style="color: #0000ff;">from</span> fastapi.security <span style="color: #0000ff;">import</span> HTTPAuthorizationCredentials, HTTPBearer
+<span style="color: #0000ff;">from</span> pydantic <span style="color: #0000ff;">import</span> BaseModel
+<span style="color: #0000ff;">from</span> datetime <span style="color: #0000ff;">import</span> datetime, timezone
+
+app = FastAPI()
+bearer = HTTPBearer(auto_error=<span style="color: #0000ff;">True</span>)
+
+<span style="color: #0000ff;">class</span> <span style="color: #2b91af;">BootstrapResponse</span>(BaseModel):
+    user_id: str
+    tenant_id: str
+    is_new_user: bool
+
+	<span style="color: #008000;"># --- Teaching-only in-memory store (production: Postgres/Cloud SQL) ---</span>
+USERS_BY_ISS_SUB: dict[tuple[str, str], dict] = {}  <span style="color: #008000;"># key = (issuer, sub)</span>
+
+	<span style="color: #008000;"># --- Teaching-only token verifier (production: JWT/JWKS validation) ---</span>
+<span style="color: #0000ff;">def</span> <span style="color: #795e26;">verify_and_decode_access_token</span>(token: str) -&gt; dict:
+    <span style="color: #a31515;">"""
+	    Production implementation:
+	      - verify JWT signature using Google JWKS
+	      - check issuer (iss), audience (aud), expiry (exp)
+	      - optionally check nonce/azp/scopes depending on token type
+	    This teaching version returns mock claims so you see where they come from.
+    """</span>
+    <span style="color: #008000;"># demo-alice-token is only a classroom stand-in for an already-verified JWT.</span>
+    <span style="color: #0000ff;">if</span> token == <span style="color: #a31515;">"demo-alice-token"</span>:
+        <span style="color: #0000ff;">return</span> {
+            <span style="color: #a31515;">"iss"</span>: <span style="color: #a31515;">"https://accounts.google.com"</span>,
+            <span style="color: #a31515;">"sub"</span>: <span style="color: #a31515;">"user-A-sub"</span>,
+            <span style="color: #a31515;">"email"</span>: <span style="color: #a31515;">"alice@acme.com"</span>,
+            <span style="color: #a31515;">"email_verified"</span>: <span style="color: #0000ff;">True</span>,
+        }
+    <span style="color: #0000ff;">raise</span> HTTPException(status_code=<span style="color: #098658;">401</span>, detail=<span style="color: #a31515;">"Invalid/expired token"</span>)
+
+<span style="color: #0000ff;">def</span> <span style="color: #795e26;">map_email_to_tenant_id</span>(email: str) -&gt; str:
+    <span style="color: #a31515;">"""
+    Example tenant mapping policy: email domain -&gt; tenant.
+    (Alternative policies: invite-only lookup, explicit claim, etc.)
+    """</span>
+    domain = email.split(<span style="color: #a31515;">"@"</span>)[<span style="color: #098658;">-1</span>].lower()
+    <span style="color: #0000ff;">if</span> domain == <span style="color: #a31515;">"acme.com"</span>:
+        <span style="color: #0000ff;">return</span> <span style="color: #a31515;">"tenant-acme"</span>
+    <span style="color: #0000ff;">raise</span> HTTPException(status_code=<span style="color: #098658;">403</span>, detail=<span style="color: #a31515;">"No tenant mapping for this user"</span>)
+
+@app.post(<span style="color: #a31515;">"/auth/bootstrap"</span>, response_model=BootstrapResponse)
+<span style="color: #0000ff;">def</span> <span style="color: #795e26;">auth_bootstrap</span>(creds: HTTPAuthorizationCredentials = Depends(bearer)):
+    <span style="color: #008000;"># 1) Extract raw token from "Authorization: Bearer &lt;token&gt;"</span>
+    token = creds.credentials
+
+    <span style="color: #008000;"># 2) Validate + decode -&gt; claims (iss/sub/email)</span>
+    claims = verify_and_decode_access_token(token)
+    issuer = claims[<span style="color: #a31515;">"iss"</span>]
+    sub = claims[<span style="color: #a31515;">"sub"</span>]
+    email = claims.get(<span style="color: #a31515;">"email"</span>, <span style="color: #a31515;">""</span>)
+    <span style="color: #0000ff;">if not</span> claims.get(<span style="color: #a31515;">"email_verified"</span>, <span style="color: #0000ff;">False</span>):
+        <span style="color: #0000ff;">raise</span> HTTPException(status_code=<span style="color: #098658;">403</span>, detail=<span style="color: #a31515;">"Verified email required"</span>)
+
+    <span style="color: #008000;"># 3) Look up user by stable key (issuer, sub)</span>
+    key = (issuer, sub)
+    existing = USERS_BY_ISS_SUB.get(key)
+
+    <span style="color: #0000ff;">if</span> existing:
+        <span style="color: #008000;"># User already provisioned</span>
+        <span style="color: #0000ff;">return</span> BootstrapResponse(
+            user_id=existing[<span style="color: #a31515;">"user_id"</span>],
+            tenant_id=existing[<span style="color: #a31515;">"tenant_id"</span>],
+            is_new_user=<span style="color: #0000ff;">False</span>,
+        )
+
+    <span style="color: #008000;"># 4) New user -&gt; determine tenant_id (domain/invite/etc.)</span>
+    tenant_id = map_email_to_tenant_id(email)
+
+    <span style="color: #008000;"># 5) "Register" user in DB (provision)</span>
+    user_row = {
+        <span style="color: #a31515;">"user_id"</span>: <span style="color: #a31515;">f"db-user-<span style="color: #000;">{sub}</span>"</span>,  <span style="color: #008000;"># in real DB: UUID</span>
+        <span style="color: #a31515;">"tenant_id"</span>: tenant_id,
+        <span style="color: #a31515;">"issuer"</span>: issuer,
+        <span style="color: #a31515;">"sub"</span>: sub,
+        <span style="color: #a31515;">"email"</span>: email,
+        <span style="color: #a31515;">"created_at"</span>: datetime.now(timezone.utc).isoformat(),
+    }
+    USERS_BY_ISS_SUB[key] = user_row
+
+    <span style="color: #0000ff;">return</span> BootstrapResponse(
+        user_id=user_row[<span style="color: #a31515;">"user_id"</span>],
+        tenant_id=user_row[<span style="color: #a31515;">"tenant_id"</span>],
+        is_new_user=<span style="color: #0000ff;">True</span>,
+    )</code></pre>
+
+    <hr>
+
+    <ol start="6">
+        <li><strong>Provision the user (your app's "registration")</strong>
+            <p>The backend creates the required records:</p>
+            <ol>
+                <li><strong>Determine tenant_id</strong>
+                    <ul>
+                        <li>Domain mapping: <code>alice@acme.com</code> → tenant "acme"</li>
+                        <li>or invite-only: user must already be linked to a tenant</li>
+                        <li>or self-serve tenant creation (first user creates tenant)</li>
+                    </ul>
+                </li>
+                <li><strong>Create user row</strong>
+                    <ul>
+                        <li>Store: <code>issuer</code>, <code>sub</code>, <code>email</code>, <code>tenant_id</code>, timestamps</li>
+                    </ul>
+                </li>
+                <li><strong>Optional defaults</strong>
+                    <ul>
+                        <li>Preferences, empty workspace, default roles, etc.</li>
+                    </ul>
+                </li>
+            </ol>
+        </li>
+        <li><strong>Backend returns a bootstrap response</strong>
+            <p>Example:</p>
+            <pre><code>{
+  <span style="color: #a31515;">"user_id"</span>: <span style="color: #a31515;">"…"</span>,
+  <span style="color: #a31515;">"tenant_id"</span>: <span style="color: #a31515;">"…"</span>,
+  <span style="color: #a31515;">"is_new_user"</span>: <span style="color: #0000ff;">true</span>
+}</code></pre>
+            <p>React can now show an onboarding / "upload documents" screen.</p>
+        </li>
+    </ol>
+
+    <hr>
+
+    <h2 id="3-where-registration-actually-lives">3. Where "Registration" Actually Lives</h2>
+    <ul>
+        <li>Google authenticates the user.</li>
+        <li>Your backend decides whether the identity is allowed and attaches it to a tenant.</li>
+        <li><strong>"Registration" = your DB provisioning, not creating credentials.</strong></li>
+    </ul>
+
+    <h2 id="4-choose-a-provisioning-policy-explicitly">4. Choose a Provisioning Policy Explicitly</h2>
+    <table>
+        <thead>
+            <tr><th>Policy</th><th>How a new identity becomes a user</th><th>Use when</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>Invite only</td><td>A pending invitation already binds an email or subject to a tenant and initial role.</td><td>Controlled B2B and regulated applications.</td></tr>
+            <tr><td>Just in time (JIT)</td><td>A verified identity that satisfies policy is created during first login.</td><td>Managed workforce domains with clear admission rules.</td></tr>
+            <tr><td>SCIM / directory sync</td><td>An identity-management system creates, updates, and disables users before login.</td><td>Enterprise lifecycle automation and rapid deprovisioning.</td></tr>
+            <tr><td>Self-service tenant creation</td><td>The first allowed user creates a tenant and becomes its initial administrator.</td><td>SaaS onboarding with abuse controls and verification.</td></tr>
+        </tbody>
+    </table>
+
+    <p>
+        Domain mapping such as <code>@acme.com → tenant-acme</code> is a
+        teaching example, not a universal policy. Use it only with a verified
+        email, an owned-domain registry, and an explicit business rule.
+        Invitations or directory-managed membership are safer when the same
+        domain can contain people who must not share application data.
+    </p>
+
+    <h2 id="5-make-first-login-race-safe">5. Make First Login Race-Safe</h2>
+    <p>
+        Browsers retry, users double-click, and multiple tabs can call
+        bootstrap simultaneously. An in-memory check followed by an insert is
+        not sufficient in production. Put a unique constraint on
+        <code>(issuer, subject)</code> and perform an upsert or transaction:
+    </p>
+
+    <pre><code class="language-sql">INSERT INTO app_user (issuer, subject, email, status, created_at)
+VALUES (:issuer, :subject, :email, 'active', CURRENT_TIMESTAMP)
+ON CONFLICT (issuer, subject)
+DO UPDATE SET
+    email = EXCLUDED.email,
+    last_login_at = CURRENT_TIMESTAMP
+RETURNING user_id, status;</code></pre>
+
+    <p>
+        Tenant membership should have its own unique key, such as
+        <code>(tenant_id, user_id)</code>. Keeping identity and membership
+        separate supports users who legitimately belong to more than one
+        tenant and avoids treating tenant data as an attribute permanently
+        embedded in the identity-provider account.
+    </p>
+
+    <h2 id="6-sign-in-is-ongoing-reconciliation">6. Sign-In Is Ongoing Reconciliation</h2>
+    <p>
+        The second login is not simply "do nothing." Update safe profile
+        metadata such as display name, verified email, and
+        <code>last_login_at</code>; evaluate whether the application user or
+        membership is suspended; and apply current authorization policy.
+        Never silently reactivate a locally disabled user merely because the
+        identity provider authenticated them.
+    </p>
+    <ul>
+        <li>Use <code>(iss, sub)</code> as the external identity key; email addresses can change or be reassigned.</li>
+        <li>Model user status and membership status separately: invited, active, suspended, or removed.</li>
+        <li>Decide whether group and role changes are read on every login, synchronized by SCIM, or maintained locally.</li>
+        <li>Record provisioning, membership changes, denial reasons, and the policy version in an audit trail.</li>
+        <li>Define deprovisioning and session revocation; login is only one part of the account lifecycle.</li>
+    </ul>
+
+    <div class="tr-tip">
+        <strong>Correct mental model</strong>
+        The identity provider owns credentials and authentication. Your
+        application owns admission, the internal user record, tenant
+        memberships, roles, and data authorization.
+    </div></div></article></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col noPrint_WFHX"></div><div class="col lastUpdated_JAkA"><span class="theme-last-updated">Last updated<!-- --> on <b><time datetime="2026-07-30T01:42:42.000Z" itemprop="dateModified">Jul 30, 2026</time></b></span></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/tutorials/part2-backend-platform-security/07-oidc-oauth2-pkce-fastapi"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">8. OIDC, OAuth 2.0, and PKCE in FastAPI</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/tutorials/part2-backend-platform-security/09-authentication-deep-dive"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">10. Authentication deep dive</div></a></nav></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer"><div class="container container-fluid"><div class="row footer__links"><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Study</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/tutorials/">Book home</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/content-map">Reading guide</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/labs/rnn">Interactive RNN lab</a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Core tracks</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/tutorials/part2-backend-platform-security/overview">Backend and security</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/part3-agent-protocols/overview">Agent protocols</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/part5-deep-learning-and-llms/overview">Deep learning and LLMs</a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright">Enterprise AI, Agents & Applied ML - 2026</div></div></div></footer></div>
+</body>
+</html>

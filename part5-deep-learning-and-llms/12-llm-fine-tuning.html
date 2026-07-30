@@ -1,0 +1,1179 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-part5-deep-learning-and-llms/llm-fine-tuning" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.10.2">
+<title data-rh="true">LLM Fine-Tuning and Optimization: From Objectives to Deployment | Enterprise AI, Agents &amp; Applied ML</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://dineshg.github.io/tutorials/part5-deep-learning-and-llms/12-llm-fine-tuning"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="keywords" content="enterprise AI, machine learning, deep learning, LLM, FastAPI, Pydantic, MCP, authentication"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="LLM Fine-Tuning and Optimization: From Objectives to Deployment | Enterprise AI, Agents &amp; Applied ML"><meta data-rh="true" name="description" content="A single, comprehensive guide to SFT, PEFT/LoRA/QLoRA, DPO, RLHF/PPO, and Reinforcement Fine-Tuning, with both mathematical intuition and hands-on examples in Hugging Face and OpenAI."><meta data-rh="true" property="og:description" content="A single, comprehensive guide to SFT, PEFT/LoRA/QLoRA, DPO, RLHF/PPO, and Reinforcement Fine-Tuning, with both mathematical intuition and hands-on examples in Hugging Face and OpenAI."><link data-rh="true" rel="icon" href="/tutorials/img/favicon.svg"><link data-rh="true" rel="canonical" href="https://dineshg.github.io/tutorials/part5-deep-learning-and-llms/12-llm-fine-tuning"><link data-rh="true" rel="alternate" href="https://dineshg.github.io/tutorials/part5-deep-learning-and-llms/12-llm-fine-tuning" hreflang="en"><link data-rh="true" rel="alternate" href="https://dineshg.github.io/tutorials/part5-deep-learning-and-llms/12-llm-fine-tuning" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Part V - Deep Learning & LLMs","item":"https://dineshg.github.io/tutorials/part5-deep-learning-and-llms/overview"},{"@type":"ListItem","position":2,"name":"12. LLM fine-tuning","item":"https://dineshg.github.io/tutorials/part5-deep-learning-and-llms/12-llm-fine-tuning"}]}</script><script>window.MathJax={startup:{typeset:!1},tex:{inlineMath:[["\\(","\\)"],["$","$"]],displayMath:[["\\[","\\]"],["$$","$$"]],processEscapes:!0},options:{skipHtmlTags:["script","noscript","style","textarea","pre","code"]}}</script>
+<link rel="stylesheet" href="/tutorials/css/book.css">
+<link rel="stylesheet" href="/tutorials/vendor/highlight.js/11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.18.1/dist/katex.min.css" integrity="sha384-5TcZemv2l/9On385z///+d7MSYlvIEw9FuZTIdZ14vJLqWphw7e7ZPuOiCHJcFCP" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-mml-chtml.js" defer="defer"></script><link rel="stylesheet" href="/tutorials/assets/css/styles.003aa738.css">
+<script src="/tutorials/assets/js/runtime~main.98c31d90.js" defer="defer"></script>
+<script src="/tutorials/assets/js/main.bd80017b.js" defer="defer"></script>
+</head>
+<body>
+<svg style="display: none;"><defs>
+<symbol id="theme-svg-external-link" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")),document.documentElement.setAttribute("data-theme-choice",t||"system")}(),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top"><div class="navbar__inner"><div class="theme-layout-navbar-left navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/tutorials/"><b class="navbar__title text--truncate">Enterprise AI Book</b></a><a class="navbar__item navbar__link" href="/tutorials/">Read</a><a class="navbar__item navbar__link" href="/tutorials/content-map">Concept map</a><a class="navbar__item navbar__link" href="/tutorials/part5-deep-learning-and-llms/10-recurrent-neural-networks">Deep learning</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><div class="navbar__item book-search-navbar-item"><button type="button" class="book-search-trigger" aria-label="Search the book">Search <kbd>Ctrl K</kbd></button></div><a href="https://github.com/dineshg/tutorials" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type="button" disabled="" title="system mode" aria-label="Switch between dark and light mode (currently system mode)"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill="currentColor" d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill="currentColor" d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill="currentColor" d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"></path></svg></button></div><div class="navbarSearchContainer_Bca1"></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class="docsWrapper_hBAB"><button aria-label="Scroll back to top" class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type="button"></button><div class="docRoot_UBD9"><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class="sidebarViewport_aRkj"><div class="sidebar_njMd"><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/tutorials/"><span class="linkLabel_WmDU">Book home</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/tutorials/content-map"><span class="linkLabel_WmDU">Reading guide and concept map</span></a></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-blue"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part1-enterprise-ai-delivery/overview"><span class="categoryLinkLabel_W154">Part I - Enterprise AI Delivery</span></a><button aria-label="Expand sidebar category &#x27;Part I - Enterprise AI Delivery&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-teal"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part2-backend-platform-security/overview"><span class="categoryLinkLabel_W154">Part II - Backend, Platform &amp; Security</span></a><button aria-label="Expand sidebar category &#x27;Part II - Backend, Platform &amp; Security&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-violet"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part3-agent-protocols/overview"><span class="categoryLinkLabel_W154">Part III - Agent Protocols</span></a><button aria-label="Expand sidebar category &#x27;Part III - Agent Protocols&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-amber"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part4-ml-foundations/overview"><span class="categoryLinkLabel_W154">Part IV - ML Foundations</span></a><button aria-label="Expand sidebar category &#x27;Part IV - ML Foundations&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item sidebar-category sidebar-category-coral"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--active" href="/tutorials/part5-deep-learning-and-llms/overview"><span class="categoryLinkLabel_W154">Part V - Deep Learning &amp; LLMs</span></a><button aria-label="Collapse sidebar category &#x27;Part V - Deep Learning &amp; LLMs&#x27;" aria-expanded="true" type="button" class="clean-btn menu__caret"></button></div><ul class="menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/01-ffn-concepts"><span class="linkLabel_WmDU">1. Feed-forward network concepts</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/02-ffn-training-debugging"><span class="linkLabel_WmDU">2. FFN training and debugging</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/03-ffn-canonical-merged"><span class="linkLabel_WmDU">3. FFN single-chapter reference</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/04-cnn-convolution"><span class="linkLabel_WmDU">4. CNN convolution</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/05-cnn-architecture"><span class="linkLabel_WmDU">5. CNN architecture</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/06-cnn-pytorch-implementation"><span class="linkLabel_WmDU">6. CNN PyTorch implementation</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/07-cnn-dropout-train-eval"><span class="linkLabel_WmDU">7. CNN dropout and train/eval</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/08-forecasting-sequence-data"><span class="linkLabel_WmDU">8. Forecasting and sequence data</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/09-autoregressive-linear-model"><span class="linkLabel_WmDU">9. Autoregressive linear model</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/10-recurrent-neural-networks"><span class="linkLabel_WmDU">10. Recurrent neural networks</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item sidebar-lab-link"><a class="menu__link" tabindex="0" href="/tutorials/labs/rnn"><span class="linkLabel_WmDU">Interactive lab: animated RNN</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/11-transformers-and-attention"><span class="linkLabel_WmDU">11. Transformers and attention</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link menu__link--active" aria-current="page" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/12-llm-fine-tuning"><span class="linkLabel_WmDU">12. LLM fine-tuning</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/13-modern-llm-alignment-orpo-grpo"><span class="linkLabel_WmDU">13. Modern LLM post-training</span></a></li></ul></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-slate"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part6-appendices/overview"><span class="categoryLinkLabel_W154">Part VI - Appendices</span></a><button aria-label="Expand sidebar category &#x27;Part VI - Appendices&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li></ul></nav><button type="button" title="Collapse sidebar" aria-label="Collapse sidebar" class="button button--secondary button--outline collapseSidebarButton_PEFL"><svg width="20" height="20" aria-hidden="true" class="collapseSidebarButtonIcon_kv0_"><g fill="#7a7a7a"><path d="M9.992 10.023c0 .2-.062.399-.172.547l-4.996 7.492a.982.982 0 01-.828.454H1c-.55 0-1-.453-1-1 0-.2.059-.403.168-.551l4.629-6.942L.168 3.078A.939.939 0 010 2.528c0-.548.45-.997 1-.997h2.996c.352 0 .649.18.828.45L9.82 9.472c.11.148.172.347.172.55zm0 0"></path><path d="M19.98 10.023c0 .2-.058.399-.168.547l-4.996 7.492a.987.987 0 01-.828.454h-3c-.547 0-.996-.453-.996-1 0-.2.059-.403.168-.551l4.625-6.942-4.625-6.945a.939.939 0 01-.168-.55 1 1 0 01.996-.997h3c.348 0 .649.18.828.45l4.996 7.492c.11.148.168.347.168.55zm0 0"></path></g></svg></button></div></div></aside><main class="docMainContainer_TBSr"><div class="container padding-top--md padding-bottom--lg"><div class="row"><div class="col"><div class="docItemContainer_Djhp"><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label="Breadcrumbs"><ul class="breadcrumbs"><li class="breadcrumbs__item"><a aria-label="Home page" class="breadcrumbs__link" href="/tutorials/"><svg viewBox="0 0 24 24" class="breadcrumbHomeIcon_YNFT"><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill="currentColor"></path></svg></a></li><li class="breadcrumbs__item"><a class="breadcrumbs__link" href="/tutorials/part5-deep-learning-and-llms/overview"><span>Part V - Deep Learning &amp; LLMs</span></a></li><li class="breadcrumbs__item breadcrumbs__item--active"><span class="breadcrumbs__link">12. LLM fine-tuning</span></li></ul></nav><div class="theme-doc-markdown markdown"><article class="book-article tr-content" data-book-part="part5" data-book-accent="coral"><header class="articleHeader_jX4Y"><span class="partLabel_DqKR">Part V - Deep Learning &amp; Large Language Models</span><h1>LLM Fine-Tuning and Optimization: From Objectives to Deployment</h1><div class="articleMeta_jfH_"><span>19<!-- --> min read</span><span aria-hidden="true">·</span><span>14<!-- --> sections</span></div></header><details class="chapterToc_aQjS"><summary>On this page</summary><nav aria-label="On this page"><a href="#contents">Contents</a><a href="#1-the-big-picture-what-fine-tuning-optimizes">1) The big picture: what “fine-tuning” optimizes</a><a href="#2-data-formats-you-ll-use-hugging-face-vs-openai">2) Data formats you’ll use (Hugging Face vs OpenAI)</a><a href="#3-sft-under-the-hood-what-really-happens">3) SFT under the hood (what really happens)</a><a href="#4-hugging-face-sft-end-to-end-with-correct-label-masking">4) Hugging Face SFT: end to end with correct label masking</a><a href="#5-peft-lora-qlora-under-the-hood-tutorials">5) PEFT (LoRA / QLoRA) under the hood + tutorials</a><a href="#6-openai-sft-managed-fine-tuning-end-to-end">6) OpenAI SFT: managed fine-tuning end to end</a><a href="#7-dpo-direct-preference-optimization-under-the-hood-tutorials">7) DPO (Direct Preference Optimization): under the hood + tutorials</a><a href="#8-ppo-proximal-policy-optimization-under-the-hood-simple-explanation">8) PPO (Proximal Policy Optimization): under the hood + simple explanation</a><a href="#9-distillation-teacher-student-in-one-page">9) Distillation (teacher → student) in one page</a><a href="#10-evaluation-how-to-know-you-improved-and-didn-t-break-anything">10) Evaluation: how to know you improved (and didn’t break anything)</a><a href="#11-decision-guide-which-method-should-you-pick">11) Decision guide: which method should you pick?</a><a href="#12-checklists-you-can-actually-use">12) Checklists you can actually use</a><a href="#references-and-official-docs-recommended-starting-points">References &amp; official docs (recommended starting points)</a></nav></details><div class="articleBody_b2wt"><div class="wrap">
+    <header class="hero">
+      
+      <p>
+        A single, comprehensive guide to <strong>SFT</strong>, <strong>PEFT/LoRA/QLoRA</strong>, <strong>DPO</strong>,
+        <strong>RLHF/PPO</strong>, and <strong>Reinforcement Fine-Tuning</strong>, with both
+        <strong>mathematical intuition</strong> and <strong>hands-on examples</strong> in
+        Hugging Face and OpenAI.
+      </p>
+      <p class="mini">
+        The chapter is organized from objective and data format through
+        efficient adaptation, preference optimization, evaluation, and
+        deployment.
+      </p>
+
+      <div class="quicknav">
+        <a href="#sft-under-the-hood">SFT mechanics</a>
+        <a href="#hf-sft-tutorial">Hugging Face SFT</a>
+        <a href="#openai-sft-tutorial">OpenAI SFT</a>
+        <a href="#dpo">DPO</a>
+        <a href="#ppo">PPO</a>
+      </div>
+    </header>
+
+    <div class="callout warn">
+      <strong>Implementation boundary (verified July 2026)</strong>
+      <div class="muted">
+        The objectives in this chapter are durable, but hosted-model support and trainer signatures are live APIs.
+        Current examples therefore take hosted model IDs from configuration instead of freezing a dated model name.
+        Pin and record your OpenAI SDK, Transformers, PEFT, TRL, CUDA, and model revisions for every reproducible run.
+        In current TRL, DPO is a stable trainer, while PPO is exposed through the experimental API.
+      </div>
+    </div>
+
+    <nav id="toc">
+      <h2 id="contents">Contents</h2>
+      <div class="toc-links" id="toc-links">
+        <!-- filled by JS -->
+      </div>
+      <div class="hr"></div>
+      <div class="mini">
+        <div><strong>Keyboard</strong></div>
+        <div>Find: <span class="kbd">Ctrl</span> + <span class="kbd">F</span></div>
+        <div>Top: <a href="#">Back to top</a></div>
+      </div>
+    </nav>
+
+    <main>
+      <section class="card" id="overview">
+        <h2 id="1-the-big-picture-what-fine-tuning-optimizes">1) The big picture: what “fine-tuning” optimizes</h2>
+        <p>
+          An LLM is a neural network with parameters $\\theta$. Fine-tuning changes $\\theta$
+          so the model behaves better for your specific tasks.
+        </p>
+
+        <div class="grid2">
+          <div class="callout ok">
+            <strong>Most fine-tuning boils down to minimizing a loss</strong>
+            <div class="muted">
+              In supervised fine-tuning (SFT), the loss is usually cross-entropy (negative log-likelihood).
+              In preference tuning (DPO), it’s a pairwise preference loss.
+              In RL methods (PPO/RFT), it’s expected reward with a “don’t drift too far” constraint.
+            </div>
+          </div>
+          <div class="callout warn">
+            <strong>But… you often don’t need fine-tuning</strong>
+            <div class="muted">
+              If your main issue is “missing knowledge,” Retrieval Augmented Generation (RAG) may be cheaper than training.
+              If your issue is “formatting,” prompt constraints + validators might be enough.
+              Fine-tune when you need <em>consistent behavior at scale</em>.
+            </div>
+          </div>
+        </div>
+
+        <h3 id="common-fine-tuning-families">Common fine-tuning families</h3>
+        <table class="table">
+          <tbody><tr>
+            <th>Method</th>
+            <th>Data you need</th>
+            <th>What it optimizes</th>
+            <th>Best for</th>
+          </tr>
+          <tr>
+            <td><strong>Continued pretraining</strong> (DAPT)</td>
+            <td>Large domain text (unlabeled)</td>
+            <td>Next-token likelihood</td>
+            <td>Domain vocabulary/knowledge shift</td>
+          </tr>
+          <tr>
+            <td><strong>SFT</strong> (Supervised Fine-Tuning)</td>
+            <td>Prompt → ideal answer</td>
+            <td>Cross-entropy on answer tokens</td>
+            <td>Style, instructions, structured outputs, “gold responses”</td>
+          </tr>
+          <tr>
+            <td><strong>PEFT</strong> (LoRA/QLoRA/Adapters)</td>
+            <td>Same as SFT (often)</td>
+            <td>Same loss, fewer trainable params</td>
+            <td>Cheaper training, many variants, limited GPU</td>
+          </tr>
+          <tr>
+            <td><strong>DPO</strong> (Direct Preference Optimization)</td>
+            <td>Prompt + (chosen, rejected)</td>
+            <td>Pairwise preference objective</td>
+            <td>“More helpful,” “more safe,” “better tone” with comparisons</td>
+          </tr>
+          <tr>
+            <td><strong>PPO / RLHF</strong></td>
+            <td>Reward signal (human or model grader)</td>
+            <td>Expected reward with KL/clip stability</td>
+            <td>Hard alignment objectives, verifiable rewards</td>
+          </tr>
+          <tr>
+            <td><strong>Distillation</strong></td>
+            <td>Teacher outputs or logits</td>
+            <td>Match teacher distribution</td>
+            <td>Smaller/faster deployment</td>
+          </tr>
+        </tbody></table>
+      </section>
+
+
+      <section class="card" id="data-formats">
+        <h2 id="2-data-formats-you-ll-use-hugging-face-vs-openai">2) Data formats you’ll use (Hugging Face vs OpenAI)</h2>
+
+        <h3 id="2-1-hugging-face-you-control-the-tokens-labels">2.1 Hugging Face: you control the tokens + labels</h3>
+        <p class="muted">
+          With Hugging Face training, you usually build examples as token IDs and labels. You can decide which tokens
+          contribute to the loss (e.g., only assistant tokens). This is how “chat-style” SFT is commonly done.
+        </p>
+
+        <details>
+          <summary>Example: a chat training example (conceptual)</summary>
+          <p>We format a single sequence like:</p>
+          <pre><code class="language-text">[BOS] &lt;system&gt;...&lt;/system&gt; &lt;user&gt;...&lt;/user&gt; &lt;assistant&gt;...&lt;/assistant&gt; [EOS]</code></pre>
+          <p>
+            Then we create <code>labels</code> that are identical to <code>input_ids</code> except:
+          </p>
+          <ul>
+            <li>Prompt tokens (system/user) are set to <code>-100</code> so they are ignored by the loss.</li>
+            <li>Assistant tokens keep their IDs so the loss trains the model to predict them.</li>
+          </ul>
+        </details>
+
+        <h3 id="2-2-openai-jsonl-messages-format">2.2 OpenAI: JSONL “messages” format</h3>
+        <p class="muted">
+          OpenAI fine-tuning uses a JSONL file where each line is one training example.
+          For chat models, each example typically contains a <code>messages</code> array (roles like system/user/assistant).
+          This is described in the OpenAI SFT guide and API reference.
+        </p>
+
+        <details>
+          <summary>Example: OpenAI SFT JSONL line (chat)</summary>
+          <pre><code class="language-json">{"messages": [{"role": "system", "content": "You are a helpful assistant that provides facts in a sarcastic tone."}, {"role": "user", "content": "What is the capital of France?"}, {"role": "assistant", "content": "Oh, you don't know? It's Paris, obviously."}]}
+{"messages": [{"role": "system", "content": "You are an assistant that occasionally misspells words."}, {"role": "user", "content": "Tell me a short story."}, {"role": "assistant", "content": "One day a student went to schoool, and he learned a lesson."}]}
+{"messages": [{"role": "user", "content": "brand is brand1, color is red, size is big"}, {"role": "assistant", "content": "{\"brand\":\"brand1\",\"color\":\"red\",\"size\":\"big\"}"}]}</code></pre>
+          <p class="mini">Your real dataset will have many such lines. You upload it with purpose <code>fine-tune</code>.</p>
+        </details>
+
+        <details>
+          <summary>Example: OpenAI DPO JSONL line (prompt + preferred vs non-preferred)</summary>
+          <pre><code class="language-json">{"input":{
+  "messages":[
+    {"role":"user","content":"Reply politely: 'No, I can't do that'."}
+  ]
+},"preferred_output":[
+  {"role":"assistant","content":"I’m sorry, but I can’t help with that request."}
+],"non_preferred_output":[
+  {"role":"assistant","content":"No."}
+]}</code></pre>
+          <p class="mini">
+            (Exact field names can vary by the guide; always match the current OpenAI DPO guide you’re following.)
+          </p>
+        </details>
+
+        <div class="callout warn">
+          <strong>Important</strong>
+          <div class="muted">
+            For OpenAI: follow the dataset schema from the official guide you’re using (SFT vs DPO vs RFT).
+            Upload files with purpose <code>fine-tune</code> and create a fine-tune job via the fine-tuning API.
+          </div>
+        </div>
+      </section>
+
+
+      <section class="card" id="sft-under-the-hood">
+        <h2 id="3-sft-under-the-hood-what-really-happens">3) SFT under the hood (what really happens)</h2>
+
+        <p>
+          SFT = <strong>teacher forcing</strong> + <strong>cross-entropy loss</strong> on target tokens.
+          You show the model the prompt and the correct answer, and train it to predict the answer tokens.
+        </p>
+
+        <h3 id="3-1-the-core-math-next-token-prediction">3.1 The core math (next-token prediction)</h3>
+        <p>
+          A causal language model factorizes a sequence $x_{1:T}$ as:
+        </p>
+        <p>
+          $$p_\\theta(x_{1:T}) = \\prod_{t=1}^{T} p_\\theta(x_t \\mid x_{&lt;t})$$
+        </p>
+        <p>
+          The training loss is negative log-likelihood (cross-entropy):
+        </p>
+        <p>
+          $$\\mathcal{L}(\\theta) = - \\sum_{t \\in \\mathcal{T}} \\log p_\\theta(x_t \\mid x_{&lt;t})$$
+        </p>
+        <p class="muted">
+          Here $\\mathcal{T}$ is the set of token positions you want to train on.
+          In chat SFT, that’s typically “assistant tokens only.”
+        </p>
+
+        <h3 id="3-2-forward-pass-logits-softmax-probabilities">3.2 Forward pass: logits → softmax → probabilities</h3>
+        <p>
+          At each position $t$, the model outputs a vector of logits $z_t \\in \\mathbb{R}^{V}$ (V = vocab size).
+          Probabilities are:
+        </p>
+        <p>
+          $$p_\\theta(x_t \\mid x_{&lt;t}) = \\text{softmax}(z_t)[x_t] = \\frac{e^{z_{t,x_t}}}{\\sum_{v=1}^V e^{z_{t,v}}}$$
+        </p>
+        <p>
+          Cross-entropy for the correct token $x_t$:
+        </p>
+        <p>
+          $$\\ell_t = -\\log \\text{softmax}(z_t)[x_t]$$
+        </p>
+
+        <h3 id="3-3-the-label-shift-why-labels-are-next-tokens">3.3 The “label shift” (why labels are next tokens)</h3>
+        <div class="callout ok">
+          <strong>Key idea:</strong>
+          <div class="muted">
+            The model uses token 1..t-1 to predict token t. So labels are input_ids shifted by one.
+            Many Hugging Face causal LM implementations handle the shift inside the model when you pass <code>labels</code>.
+          </div>
+        </div>
+
+        <details>
+          <summary>Concrete example: token shifting</summary>
+          <p>Suppose your token IDs are:</p>
+          <pre><code class="language-text">input_ids: [  101,   2009,   2001,   1037,   2154,   102 ]</code></pre>
+          <p>Then conceptually the training pairs are:</p>
+          <pre><code class="language-text">predict 2009 from [101]
+predict 2001 from [101,2009]
+predict 1037 from [101,2009,2001]
+...
+predict 102  from [101,2009,2001,1037,2154]</code></pre>
+          <p class="muted">
+            In practice, you usually pass <code>labels = input_ids</code> and the model computes the shifted loss internally.
+          </p>
+        </details>
+
+        <h3 id="3-4-masking-only-train-on-assistant-tokens">3.4 Masking: only train on assistant tokens</h3>
+        <p>
+          Chat SFT typically should not train the model to “predict the user prompt.” You want it to learn:
+          “Given the prompt, produce the assistant response.”
+        </p>
+        <p>
+          So we set labels for prompt tokens to <code>-100</code> (PyTorch cross-entropy ignore index).
+        </p>
+
+        <details>
+          <summary>Example: label masking (conceptual)</summary>
+          <pre><code class="language-text">Tokens:
+[system] You are helpful.
+[user]   Explain gradient descent.
+[assistant] Gradient descent is...
+
+Labels (train only assistant tokens):
+-100 -100 -100 ... -100  (system/user tokens ignored)
+  id   id   id  ... id    (assistant tokens contribute to loss)</code></pre>
+        </details>
+
+        <h3 id="3-5-backprop-optimizer-how-weights-actually-change">3.5 Backprop + optimizer: how weights actually change</h3>
+        <p>
+          Once you compute $\\mathcal{L}(\\theta)$, you compute gradients $\\nabla_\\theta \\mathcal{L}$ via backprop.
+          Then an optimizer updates parameters:
+        </p>
+        <p>
+          $$\\theta \\leftarrow \\theta - \\eta\\, \\nabla_\\theta \\mathcal{L}(\\theta)$$
+        </p>
+        <p class="muted">
+          In modern LLM training, AdamW is common. You’ll also see learning-rate warmup, cosine schedules, gradient clipping,
+          and mixed precision (bf16/fp16).
+        </p>
+
+        <details>
+          <summary>Minimal “from scratch” training loop pseudocode</summary>
+          <pre><code class="language-python">for step, batch in enumerate(dataloader):
+    input_ids = batch["input_ids"]
+    attention_mask = batch["attention_mask"]
+    labels = batch["labels"]  # -100 masks prompt tokens
+
+    # Forward pass
+    outputs = model(input_ids=input_ids, attention_mask=attention_mask, labels=labels)
+    loss = outputs.loss
+
+    # Backprop
+    loss.backward()
+
+    # Optional: gradient clipping
+    torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+
+    # Optimizer step
+    optimizer.step()
+    optimizer.zero_grad(set_to_none=True)
+
+    # LR scheduler step (if used)
+    scheduler.step()</code></pre>
+        </details>
+
+        <h3 id="3-6-hyperparameters-what-they-mean-under-the-hood">3.6 Hyperparameters (what they mean under the hood)</h3>
+        <table class="table">
+          <tbody><tr>
+            <th>Hyperparameter</th>
+            <th>What it controls</th>
+            <th>Typical effect / gotcha</th>
+          </tr>
+          <tr>
+            <td><strong>learning_rate</strong></td>
+            <td>Step size $\\eta$</td>
+            <td>Too high → instability, forgetting; too low → slow / underfit</td>
+          </tr>
+          <tr>
+            <td><strong>batch_size</strong></td>
+            <td>Tokens per step</td>
+            <td>More stable gradients; may require gradient accumulation</td>
+          </tr>
+          <tr>
+            <td><strong>grad_accum_steps</strong></td>
+            <td>Simulates bigger batch</td>
+            <td>Watch effective LR scaling; logging steps become “slower”</td>
+          </tr>
+          <tr>
+            <td><strong>max_seq_len</strong></td>
+            <td>Context window used during training</td>
+            <td>Too small → truncation; too large → OOM; longer also slows training</td>
+          </tr>
+          <tr>
+            <td><strong>epochs</strong></td>
+            <td>Passes over dataset</td>
+            <td>Too many → overfit; use validation + early stop</td>
+          </tr>
+          <tr>
+            <td><strong>weight_decay</strong></td>
+            <td>L2-like regularization</td>
+            <td>Helps generalization; don’t apply to bias/norm typically</td>
+          </tr>
+          <tr>
+            <td><strong>warmup_ratio/steps</strong></td>
+            <td>Gradually increases LR initially</td>
+            <td>Helps avoid early divergence</td>
+          </tr>
+          <tr>
+            <td><strong>gradient_checkpointing</strong></td>
+            <td>Trade compute for memory</td>
+            <td>Slower, but enables longer sequences / larger batches</td>
+          </tr>
+          <tr>
+            <td><strong>bf16/fp16</strong></td>
+            <td>Mixed precision</td>
+            <td>Big speed/memory gain; bf16 often more stable if supported</td>
+          </tr>
+        </tbody></table>
+
+        <div class="callout warn">
+          <strong>Most common SFT failure modes</strong>
+          <ul>
+            <li><strong>Bad data</strong>: inconsistent style, wrong answers, or “teaches” the model to ramble.</li>
+            <li><strong>Label leakage</strong>: you accidentally train on user prompt tokens.</li>
+            <li><strong>Overfitting</strong>: training loss drops, but validation quality declines.</li>
+            <li><strong>Catastrophic forgetting</strong>: model loses general ability if you over-train on narrow data.</li>
+          </ul>
+        </div>
+      </section>
+
+
+      <section class="card" id="hf-sft-tutorial">
+        <h2 id="4-hugging-face-sft-end-to-end-with-correct-label-masking">4) Hugging Face SFT: end to end with correct label masking</h2>
+        <p class="muted">
+          This tutorial uses Transformers + Datasets and demonstrates the important “chat SFT” piece:
+          how to create labels so only assistant tokens contribute to the loss.
+        </p>
+
+        <h3 id="4-1-install">4.1 Install</h3>
+        <pre><code class="language-bash">pip install -U transformers datasets accelerate</code></pre>
+
+        <h3 id="4-2-create-a-tiny-jsonl-dataset">4.2 Create a tiny JSONL dataset</h3>
+        <p class="muted">
+          For simplicity, we’ll store a “messages” list per example (like OpenAI), then format it into a single text string
+          using a chat template (or a simple manual template).
+        </p>
+
+        <pre><code class="language-json">{"messages":[
+  {"role":"system","content":"You are a precise tutor."},
+  {"role":"user","content":"Explain gradient descent in 2 sentences."},
+  {"role":"assistant","content":"Gradient descent minimizes a loss by moving parameters opposite the gradient. Repeating small steps reduces the loss over time."}
+]}
+{"messages":[
+  {"role":"system","content":"You are a precise tutor."},
+  {"role":"user","content":"What is overfitting?"},
+  {"role":"assistant","content":"Overfitting is when a model learns noise in training data and performs worse on new data. Regularization and validation help detect and reduce it."}
+]}</code></pre>
+
+        <div class="callout ok">
+          <strong>Why this format?</strong>
+          <div class="muted">
+            It mirrors how you think about chat, but HF training ultimately needs token IDs + labels.
+            We’ll convert messages → one training string, then compute a loss mask.
+          </div>
+        </div>
+
+        <h3 id="4-3-formatting-tokenization-label-masking">4.3 Formatting + tokenization + label masking</h3>
+        <details>
+          <summary>Open: full training script (SFT with assistant-only loss)</summary>
+          <pre><code class="language-python">import json
+from datasets import load_dataset
+from transformers import AutoTokenizer, AutoModelForCausalLM, TrainingArguments, Trainer
+import torch
+
+MODEL_ID = "HuggingFaceTB/SmolLM2-135M-Instruct"  # small instruction model for a tutorial run
+
+# 1) Load JSONL
+ds = load_dataset("json", data_files={"train":"train.jsonl"})
+
+# 2) Tokenizer
+tok = AutoTokenizer.from_pretrained(MODEL_ID)
+if tok.pad_token is None:
+    tok.pad_token = tok.eos_token
+
+# 3) Use the tokenizer's chat template when available.
+def format_messages(messages):
+    if getattr(tok, "chat_template", None):
+        return tok.apply_chat_template(
+            messages,
+            tokenize=False,
+            add_generation_prompt=False,
+        )
+    # Fallback only for toy models without a template.
+    return "".join(
+        f"&lt;|{m['role']}|&gt;\\n{m['content'].strip()}\\n"
+        for m in messages
+    )
+
+def tokenize_and_mask(example, max_length=1024):
+    text = format_messages(example["messages"])
+
+    # Tokenize
+    enc = tok(
+        text,
+        truncation=True,
+        max_length=max_length,
+        padding=False,
+        return_offsets_mapping=True,  # lets us map characters to tokens
+    )
+
+    input_ids = enc["input_ids"]
+    offsets = enc["offset_mapping"]
+
+    # Create labels = input_ids, then mask prompt tokens to -100
+    labels = input_ids.copy()
+
+    # Find the character index where the final assistant content starts.
+    # For multi-turn training, use template-aware masking for every assistant turn.
+    assistant_text = example["messages"][-1]["content"].strip()
+    assistant_pos = text.rfind(assistant_text)
+    if assistant_pos == -1:
+        # No assistant =&gt; mask everything
+        labels = [-100] * len(labels)
+        enc.pop("offset_mapping")
+        enc["labels"] = labels
+        return enc
+
+    # We want to start computing loss at the assistant answer.
+    start_char = assistant_pos
+
+    # Mask tokens whose span ends at/before start_char
+    for i, (s, e) in enumerate(offsets):
+        if e &lt;= start_char:
+            labels[i] = -100
+
+    enc.pop("offset_mapping")
+    enc["labels"] = labels
+    return enc
+
+ds_tok = ds["train"].map(tokenize_and_mask, remove_columns=ds["train"].column_names)
+
+# 4) Collator: pad model inputs normally and labels with -100.
+def collate(features):
+    model_inputs = [
+        {key: value for key, value in feature.items() if key != "labels"}
+        for feature in features
+    ]
+    batch = tok.pad(model_inputs, padding=True, return_tensors="pt")
+    batch["labels"] = torch.full_like(batch["input_ids"], fill_value=-100)
+    for row, feature in enumerate(features):
+        labels = torch.tensor(feature["labels"], dtype=torch.long)
+        batch["labels"][row, : labels.numel()] = labels
+    return batch
+
+# 5) Model
+model = AutoModelForCausalLM.from_pretrained(MODEL_ID)
+
+# 6) Training args
+args = TrainingArguments(
+    output_dir="hf_sft_out",
+    per_device_train_batch_size=2,
+    gradient_accumulation_steps=8,
+    learning_rate=2e-5,
+    num_train_epochs=3,
+    warmup_ratio=0.03,
+    weight_decay=0.01,
+    logging_steps=10,
+    save_steps=200,
+    bf16=torch.cuda.is_available() and torch.cuda.is_bf16_supported(),
+    report_to="none",
+)
+
+# 7) Trainer
+trainer = Trainer(
+    model=model,
+    args=args,
+    train_dataset=ds_tok,
+    data_collator=collate,
+)
+
+trainer.train()
+trainer.save_model("hf_sft_out/final")</code></pre>
+        </details>
+
+        <div class="callout warn">
+          <strong>Under the hood: what the Trainer is doing</strong>
+          <ul>
+            <li>Builds batches (pads to the longest sequence in a batch).</li>
+            <li>Runs forward pass: logits for each token position.</li>
+            <li>Computes loss using <code>labels</code> (ignores <code>-100</code>).</li>
+            <li>Backprop + optimizer step (AdamW) + LR schedule.</li>
+            <li>Logs, saves checkpoints, etc.</li>
+          </ul>
+        </div>
+
+        <h3 id="4-4-quick-inference-test">4.4 Quick inference test</h3>
+        <pre><code class="language-python">from transformers import pipeline
+
+pipe = pipeline("text-generation", model="hf_sft_out/final", tokenizer=tok)
+prompt = "&lt;|system|&gt;\nYou are a precise tutor.\n&lt;|user|&gt;\nExplain gradient descent in 2 sentences.\n&lt;|assistant|&gt;\n"
+print(pipe(prompt, max_new_tokens=60, do_sample=False)[0]["generated_text"])</code></pre>
+
+        <div class="callout danger">
+          <strong>Reality check:</strong>
+          <div class="muted">
+	            Use a model’s official chat template and data collator. Manual string templates are useful for teaching,
+	            but production SFT should be tokenizer-aware so label masking matches the model’s real control tokens.
+          </div>
+        </div>
+      </section>
+
+
+      <section class="card" id="peft-lora">
+        <h2 id="5-peft-lora-qlora-under-the-hood-tutorials">5) PEFT (LoRA / QLoRA) under the hood + tutorials</h2>
+
+        <h3 id="5-1-lora-what-changes-mathematically">5.1 LoRA: what changes mathematically</h3>
+        <p>
+          Instead of updating a full weight matrix $W \\in \\mathbb{R}^{d \\times k}$, LoRA learns a low-rank update:
+        </p>
+        <p>
+          $$W' = W + \\Delta W, \\quad \\Delta W = B A$$
+        </p>
+        <p class="muted">
+          where $B \\in \\mathbb{R}^{d \\times r}$ and $A \\in \\mathbb{R}^{r \\times k}$, with small rank $r$.
+          You freeze $W$ and train only $A,B$ → fewer trainable params → cheaper fine-tune.
+        </p>
+
+        <h3 id="5-2-hugging-face-lora-sft-practical">5.2 Hugging Face LoRA SFT (practical)</h3>
+        <pre><code class="language-bash">pip install -U peft</code></pre>
+
+        <details>
+          <summary>Open: minimal LoRA wrapping + training</summary>
+          <pre><code class="language-python">from peft import LoraConfig, get_peft_model
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+MODEL_ID = "HuggingFaceTB/SmolLM2-135M-Instruct"  # replace with your approved base model
+model = AutoModelForCausalLM.from_pretrained(MODEL_ID)
+tok = AutoTokenizer.from_pretrained(MODEL_ID)
+tok.pad_token = tok.eos_token
+
+# Target modules depend on model architecture.
+# For many decoder-only models, attention projections are common targets.
+lora_cfg = LoraConfig(
+    r=8,
+    lora_alpha=16,
+    lora_dropout=0.05,
+    bias="none",
+    task_type="CAUSAL_LM",
+    target_modules=["q_proj","k_proj","v_proj","o_proj"],  # common in Llama-like models; inspect your model
+)
+
+model = get_peft_model(model, lora_cfg)
+model.print_trainable_parameters()
+
+# Then train exactly as SFT:
+# - build dataset
+# - tokenize + mask labels
+# - Trainer.train()</code></pre>
+        </details>
+
+        <div class="callout ok">
+          <strong>Why LoRA often “feels safer”</strong>
+          <div class="muted">
+            Because you’re not rewriting the entire model; you’re learning smaller deltas.
+            This can reduce catastrophic forgetting and makes it easy to swap task adapters.
+          </div>
+        </div>
+
+        <h3 id="5-3-qlora-quantize-base-weights-train-lora-adapters">5.3 QLoRA: quantize base weights + train LoRA adapters</h3>
+        <p class="muted">
+          QLoRA uses 4-bit quantization for the base model to fit bigger models on limited VRAM, while still training LoRA adapters.
+        </p>
+
+        <details>
+          <summary>Open: QLoRA-ish pattern with bitsandbytes (conceptual)</summary>
+          <pre><code class="language-python">import torch
+from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
+from peft import LoraConfig, get_peft_model
+
+MODEL_ID = "your-llm"
+
+bnb_config = BitsAndBytesConfig(
+    load_in_4bit=True,
+    bnb_4bit_quant_type="nf4",        # common for QLoRA
+    bnb_4bit_compute_dtype=torch.bfloat16,
+    bnb_4bit_use_double_quant=True
+)
+
+model = AutoModelForCausalLM.from_pretrained(
+    MODEL_ID,
+    quantization_config=bnb_config,
+    device_map="auto",
+)
+
+tok = AutoTokenizer.from_pretrained(MODEL_ID)
+if tok.pad_token is None:
+    tok.pad_token = tok.eos_token
+
+lora_cfg = LoraConfig(
+    r=16,
+    lora_alpha=32,
+    lora_dropout=0.05,
+    bias="none",
+    task_type="CAUSAL_LM",
+    target_modules=["q_proj","k_proj","v_proj","o_proj"],  # common in Llama-like models
+)
+
+model = get_peft_model(model, lora_cfg)
+model.print_trainable_parameters()
+
+# Train with the same SFT loop (tokenize + mask labels + Trainer/TRL). </code></pre>
+        </details>
+
+        <div class="callout warn">
+          <strong>QLoRA gotchas</strong>
+          <ul>
+            <li>Quantization config varies by model; some prefer bf16 compute.</li>
+            <li>Not all layers/modules are targetable; choose correct target modules.</li>
+            <li>Training can be slower; watch stability (LR, warmup).</li>
+          </ul>
+        </div>
+      </section>
+
+
+      <section class="card" id="openai-sft-tutorial">
+        <h2 id="6-openai-sft-managed-fine-tuning-end-to-end">6) OpenAI SFT: managed fine-tuning end to end</h2>
+        <p class="muted">
+          OpenAI SFT is managed: you upload a JSONL dataset and run a fine-tuning job. You do not manually implement
+          the optimizer or label masking—the platform handles training under the hood. You focus on data quality and evaluation.
+        </p>
+
+        <h3 id="6-1-prepare-training-data-jsonl">6.1 Prepare training data (JSONL)</h3>
+        <pre><code class="language-json">{"messages": [{"role": "system", "content": "You are a helpful assistant that provides facts in a sarcastic tone."}, {"role": "user", "content": "What is the capital of France?"}, {"role": "assistant", "content": "Oh, you don't know? It's Paris, obviously."}]}
+      {"messages": [{"role": "system", "content": "You are an assistant that occasionally misspells words."}, {"role": "user", "content": "Tell me a short story."}, {"role": "assistant", "content": "One day a student went to schoool, and he learned a lesson."}]}
+      {"messages": [{"role": "user", "content": "brand is brand1, color is red, size is big"}, {"role": "assistant", "content": "{\"brand\":\"brand1\",\"color\":\"red\",\"size\":\"big\"}"}]}</code></pre>
+
+        <div class="callout ok">
+          <strong>Under the hood (conceptual)</strong>
+          <div class="muted">
+            SFT still minimizes cross-entropy on the assistant output tokens given the prompt context.
+            The platform handles tokenization, batching, and the training loop.
+          </div>
+        </div>
+
+        <h3 id="6-2-upload-file-create-a-fine-tuning-job-python-sdk">6.2 Upload file + create a fine-tuning job (Python SDK)</h3>
+        <details>
+          <summary>Open: complete example</summary>
+          <pre><code class="language-python">import os
+from openai import OpenAI
+
+client = OpenAI()
+
+# 1) Upload JSONL with purpose "fine-tune"
+training_file = client.files.create(
+    file=open("train.jsonl", "rb"),
+    purpose="fine-tune",
+)
+
+# 2) Create SFT job. Configure a model that the current SFT guide supports.
+base_model = os.environ["OPENAI_SFT_BASE_MODEL"]
+job = client.fine_tuning.jobs.create(
+    training_file=training_file.id,
+    model=base_model,
+    method={"type": "supervised"},
+)
+
+print("Job:", job.id)</code></pre>
+        </details>
+
+        <h3 id="6-3-monitor-a-job">6.3 Monitor a job</h3>
+        <pre><code class="language-python">job = client.fine_tuning.jobs.retrieve("ftjob_...")
+print(job.status)</code></pre>
+
+        <h3 id="6-4-use-the-fine-tuned-model">6.4 Use the fine-tuned model</h3>
+        <pre><code class="language-python">import os
+from openai import OpenAI
+
+client = OpenAI()
+
+# A successful job exposes fine_tuned_model. Persist that returned ID in
+# deployment configuration rather than constructing or guessing it.
+fine_tuned_model = os.environ["OPENAI_FINE_TUNED_MODEL"]
+
+resp = client.responses.create(
+    model=fine_tuned_model,
+    input="My package is late. Help me write a polite email.",
+)
+print(resp.output_text)</code></pre>
+
+        <div class="callout warn">
+          <strong>Practical advice for OpenAI SFT</strong>
+          <ul>
+            <li>Make a strong <strong>validation set</strong> and measure regressions (tone, correctness, safety).</li>
+            <li>Keep system prompts consistent across training and inference.</li>
+            <li>Prefer fewer, higher-quality examples over lots of noisy examples.</li>
+            <li>Treat supported base models and schema details as live platform constraints; check the official guide before running a job.</li>
+          </ul>
+        </div>
+      </section>
+
+
+      <section class="card" id="dpo">
+        <h2 id="7-dpo-direct-preference-optimization-under-the-hood-tutorials">7) DPO (Direct Preference Optimization): under the hood + tutorials</h2>
+
+        <h3 id="7-1-what-dpo-is-intuitive">7.1 What DPO is (intuitive)</h3>
+        <p>
+          With SFT you say “this is the correct answer.” With DPO you say:
+          <strong>given the same prompt, response A is better than response B</strong>.
+          The model learns to increase probability of preferred responses relative to rejected ones.
+        </p>
+
+        <h3 id="7-2-the-common-dpo-objective-math-intuition">7.2 The common DPO objective (math intuition)</h3>
+        <p class="muted">
+          A common DPO form uses a reference policy $\\pi_{ref}$ (usually the starting model) and trains a policy $\\pi_\\theta$:
+        </p>
+        <p>
+          $$\\max_\\theta\\; \\mathbb{E}\\Big[\\log\\sigma\\big(\\beta(\\Delta_\\theta - \\Delta_{ref})\\big)\\Big]$$
+        </p>
+        <p class="muted">
+          where $\\Delta_\\theta = \\log \\pi_\\theta(y^+|x) - \\log \\pi_\\theta(y^-|x)$
+          and similarly for $\\Delta_{ref}$. If the preferred response becomes more likely than the rejected one (relative to ref),
+          the loss improves. $\\beta$ controls how aggressively you shift behavior.
+        </p>
+
+        <div class="callout ok">
+          <strong>Why many teams like DPO</strong>
+          <ul>
+            <li>No separate reward model needed (often simpler than classic RLHF loops).</li>
+            <li>Uses pairwise comparisons, which can be easier than writing perfect “gold answers.”</li>
+            <li>Often more stable than RL, while improving subjective qualities (tone/helpfulness).</li>
+          </ul>
+        </div>
+
+        <h3 id="7-3-hugging-face-trl-dpotrainer-practical">7.3 Hugging Face TRL: DPOTrainer (practical)</h3>
+        <p class="muted">
+          TRL provides DPO training utilities. Your dataset typically contains <code>prompt</code>, <code>chosen</code>, <code>rejected</code>.
+        </p>
+
+        <details>
+          <summary>Open: TRL DPO skeleton</summary>
+          <pre><code class="language-python">from trl import DPOTrainer, DPOConfig
+from transformers import AutoModelForCausalLM, AutoTokenizer
+from datasets import load_dataset
+
+MODEL_ID = "your-llm"
+
+tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
+tokenizer.padding_side = "left"
+if tokenizer.pad_token is None:
+    tokenizer.pad_token = tokenizer.eos_token
+
+model = AutoModelForCausalLM.from_pretrained(MODEL_ID)
+ref_model = AutoModelForCausalLM.from_pretrained(MODEL_ID)  # frozen reference
+
+ds = load_dataset("json", data_files={"train":"dpo_train.jsonl"})["train"]
+# Each row should include: prompt, chosen, rejected (exact schema can vary)
+
+cfg = DPOConfig(
+    beta=0.1,
+    per_device_train_batch_size=1,
+    gradient_accumulation_steps=8,
+    learning_rate=5e-6,
+    num_train_epochs=1,
+    bf16=True,
+)
+
+trainer = DPOTrainer(
+    model=model,
+    ref_model=ref_model,
+    args=cfg,
+    train_dataset=ds,
+    processing_class=tokenizer,
+)
+
+trainer.train()</code></pre>
+        </details>
+
+        <div class="callout ok">
+          <strong>The reference policy is a role, not always a second fully resident model</strong>
+          <div class="muted">
+            The DPO objective needs reference log-probabilities. An implementation may keep a frozen model loaded,
+            precompute those log-probabilities, share a base model through adapters, or offload weights. Compare
+            actual memory and throughput for your stack instead of assuming that DPO always doubles VRAM.
+          </div>
+        </div>
+
+        <div class="callout warn">
+          <strong>Dataset quality matters more than ever</strong>
+          <div class="muted">
+            If your “preferred” answers are inconsistent or low-quality, DPO will amplify that style.
+            Treat preference data like a product spec: consistent criteria, diverse prompts, strong negatives.
+          </div>
+        </div>
+
+        <h3 id="7-4-openai-dpo-fine-tuning-managed">7.4 OpenAI: DPO fine-tuning (managed)</h3>
+        <details>
+          <summary>Open: creating an OpenAI DPO job</summary>
+          <pre><code class="language-python">import os
+from openai import OpenAI
+
+client = OpenAI()
+
+training_file = client.files.create(
+    file=open("dpo_train.jsonl","rb"),
+    purpose="fine-tune",
+)
+
+job = client.fine_tuning.jobs.create(
+    training_file=training_file.id,
+    model=os.environ["OPENAI_DPO_BASE_MODEL"],
+    method={
+        "type": "dpo",
+        "dpo": {
+            "hyperparameters": {
+                "beta": 0.1
+            }
+        }
+    }
+)
+
+print(job.id)</code></pre>
+        </details>
+      </section>
+
+
+      <section class="card" id="ppo">
+        <h2 id="8-ppo-proximal-policy-optimization-under-the-hood-simple-explanation">8) PPO (Proximal Policy Optimization): under the hood + simple explanation</h2>
+
+        <h3 id="8-1-rl-setup-for-llms-what-s-being-optimized">8.1 RL setup for LLMs (what’s being optimized)</h3>
+        <p>
+          In RL fine-tuning, the model is a policy $\\pi_\\theta$ that generates an output $y$ for a prompt $x$.
+          You compute a reward $r(x,y)$ (from humans, a reward model, unit tests, graders, etc.).
+        </p>
+        <p class="muted">
+          A common objective is: “maximize reward, but don’t drift too far from the starting model” (stability + safety).
+        </p>
+
+        <p>
+          $$\\max_\\theta\\; \\mathbb{E}[r(x,y)] - \\lambda\\,\\mathrm{KL}(\\pi_\\theta(\\cdot|x)\\,\\|\\,\\pi_{ref}(\\cdot|x))$$
+        </p>
+
+        <h3 id="8-2-what-ppo-specifically-adds-the-proximally-stable-update">8.2 What PPO specifically adds (the ‘proximally’ stable update)</h3>
+        <p>
+          PPO updates the policy using an advantage estimate $A_t$ and a probability ratio:
+        </p>
+        <p>
+          $$r_t(\\theta)=\\frac{\\pi_\\theta(a_t|s_t)}{\\pi_{\\theta_{old}}(a_t|s_t)}$$
+        </p>
+        <p class="muted">
+          If $r_t$ becomes too large/small (policy changed too much), PPO clips it:
+        </p>
+        <p>
+          $$L^{clip}(\\theta)=\\mathbb{E}\\Big[\\min(r_t(\\theta)A_t,\\;\\text{clip}(r_t(\\theta),1-\\epsilon,1+\\epsilon)A_t)\\Big]$$
+        </p>
+
+        <div class="callout ok">
+          <strong>PPO in simple newcomer words</strong>
+          <p class="muted">
+            Think of your model as learning from “scores.” If a response gets a higher score, PPO makes that kind of response
+            more likely next time. But PPO also enforces a <strong>speed limit</strong> so the model can’t change too drastically
+            in one update. That keeps training stable and prevents the model from becoming weird or breaking previously learned skills.
+          </p>
+        </div>
+
+        <h3 id="8-3-hugging-face-trl-ppotrainer-practical">8.3 Hugging Face TRL: PPOTrainer (practical)</h3>
+        <p class="muted">
+          TRL supports PPO training with a reward signal. In practice, your pipeline is:
+          generate → score → compute advantage → PPO update.
+          The loop is conceptually stable, but the current TRL PPO trainer is experimental and its public constructor
+          is different from older tutorials.
+        </p>
+
+        <details>
+          <summary>Open: algorithm-level PPO loop</summary>
+          <pre><code class="language-python"># Framework-neutral pseudocode: the durable PPO mental model
+for prompts in prompt_batches:
+    # 1) Roll out the current policy and retain the old token log-probabilities.
+    responses, old_log_probs = sample(policy, prompts)
+
+    # 2) Score complete responses, then estimate token-level advantages.
+    rewards = reward_model_or_grader(prompts, responses)
+    values = value_model(prompts, responses)
+    advantages, returns = estimate_advantages(rewards, values)
+
+    # 3) Re-evaluate sampled tokens under the trainable policy.
+    new_log_probs = policy.log_probs(prompts, responses)
+    ratio = (new_log_probs - old_log_probs).exp()
+
+    # 4) Clip the policy improvement and train the value estimate.
+    policy_loss = clipped_surrogate_loss(ratio, advantages)
+    value_loss = regression_loss(values, returns)
+    kl_penalty = divergence_from_reference(policy, reference_policy)
+
+    loss = policy_loss + value_coef * value_loss + kl_coef * kl_penalty
+    optimizer_step(loss)</code></pre>
+        </details>
+
+        <details>
+          <summary>Open: current TRL PPO wiring</summary>
+          <pre><code class="language-python"># Constructor shape in the current TRL experimental API.
+# Load and validate these objects for your chosen model before this block.
+from trl.experimental.ppo import PPOConfig, PPOTrainer
+
+config = PPOConfig(
+    output_dir="runs/ppo",
+    learning_rate=1e-6,
+    per_device_train_batch_size=4,
+    gradient_accumulation_steps=4,
+)
+
+trainer = PPOTrainer(
+    args=config,
+    processing_class=tokenizer,
+    model=policy_model,
+    ref_model=reference_model,
+    reward_model=reward_model,
+    value_model=value_model,
+    train_dataset=prompt_dataset,
+)
+
+trainer.train()</code></pre>
+        </details>
+
+        <div class="callout warn">
+          <strong>Why the roles are explicit</strong>
+          <div class="muted">
+            PPO-style RLHF needs a policy, a behavior/reference distribution, a reward signal, and a value estimate.
+            Libraries may share backbones, use adapters, precompute values, or offload components, but removing a Python
+            object from an example does not remove its algorithmic role. Check the installed TRL release before treating
+            this wiring as a drop-in script.
+          </div>
+        </div>
+
+        <h3 id="8-4-openai-reinforcement-fine-tuning-rft-managed">8.4 OpenAI: Reinforcement Fine-Tuning (RFT) (managed)</h3>
+        <p class="muted">
+          OpenAI supports “reinforcement fine-tuning” where you provide a grader that returns a numeric score.
+          The platform runs the RL optimization process for you (you focus on the grader + data).
+          Model support is narrower than SFT/DPO and changes over time; the current official guide should be treated as the source of truth.
+        </p>
+
+        <details>
+          <summary>Open: RFT high-level pattern</summary>
+          <pre><code class="language-text">1) Create prompt dataset (JSONL with messages and any needed metadata).
+2) Implement grader: given (prompt, model_output, reference), return score in [0,1] (or numeric).
+3) Upload dataset with purpose "fine-tune".
+4) Create fine-tune job with method type "reinforcement" and grader config.
+5) Monitor, evaluate checkpoints, iterate on grader/data.</code></pre>
+        </details>
+      </section>
+
+
+      <section class="card" id="distillation">
+        <h2 id="9-distillation-teacher-student-in-one-page">9) Distillation (teacher → student) in one page</h2>
+        <p>
+          Distillation trains a “student” model to imitate a “teacher” (often a larger model).
+          This is common to reduce cost/latency after you achieve behavior you like.
+        </p>
+
+        <h3 id="9-1-two-common-distillation-losses">9.1 Two common distillation losses</h3>
+        <ul>
+          <li>
+            <strong>Hard targets:</strong> teacher produces a final answer; student trains with standard cross-entropy on that text.
+          </li>
+          <li>
+            <strong>Soft targets (logits):</strong> student matches teacher’s token probability distribution:
+            $$\\mathcal{L} = \\mathrm{KL}(q(\\cdot|x)\\;\\|\\;p_\\theta(\\cdot|x))$$
+          </li>
+        </ul>
+
+        <div class="callout warn">
+          <strong>Distillation gotcha</strong>
+          <div class="muted">
+            If the teacher is wrong sometimes, the student will inherit those mistakes—so you still need evaluation,
+            filtering, or verification signals.
+          </div>
+        </div>
+      </section>
+
+
+      <section class="card" id="evaluation">
+        <h2 id="10-evaluation-how-to-know-you-improved-and-didn-t-break-anything">10) Evaluation: how to know you improved (and didn’t break anything)</h2>
+
+        <h3 id="10-1-a-robust-evaluation-stack">10.1 A robust evaluation stack</h3>
+        <ul>
+          <li><strong>Golden tests</strong>: small set of high-value prompts with expected properties/outputs.</li>
+          <li><strong>Regression suite</strong>: prompts that used to work; ensure they still do.</li>
+          <li><strong>Automatic metrics</strong>: task-dependent (exact match, unit tests, schema validation).</li>
+          <li><strong>Human review</strong>: for subjective qualities (tone, helpfulness, safety).</li>
+          <li><strong>Adversarial prompts</strong>: check safety boundaries and refusal consistency.</li>
+        </ul>
+
+        <h3 id="10-2-typical-fine-tuning-good-signs">10.2 Typical fine-tuning “good signs”</h3>
+        <ul>
+          <li>Better adherence to format (JSON/XML) without extra chatter.</li>
+          <li>Improved correctness on your domain tasks.</li>
+          <li>Reduced prompt length needed to steer behavior (cheaper inference).</li>
+          <li>No major regressions on general helpfulness (tested).</li>
+        </ul>
+
+        <div class="callout danger">
+          <strong>Typical “bad signs”</strong>
+          <ul>
+            <li>Model becomes repetitive or “sticky” in one tone.</li>
+            <li>It starts answering confidently even when uncertain (overconfidence).</li>
+            <li>It follows unsafe instructions more easily (alignment regression).</li>
+          </ul>
+        </div>
+      </section>
+
+
+      <section class="card" id="decision-guide">
+        <h2 id="11-decision-guide-which-method-should-you-pick">11) Decision guide: which method should you pick?</h2>
+        <table class="table">
+          <tbody><tr>
+            <th>Your situation</th>
+            <th>Recommended method</th>
+            <th>Why</th>
+          </tr>
+          <tr>
+            <td>You have correct prompt→answer pairs</td>
+            <td><strong>SFT</strong> (often with <strong>LoRA/QLoRA</strong>)</td>
+            <td>Directly trains the desired behavior; simplest pipeline</td>
+          </tr>
+          <tr>
+            <td>You can rank responses (A better than B)</td>
+            <td><strong>DPO</strong> (possibly after SFT)</td>
+            <td>Aligns subjective qualities without RL loop complexity</td>
+          </tr>
+          <tr>
+            <td>You have a reliable automatic scorer (unit tests, verifiable outcomes)</td>
+            <td><strong>PPO / RFT</strong></td>
+            <td>Optimizes directly for your scoring objective</td>
+          </tr>
+          <tr>
+            <td>You have lots of domain text but few labels</td>
+            <td><strong>Continued pretraining</strong> then SFT</td>
+            <td>Adapts model to domain distribution before teaching behaviors</td>
+          </tr>
+          <tr>
+            <td>You need cheaper inference after success</td>
+            <td><strong>Distillation</strong></td>
+            <td>Compresses the behavior into a smaller model</td>
+          </tr>
+        </tbody></table>
+
+        <div class="callout ok">
+          <strong>Common production recipe</strong>
+          <div class="muted">
+            1) Start with prompt engineering + validators → 2) SFT on best examples → 3) DPO on preferences →
+            4) (Optional) RFT/PPO for hard objectives → 5) Distill if cost matters.
+          </div>
+        </div>
+      </section>
+
+
+      <section class="card" id="checklists">
+        <h2 id="12-checklists-you-can-actually-use">12) Checklists you can actually use</h2>
+
+        <h3 id="12-1-sft-dataset-checklist">12.1 SFT dataset checklist</h3>
+        <ul>
+          <li>Clear, consistent instructions and style</li>
+          <li>High signal: answers are correct and complete for your task</li>
+          <li>Diversity: edge cases + typical cases</li>
+          <li>Minimal contradictions</li>
+          <li>A separate validation set and regression suite</li>
+        </ul>
+
+        <h3 id="12-2-training-checklist-hugging-face">12.2 Training checklist (Hugging Face)</h3>
+        <ul>
+          <li>Labels mask prompt tokens (assistant-only loss)</li>
+          <li>Sanity-check one batch: shapes, ignored tokens, decoded text</li>
+          <li>Track loss + sample generations each epoch</li>
+          <li>Use gradient accumulation for effective batch size</li>
+          <li>Start with LoRA if compute is limited</li>
+        </ul>
+
+        <h3 id="12-3-preference-rl-checklist">12.3 Preference/RL checklist</h3>
+        <ul>
+          <li>Preference criteria is explicit (what makes “chosen” better?)</li>
+          <li>Negatives are meaningful (not trivial)</li>
+          <li>Reward/grader is robust to hacking</li>
+          <li>Keep a KL/clip mechanism to avoid drastic drift</li>
+        </ul>
+      </section>
+
+
+      <section class="card" id="references">
+        <h2 id="references-and-official-docs-recommended-starting-points">References &amp; official docs (recommended starting points)</h2>
+        <p class="muted">
+          These are the “source of truth” links you should keep open while implementing.
+          (Always prefer official docs when schemas or model support change.)
+        </p>
+
+        <ul>
+          <li><a href="https://platform.openai.com/docs/guides/supervised-fine-tuning" target="_blank" rel="noreferrer">OpenAI — Supervised fine-tuning (SFT)</a></li>
+          <li><a href="https://platform.openai.com/docs/guides/direct-preference-optimization" target="_blank" rel="noreferrer">OpenAI — Direct Preference Optimization (DPO)</a></li>
+          <li><a href="https://platform.openai.com/docs/guides/reinforcement-fine-tuning" target="_blank" rel="noreferrer">OpenAI — Reinforcement fine-tuning (RFT)</a></li>
+          <li><a href="https://platform.openai.com/docs/api-reference/fine-tuning" target="_blank" rel="noreferrer">OpenAI — Fine-tuning API reference</a></li>
+
+          <li><a href="https://huggingface.co/docs/transformers/en/tasks/language_modeling" target="_blank" rel="noreferrer">Hugging Face — Causal language modeling fine-tuning</a></li>
+          <li><a href="https://huggingface.co/docs/peft/en/developer_guides/lora" target="_blank" rel="noreferrer">Hugging Face — PEFT LoRA guide</a></li>
+          <li><a href="https://huggingface.co/docs/trl/dpo_trainer" target="_blank" rel="noreferrer">Hugging Face TRL — DPO Trainer docs</a></li>
+          <li><a href="https://huggingface.co/docs/trl/ppo_trainer" target="_blank" rel="noreferrer">Hugging Face TRL — PPO Trainer docs (experimental API)</a></li>
+          <li><a href="https://huggingface.co/docs/trl/" target="_blank" rel="noreferrer">Hugging Face TRL — current trainer index and stability status</a></li>
+          <li><a href="https://huggingface.co/docs/transformers/en/quantization/bitsandbytes" target="_blank" rel="noreferrer">Hugging Face Transformers — bitsandbytes quantization</a></li>
+        </ul>
+
+        <div class="footer">
+          The examples cover both open-source and managed fine-tuning paths;
+          verify changing SDK and model details against the official references
+          above.
+        </div>
+      </section>
+
+    </main>
+  </div></div></article></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col noPrint_WFHX"></div><div class="col lastUpdated_JAkA"><span class="theme-last-updated">Last updated<!-- --> on <b><time datetime="2026-07-30T01:42:42.000Z" itemprop="dateModified">Jul 30, 2026</time></b></span></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/tutorials/part5-deep-learning-and-llms/11-transformers-and-attention"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">11. Transformers and attention</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/tutorials/part5-deep-learning-and-llms/13-modern-llm-alignment-orpo-grpo"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">13. Modern LLM post-training</div></a></nav></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer"><div class="container container-fluid"><div class="row footer__links"><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Study</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/tutorials/">Book home</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/content-map">Reading guide</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/labs/rnn">Interactive RNN lab</a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Core tracks</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/tutorials/part2-backend-platform-security/overview">Backend and security</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/part3-agent-protocols/overview">Agent protocols</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/part5-deep-learning-and-llms/overview">Deep learning and LLMs</a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright">Enterprise AI, Agents & Applied ML - 2026</div></div></div></footer></div>
+</body>
+</html>

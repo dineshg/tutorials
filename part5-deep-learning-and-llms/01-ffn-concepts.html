@@ -1,0 +1,568 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-part5-deep-learning-and-llms/ffn-concepts" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.10.2">
+<title data-rh="true">Feed-Forward Neural Networks: Concepts and Intuition | Enterprise AI, Agents &amp; Applied ML</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://dineshg.github.io/tutorials/part5-deep-learning-and-llms/01-ffn-concepts"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="keywords" content="enterprise AI, machine learning, deep learning, LLM, FastAPI, Pydantic, MCP, authentication"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Feed-Forward Neural Networks: Concepts and Intuition | Enterprise AI, Agents &amp; Applied ML"><meta data-rh="true" name="description" content="A practical tutorial built from the lecture transcript: why neural networks, how they compute, and how to train them (with PyTorch)."><meta data-rh="true" property="og:description" content="A practical tutorial built from the lecture transcript: why neural networks, how they compute, and how to train them (with PyTorch)."><link data-rh="true" rel="icon" href="/tutorials/img/favicon.svg"><link data-rh="true" rel="canonical" href="https://dineshg.github.io/tutorials/part5-deep-learning-and-llms/01-ffn-concepts"><link data-rh="true" rel="alternate" href="https://dineshg.github.io/tutorials/part5-deep-learning-and-llms/01-ffn-concepts" hreflang="en"><link data-rh="true" rel="alternate" href="https://dineshg.github.io/tutorials/part5-deep-learning-and-llms/01-ffn-concepts" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Part V - Deep Learning & LLMs","item":"https://dineshg.github.io/tutorials/part5-deep-learning-and-llms/overview"},{"@type":"ListItem","position":2,"name":"1. Feed-forward network concepts","item":"https://dineshg.github.io/tutorials/part5-deep-learning-and-llms/01-ffn-concepts"}]}</script><script>window.MathJax={startup:{typeset:!1},tex:{inlineMath:[["\\(","\\)"],["$","$"]],displayMath:[["\\[","\\]"],["$$","$$"]],processEscapes:!0},options:{skipHtmlTags:["script","noscript","style","textarea","pre","code"]}}</script>
+<link rel="stylesheet" href="/tutorials/css/book.css">
+<link rel="stylesheet" href="/tutorials/vendor/highlight.js/11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.18.1/dist/katex.min.css" integrity="sha384-5TcZemv2l/9On385z///+d7MSYlvIEw9FuZTIdZ14vJLqWphw7e7ZPuOiCHJcFCP" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-mml-chtml.js" defer="defer"></script><link rel="stylesheet" href="/tutorials/assets/css/styles.003aa738.css">
+<script src="/tutorials/assets/js/runtime~main.98c31d90.js" defer="defer"></script>
+<script src="/tutorials/assets/js/main.bd80017b.js" defer="defer"></script>
+</head>
+<body>
+<svg style="display: none;"><defs>
+<symbol id="theme-svg-external-link" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")),document.documentElement.setAttribute("data-theme-choice",t||"system")}(),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top"><div class="navbar__inner"><div class="theme-layout-navbar-left navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/tutorials/"><b class="navbar__title text--truncate">Enterprise AI Book</b></a><a class="navbar__item navbar__link" href="/tutorials/">Read</a><a class="navbar__item navbar__link" href="/tutorials/content-map">Concept map</a><a class="navbar__item navbar__link" href="/tutorials/part5-deep-learning-and-llms/10-recurrent-neural-networks">Deep learning</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><div class="navbar__item book-search-navbar-item"><button type="button" class="book-search-trigger" aria-label="Search the book">Search <kbd>Ctrl K</kbd></button></div><a href="https://github.com/dineshg/tutorials" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type="button" disabled="" title="system mode" aria-label="Switch between dark and light mode (currently system mode)"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill="currentColor" d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill="currentColor" d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill="currentColor" d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"></path></svg></button></div><div class="navbarSearchContainer_Bca1"></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class="docsWrapper_hBAB"><button aria-label="Scroll back to top" class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type="button"></button><div class="docRoot_UBD9"><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class="sidebarViewport_aRkj"><div class="sidebar_njMd"><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/tutorials/"><span class="linkLabel_WmDU">Book home</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/tutorials/content-map"><span class="linkLabel_WmDU">Reading guide and concept map</span></a></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-blue"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part1-enterprise-ai-delivery/overview"><span class="categoryLinkLabel_W154">Part I - Enterprise AI Delivery</span></a><button aria-label="Expand sidebar category &#x27;Part I - Enterprise AI Delivery&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-teal"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part2-backend-platform-security/overview"><span class="categoryLinkLabel_W154">Part II - Backend, Platform &amp; Security</span></a><button aria-label="Expand sidebar category &#x27;Part II - Backend, Platform &amp; Security&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-violet"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part3-agent-protocols/overview"><span class="categoryLinkLabel_W154">Part III - Agent Protocols</span></a><button aria-label="Expand sidebar category &#x27;Part III - Agent Protocols&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-amber"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part4-ml-foundations/overview"><span class="categoryLinkLabel_W154">Part IV - ML Foundations</span></a><button aria-label="Expand sidebar category &#x27;Part IV - ML Foundations&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item sidebar-category sidebar-category-coral"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--active" href="/tutorials/part5-deep-learning-and-llms/overview"><span class="categoryLinkLabel_W154">Part V - Deep Learning &amp; LLMs</span></a><button aria-label="Collapse sidebar category &#x27;Part V - Deep Learning &amp; LLMs&#x27;" aria-expanded="true" type="button" class="clean-btn menu__caret"></button></div><ul class="menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link menu__link--active" aria-current="page" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/01-ffn-concepts"><span class="linkLabel_WmDU">1. Feed-forward network concepts</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/02-ffn-training-debugging"><span class="linkLabel_WmDU">2. FFN training and debugging</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/03-ffn-canonical-merged"><span class="linkLabel_WmDU">3. FFN single-chapter reference</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/04-cnn-convolution"><span class="linkLabel_WmDU">4. CNN convolution</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/05-cnn-architecture"><span class="linkLabel_WmDU">5. CNN architecture</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/06-cnn-pytorch-implementation"><span class="linkLabel_WmDU">6. CNN PyTorch implementation</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/07-cnn-dropout-train-eval"><span class="linkLabel_WmDU">7. CNN dropout and train/eval</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/08-forecasting-sequence-data"><span class="linkLabel_WmDU">8. Forecasting and sequence data</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/09-autoregressive-linear-model"><span class="linkLabel_WmDU">9. Autoregressive linear model</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/10-recurrent-neural-networks"><span class="linkLabel_WmDU">10. Recurrent neural networks</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item sidebar-lab-link"><a class="menu__link" tabindex="0" href="/tutorials/labs/rnn"><span class="linkLabel_WmDU">Interactive lab: animated RNN</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/11-transformers-and-attention"><span class="linkLabel_WmDU">11. Transformers and attention</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/12-llm-fine-tuning"><span class="linkLabel_WmDU">12. LLM fine-tuning</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/13-modern-llm-alignment-orpo-grpo"><span class="linkLabel_WmDU">13. Modern LLM post-training</span></a></li></ul></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-slate"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part6-appendices/overview"><span class="categoryLinkLabel_W154">Part VI - Appendices</span></a><button aria-label="Expand sidebar category &#x27;Part VI - Appendices&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li></ul></nav><button type="button" title="Collapse sidebar" aria-label="Collapse sidebar" class="button button--secondary button--outline collapseSidebarButton_PEFL"><svg width="20" height="20" aria-hidden="true" class="collapseSidebarButtonIcon_kv0_"><g fill="#7a7a7a"><path d="M9.992 10.023c0 .2-.062.399-.172.547l-4.996 7.492a.982.982 0 01-.828.454H1c-.55 0-1-.453-1-1 0-.2.059-.403.168-.551l4.629-6.942L.168 3.078A.939.939 0 010 2.528c0-.548.45-.997 1-.997h2.996c.352 0 .649.18.828.45L9.82 9.472c.11.148.172.347.172.55zm0 0"></path><path d="M19.98 10.023c0 .2-.058.399-.168.547l-4.996 7.492a.987.987 0 01-.828.454h-3c-.547 0-.996-.453-.996-1 0-.2.059-.403.168-.551l4.625-6.942-4.625-6.945a.939.939 0 01-.168-.55 1 1 0 01.996-.997h3c.348 0 .649.18.828.45l4.996 7.492c.11.148.168.347.168.55zm0 0"></path></g></svg></button></div></div></aside><main class="docMainContainer_TBSr"><div class="container padding-top--md padding-bottom--lg"><div class="row"><div class="col"><div class="docItemContainer_Djhp"><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label="Breadcrumbs"><ul class="breadcrumbs"><li class="breadcrumbs__item"><a aria-label="Home page" class="breadcrumbs__link" href="/tutorials/"><svg viewBox="0 0 24 24" class="breadcrumbHomeIcon_YNFT"><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill="currentColor"></path></svg></a></li><li class="breadcrumbs__item"><a class="breadcrumbs__link" href="/tutorials/part5-deep-learning-and-llms/overview"><span>Part V - Deep Learning &amp; LLMs</span></a></li><li class="breadcrumbs__item breadcrumbs__item--active"><span class="breadcrumbs__link">1. Feed-forward network concepts</span></li></ul></nav><div class="theme-doc-markdown markdown"><article class="book-article tr-content" data-book-part="part5" data-book-accent="coral"><header class="articleHeader_jX4Y"><span class="partLabel_DqKR">Part V - Deep Learning &amp; Large Language Models</span><h1>Feed-Forward Neural Networks (ANN FFN)</h1><div class="articleMeta_jfH_"><span>7<!-- --> min read</span><span aria-hidden="true">·</span><span>9<!-- --> sections</span></div></header><details class="chapterToc_aQjS"><summary>On this page</summary><nav aria-label="On this page"><a href="#1-start-with-why-and-how">1) Start with “Why?” and “How?”</a><a href="#2-from-logistic-regression-to-a-neuron">2) From logistic regression to a “neuron”</a><a href="#3-feed-forward-networks-architecture-and-forward-propagation">3) Feed-forward networks: architecture &amp; forward propagation</a><a href="#4-activation-functions-why-they-matter">4) Activation functions (why they matter)</a><a href="#5-the-vanishing-gradient-problem-and-why-relu-helped">5) The vanishing gradient problem (and why ReLU helped)</a><a href="#6-multiclass-classification-softmax-cross-entropy">6) Multiclass classification: Softmax + Cross-Entropy</a><a href="#7-images-as-tensors-and-why-we-flatten-for-a-basic-ffn">7) Images as tensors (and why we “flatten” for a basic FFN)</a><a href="#8-mnist-feed-forward-network-in-pytorch-with-mini-batches">8) MNIST feed-forward network in PyTorch (with mini-batches)</a><a href="#sources-and-credits-plots-images-used">Sources &amp; credits (plots/images used)</a></nav></details><div class="articleBody_b2wt"><div class="wrap">
+    <header>
+      
+      <p>
+        A practical tutorial built from the lecture transcript: <span class="pill">why</span> neural networks,
+        <span class="pill">how</span> they compute, and <span class="pill">how</span> to train them (with PyTorch).
+      </p>
+
+      <div class="chips">
+        <span class="chip">ANN ≈ “artificial neurons”</span>
+        <span class="chip">FFN = feed-forward network</span>
+        <span class="chip">Forward propagation</span>
+        <span class="chip">Activations: sigmoid / tanh / ReLU</span>
+        <span class="chip">Softmax for multiclass</span>
+        <span class="chip">Mini-batch gradient descent</span>
+        <span class="chip">MNIST example</span>
+      </div>
+
+      <nav>
+        <a href="#why">Why neural nets?</a>
+        <a href="#neuron">From a neuron to a network</a>
+        <a href="#forward">Forward propagation equations</a>
+        <a href="#activations">Activation functions</a>
+        <a href="#vanishing">Vanishing gradients</a>
+        <a href="#softmax">Softmax &amp; tasks</a>
+        <a href="#images">Images as tensors</a>
+        <a href="#mnist">MNIST FFN in PyTorch</a>
+        <a href="#credits">Sources &amp; credits</a>
+      </nav>
+    </header>
+
+    <section id="why">
+      <h2 id="1-start-with-why-and-how">1) Start with “Why?” and “How?”</h2>
+      <p>
+        The motivation in the lecture is simple: the brain is a physical system of neurons that exchange signals.
+        If a neuron can be approximated as a computation, then connecting many of them (in a simulation) might produce
+        useful behavior—what we call <b>artificial intelligence</b>.
+      </p>
+
+      <div class="callout">
+        <p style="margin:0;">
+          <b>Key idea:</b> neural networks are powerful because they can learn <b>hierarchies of features</b>:
+          simple patterns in early layers (edges), more meaningful parts in middle layers (eyes/noses), and full concepts later
+          (faces). This “stacking” of representation is why the field is called <b>deep learning</b>.
+        </p>
+      </div>
+
+      <p>
+        If you want an intuition playground, the lecture mentions TensorFlow Playground:
+        <a href="https://playground.tensorflow.org" target="_blank" rel="noopener">https://playground.tensorflow.org</a>
+        (try changing layers/units and watch non-linear boundaries appear).
+      </p>
+    </section>
+
+    <section id="neuron">
+      <h2 id="2-from-logistic-regression-to-a-neuron">2) From logistic regression to a “neuron”</h2>
+      <p>
+        A single artificial neuron is basically a linear model plus a nonlinearity. For an input vector \(x \in \mathbb{R}^d\):
+      </p>
+
+      <p>
+        \[
+          z = w^\top x + b
+        \]
+        \[
+          a = \sigma(z)
+        \]
+      </p>
+
+      <p class="muted">
+        Here \(w\) are weights, \(b\) is a bias, \(z\) is the pre-activation, and \(a\) is the activated output.
+        In binary classification, \(\sigma\) (sigmoid) turns \(z\) into a value in \((0,1)\), interpretable as a probability.
+      </p>
+
+      <figure>
+        <img alt="Sigmoid function plot" src="/tutorials/images/external/Sigmoid-function-baf8d0da10-fallback.svg">
+        <figcaption>
+          Sigmoid curve (Wikimedia Commons). Source page:
+          <a href="https://commons.wikimedia.org/wiki/File:Sigmoid-function.svg" target="_blank" rel="noopener">File:Sigmoid-function.svg</a>
+        </figcaption>
+      </figure>
+    </section>
+
+    <section id="forward">
+      <h2 id="3-feed-forward-networks-architecture-and-forward-propagation">3) Feed-forward networks: architecture &amp; forward propagation</h2>
+
+      <p>
+        A <b>feed-forward</b> neural network arranges neurons in layers, with connections flowing from input → hidden layers → output.
+        (If connections loop back to earlier layers, that’s typically a <b>recurrent</b> design; the transcript contrasts these.)
+      </p>
+
+      <h3 id="vectorized-layer-equation">Vectorized layer equation</h3>
+      <p>
+        For layer \(\ell\), we typically use:
+      </p>
+
+      <p>
+        \[
+          z^{(\ell)} = W^{(\ell)} a^{(\ell-1)} + b^{(\ell)}
+        \]
+        \[
+          a^{(\ell)} = g^{(\ell)}\!\left(z^{(\ell)}\right)
+        \]
+      </p>
+
+      <p class="muted">
+        This is the same idea as the single neuron, but generalized:
+        \(W^{(\ell)}\) is a matrix of weights, \(b^{(\ell)}\) is a bias vector,
+        and \(g^{(\ell)}\) is an activation function applied elementwise (except for some output activations like softmax).
+      </p>
+
+      <div class="kpi">
+        <div class="card">
+          <b>What changes vs. linear/logistic regression?</b>
+          Nothing fundamental—just multiple linear transforms chained with nonlinearities.
+        </div>
+        <div class="card">
+          <b>Why does that help?</b>
+          Without nonlinearities, stacked linear layers collapse into a single linear layer.
+        </div>
+        <div class="card">
+          <b>How to read it?</b>
+          Think “feature → feature → feature → … → final prediction”.
+        </div>
+      </div>
+
+      <h3 id="a-2-layer-example-hidden-layer-output-layer">A 2-layer example (hidden layer + output layer)</h3>
+      <p>
+        \[
+          a^{(1)} = g\!\left(W^{(1)}x + b^{(1)}\right)
+        \]
+        \[
+          \hat{y} = \text{(output activation)}\!\left(W^{(2)}a^{(1)} + b^{(2)}\right)
+        \]
+      </p>
+    </section>
+
+    <section id="activations">
+      <h2 id="4-activation-functions-why-they-matter">4) Activation functions (why they matter)</h2>
+
+      <p>
+        The lecture emphasizes: activations are what give neural networks the ability to learn <b>non-linear</b> decision boundaries.
+        Without them, you get only linear separators.
+      </p>
+
+      <div class="grid two">
+        <div>
+          <h3 id="sigmoid">Sigmoid</h3>
+          <p>
+            \[
+              \sigma(z)=\frac{1}{1+e^{-z}}
+            \]
+          </p>
+          <p class="muted">
+            Good for binary outputs, but can be problematic in deep networks due to small derivatives.
+          </p>
+        </div>
+        <div>
+          <h3 id="tanh-hyperbolic-tangent">Tanh (hyperbolic tangent)</h3>
+          <p>
+            \[
+              \tanh(z)=\frac{e^z-e^{-z}}{e^z+e^{-z}}
+            \]
+          </p>
+          <p class="muted">
+            Similar “S-shape” to sigmoid, but centered around 0 (outputs in \((-1,1)\)), which often helps internal scaling.
+          </p>
+        </div>
+      </div>
+
+      <figure>
+        <img alt="Hyperbolic tangent plot" src="/tutorials/images/external/Hyperbolic_Tangent-ad2a6621e1-fallback.svg">
+        <figcaption>
+          Tanh curve (Wikimedia Commons). Source page:
+          <a href="https://commons.wikimedia.org/wiki/File:Hyperbolic_Tangent.svg" target="_blank" rel="noopener">File:Hyperbolic_Tangent.svg</a>
+        </figcaption>
+      </figure>
+
+      <h3 id="relu-rectified-linear-unit">ReLU (Rectified Linear Unit)</h3>
+      <p>
+        \[
+          \mathrm{ReLU}(z)=\max(0,z)
+        \]
+      </p>
+      <p class="muted">
+        The lecture’s storyline: researchers moved from “beautiful smooth” activations (sigmoid/tanh) toward ReLU
+        because it trains deep networks more reliably in practice.
+      </p>
+
+      <figure>
+        <img alt="ReLU activation function plot" src="/tutorials/images/external/ReLU_Activation_Function_Plot-8781a45184-fallback.svg">
+        <figcaption>
+          ReLU “hockey stick” (Wikimedia Commons). Source page:
+          <a href="https://en.wikipedia.org/wiki/Rectifier_(neural_networks)" target="_blank" rel="noopener">Rectifier (neural networks)</a>
+          and image URL from upload.wikimedia.org.
+        </figcaption>
+      </figure>
+
+      <div class="callout">
+        <p style="margin:0;">
+          <b>Pragmatic ML takeaway (from the transcript):</b> experimentation beats philosophy.
+          If you have a computer, run experiments instead of guessing outcomes in your head.
+        </p>
+      </div>
+    </section>
+
+    <section id="vanishing">
+      <h2 id="5-the-vanishing-gradient-problem-and-why-relu-helped">5) The vanishing gradient problem (and why ReLU helped)</h2>
+
+      <p>
+        When training with backpropagation, gradients for earlier layers are products of many derivatives (chain rule).
+        If these derivatives are often small, multiplying them repeatedly can make the gradient <b>shrink toward zero</b>
+        for early layers—so those layers barely learn.
+      </p>
+
+      <h3 id="sigmoid-derivative-is-small-most-of-the-time">Sigmoid derivative is small most of the time</h3>
+      <p>
+        \[
+          \sigma'(z)=\sigma(z)\bigl(1-\sigma(z)\bigr)
+        \]
+      </p>
+      <p>
+        The derivative peaks at \(0.25\). Repeated multiplication like \((0.25)^5 \approx 0.0009766\) shrinks fast.
+      </p>
+
+      <figure>
+        <img alt="Sigmoid and its derivative" src="/tutorials/images/external/Sigmoid-derivative-5a7e62a47b-fallback.svg">
+        <figcaption>
+          Sigmoid vs. sigmoid derivative (Wikimedia Commons). Source page:
+          <a href="https://commons.wikimedia.org/wiki/File:Sigmoid-derivative.png" target="_blank" rel="noopener">File:Sigmoid-derivative.png</a>
+        </figcaption>
+      </figure>
+
+      <h3 id="a-related-visualization-used-in-discussions-of-vanishing-gradients">A related visualization used in discussions of vanishing gradients</h3>
+      <figure>
+        <img alt="One-neuron recurrent network bifurcation diagram" src="/tutorials/images/external/One-neuron_recurrent_network_bifurcation_diagram-c62882fbda-fallback.svg">
+        <figcaption>
+          Diagram referenced in vanishing-gradient discussions (Wikimedia Commons). Source page:
+          <a href="https://commons.wikimedia.org/wiki/File:One-neuron_recurrent_network_bifurcation_diagram.png" target="_blank" rel="noopener">
+            File:One-neuron recurrent network bifurcation diagram.png
+          </a>
+        </figcaption>
+      </figure>
+
+      <p class="muted">
+        Historically (as mentioned in the lecture), one workaround was layer-wise pretraining (e.g., Hinton’s earlier-era approaches).
+        Modern practice usually relies on better activations (ReLU-family), initialization, normalization, and optimizers.
+      </p>
+    </section>
+
+    <section id="softmax">
+      <h2 id="6-multiclass-classification-softmax-cross-entropy">6) Multiclass classification: Softmax + Cross-Entropy</h2>
+
+      <p>
+        For \(K\) classes, the output layer produces a vector of logits \(z \in \mathbb{R}^K\).
+        We convert logits into a probability distribution with <b>softmax</b>:
+      </p>
+
+      <p>
+        \[
+          \mathrm{softmax}(z)_i = \frac{e^{z_i}}{\sum_{j=1}^{K} e^{z_j}}
+        \]
+      </p>
+
+      <p class="muted">
+        This guarantees probabilities are positive and sum to 1. In practice, we usually do not apply softmax explicitly during training;
+        we use a numerically-stable loss that combines softmax with cross-entropy.
+      </p>
+
+      <div class="grid two">
+        <figure>
+          <img alt="Softmax illustration" src="/tutorials/images/external/Softmax-89e10495c2-fallback.svg">
+          <figcaption>
+            Softmax illustration (Wikimedia Commons). Source page:
+            <a href="https://commons.wikimedia.org/wiki/File:Softmax.svg" target="_blank" rel="noopener">File:Softmax.svg</a>
+          </figcaption>
+        </figure>
+        <figure>
+          <img alt="Softmax illustration (English)" src="/tutorials/images/external/Softmax_en-13b6657f61-fallback.svg">
+          <figcaption>
+            Softmax illustration (English) (Wikimedia Commons). Source page:
+            <a href="https://commons.wikimedia.org/wiki/File:Softmax_en.svg" target="_blank" rel="noopener">File:Softmax_en.svg</a>
+          </figcaption>
+        </figure>
+      </div>
+
+      <h3 id="three-common-tasks-output-activations">Three common tasks ↔ output activations</h3>
+      <ul>
+        <li><b>Regression:</b> identity output (no activation): \(\hat{y}=z\)</li>
+        <li><b>Binary classification:</b> sigmoid output: \(\hat{y}=\sigma(z)\)</li>
+        <li><b>Multiclass classification:</b> softmax output: \(\hat{y}=\mathrm{softmax}(z)\)</li>
+      </ul>
+
+      <div class="callout">
+        <p style="margin:0;">
+          The lecture also notes: softmax can handle binary classification too (with \(K=2\)), but it’s redundant because the two probabilities
+          always sum to 1.
+        </p>
+      </div>
+    </section>
+
+    <section id="images">
+      <h2 id="7-images-as-tensors-and-why-we-flatten-for-a-basic-ffn">7) Images as tensors (and why we “flatten” for a basic FFN)</h2>
+
+      <p>
+        Computers store images as arrays. A color image (RGB) is typically a tensor of shape:
+      </p>
+      <p>
+        \[
+          \text{image} \in \mathbb{R}^{H \times W \times C}, \quad C=3
+        \]
+      </p>
+      <p>
+        Each pixel channel is often quantized into 256 levels (0–255). For neural networks, it’s common to scale to \([0,1]\).
+      </p>
+
+      <h3 id="grayscale-is-simpler">Grayscale is simpler</h3>
+      <p class="muted">
+        MNIST digits are grayscale, so each image is \(28 \times 28\) (no RGB channels).
+      </p>
+
+      <h3 id="flattening">Flattening</h3>
+      <p>
+        A fully-connected FFN expects vectors. Flattening turns a \(28\times 28\) image into a vector of length \(784\):
+      </p>
+      <p>
+        \[
+          x \in \mathbb{R}^{28\times 28} \;\;\longrightarrow\;\; \mathrm{vec}(x)\in \mathbb{R}^{784}
+        \]
+      </p>
+
+      <div class="grid two">
+        <figure>
+          <img alt="MNIST samples" src="/tutorials/images/external/MnistExamples-d4e8cf54a6.png">
+          <figcaption>
+            MNIST sample digits (Wikimedia Commons). Source page:
+            <a href="https://commons.wikimedia.org/wiki/File:MnistExamples.png" target="_blank" rel="noopener">File:MnistExamples.png</a>
+          </figcaption>
+        </figure>
+
+        <figure>
+          <img alt="t-SNE embedding of MNIST" src="/tutorials/images/external/T-SNE_Embedding_of_MNIST-9dd0424557-fallback.svg">
+          <figcaption>
+            t-SNE embedding of MNIST (Wikimedia Commons). Source page:
+            <a href="https://commons.wikimedia.org/wiki/File:T-SNE_Embedding_of_MNIST.png" target="_blank" rel="noopener">
+              File:T-SNE Embedding of MNIST.png
+            </a>
+          </figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section id="mnist">
+      <h2 id="8-mnist-feed-forward-network-in-pytorch-with-mini-batches">8) MNIST feed-forward network in PyTorch (with mini-batches)</h2>
+
+      <p>
+        The lecture’s example: MNIST has 10 classes (digits 0–9), so it’s multiclass classification.
+        A simple FFN can look like: <b>784 → 128 → 10</b>, with ReLU in the hidden layer.
+      </p>
+
+      <h3 id="model-equations-as-described">Model equations (as described)</h3>
+      <p>
+        \[
+          a^{(1)} = \mathrm{ReLU}(W^{(1)}x + b^{(1)})
+        \]
+        \[
+          z^{(2)} = W^{(2)}a^{(1)} + b^{(2)}
+        \]
+        \[
+          \hat{y} = \mathrm{softmax}(z^{(2)}) \quad \text{(conceptually; training uses cross-entropy)}
+        \]
+      </p>
+
+      <div class="callout">
+        <p style="margin:0;">
+          <b>Mini-batch gradient descent:</b> instead of computing gradients over the entire dataset at once,
+          we compute them on small batches. PyTorch’s <code>DataLoader</code> handles batching for you.
+        </p>
+      </div>
+
+      <h3 id="pytorch-code-end-to-end">PyTorch code (end-to-end)</h3>
+      <p class="muted">
+        This follows the transcript’s steps: load MNIST, flatten + scale, build FFN, train with batches, evaluate, and inspect mistakes.
+      </p>
+
+<pre><code class="language-python">import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from torch.utils.data import DataLoader
+from torchvision import datasets, transforms
+
+# 1) Data: MNIST (grayscale 28x28)
+# - ToTensor() scales uint8 [0,255] -&gt; float [0,1]
+# - We'll flatten in the training loop (or use transforms.Lambda)
+transform = transforms.ToTensor()
+
+train_ds = datasets.MNIST(root="data", train=True, download=True, transform=transform)
+test_ds  = datasets.MNIST(root="data", train=False, download=True, transform=transform)
+
+train_loader = DataLoader(train_ds, batch_size=128, shuffle=True, num_workers=2, pin_memory=True)
+test_loader  = DataLoader(test_ds, batch_size=256, shuffle=False, num_workers=2, pin_memory=True)
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+
+# 2) Model: 784 -&gt; 128 -&gt; 10
+class FFN(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.fc1 = nn.Linear(28*28, 128)
+        self.fc2 = nn.Linear(128, 10)
+
+    def forward(self, x):
+        # x: (B, 1, 28, 28) -&gt; flatten to (B, 784)
+        x = x.view(x.size(0), -1)
+        x = F.relu(self.fc1(x))
+        logits = self.fc2(x)  # raw scores (logits)
+        return logits
+
+model = FFN().to(device)
+
+# 3) Training setup
+# CrossEntropyLoss = LogSoftmax + NLLLoss (numerically stable)
+criterion = nn.CrossEntropyLoss()
+optimizer = torch.optim.SGD(model.parameters(), lr=0.1)
+
+def accuracy_from_logits(logits, y):
+    preds = logits.argmax(dim=1)
+    return (preds == y).float().mean().item()
+
+# 4) Train loop (mini-batch gradient descent)
+def train_one_epoch():
+    model.train()
+    total_loss = 0.0
+    total_acc = 0.0
+    n_batches = 0
+
+    for x, y in train_loader:
+        x, y = x.to(device), y.to(device)
+
+        optimizer.zero_grad()
+        logits = model(x)
+        loss = criterion(logits, y)
+        loss.backward()
+        optimizer.step()
+
+        total_loss += loss.item()
+        total_acc += accuracy_from_logits(logits, y)
+        n_batches += 1
+
+    return total_loss / n_batches, total_acc / n_batches
+
+@torch.no_grad()
+def evaluate():
+    model.eval()
+    total_loss = 0.0
+    total_acc = 0.0
+    n_batches = 0
+
+    for x, y in test_loader:
+        x, y = x.to(device), y.to(device)
+        logits = model(x)
+        loss = criterion(logits, y)
+
+        total_loss += loss.item()
+        total_acc += accuracy_from_logits(logits, y)
+        n_batches += 1
+
+    return total_loss / n_batches, total_acc / n_batches
+
+# 5) Run training
+for epoch in range(1, 6):
+    tr_loss, tr_acc = train_one_epoch()
+    te_loss, te_acc = evaluate()
+    print(f"epoch {epoch:02d} | train loss {tr_loss:.4f} acc {tr_acc:.4f} | test loss {te_loss:.4f} acc {te_acc:.4f}")
+
+
+# 6) Inspect mistakes (what the model gets wrong)
+@torch.no_grad()
+def collect_mistakes(max_items=24):
+    model.eval()
+    mistakes = []
+    for x, y in test_loader:
+        x, y = x.to(device), y.to(device)
+        logits = model(x)
+        preds = logits.argmax(dim=1)
+        wrong_mask = preds != y
+        if wrong_mask.any():
+            xw = x[wrong_mask].cpu()
+            yw = y[wrong_mask].cpu()
+            pw = preds[wrong_mask].cpu()
+            for i in range(xw.size(0)):
+                mistakes.append((xw[i], int(yw[i]), int(pw[i])))
+                if len(mistakes) &gt;= max_items:
+                    return mistakes
+    return mistakes
+
+mistakes = collect_mistakes()
+print("Collected mistakes:", len(mistakes))
+</code></pre>
+
+      <h3 id="plotting-training-curves">Plotting training curves</h3>
+      <p class="muted">
+        You can compare your runs to standard learning-curve discussions and visualizations.
+        For example, compare whether training loss decreases smoothly, validation loss follows it, or validation loss starts rising while training loss keeps falling.
+        You can also log your own metrics and view them in TensorBoard, Weights &amp; Biases, or another dashboard.
+      </p>
+
+      <div class="callout">
+        <p style="margin:0;">
+          <b>Common gotcha:</b> If you use <code>nn.CrossEntropyLoss()</code>, do <b>not</b> apply softmax in your model forward pass.
+          Cross-entropy expects raw logits.
+        </p>
+      </div>
+
+      <div class="callout">
+        <p style="margin:0;">
+          <b>Probability nuance:</b> softmax outputs non-negative values that sum to 1, so they are convenient class probabilities.
+          They are not automatically <i>well calibrated</i>. A model can be 99% confident and still be wrong. Calibration is a separate
+          evaluation topic, usually checked with reliability diagrams, expected calibration error, or held-out validation data.
+        </p>
+      </div>
+    </section>
+
+    <section id="credits">
+      <h2 id="sources-and-credits-plots-images-used">Sources &amp; credits (plots/images used)</h2>
+      <p class="muted">
+        All plots shown are served from local assets, with source credits retained where applicable.
+      </p>
+      <ul class="small">
+        <li>Sigmoid plot: <a href="https://commons.wikimedia.org/wiki/File:Sigmoid-function.svg" target="_blank" rel="noopener">Wikimedia Commons — Sigmoid-function.svg</a></li>
+        <li>Tanh plot: <a href="https://commons.wikimedia.org/wiki/File:Hyperbolic_Tangent.svg" target="_blank" rel="noopener">Wikimedia Commons — Hyperbolic_Tangent.svg</a></li>
+        <li>ReLU plot (via upload.wikimedia.org): <a href="https://en.wikipedia.org/wiki/Rectifier_(neural_networks)" target="_blank" rel="noopener">Wikipedia — Rectifier (neural networks)</a></li>
+        <li>Sigmoid derivative: <a href="https://commons.wikimedia.org/wiki/File:Sigmoid-derivative.png" target="_blank" rel="noopener">Wikimedia Commons — Sigmoid-derivative.png</a></li>
+        <li>Softmax illustrations: <a href="https://commons.wikimedia.org/wiki/File:Softmax.svg" target="_blank" rel="noopener">Softmax.svg</a>,
+            <a href="https://commons.wikimedia.org/wiki/File:Softmax_en.svg" target="_blank" rel="noopener">Softmax_en.svg</a></li>
+        <li>MNIST samples: <a href="https://commons.wikimedia.org/wiki/File:MnistExamples.png" target="_blank" rel="noopener">MnistExamples.png</a></li>
+        <li>t-SNE MNIST embedding: <a href="https://commons.wikimedia.org/wiki/File:T-SNE_Embedding_of_MNIST.png" target="_blank" rel="noopener">T-SNE Embedding of MNIST.png</a></li>
+        <li>Vanishing gradient related diagram: <a href="https://commons.wikimedia.org/wiki/File:One-neuron_recurrent_network_bifurcation_diagram.png" target="_blank" rel="noopener">One-neuron recurrent network bifurcation diagram.png</a></li>
+        <li>TensorFlow Playground (interactive): <a href="https://playground.tensorflow.org" target="_blank" rel="noopener">playground.tensorflow.org</a></li>
+      </ul>
+
+      <div class="hr"></div>
+      <p class="muted small">
+        Equations are rendered through the book's shared math layer; source
+        credits remain attached to the visual assets above.
+      </p>
+    </section>
+  </div></div></article></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col noPrint_WFHX"></div><div class="col lastUpdated_JAkA"><span class="theme-last-updated">Last updated<!-- --> on <b><time datetime="2026-07-30T01:42:42.000Z" itemprop="dateModified">Jul 30, 2026</time></b></span></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/tutorials/part5-deep-learning-and-llms/overview"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Part overview</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/tutorials/part5-deep-learning-and-llms/02-ffn-training-debugging"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">2. FFN training and debugging</div></a></nav></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer"><div class="container container-fluid"><div class="row footer__links"><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Study</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/tutorials/">Book home</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/content-map">Reading guide</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/labs/rnn">Interactive RNN lab</a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Core tracks</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/tutorials/part2-backend-platform-security/overview">Backend and security</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/part3-agent-protocols/overview">Agent protocols</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/part5-deep-learning-and-llms/overview">Deep learning and LLMs</a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright">Enterprise AI, Agents & Applied ML - 2026</div></div></div></footer></div>
+</body>
+</html>

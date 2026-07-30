@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-part6-appendices/classification-latex-print" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.10.2">
+<title data-rh="true">Appendix B — Classification (LaTeX Print Edition) | Enterprise AI, Agents &amp; Applied ML</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://dineshg.github.io/tutorials/part6-appendices/02-classification-latex-print"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="keywords" content="enterprise AI, machine learning, deep learning, LLM, FastAPI, Pydantic, MCP, authentication"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Appendix B — Classification (LaTeX Print Edition) | Enterprise AI, Agents &amp; Applied ML"><meta data-rh="true" name="description" content="This appendix is the book‑typeset (LaTeX) edition of the classification chapter. The web edition lives in the main book at Part IV, Chapter 4 — Linear classification. The two cover the same material; the .tex file is..."><meta data-rh="true" property="og:description" content="This appendix is the book‑typeset (LaTeX) edition of the classification chapter. The web edition lives in the main book at Part IV, Chapter 4 — Linear classification. The two cover the same material; the .tex file is..."><link data-rh="true" rel="icon" href="/tutorials/img/favicon.svg"><link data-rh="true" rel="canonical" href="https://dineshg.github.io/tutorials/part6-appendices/02-classification-latex-print"><link data-rh="true" rel="alternate" href="https://dineshg.github.io/tutorials/part6-appendices/02-classification-latex-print" hreflang="en"><link data-rh="true" rel="alternate" href="https://dineshg.github.io/tutorials/part6-appendices/02-classification-latex-print" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Part VI - Appendices","item":"https://dineshg.github.io/tutorials/part6-appendices/overview"},{"@type":"ListItem","position":2,"name":"B. Classification LaTeX source","item":"https://dineshg.github.io/tutorials/part6-appendices/02-classification-latex-print"}]}</script><script>window.MathJax={startup:{typeset:!1},tex:{inlineMath:[["\\(","\\)"],["$","$"]],displayMath:[["\\[","\\]"],["$$","$$"]],processEscapes:!0},options:{skipHtmlTags:["script","noscript","style","textarea","pre","code"]}}</script>
+<link rel="stylesheet" href="/tutorials/css/book.css">
+<link rel="stylesheet" href="/tutorials/vendor/highlight.js/11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.18.1/dist/katex.min.css" integrity="sha384-5TcZemv2l/9On385z///+d7MSYlvIEw9FuZTIdZ14vJLqWphw7e7ZPuOiCHJcFCP" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-mml-chtml.js" defer="defer"></script><link rel="stylesheet" href="/tutorials/assets/css/styles.003aa738.css">
+<script src="/tutorials/assets/js/runtime~main.98c31d90.js" defer="defer"></script>
+<script src="/tutorials/assets/js/main.bd80017b.js" defer="defer"></script>
+</head>
+<body>
+<svg style="display: none;"><defs>
+<symbol id="theme-svg-external-link" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")),document.documentElement.setAttribute("data-theme-choice",t||"system")}(),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top"><div class="navbar__inner"><div class="theme-layout-navbar-left navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/tutorials/"><b class="navbar__title text--truncate">Enterprise AI Book</b></a><a class="navbar__item navbar__link" href="/tutorials/">Read</a><a class="navbar__item navbar__link" href="/tutorials/content-map">Concept map</a><a class="navbar__item navbar__link" href="/tutorials/part5-deep-learning-and-llms/10-recurrent-neural-networks">Deep learning</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><div class="navbar__item book-search-navbar-item"><button type="button" class="book-search-trigger" aria-label="Search the book">Search <kbd>Ctrl K</kbd></button></div><a href="https://github.com/dineshg/tutorials" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type="button" disabled="" title="system mode" aria-label="Switch between dark and light mode (currently system mode)"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill="currentColor" d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill="currentColor" d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill="currentColor" d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"></path></svg></button></div><div class="navbarSearchContainer_Bca1"></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class="docsWrapper_hBAB"><button aria-label="Scroll back to top" class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type="button"></button><div class="docRoot_UBD9"><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class="sidebarViewport_aRkj"><div class="sidebar_njMd"><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/tutorials/"><span class="linkLabel_WmDU">Book home</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/tutorials/content-map"><span class="linkLabel_WmDU">Reading guide and concept map</span></a></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-blue"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part1-enterprise-ai-delivery/overview"><span class="categoryLinkLabel_W154">Part I - Enterprise AI Delivery</span></a><button aria-label="Expand sidebar category &#x27;Part I - Enterprise AI Delivery&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-teal"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part2-backend-platform-security/overview"><span class="categoryLinkLabel_W154">Part II - Backend, Platform &amp; Security</span></a><button aria-label="Expand sidebar category &#x27;Part II - Backend, Platform &amp; Security&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-violet"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part3-agent-protocols/overview"><span class="categoryLinkLabel_W154">Part III - Agent Protocols</span></a><button aria-label="Expand sidebar category &#x27;Part III - Agent Protocols&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-amber"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part4-ml-foundations/overview"><span class="categoryLinkLabel_W154">Part IV - ML Foundations</span></a><button aria-label="Expand sidebar category &#x27;Part IV - ML Foundations&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-coral"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part5-deep-learning-and-llms/overview"><span class="categoryLinkLabel_W154">Part V - Deep Learning &amp; LLMs</span></a><button aria-label="Expand sidebar category &#x27;Part V - Deep Learning &amp; LLMs&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item sidebar-category sidebar-category-slate"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--active" href="/tutorials/part6-appendices/overview"><span class="categoryLinkLabel_W154">Part VI - Appendices</span></a><button aria-label="Collapse sidebar category &#x27;Part VI - Appendices&#x27;" aria-expanded="true" type="button" class="clean-btn menu__caret"></button></div><ul class="menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part6-appendices/01-lead-ds-interview-talk-track"><span class="linkLabel_WmDU">A. Lead DS interview talk track</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link menu__link--active" aria-current="page" tabindex="0" href="/tutorials/part6-appendices/02-classification-latex-print"><span class="linkLabel_WmDU">B. Classification LaTeX source</span></a></li></ul></li></ul></nav><button type="button" title="Collapse sidebar" aria-label="Collapse sidebar" class="button button--secondary button--outline collapseSidebarButton_PEFL"><svg width="20" height="20" aria-hidden="true" class="collapseSidebarButtonIcon_kv0_"><g fill="#7a7a7a"><path d="M9.992 10.023c0 .2-.062.399-.172.547l-4.996 7.492a.982.982 0 01-.828.454H1c-.55 0-1-.453-1-1 0-.2.059-.403.168-.551l4.629-6.942L.168 3.078A.939.939 0 010 2.528c0-.548.45-.997 1-.997h2.996c.352 0 .649.18.828.45L9.82 9.472c.11.148.172.347.172.55zm0 0"></path><path d="M19.98 10.023c0 .2-.058.399-.168.547l-4.996 7.492a.987.987 0 01-.828.454h-3c-.547 0-.996-.453-.996-1 0-.2.059-.403.168-.551l4.625-6.942-4.625-6.945a.939.939 0 01-.168-.55 1 1 0 01.996-.997h3c.348 0 .649.18.828.45l4.996 7.492c.11.148.168.347.168.55zm0 0"></path></g></svg></button></div></div></aside><main class="docMainContainer_TBSr"><div class="container padding-top--md padding-bottom--lg"><div class="row"><div class="col"><div class="docItemContainer_Djhp"><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label="Breadcrumbs"><ul class="breadcrumbs"><li class="breadcrumbs__item"><a aria-label="Home page" class="breadcrumbs__link" href="/tutorials/"><svg viewBox="0 0 24 24" class="breadcrumbHomeIcon_YNFT"><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill="currentColor"></path></svg></a></li><li class="breadcrumbs__item"><a class="breadcrumbs__link" href="/tutorials/part6-appendices/overview"><span>Part VI - Appendices</span></a></li><li class="breadcrumbs__item breadcrumbs__item--active"><span class="breadcrumbs__link">B. Classification LaTeX source</span></li></ul></nav><div class="theme-doc-markdown markdown"><article class="book-article tr-content" data-book-part="part6" data-book-accent="slate"><header class="articleHeader_jX4Y"><span class="partLabel_DqKR">Part VI - Appendices</span><h1>Appendix B — Classification (LaTeX Print Edition)</h1><div class="articleMeta_jfH_"><span>7<!-- --> min read</span><span aria-hidden="true">·</span><span>1<!-- --> sections</span></div></header><div class="articleBody_b2wt"><div class="ch">
+
+
+
+<p>This appendix is the <strong>book‑typeset (LaTeX) edition</strong> of the
+classification chapter. The web edition lives in the main book at
+<a href="/tutorials/part4-ml-foundations/04-linear-classification">Part IV, Chapter 4 — Linear classification</a>.
+The two cover the same material; the <code>.tex</code> file is included for
+readers who want a print/PDF workflow.</p>
+
+<div class="tr-tip">
+  <strong>How to use this appendix</strong>
+  <ul style="margin: 6px 0 0 18px">
+    <li><strong>Read on the web:</strong> use the
+        <a href="/tutorials/part4-ml-foundations/04-linear-classification">web edition</a>.</li>
+    <li><strong>Want a PDF:</strong> compile the source below with any LaTeX
+        toolchain (TeX Live, MiKTeX, Overleaf). The minimum command is:
+        <pre><code>pdflatex 02-classification-latex-print.tex</code></pre></li>
+    <li><strong>Quick look:</strong> the rendered source is shown below.
+        Open the raw file at
+        <a href="/tutorials/downloads/classification-latex-print.tex"><code>02-classification-latex-print.tex</code></a>.</li>
+  </ul>
+</div>
+
+<h2 id="source-read-only-preview">Source (read‑only preview)</h2>
+<pre><code id="tex-src">%==========================================================
+% Chapter: Linear Classification in PyTorch (Student-Friendly)
+% NOTE: This is LaTeX-only, with colors and improved formatting.
+%==========================================================
+
+\chapter{Linear Classification in PyTorch: From Geometry to Code (with Logistic Regression)}
+
+\begin{center}
+{\Large \color{blue!70!black}\textbf{Goal:}} \; Build and understand a binary classifier in PyTorch, \\
+from the decision boundary equation to training, evaluation, and saving the model.
+\end{center}
+
+\vspace{0.5em}
+
+%---------------------------
+% Recommended packages (place in preamble)
+%---------------------------
+% \usepackage{amsmath, amssymb, mathtools}
+% \usepackage{xcolor}
+% \usepackage{hyperref}
+% \usepackage{tcolorbox}
+% \usepackage{listings}
+% \usepackage{graphicx}
+% \usepackage{enumitem}
+% \usepackage{microtype}
+
+%---------------------------
+% Listings settings (place in preamble)
+%---------------------------
+% \lstset{
+%   basicstyle=\ttfamily\small,
+%   keywordstyle=\color{blue!70!black}\bfseries,
+%   commentstyle=\color{green!50!black},
+%   stringstyle=\color{orange!70!black},
+%   showstringspaces=false,
+%   frame=single,
+%   rulecolor=\color{black!20},
+%   breaklines=true,
+%   columns=fullflexible
+% }
+
+%---------------------------
+% Color boxes (place in preamble)
+%---------------------------
+% \tcbset{
+%   colframe=blue!50!black,
+%   colback=blue!2,
+%   arc=2mm,
+%   boxrule=0.6pt
+% }
+
+\section{The Big Picture: What Your ML Script Is Really Doing}
+
+Most machine learning scripts follow this pattern:
+
+\begin{tcolorbox}[title=\textbf{\color{blue!70!black}Standard workflow (high-level)}]
+\begin{enumerate}[leftmargin=*]
+  \item Load data: features $X$ and labels $y$
+  \item Create a model
+  \item Train the model (fit)
+  \item Make predictions
+  \item Evaluate performance
+\end{enumerate}
+\end{tcolorbox}
+
+In scikit-learn, this is hidden inside functions like \texttt{fit}, \texttt{predict}, and \texttt{score}.
+In PyTorch, we write the training loop ourselves, which is the best way to actually understand learning.
+
+\section{Binary Classification: Accuracy, Error, and What We Care About}
+
+\subsection{Targets and predictions}
+Binary classification means:
+\[
+y \in \{0,1\}.
+\]
+Examples:
+\begin{itemize}
+  \item spam (1) vs not spam (0)
+  \item malignant (1) vs benign (0)
+\end{itemize}
+
+\subsection{Accuracy}
+\[
+\text{Accuracy} = \frac{\#\text{correct}}{\#\text{total}}
+= \frac{1}{N}\sum_{i=1}^{N}\mathbb{1}[\hat{y}_i = y_i].
+\]
+
+\subsection{Classification error}
+\[
+\text{Error} = 1 - \text{Accuracy}.
+\]
+
+\begin{tcolorbox}[colframe=green!50!black,colback=green!3,title=\textbf{\color{green!40!black}Student check: train vs test accuracy}]
+\textbf{Train accuracy} measures performance on data the model has already seen. \\
+\textbf{Test accuracy} measures performance on data the model has \textit{not} seen. \\
+\textbf{\color{red!70!black}{Test accuracy is what you should trust more.}}
+\end{tcolorbox}
+
+\section{Geometry First: The Decision Boundary}
+
+\subsection{A line / hyperplane}
+In 2D, a separating line can be written as:
+\[
+w_1x_1 + w_2x_2 + b = 0.
+\]
+In $D$ dimensions, we use vectors:
+\[
+x \in \mathbb{R}^D,\quad w \in \mathbb{R}^D,
+\]
+and the compact form:
+\[
+\underbrace{a}_{\text{\color{blue!70!black}{activation / logit}}} = w^\top x + b.
+\]
+
+\begin{tcolorbox}[colframe=blue!50!black,colback=blue!2,title=\textbf{\color{blue!70!black}Interpretation}]
+\begin{itemize}[leftmargin=*]
+  \item $w$ controls \textbf{how strongly} each feature affects the decision.
+  \item $b$ shifts the boundary left/right (or more generally: shifts the hyperplane).
+  \item The value $a = w^\top x + b$ tells you \textbf{which side} of the boundary $x$ lies on.
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{Prediction from geometry (sign rule)}
+If $a$ is positive, you are on one side; if negative, you are on the other:
+\[
+\hat{y} =
+\begin{cases}
+1 &amp; \text{if } a&gt;0,\\
+0 &amp; \text{otherwise}.
+\end{cases}
+\]
+
+\section{From Hard Decisions to Probabilities: The Sigmoid}
+
+The hard step rule is not smooth, and deep learning likes smooth functions.
+So we map $a$ to a probability using the \textbf{sigmoid}:
+
+\[
+\sigma(a)=\frac{1}{1+e^{-a}},
+\qquad
+p(y=1\mid x)=\sigma(w^\top x+b).
+\]
+
+\subsection{Thresholding probabilities}
+A common rule:
+\[
+\hat{y} =
+\begin{cases}
+1 &amp; \text{if } p\ge 0.5,\\
+0 &amp; \text{otherwise}.
+\end{cases}
+\]
+
+\begin{tcolorbox}[colframe=purple!60!black,colback=purple!3,title=\textbf{\color{purple!70!black}Key equivalence (very important!)}]
+\[
+\sigma(a)\ge 0.5 \;\Longleftrightarrow\; a\ge 0.
+\]
+So you can classify using either probabilities \textbf{or} logits (activations).
+\end{tcolorbox}
+
+\section{Training: Why Loss Functions Change for Classification}
+
+\subsection{Why not mean squared error?}
+Regression predicts real numbers, so MSE makes sense:
+\[
+\text{MSE}=\frac{1}{N}\sum_{i=1}^{N}(y_i-\hat{y}_i)^2.
+\]
+Classification predicts probabilities; the standard loss is cross entropy.
+
+\subsection{Binary cross entropy (BCE)}
+For $y_i\in\{0,1\}$ and predicted probability $p_i$:
+\[
+\mathcal{L}_{\text{BCE}}(y,p)=
+-\frac{1}{N}\sum_{i=1}^{N}\left[y_i\log(p_i)+(1-y_i)\log(1-p_i)\right].
+\]
+
+\section{The PyTorch Training Loop: What \texttt{fit} Is Hiding}
+
+Gradient-based training repeats the same core steps each epoch:
+
+\begin{tcolorbox}[colframe=orange!70!black,colback=orange!4,title=\textbf{\color{orange!80!black}One epoch = one parameter update cycle}]
+\begin{enumerate}[leftmargin=*]
+  \item Zero old gradients
+  \item Forward pass: compute outputs
+  \item Compute loss
+  \item Backward pass: compute gradients
+  \item Update parameters
+\end{enumerate}
+\end{tcolorbox}
+
+Mathematically, gradient descent updates:
+\[
+w \leftarrow w - \eta\nabla_w\mathcal{L},
+\qquad
+b \leftarrow b - \eta\nabla_b\mathcal{L},
+\]
+where $\eta$ is the learning rate.
+
+\section{Tutorial: Breast Cancer Classification (End-to-End)}
+
+\subsection{Step 1: Load, split, and standardize}
+\begin{tcolorbox}[colframe=black!40,colback=black!2,title=\textbf{Why standardization matters}]
+If one feature ranges near $10^6$ and another near $10^{-3}$, gradient-based training becomes unstable and slow.
+Standardization makes features comparable.
+\end{tcolorbox}
+
+\begin{lstlisting}[language=Python,caption={Load data, train/test split, and standardize (scikit-learn)}]
+import numpy as np
+import torch
+import torch.nn as nn
+
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+
+# Load dataset
+data = load_breast_cancer()
+X = data.data          # shape: (N, D)
+y = data.target        # shape: (N,)
+
+# Split
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.33, random_state=123
+)
+
+# Standardize using train statistics only
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test  = scaler.transform(X_test)
+\end{lstlisting}
+
+\subsection{Step 2: Convert to PyTorch tensors (watch shapes!)}
+PyTorch often expects targets shaped as $(N,1)$ for binary losses.
+
+\begin{lstlisting}[language=Python,caption={Convert numpy arrays to torch tensors (float32) and reshape targets}]
+X_train_t = torch.from_numpy(X_train).float()
+X_test_t  = torch.from_numpy(X_test).float()
+
+y_train_t = torch.from_numpy(y_train).float().view(-1, 1)  # (N,1)
+y_test_t  = torch.from_numpy(y_test).float().view(-1, 1)   # (N,1)
+
+D = X_train.shape[1]
+\end{lstlisting}
+
+\section{Two Correct Implementations (Choose One)}
+
+\subsection{Option A: Linear + Sigmoid + BCELoss (simple, but less stable)}
+
+\begin{tcolorbox}[colframe=red!60!black,colback=red!3,title=\textbf{\color{red!70!black}Note}]
+This is correct, but can be numerically unstable due to exponentials and logs.
+Option B is usually preferred in practice.
+\end{tcolorbox}
+
+\begin{lstlisting}[language=Python,caption={Model A: sigmoid inside the model + BCELoss}]
+model = nn.Sequential(
+    nn.Linear(D, 1),
+    nn.Sigmoid()
+)
+
+criterion = nn.BCELoss()
+optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+\end{lstlisting}
+
+\subsubsection{Training loop (same structure always)}
+\begin{lstlisting}[language=Python,caption={Training loop with train/test loss tracking (Model A)}]
+n_epochs = 200
+train_losses, test_losses = [], []
+
+for epoch in range(n_epochs):
+    # ---- TRAIN ----
+    optimizer.zero_grad()
+    p_train = model(X_train_t)                    # probabilities (0,1)
+    loss_train = criterion(p_train, y_train_t)
+    loss_train.backward()
+    optimizer.step()
+
+    # ---- TEST LOSS ----
+    with torch.no_grad():
+        p_test = model(X_test_t)
+        loss_test = criterion(p_test, y_test_t)
+
+    train_losses.append(loss_train.item())
+    test_losses.append(loss_test.item())
+
+print("Final train loss:", train_losses[-1])
+print("Final test  loss:", test_losses[-1])
+\end{lstlisting}
+
+\subsubsection{Accuracy}
+\begin{lstlisting}[language=Python,caption={Accuracy from probabilities}]
+def accuracy_from_prob(p, y_true):
+    # p: (N,1) probabilities
+    y_pred = (p &gt;= 0.5).float()
+    return (y_pred.eq(y_true)).float().mean().item()
+
+with torch.no_grad():
+    p_train = model(X_train_t)
+    p_test  = model(X_test_t)
+
+print("Train accuracy:", accuracy_from_prob(p_train, y_train_t))
+print("Test accuracy: ", accuracy_from_prob(p_test,  y_test_t))
+\end{lstlisting}
+
+\subsection{Option B (Recommended): Linear logits + BCEWithLogitsLoss (stable)}
+
+\begin{tcolorbox}[colframe=green!60!black,colback=green!3,title=\textbf{\color{green!50!black}Recommended in practice}]
+Use logits directly and let the loss handle the sigmoid internally in a numerically stable way.
+\end{tcolorbox}
+
+\begin{lstlisting}[language=Python,caption={Model B: logits output + BCEWithLogitsLoss}]
+model = nn.Linear(D, 1)                # outputs logits (any real number)
+criterion = nn.BCEWithLogitsLoss()     # stable sigmoid + BCE
+optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+\end{lstlisting}
+
+\subsubsection{Training loop (identical skeleton)}
+\begin{lstlisting}[language=Python,caption={Training loop with logits (Model B)}]
+n_epochs = 200
+train_losses, test_losses = [], []
+
+for epoch in range(n_epochs):
+    optimizer.zero_grad()
+    logits_train = model(X_train_t)                 # logits
+    loss_train = criterion(logits_train, y_train_t)
+    loss_train.backward()
+    optimizer.step()
+
+    with torch.no_grad():
+        logits_test = model(X_test_t)
+        loss_test = criterion(logits_test, y_test_t)
+
+    train_losses.append(loss_train.item())
+    test_losses.append(loss_test.item())
+
+print("Final train loss:", train_losses[-1])
+print("Final test  loss:", test_losses[-1])
+\end{lstlisting}
+
+\subsubsection{Accuracy from logits (no sigmoid needed)}
+Because $\sigma(a)\ge 0.5 \Leftrightarrow a\ge 0$, we classify by sign:
+\[
+\hat{y} = \mathbb{1}[a\ge 0].
+\]
+
+\begin{lstlisting}[language=Python,caption={Accuracy from logits}]
+def accuracy_from_logits(logits, y_true):
+    y_pred = (logits &gt;= 0).float()     # sign rule
+    return (y_pred.eq(y_true)).float().mean().item()
+
+with torch.no_grad():
+    logits_train = model(X_train_t)
+    logits_test  = model(X_test_t)
+
+print("Train accuracy:", accuracy_from_logits(logits_train, y_train_t))
+print("Test accuracy: ", accuracy_from_logits(logits_test,  y_test_t))
+\end{lstlisting}
+
+\section{Saving and Loading the Model}
+
+\subsection{What is a \texttt{state\_dict}?}
+\texttt{state\_dict} is an ordered dictionary of parameters (weights, biases, etc.).
+For a linear layer, it contains:
+\[
+W \in \mathbb{R}^{1\times D},\qquad b \in \mathbb{R}.
+\]
+
+\subsection{Save}
+\begin{lstlisting}[language=Python,caption={Save learned parameters}]
+torch.save(model.state_dict(), "mymodel.pt")
+\end{lstlisting}
+
+\subsection{Load (recreate architecture first)}
+\begin{lstlisting}[language=Python,caption={Load parameters into a new model with same architecture}]
+model2 = nn.Linear(D, 1)
+model2.load_state_dict(torch.load("mymodel.pt"))
+model2.eval()
+\end{lstlisting}
+
+\subsection{Verify loaded model}
+\begin{lstlisting}[language=Python,caption={Check test accuracy of loaded model}]
+with torch.no_grad():
+    logits_test_2 = model2(X_test_t)
+
+print("Reloaded model test accuracy:",
+      accuracy_from_logits(logits_test_2, y_test_t))
+\end{lstlisting}
+
+\section{Train vs Validation vs Test (Student-Friendly Explanation)}
+
+\begin{tcolorbox}[colframe=blue!60!black,colback=blue!3,title=\textbf{\color{blue!70!black}Why splitting matters}]
+A model can look great on training data but fail on new data. \\
+We split data to estimate real-world performance and to avoid overfitting.
+\end{tcolorbox}
+
+\subsection{Two-way split}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Train set}: used to learn parameters $(w,b)$.
+  \item \textbf{Test set}: used to estimate performance on unseen data.
+\end{itemize}
+
+\subsection{Three-way split}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Train}: learn parameters.
+  \item \textbf{Validation}: tune hyperparameters (learning rate, epochs, architecture).
+  \item \textbf{Test}: final unbiased evaluation (use once at the end).
+\end{itemize}
+
+\subsection{Parameters vs hyperparameters}
+\begin{tcolorbox}[colframe=purple!60!black,colback=purple!3,title=\textbf{\color{purple!70!black}Important distinction}]
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Parameters} (learned): $w, b$
+  \item \textbf{Hyperparameters} (chosen by you): learning rate $\eta$, optimizer, number of epochs, model size
+\end{itemize}
+Validation helps you choose hyperparameters.
+\end{tcolorbox}
+
+\section{Exercises (to make it stick)}
+
+\subsection*{\color{blue!70!black}Exercise 1: Track accuracy per epoch}
+During training, compute train and test accuracy each epoch and store them in arrays. Plot:
+\[
+\text{loss vs epoch}, \qquad \text{accuracy vs epoch}.
+\]
+
+\subsection*{\color{blue!70!black}Exercise 2: Confirm two prediction rules match}
+Verify these produce the same predictions:
+\[
+\hat{y}=\mathbb{1}[a\ge 0]
+\quad \text{and} \quad
+\hat{y}=\mathbb{1}[\sigma(a)\ge 0.5].
+\]
+
+\subsection*{\color{blue!70!black}Exercise 3: Learning rate experimentation}
+Try $\eta \in \{10^{-1}, 10^{-2}, 10^{-3}, 10^{-4}\}$ and observe:
+\begin{itemize}[leftmargin=*]
+  \item too high $\Rightarrow$ loss explodes / diverges
+  \item too low $\Rightarrow$ training is very slow
+  \item just right $\Rightarrow$ smooth decreasing loss
+\end{itemize}
+
+\section{Chapter Summary (One Page)}
+\begin{tcolorbox}[colframe=black!50,colback=black!3,title=\textbf{\color{black}You should now understand...}]
+\begin{itemize}[leftmargin=*]
+  \item Linear classification uses $a=w^\top x+b$ and separates classes by the sign of $a$.
+  \item Logistic regression converts $a$ to probability with $\sigma(a)=\frac{1}{1+e^{-a}}$.
+  \item Classification uses BCE-style losses; \texttt{BCEWithLogitsLoss} is numerically stable.
+  \item The PyTorch training loop is: zero grad $\to$ forward $\to$ loss $\to$ backward $\to$ step.
+  \item Accuracy is computed by comparing predicted labels with true labels.
+  \item Models are saved with \texttt{state\_dict} and loaded by recreating architecture + loading weights.
+  \item Train/validation/test splits support generalization and hyperparameter tuning.
+\end{itemize}
+\end{tcolorbox}</code></pre>
+
+</div></div></article></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col noPrint_WFHX"></div><div class="col lastUpdated_JAkA"><span class="theme-last-updated">Last updated<!-- --> on <b><time datetime="2026-07-30T01:42:42.000Z" itemprop="dateModified">Jul 30, 2026</time></b></span></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/tutorials/part6-appendices/01-lead-ds-interview-talk-track"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">A. Lead DS interview talk track</div></a></nav></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer"><div class="container container-fluid"><div class="row footer__links"><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Study</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/tutorials/">Book home</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/content-map">Reading guide</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/labs/rnn">Interactive RNN lab</a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Core tracks</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/tutorials/part2-backend-platform-security/overview">Backend and security</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/part3-agent-protocols/overview">Agent protocols</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/part5-deep-learning-and-llms/overview">Deep learning and LLMs</a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright">Enterprise AI, Agents & Applied ML - 2026</div></div></div></footer></div>
+</body>
+</html>

@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-part1-enterprise-ai-delivery/ai-lead-response" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.10.2">
+<title data-rh="true">AI Lead Response Doc: Executive Document Q&amp;A Pilot (Cited, Secure, Measurable) | Enterprise AI, Agents &amp; Applied ML</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://dineshg.github.io/tutorials/part1-enterprise-ai-delivery/03-ai-lead-response"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="keywords" content="enterprise AI, machine learning, deep learning, LLM, FastAPI, Pydantic, MCP, authentication"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="AI Lead Response Doc: Executive Document Q&amp;A Pilot (Cited, Secure, Measurable) | Enterprise AI, Agents &amp; Applied ML"><meta data-rh="true" name="description" content="This document is the typical Lead AI Engineer output after receiving a business intake brief. It turns “we want an LLM tool for docs” into a delivery-ready plan: scope, safety, evaluation, architecture, and a pilot ro..."><meta data-rh="true" property="og:description" content="This document is the typical Lead AI Engineer output after receiving a business intake brief. It turns “we want an LLM tool for docs” into a delivery-ready plan: scope, safety, evaluation, architecture, and a pilot ro..."><link data-rh="true" rel="icon" href="/tutorials/img/favicon.svg"><link data-rh="true" rel="canonical" href="https://dineshg.github.io/tutorials/part1-enterprise-ai-delivery/03-ai-lead-response"><link data-rh="true" rel="alternate" href="https://dineshg.github.io/tutorials/part1-enterprise-ai-delivery/03-ai-lead-response" hreflang="en"><link data-rh="true" rel="alternate" href="https://dineshg.github.io/tutorials/part1-enterprise-ai-delivery/03-ai-lead-response" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Part I - Enterprise AI Delivery","item":"https://dineshg.github.io/tutorials/part1-enterprise-ai-delivery/overview"},{"@type":"ListItem","position":2,"name":"3. AI lead response document","item":"https://dineshg.github.io/tutorials/part1-enterprise-ai-delivery/03-ai-lead-response"}]}</script><script>window.MathJax={startup:{typeset:!1},tex:{inlineMath:[["\\(","\\)"],["$","$"]],displayMath:[["\\[","\\]"],["$$","$$"]],processEscapes:!0},options:{skipHtmlTags:["script","noscript","style","textarea","pre","code"]}}</script>
+<link rel="stylesheet" href="/tutorials/css/book.css">
+<link rel="stylesheet" href="/tutorials/vendor/highlight.js/11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.18.1/dist/katex.min.css" integrity="sha384-5TcZemv2l/9On385z///+d7MSYlvIEw9FuZTIdZ14vJLqWphw7e7ZPuOiCHJcFCP" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-mml-chtml.js" defer="defer"></script><link rel="stylesheet" href="/tutorials/assets/css/styles.003aa738.css">
+<script src="/tutorials/assets/js/runtime~main.98c31d90.js" defer="defer"></script>
+<script src="/tutorials/assets/js/main.bd80017b.js" defer="defer"></script>
+</head>
+<body>
+<svg style="display: none;"><defs>
+<symbol id="theme-svg-external-link" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")),document.documentElement.setAttribute("data-theme-choice",t||"system")}(),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top"><div class="navbar__inner"><div class="theme-layout-navbar-left navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/tutorials/"><b class="navbar__title text--truncate">Enterprise AI Book</b></a><a class="navbar__item navbar__link" href="/tutorials/">Read</a><a class="navbar__item navbar__link" href="/tutorials/content-map">Concept map</a><a class="navbar__item navbar__link" href="/tutorials/part5-deep-learning-and-llms/10-recurrent-neural-networks">Deep learning</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><div class="navbar__item book-search-navbar-item"><button type="button" class="book-search-trigger" aria-label="Search the book">Search <kbd>Ctrl K</kbd></button></div><a href="https://github.com/dineshg/tutorials" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type="button" disabled="" title="system mode" aria-label="Switch between dark and light mode (currently system mode)"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill="currentColor" d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill="currentColor" d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill="currentColor" d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"></path></svg></button></div><div class="navbarSearchContainer_Bca1"></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class="docsWrapper_hBAB"><button aria-label="Scroll back to top" class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type="button"></button><div class="docRoot_UBD9"><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class="sidebarViewport_aRkj"><div class="sidebar_njMd"><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/tutorials/"><span class="linkLabel_WmDU">Book home</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/tutorials/content-map"><span class="linkLabel_WmDU">Reading guide and concept map</span></a></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item sidebar-category sidebar-category-blue"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--active" href="/tutorials/part1-enterprise-ai-delivery/overview"><span class="categoryLinkLabel_W154">Part I - Enterprise AI Delivery</span></a><button aria-label="Collapse sidebar category &#x27;Part I - Enterprise AI Delivery&#x27;" aria-expanded="true" type="button" class="clean-btn menu__caret"></button></div><ul class="menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part1-enterprise-ai-delivery/01-business-pain-to-ai-lead"><span class="linkLabel_WmDU">1. From business pain to AI lead</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part1-enterprise-ai-delivery/02-intake-package"><span class="linkLabel_WmDU">2. The intake package</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link menu__link--active" aria-current="page" tabindex="0" href="/tutorials/part1-enterprise-ai-delivery/03-ai-lead-response"><span class="linkLabel_WmDU">3. AI lead response document</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part1-enterprise-ai-delivery/04-kickoff-meeting"><span class="linkLabel_WmDU">4. Pilot kickoff meeting</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part1-enterprise-ai-delivery/05-seven-days-after-kickoff"><span class="linkLabel_WmDU">5. Seven days after kickoff</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part1-enterprise-ai-delivery/06-architecture-reference-design"><span class="linkLabel_WmDU">6. Architecture reference design</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part1-enterprise-ai-delivery/07-hld-service-selection"><span class="linkLabel_WmDU">7. HLD and service selection</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part1-enterprise-ai-delivery/08-after-hld-next-steps"><span class="linkLabel_WmDU">8. After HLD: next steps</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part1-enterprise-ai-delivery/09-architecture-review"><span class="linkLabel_WmDU">9. Architecture review</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part1-enterprise-ai-delivery/10-hld-to-lld-sprint-plan"><span class="linkLabel_WmDU">10. HLD to LLD and sprint plan</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part1-enterprise-ai-delivery/11-provisioning-services-scale"><span class="linkLabel_WmDU">11. Provisioning, services, scale</span></a></li></ul></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-teal"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part2-backend-platform-security/overview"><span class="categoryLinkLabel_W154">Part II - Backend, Platform &amp; Security</span></a><button aria-label="Expand sidebar category &#x27;Part II - Backend, Platform &amp; Security&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-violet"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part3-agent-protocols/overview"><span class="categoryLinkLabel_W154">Part III - Agent Protocols</span></a><button aria-label="Expand sidebar category &#x27;Part III - Agent Protocols&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-amber"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part4-ml-foundations/overview"><span class="categoryLinkLabel_W154">Part IV - ML Foundations</span></a><button aria-label="Expand sidebar category &#x27;Part IV - ML Foundations&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-coral"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part5-deep-learning-and-llms/overview"><span class="categoryLinkLabel_W154">Part V - Deep Learning &amp; LLMs</span></a><button aria-label="Expand sidebar category &#x27;Part V - Deep Learning &amp; LLMs&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-slate"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part6-appendices/overview"><span class="categoryLinkLabel_W154">Part VI - Appendices</span></a><button aria-label="Expand sidebar category &#x27;Part VI - Appendices&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li></ul></nav><button type="button" title="Collapse sidebar" aria-label="Collapse sidebar" class="button button--secondary button--outline collapseSidebarButton_PEFL"><svg width="20" height="20" aria-hidden="true" class="collapseSidebarButtonIcon_kv0_"><g fill="#7a7a7a"><path d="M9.992 10.023c0 .2-.062.399-.172.547l-4.996 7.492a.982.982 0 01-.828.454H1c-.55 0-1-.453-1-1 0-.2.059-.403.168-.551l4.629-6.942L.168 3.078A.939.939 0 010 2.528c0-.548.45-.997 1-.997h2.996c.352 0 .649.18.828.45L9.82 9.472c.11.148.172.347.172.55zm0 0"></path><path d="M19.98 10.023c0 .2-.058.399-.168.547l-4.996 7.492a.987.987 0 01-.828.454h-3c-.547 0-.996-.453-.996-1 0-.2.059-.403.168-.551l4.625-6.942-4.625-6.945a.939.939 0 01-.168-.55 1 1 0 01.996-.997h3c.348 0 .649.18.828.45l4.996 7.492c.11.148.168.347.168.55zm0 0"></path></g></svg></button></div></div></aside><main class="docMainContainer_TBSr"><div class="container padding-top--md padding-bottom--lg"><div class="row"><div class="col"><div class="docItemContainer_Djhp"><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label="Breadcrumbs"><ul class="breadcrumbs"><li class="breadcrumbs__item"><a aria-label="Home page" class="breadcrumbs__link" href="/tutorials/"><svg viewBox="0 0 24 24" class="breadcrumbHomeIcon_YNFT"><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill="currentColor"></path></svg></a></li><li class="breadcrumbs__item"><a class="breadcrumbs__link" href="/tutorials/part1-enterprise-ai-delivery/overview"><span>Part I - Enterprise AI Delivery</span></a></li><li class="breadcrumbs__item breadcrumbs__item--active"><span class="breadcrumbs__link">3. AI lead response document</span></li></ul></nav><div class="theme-doc-markdown markdown"><article class="book-article tr-content" data-book-part="part1" data-book-accent="blue"><header class="articleHeader_jX4Y"><span class="partLabel_DqKR">Part I - Enterprise AI Delivery Lifecycle</span><h1>AI Lead Response Doc</h1><div class="articleMeta_jfH_"><span>5<!-- --> min read</span><span aria-hidden="true">·</span><span>11<!-- --> sections</span></div></header><details class="chapterToc_aQjS"><summary>On this page</summary><nav aria-label="On this page"><a href="#summary">1) Executive summary</a><a href="#workflow">2) Target workflow (validated with EA + Ops)</a><a href="#scope">3) Pilot scope (smallest safe slice)</a><a href="#success">4) Success metrics (business + quality + operations)</a><a href="#safety">5) Safety &amp; controls (enterprise non-negotiables)</a><a href="#architecture">6) Architecture (high level)</a><a href="#eval">7) Evaluation plan (how we avoid “demo success”)</a><a href="#ops">8) Operations &amp; support model</a><a href="#plan">9) Team plan &amp; timeline (example for a 5-person team)</a><a href="#risks">10) Risks &amp; mitigations</a><a href="#asks">11) Dependencies / asks (what I need to proceed)</a></nav></details><div class="articleBody_b2wt"><div class="container">
+    
+    <p class="lead">
+      This document is the typical <strong>Lead AI Engineer</strong> output after receiving a business intake brief.
+      It turns “we want an LLM tool for docs” into a delivery-ready plan: scope, safety, evaluation, architecture, and a pilot roadmap.
+      The example context is an <strong>Executive Document Q&amp;A</strong> assistant (meeting notes/packs) that returns <strong>cited answers</strong>.
+    </p>
+
+    <div class="meta">
+      <div class="box">
+        <div class="k">Initiative</div>
+        Executive Document Intelligence (Meeting Notes/Packs) — Pilot
+      </div>
+      <div class="box">
+        <div class="k">Owner</div>
+        Lead AI Engineer (delivery) + Business Owner (outcome/adoption)
+      </div>
+      <div class="box">
+        <div class="k">Target Users</div>
+        Execs + EAs (Executive Assistants); optionally Ops leadership
+      </div>
+      <div class="box">
+        <div class="k">Core Promise</div>
+        Fast, grounded answers <em>with citations</em> over an approved corpus, with strict access control.
+      </div>
+    </div>
+
+    <ul class="toc">
+      <li><a href="#summary">Summary</a></li>
+      <li><a href="#workflow">Target workflow</a></li>
+      <li><a href="#scope">Pilot scope</a></li>
+      <li><a href="#success">Success metrics</a></li>
+      <li><a href="#safety">Safety &amp; controls</a></li>
+      <li><a href="#architecture">Architecture</a></li>
+      <li><a href="#eval">Evaluation plan</a></li>
+      <li><a href="#ops">Operations</a></li>
+      <li><a href="#plan">Team plan &amp; timeline</a></li>
+      <li><a href="#risks">Risks &amp; mitigations</a></li>
+      <li><a href="#asks">Dependencies / asks</a></li>
+    </ul>
+
+    <h2 id="summary">1) Executive summary</h2>
+    <div class="card">
+      <p>
+        We will deliver a pilot assistant that answers natural-language questions over <strong>approved meeting notes/packs</strong>
+        and returns <strong>grounded answers with citations</strong> (source link + excerpt; timestamp if transcript exists).
+      </p>
+      <p>
+        The pilot is intentionally narrow: one controlled corpus, one exec cohort, and a small set of question patterns.
+        This ensures we can meet enterprise requirements: access control, auditability, safe failure behavior, and measurable impact.
+      </p>
+      <div class="ok">
+        <strong>Pilot objective:</strong> reduce EA time spent searching/compiling answers, while keeping answers provably grounded and access-controlled.
+      </div>
+    </div>
+
+    <h2 id="workflow">2) Target workflow (validated with EA + Ops)</h2>
+    <div class="card">
+      <h3 id="why-ea-and-ops-are-first-class-stakeholders">Why EA and Ops are first-class stakeholders</h3>
+      <ul>
+        <li><strong>EA (Executive Assistant):</strong> owns the exec workflow (meeting packs, minutes, action logs). Defines “usable output” and proof format.</li>
+        <li><strong>Ops (Operations):</strong> cares about speed, reliability, and failure tolerance. Defines “what goes wrong if the answer is wrong.”</li>
+      </ul>
+
+      <h3 id="primary-user-story-pilot">Primary user story (pilot)</h3>
+      <p>
+        “As an executive (or EA supporting an exec), I ask: <em>What did Chandima mention about no meeting on 1 Dec?</em>
+        and receive a short answer plus citations to the exact source text.”
+      </p>
+
+      <h3 id="response-contract">Response contract</h3>
+      <ul>
+        <li><strong>Answer:</strong> 2–6 sentences</li>
+        <li><strong>Citations:</strong> document title + link + quoted excerpt (and timestamp if applicable)</li>
+        <li><strong>Safe failure:</strong> if evidence isn’t found, respond “not found” and suggest next-best queries</li>
+      </ul>
+
+      <div class="callout">
+        <strong>EA acceptance test:</strong> “I can copy/paste the answer into a briefing email and it includes proof.”<br>
+        <strong>Ops acceptance test:</strong> “It doesn’t guess when evidence is missing; it fails safely.”
+      </div>
+    </div>
+
+    <h2 id="scope">3) Pilot scope (smallest safe slice)</h2>
+    <div class="card">
+      <h3 id="in-scope">In scope</h3>
+      <ul>
+        <li>One exec cohort (e.g., 5–10 execs + their EAs)</li>
+        <li>One approved corpus (e.g., one recurring meeting series)</li>
+        <li>Question patterns:
+          <ul>
+            <li>“Who said what, when” (speaker + date + topic)</li>
+            <li>“What was agreed / actioned” (initially via cited retrieval; structured extraction later)</li>
+          </ul>
+        </li>
+        <li>Audited Q&amp;A with citations</li>
+      </ul>
+
+      <h3 id="out-of-scope-pilot">Out of scope (pilot)</h3>
+      <ul>
+        <li>Searching all enterprise docs across all BUs</li>
+        <li>Write-back actions (auto-email, auto-ticketing)</li>
+        <li>Customer PII-heavy corpora (unless explicitly approved for a later phase)</li>
+      </ul>
+
+      <div class="warn">
+        <strong>Scope guardrail:</strong> “All docs in the company” is a phase-2 ambition, not a phase-1 pilot.
+      </div>
+    </div>
+
+    <h2 id="success">4) Success metrics (business + quality + operations)</h2>
+    <div class="card">
+      <h3 id="business-impact">Business impact</h3>
+      <ul>
+        <li>EA time saved per exec per week (baseline + post-pilot measurement)</li>
+        <li>Time-to-answer for top recurring questions (before/after)</li>
+        <li>User adoption: weekly active users in pilot group</li>
+      </ul>
+
+      <h3 id="quality">Quality</h3>
+      <ul>
+        <li><strong>Citation correctness:</strong> cited doc/chunk actually supports the answer</li>
+        <li><strong>Groundedness:</strong> answer statements are supported by retrieved context</li>
+        <li><strong>Refusal correctness:</strong> says “not found” when evidence is insufficient</li>
+      </ul>
+
+      <h3 id="operational">Operational</h3>
+      <ul>
+        <li>Latency P50/P95 (target defined with business; typical: a few seconds)</li>
+        <li>Error rate and dependency health (retrieval, model, ingestion freshness)</li>
+        <li>Cost per question (LLM tokens + retrieval cost)</li>
+      </ul>
+    </div>
+
+    <h2 id="safety">5) Safety &amp; controls (enterprise non-negotiables)</h2>
+    <div class="card">
+      <h3 id="access-control-who-can-see-what">Access control (who can see what)</h3>
+      <ul>
+        <li>Users authenticate via SSO (e.g., Google Workspace)</li>
+        <li>Group gate: only users in an approved org group can access the tool</li>
+        <li>Corpus gate: retrieval is limited to document sets approved by data owners</li>
+        <li>Per-request audit log: who asked, what sources were used, and when</li>
+      </ul>
+
+      <h3 id="model-safety-behavior">Model safety behavior</h3>
+      <ul>
+        <li>Require citations for all factual claims</li>
+        <li>Refuse if insufficient evidence</li>
+        <li>Minimize context sent to the LLM (only retrieved snippets)</li>
+      </ul>
+
+      <div class="callout">
+        <strong>Principle:</strong> “If you can’t cite it, you can’t say it.”
+      </div>
+    </div>
+
+    <h2 id="architecture">6) Architecture (high level)</h2>
+    <div class="card">
+      <h3 id="ingestion-path">Ingestion path</h3>
+      <ol>
+        <li>Fetch approved documents/transcripts</li>
+        <li>Extract canonical text + metadata (meeting date, title, participants/speaker if available, source link)</li>
+        <li>Store canonical text + metadata as system-of-record</li>
+        <li>Build retrieval index that supports semantic search + strict filters (date/speaker/corpus)</li>
+      </ol>
+
+      <h3 id="query-path">Query path</h3>
+      <ol>
+        <li>User asks a question</li>
+        <li>Verify identity and authorization (group + corpus)</li>
+        <li>Retrieve relevant chunks (with strict filters)</li>
+        <li>Generate answer using retrieved context only</li>
+        <li>Return answer + citations; write audit log</li>
+      </ol>
+
+      <pre>User → (SSO) → API → retrieve (filtered) → LLM (context only) → answer + citations → audit log
+      </pre>
+    </div>
+
+    <h2 id="eval">7) Evaluation plan (how we avoid “demo success”)</h2>
+    <div class="card">
+      <h3 id="golden-set-week-1">Golden set (week 1)</h3>
+      <ul>
+        <li>Collect 30–50 real questions from EAs/Ops</li>
+        <li>For each question, identify expected source doc(s)</li>
+        <li>Define scoring rubric:
+          <ul>
+            <li>citation correctness</li>
+            <li>groundedness</li>
+            <li>refusal correctness</li>
+          </ul>
+        </li>
+      </ul>
+
+      <h3 id="release-gates">Release gates</h3>
+      <ul>
+        <li>Minimum citation correctness on sampled set</li>
+        <li>No cross-user/cross-corpus leakage in tests</li>
+        <li>Acceptable latency/cost for pilot cohort</li>
+      </ul>
+
+      <div class="ok">
+        <strong>Why this matters:</strong> enterprises ship what they can measure and defend.
+        “Looks good in a demo” is not a release criterion.
+      </div>
+    </div>
+
+    <h2 id="ops">8) Operations &amp; support model</h2>
+    <div class="card">
+      <h3 id="observability">Observability</h3>
+      <ul>
+        <li>Metrics: latency, error rate, token usage, retrieval hit rate</li>
+        <li>Logs: request audit trail, citation trace, dependency errors</li>
+        <li>Alerting: dependency outages, cost anomalies, ingestion failures</li>
+      </ul>
+
+      <h3 id="runbook-essentials">Runbook essentials</h3>
+      <ul>
+        <li>How to diagnose “wrong answer” reports (check citations + retrieved chunks)</li>
+        <li>How to handle “not found” (ingestion freshness, metadata coverage)</li>
+        <li>How to disable a corpus quickly if misconfigured</li>
+      </ul>
+    </div>
+
+    <h2 id="plan">9) Team plan &amp; timeline (example for a 5-person team)</h2>
+    <div class="card">
+      <h3 id="work-lanes">Work lanes</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Lane</th>
+            <th>Owner</th>
+            <th>Key deliverables</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Ingestion &amp; metadata</td>
+            <td>2 engineers</td>
+            <td>connectors, extraction, incremental sync, canonical schema</td>
+          </tr>
+          <tr>
+            <td>Backend &amp; security</td>
+            <td>2 engineers</td>
+            <td>SSO validation, group/corpus gating, audit logs, API endpoints</td>
+          </tr>
+          <tr>
+            <td>Retrieval/LLM &amp; eval</td>
+            <td>1 engineer + AI lead</td>
+            <td>chunking, filters, prompting, citation formatting, eval harness</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3 id="milestone-sketch">Milestone sketch</h3>
+      <ul>
+        <li><strong>Week 1:</strong> stakeholder workshop (EA/Ops), golden set, schema, first ingestion slice</li>
+        <li><strong>Week 2:</strong> retrieval + citations prototype, baseline eval</li>
+        <li><strong>Week 3–4:</strong> harden access control, improve retrieval/prompting, expand golden set</li>
+        <li><strong>Week 5–6:</strong> pilot rollout, monitoring, feedback loop, measured outcomes</li>
+      </ul>
+    </div>
+
+    <h2 id="risks">10) Risks &amp; mitigations</h2>
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>Risk</th>
+            <th>Why it matters</th>
+            <th>Mitigation</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Cross-user / cross-corpus leakage</td>
+            <td>Severe privacy breach</td>
+            <td>Strict gating + tests + audit logs; limit pilot corpus</td>
+          </tr>
+          <tr>
+            <td>Hallucinated answers</td>
+            <td>Loss of trust; governance risk</td>
+            <td>Citations required; refuse if insufficient evidence; eval gates</td>
+          </tr>
+          <tr>
+            <td>Sensitive data exposure to model provider</td>
+            <td>Compliance &amp; privacy exposure</td>
+            <td>Send minimal retrieved context; redaction rules; approved corpora only</td>
+          </tr>
+          <tr>
+            <td>Low adoption</td>
+            <td>“Demo trap”</td>
+            <td>Co-design with EA; output format matches briefings; weekly feedback loop</td>
+          </tr>
+          <tr>
+            <td>Source documents are messy</td>
+            <td>Retrieval fails without metadata</td>
+            <td>Define canonical schema; enrich metadata; iterate on chunking</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 id="asks">11) Dependencies / asks (what I need to proceed)</h2>
+    <div class="card">
+      <ul>
+        <li>Named pilot cohort + business owner confirmation</li>
+        <li>Document source list + data owner sign-off for pilot corpus</li>
+        <li>Security/IAM contacts to confirm approved patterns</li>
+        <li>EA and Ops representatives for weekly co-design and acceptance testing</li>
+        <li>Agreement on pilot success metrics and how we will measure them</li>
+      </ul>
+
+      <div class="ok">
+        <strong>Next step:</strong> schedule a 60–90 minute workshop with the EA rep + Ops rep + Business owner to finalize:
+        (1) top questions, (2) “proof format,” (3) corpus boundaries, and (4) baseline measurement plan.
+      </div>
+    </div>
+
+    <p class="footer-note">
+      Optional appendices you can add for real enterprise rollout:
+      A) Data classification &amp; retention rules, B) release checklist, C) incident response plan, D) cost/FinOps policy.
+    </p>
+  </div></div></article></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col noPrint_WFHX"></div><div class="col lastUpdated_JAkA"><span class="theme-last-updated">Last updated<!-- --> on <b><time datetime="2026-07-30T01:42:42.000Z" itemprop="dateModified">Jul 30, 2026</time></b></span></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/tutorials/part1-enterprise-ai-delivery/02-intake-package"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">2. The intake package</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/tutorials/part1-enterprise-ai-delivery/04-kickoff-meeting"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">4. Pilot kickoff meeting</div></a></nav></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer"><div class="container container-fluid"><div class="row footer__links"><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Study</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/tutorials/">Book home</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/content-map">Reading guide</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/labs/rnn">Interactive RNN lab</a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Core tracks</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/tutorials/part2-backend-platform-security/overview">Backend and security</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/part3-agent-protocols/overview">Agent protocols</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/part5-deep-learning-and-llms/overview">Deep learning and LLMs</a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright">Enterprise AI, Agents & Applied ML - 2026</div></div></div></footer></div>
+</body>
+</html>

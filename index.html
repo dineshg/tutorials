@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-home" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.10.2">
+<title data-rh="true">Enterprise AI, Agents &amp; Applied ML</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://dineshg.github.io/tutorials/"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="keywords" content="enterprise AI, machine learning, deep learning, LLM, FastAPI, Pydantic, MCP, authentication"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Enterprise AI, Agents &amp; Applied ML"><meta data-rh="true" name="description" content="A practical book for moving from enterprise AI delivery and backend platform foundations into agent protocols, applied machine learning, deep learning, LLM fine‑tuning, and alignment. It is organized as a sequence of..."><meta data-rh="true" property="og:description" content="A practical book for moving from enterprise AI delivery and backend platform foundations into agent protocols, applied machine learning, deep learning, LLM fine‑tuning, and alignment. It is organized as a sequence of..."><link data-rh="true" rel="icon" href="/tutorials/img/favicon.svg"><link data-rh="true" rel="canonical" href="https://dineshg.github.io/tutorials/"><link data-rh="true" rel="alternate" href="https://dineshg.github.io/tutorials/" hreflang="en"><link data-rh="true" rel="alternate" href="https://dineshg.github.io/tutorials/" hreflang="x-default"><script data-rh="true">function insertBanner(){var n=document.createElement("div");n.id="__docusaurus-base-url-issue-banner-container";n.innerHTML='\n<div id="__docusaurus-base-url-issue-banner" style="border: thick solid red; background-color: rgb(255, 230, 179); margin: 20px; padding: 20px; font-size: 20px;">\n   <p style="font-weight: bold; font-size: 30px;">Your Docusaurus site did not load properly.</p>\n   <p>A very common reason is a wrong site <a href="https://docusaurus.io/docs/docusaurus.config.js/#baseUrl" style="font-weight: bold;">baseUrl configuration</a>.</p>\n   <p>Current configured baseUrl = <span style="font-weight: bold; color: red;">/tutorials/</span> </p>\n   <p>We suggest trying baseUrl = <span id="__docusaurus-base-url-issue-banner-suggestion-container" style="font-weight: bold; color: green;"></span></p>\n</div>\n',document.body.prepend(n);var e=document.getElementById("__docusaurus-base-url-issue-banner-suggestion-container"),s=window.location.pathname,o="/"===s.substr(-1)?s:s+"/";e.textContent=o}document.addEventListener("DOMContentLoaded",function(){void 0===window.docusaurus&&insertBanner()})</script><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Book home","item":"https://dineshg.github.io/tutorials/"}]}</script><script>window.MathJax={startup:{typeset:!1},tex:{inlineMath:[["\\(","\\)"],["$","$"]],displayMath:[["\\[","\\]"],["$$","$$"]],processEscapes:!0},options:{skipHtmlTags:["script","noscript","style","textarea","pre","code"]}}</script>
+<link rel="stylesheet" href="/tutorials/css/book.css">
+<link rel="stylesheet" href="/tutorials/vendor/highlight.js/11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.18.1/dist/katex.min.css" integrity="sha384-5TcZemv2l/9On385z///+d7MSYlvIEw9FuZTIdZ14vJLqWphw7e7ZPuOiCHJcFCP" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-mml-chtml.js" defer="defer"></script><link rel="stylesheet" href="/tutorials/assets/css/styles.003aa738.css">
+<script src="/tutorials/assets/js/runtime~main.98c31d90.js" defer="defer"></script>
+<script src="/tutorials/assets/js/main.bd80017b.js" defer="defer"></script>
+</head>
+<body>
+<svg style="display: none;"><defs>
+<symbol id="theme-svg-external-link" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")),document.documentElement.setAttribute("data-theme-choice",t||"system")}(),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top"><div class="navbar__inner"><div class="theme-layout-navbar-left navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/tutorials/"><b class="navbar__title text--truncate">Enterprise AI Book</b></a><a class="navbar__item navbar__link" href="/tutorials/">Read</a><a class="navbar__item navbar__link" href="/tutorials/content-map">Concept map</a><a class="navbar__item navbar__link" href="/tutorials/part5-deep-learning-and-llms/10-recurrent-neural-networks">Deep learning</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><div class="navbar__item book-search-navbar-item"><button type="button" class="book-search-trigger" aria-label="Search the book">Search <kbd>Ctrl K</kbd></button></div><a href="https://github.com/dineshg/tutorials" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type="button" disabled="" title="system mode" aria-label="Switch between dark and light mode (currently system mode)"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill="currentColor" d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill="currentColor" d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill="currentColor" d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"></path></svg></button></div><div class="navbarSearchContainer_Bca1"></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class="docsWrapper_hBAB"><button aria-label="Scroll back to top" class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type="button"></button><div class="docRoot_UBD9"><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class="sidebarViewport_aRkj"><div class="sidebar_njMd"><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link menu__link--active" aria-current="page" href="/tutorials/"><span class="linkLabel_WmDU">Book home</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/tutorials/content-map"><span class="linkLabel_WmDU">Reading guide and concept map</span></a></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-blue"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part1-enterprise-ai-delivery/overview"><span class="categoryLinkLabel_W154">Part I - Enterprise AI Delivery</span></a><button aria-label="Expand sidebar category &#x27;Part I - Enterprise AI Delivery&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-teal"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part2-backend-platform-security/overview"><span class="categoryLinkLabel_W154">Part II - Backend, Platform &amp; Security</span></a><button aria-label="Expand sidebar category &#x27;Part II - Backend, Platform &amp; Security&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-violet"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part3-agent-protocols/overview"><span class="categoryLinkLabel_W154">Part III - Agent Protocols</span></a><button aria-label="Expand sidebar category &#x27;Part III - Agent Protocols&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-amber"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part4-ml-foundations/overview"><span class="categoryLinkLabel_W154">Part IV - ML Foundations</span></a><button aria-label="Expand sidebar category &#x27;Part IV - ML Foundations&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-coral"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part5-deep-learning-and-llms/overview"><span class="categoryLinkLabel_W154">Part V - Deep Learning &amp; LLMs</span></a><button aria-label="Expand sidebar category &#x27;Part V - Deep Learning &amp; LLMs&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-slate"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part6-appendices/overview"><span class="categoryLinkLabel_W154">Part VI - Appendices</span></a><button aria-label="Expand sidebar category &#x27;Part VI - Appendices&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li></ul></nav><button type="button" title="Collapse sidebar" aria-label="Collapse sidebar" class="button button--secondary button--outline collapseSidebarButton_PEFL"><svg width="20" height="20" aria-hidden="true" class="collapseSidebarButtonIcon_kv0_"><g fill="#7a7a7a"><path d="M9.992 10.023c0 .2-.062.399-.172.547l-4.996 7.492a.982.982 0 01-.828.454H1c-.55 0-1-.453-1-1 0-.2.059-.403.168-.551l4.629-6.942L.168 3.078A.939.939 0 010 2.528c0-.548.45-.997 1-.997h2.996c.352 0 .649.18.828.45L9.82 9.472c.11.148.172.347.172.55zm0 0"></path><path d="M19.98 10.023c0 .2-.058.399-.168.547l-4.996 7.492a.987.987 0 01-.828.454h-3c-.547 0-.996-.453-.996-1 0-.2.059-.403.168-.551l4.625-6.942-4.625-6.945a.939.939 0 01-.168-.55 1 1 0 01.996-.997h3c.348 0 .649.18.828.45l4.996 7.492c.11.148.168.347.168.55zm0 0"></path></g></svg></button></div></div></aside><main class="docMainContainer_TBSr"><div class="container padding-top--md padding-bottom--lg"><div class="row"><div class="col"><div class="docItemContainer_Djhp"><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label="Breadcrumbs"><ul class="breadcrumbs"><li class="breadcrumbs__item"><a aria-label="Home page" class="breadcrumbs__link" href="/tutorials/"><svg viewBox="0 0 24 24" class="breadcrumbHomeIcon_YNFT"><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill="currentColor"></path></svg></a></li><li class="breadcrumbs__item breadcrumbs__item--active"><span class="breadcrumbs__link">Book home</span></li></ul></nav><div class="theme-doc-markdown markdown"><article class="book-article tr-content book-home" data-book-part="book" data-book-accent="blue"><div class="articleBody_b2wt"><section class="tr-hero">
+  <h1>Enterprise AI, Agents &amp; Applied ML</h1>
+  <p>A practical book for moving from enterprise AI delivery and backend
+     platform foundations into agent protocols, applied machine learning,
+     deep learning, LLM fine‑tuning, and alignment. It is organized as a
+     sequence of small-to-large examples: first the mental model, then the
+     implementation pattern, then the production tradeoffs.</p>
+  <div class="tr-hero-meta">6 parts · 54 chapters + companion labs · delivery, platform, agents, ML, deep learning, and reference material</div>
+</section>
+
+<div class="tr-paths">
+  <a class="tr-chip" href="/tutorials/content-map">Reading guide and concept map</a>
+  <a class="tr-chip" href="/tutorials/part1-enterprise-ai-delivery/overview">Delivery / Lead path</a>
+  <a class="tr-chip" href="/tutorials/part2-backend-platform-security/overview">Backend &amp; platform path</a>
+  <a class="tr-chip" href="/tutorials/part3-agent-protocols/overview">Agent systems path</a>
+  <a class="tr-chip" href="/tutorials/part4-ml-foundations/overview">ML foundations path</a>
+  <a class="tr-chip" href="/tutorials/part5-deep-learning-and-llms/overview">Deep learning &amp; LLM path</a>
+  <a class="tr-chip" href="/tutorials/part6-appendices/overview">Appendices</a>
+</div>
+
+<div class="tr-note" style="margin: 18px 0 6px;">
+  <strong>Book-wide concept map</strong>
+  The <a href="/tutorials/content-map">concept map</a> explains how the parts fit
+  together, which chapters provide the primary explanation for each major
+  concept, and where later chapters revisit the same idea as an implementation,
+  enterprise, or reference view.
+</div>
+
+<section class="tr-card" style="margin: 18px 0 6px;">
+  <h2 style="margin-top:0" id="how-to-read-this-book">How to read this book</h2>
+  <p>The book has six parts. They are presented in the order an enterprise
+  team usually encounters them — delivery first, then platform, then agents,
+  then the ML/DL fundamentals that power them. <strong>If you are a new
+  learner, you almost certainly want to read the parts in a different order.</strong>
+  Pick the path that matches your role:</p>
+
+  <h3 id="new-to-ml-or-just-learning-the-field">New to ML or just learning the field</h3>
+  <ol>
+    <li><a href="/tutorials/part4-ml-foundations/overview">Part IV — ML Foundations</a> (PyTorch, regression, classification, trees)</li>
+    <li><a href="/tutorials/part5-deep-learning-and-llms/overview">Part V — Deep Learning &amp; LLMs</a> in order: FFN → CNN → RNN → Transformers → fine‑tuning → alignment</li>
+    <li><a href="/tutorials/part3-agent-protocols/overview">Part III — Agent Protocols</a> once you understand what an LLM is</li>
+    <li><a href="/tutorials/part2-backend-platform-security/overview">Part II</a> and <a href="/tutorials/part1-enterprise-ai-delivery/overview">Part I</a> when you start shipping</li>
+  </ol>
+
+  <h3 id="backend-platform-engineer-learning-ai">Backend / platform engineer learning AI</h3>
+  <ol>
+    <li><a href="/tutorials/part2-backend-platform-security/overview">Part II</a> chapters 1–6 (FastAPI, Pydantic contracts, concurrency, background work) — already familiar territory</li>
+    <li><a href="/tutorials/part2-backend-platform-security/overview">Part II</a> chapters 7–16 for the auth + identity + multi‑tenancy stack</li>
+    <li><a href="/tutorials/part3-agent-protocols/overview">Part III</a> end‑to‑end (MCP → A2A → LangChain)</li>
+    <li>Spot‑read <a href="/tutorials/part5-deep-learning-and-llms/11-transformers-and-attention">Transformers (Part V Ch. 11)</a>, <a href="/tutorials/part5-deep-learning-and-llms/12-llm-fine-tuning">fine‑tuning (Ch. 12)</a>, and <a href="/tutorials/part5-deep-learning-and-llms/13-modern-llm-alignment-orpo-grpo">alignment (Ch. 13)</a></li>
+    <li><a href="/tutorials/part1-enterprise-ai-delivery/overview">Part I</a> when you take your first AI project to production</li>
+  </ol>
+
+  <h3 id="lead-principal-ai-engineer-or-architect">Lead / Principal AI engineer or architect</h3>
+  <ol>
+    <li><a href="/tutorials/part1-enterprise-ai-delivery/overview">Part I</a> end‑to‑end (delivery lifecycle)</li>
+    <li><a href="/tutorials/part2-backend-platform-security/06-sso-oauth2-oidc-primer">Part II Ch. 7–16</a> for the auth/identity story you'll review</li>
+    <li><a href="/tutorials/part3-agent-protocols/overview">Part III</a> for protocol‑level vocabulary in design reviews</li>
+    <li><a href="/tutorials/part5-deep-learning-and-llms/11-transformers-and-attention">Transformers</a>, <a href="/tutorials/part5-deep-learning-and-llms/12-llm-fine-tuning">fine‑tuning</a>, <a href="/tutorials/part5-deep-learning-and-llms/13-modern-llm-alignment-orpo-grpo">alignment</a> as conceptual reference</li>
+    <li><a href="/tutorials/part6-appendices/01-lead-ds-interview-talk-track">Appendix A</a> for a 60‑minute narrative covering all of the above</li>
+  </ol>
+
+  <h3 id="preparing-for-a-lead-ds-lead-ai-interview">Preparing for a Lead DS / Lead AI interview</h3>
+  <ol>
+    <li><a href="/tutorials/part6-appendices/01-lead-ds-interview-talk-track">Appendix A — Lead DS interview talk track</a> (start here)</li>
+    <li>Drill the <a href="/tutorials/part1-enterprise-ai-delivery/overview">delivery lifecycle</a> and <a href="/tutorials/part2-backend-platform-security/09-authentication-deep-dive">auth deep‑dive</a></li>
+    <li>Be able to whiteboard <a href="/tutorials/part5-deep-learning-and-llms/11-transformers-and-attention">attention</a> and explain the difference between <a href="/tutorials/part5-deep-learning-and-llms/12-llm-fine-tuning">SFT/PEFT/DPO</a> and <a href="/tutorials/part5-deep-learning-and-llms/13-modern-llm-alignment-orpo-grpo">ORPO/GRPO/KTO</a></li>
+  </ol>
+
+  <p style="margin-bottom:0"><strong>Reading the book front‑to‑back</strong> is
+  also valid — it tells the story from the business side inward. Just be
+  aware that Part III assumes Part II Ch. 1–3, and Part V assumes Part IV.</p>
+</section>
+
+<div class="tr-toc-grid">
+
+  <article class="tr-card">
+    <span class="tr-card-tag">part-i · delivery-leadership</span>
+    <h3 id="part-i-enterprise-ai-delivery-lifecycle"><a href="/tutorials/part1-enterprise-ai-delivery/overview">Part I — Enterprise AI Delivery Lifecycle</a></h3>
+    <p>From a business pain point to a shipped pilot: intake, response,
+       kickoff, HLD/LLD, architecture review, provisioning, and scale.</p>
+    <ol>
+      <li><a href="/tutorials/part1-enterprise-ai-delivery/01-business-pain-to-ai-lead">From business pain to AI lead</a></li>
+      <li><a href="/tutorials/part1-enterprise-ai-delivery/02-intake-package">The intake package</a></li>
+      <li><a href="/tutorials/part1-enterprise-ai-delivery/03-ai-lead-response">AI lead response document</a></li>
+      <li><a href="/tutorials/part1-enterprise-ai-delivery/04-kickoff-meeting">Pilot kickoff meeting</a></li>
+      <li><a href="/tutorials/part1-enterprise-ai-delivery/05-seven-days-after-kickoff">Seven days after kickoff</a></li>
+      <li><a href="/tutorials/part1-enterprise-ai-delivery/06-architecture-reference-design">Architecture reference design</a></li>
+      <li><a href="/tutorials/part1-enterprise-ai-delivery/07-hld-service-selection">HLD and service selection</a></li>
+      <li><a href="/tutorials/part1-enterprise-ai-delivery/08-after-hld-next-steps">After HLD: next steps</a></li>
+      <li><a href="/tutorials/part1-enterprise-ai-delivery/09-architecture-review">Architecture review</a></li>
+      <li><a href="/tutorials/part1-enterprise-ai-delivery/10-hld-to-lld-sprint-plan">HLD → LLD &amp; sprint plan</a></li>
+      <li><a href="/tutorials/part1-enterprise-ai-delivery/11-provisioning-services-scale">Provisioning, services, scale</a></li>
+    </ol>
+  </article>
+
+  <article class="tr-card">
+    <span class="tr-card-tag">part-ii · platform-engineering</span>
+    <h3 id="part-ii-backend-platform-and-security"><a href="/tutorials/part2-backend-platform-security/overview">Part II — Backend, Platform &amp; Security</a></h3>
+    <p>FastAPI fundamentals, Pydantic data contracts, concurrency &amp; user
+       isolation, background work, the full auth stack
+       (OIDC/OAuth2/PKCE/JWT), workload identity, multi‑tenancy, external
+       integrations, GitHub governance, and <em>modern auth additions</em>
+       (Passkeys/WebAuthn, DPoP, mTLS).</p>
+    <ol>
+      <li><a href="/tutorials/part2-backend-platform-security/01-fastapi-uvicorn-basics">FastAPI &amp; Uvicorn basics</a></li>
+      <li><a href="/tutorials/part2-backend-platform-security/02-http-methods">HTTP methods</a></li>
+      <li><a href="/tutorials/part2-backend-platform-security/03-fastapi-request-mapping">FastAPI request mapping</a></li>
+      <li><a href="/tutorials/part2-backend-platform-security/04-pydantic-data-models">Pydantic data models</a></li>
+      <li><a href="/tutorials/part2-backend-platform-security/04-concurrency-user-isolation">Concurrency &amp; user isolation</a></li>
+      <li><a href="/tutorials/part2-backend-platform-security/05-background-tasks-and-retries">Background tasks &amp; retries</a></li>
+      <li><a href="/tutorials/part2-backend-platform-security/06-sso-oauth2-oidc-primer">SSO / OAuth2 / OIDC primer</a></li>
+      <li><a href="/tutorials/part2-backend-platform-security/07-oidc-oauth2-pkce-fastapi">OIDC + OAuth2 + PKCE in FastAPI</a></li>
+      <li><a href="/tutorials/part2-backend-platform-security/08-registering-new-users">Registering new users</a></li>
+      <li><a href="/tutorials/part2-backend-platform-security/09-authentication-deep-dive">Authentication deep dive</a></li>
+      <li><a href="/tutorials/part2-backend-platform-security/15-modern-auth-additions">Modern auth additions (Passkeys, DPoP, mTLS)</a></li>
+      <li><a href="/tutorials/part2-backend-platform-security/10-enduser-vs-workload-identity">End‑user vs workload identity</a></li>
+      <li><a href="/tutorials/part2-backend-platform-security/12-tenant-iam-ad-groups">Tenant isolation, IAM &amp; AD groups</a></li>
+      <li><a href="/tutorials/part2-backend-platform-security/11-gcp-workload-identity">GCP workload identity</a></li>
+      <li><a href="/tutorials/part2-backend-platform-security/13-external-service-integration">External service integration</a></li>
+      <li><a href="/tutorials/part2-backend-platform-security/14-github-governance">GitHub governance &amp; CI</a></li>
+    </ol>
+  </article>
+
+  <article class="tr-card">
+    <span class="tr-card-tag">part-iii · agents-mcp-a2a</span>
+    <h3 id="part-iii-agent-protocols-and-integration"><a href="/tutorials/part3-agent-protocols/overview">Part III — Agent Protocols &amp; Integration</a></h3>
+    <p>MCP from first principles through the enterprise pattern and its
+       2025-to-2026 protocol evolution, A2A 1.0 for multi-agent collaboration,
+       plus a JS/TS primer and the LangChain → LangGraph → Flowise journey.</p>
+    <ol>
+      <li><a href="/tutorials/part3-agent-protocols/01-mcp-fundamentals">MCP fundamentals</a></li>
+      <li><a href="/tutorials/part3-agent-protocols/02-mcp-discovery-remote-auth">MCP discovery, remote &amp; auth</a></li>
+      <li><a href="/tutorials/part3-agent-protocols/03-mcp-enterprise-pattern">MCP enterprise pattern</a></li>
+      <li><a href="/tutorials/part3-agent-protocols/04-mcp-2025-update">MCP protocol evolution: 2025 foundations to the 2026 stateless core</a></li>
+      <li><a href="/tutorials/part3-agent-protocols/05-a2a-protocol">A2A protocol 1.0</a></li>
+      <li><a href="/tutorials/part3-agent-protocols/06-javascript-typescript-primer">JavaScript &amp; TypeScript primer</a></li>
+      <li><a href="/tutorials/part3-agent-protocols/07-langchain-langgraph-flowise">LangChain → LangGraph → Flowise</a></li>
+    </ol>
+  </article>
+
+  <article class="tr-card">
+    <span class="tr-card-tag">part-iv · classical-ml</span>
+    <h3 id="part-iv-ml-foundations"><a href="/tutorials/part4-ml-foundations/overview">Part IV — ML Foundations</a></h3>
+    <p>The geometric view of ML, linear regression and classification in
+       PyTorch, and the tree/ensemble family (Random Forest, AdaBoost,
+       Gradient Boosting, XGBoost).</p>
+    <ol>
+      <li><a href="/tutorials/part4-ml-foundations/01-introduction-pytorch">PyTorch foundations</a></li>
+      <li><a href="/tutorials/part4-ml-foundations/02-ml-as-geometry">ML as geometry</a></li>
+      <li><a href="/tutorials/part4-ml-foundations/03-linear-regression">Linear regression</a></li>
+      <li><a href="/tutorials/part4-ml-foundations/04-linear-classification">Linear classification</a></li>
+      <li><a href="/tutorials/part4-ml-foundations/05-trees-bagging-boosting">Trees, bagging &amp; boosting</a></li>
+    </ol>
+  </article>
+
+  <article class="tr-card">
+    <span class="tr-card-tag">part-v · neural-nets-llms</span>
+    <h3 id="part-v-deep-learning-and-llms"><a href="/tutorials/part5-deep-learning-and-llms/overview">Part V — Deep Learning &amp; LLMs</a></h3>
+    <p>From the single neuron to feed‑forward nets, CNNs, sequence models,
+       and into Transformers, LLM fine‑tuning, and modern alignment
+       methods such as ORPO, GRPO, and KTO.</p>
+    <ol>
+      <li><a href="/tutorials/part5-deep-learning-and-llms/01-ffn-concepts">FFN concepts</a></li>
+      <li><a href="/tutorials/part5-deep-learning-and-llms/02-ffn-training-debugging">FFN training &amp; debugging</a></li>
+      <li><a href="/tutorials/part5-deep-learning-and-llms/03-ffn-canonical-merged">FFN single-chapter reference</a></li>
+      <li><a href="/tutorials/part5-deep-learning-and-llms/04-cnn-convolution">CNN — convolution</a></li>
+      <li><a href="/tutorials/part5-deep-learning-and-llms/05-cnn-architecture">CNN — architecture</a></li>
+      <li><a href="/tutorials/part5-deep-learning-and-llms/06-cnn-pytorch-implementation">CNN — PyTorch implementation</a></li>
+      <li><a href="/tutorials/part5-deep-learning-and-llms/07-cnn-dropout-train-eval">CNN — dropout &amp; train/eval</a></li>
+      <li><a href="/tutorials/part5-deep-learning-and-llms/08-forecasting-sequence-data">Forecasting &amp; sequence data</a></li>
+      <li><a href="/tutorials/part5-deep-learning-and-llms/09-autoregressive-linear-model">Autoregressive linear model</a></li>
+      <li><a href="/tutorials/labs/rnn"><em>Companion lab:</em> animated RNN walkthrough</a></li>
+      <li><a href="/tutorials/part5-deep-learning-and-llms/10-recurrent-neural-networks">Recurrent neural networks</a></li>
+      <li><a href="/tutorials/part5-deep-learning-and-llms/11-transformers-and-attention">Transformers &amp; attention</a></li>
+      <li><a href="/tutorials/part5-deep-learning-and-llms/12-llm-fine-tuning">LLM fine‑tuning</a></li>
+      <li><a href="/tutorials/part5-deep-learning-and-llms/13-modern-llm-alignment-orpo-grpo">Modern LLM alignment: ORPO, GRPO, KTO</a></li>
+    </ol>
+  </article>
+
+  <article class="tr-card">
+    <span class="tr-card-tag">part-vi · reference</span>
+    <h3 id="part-vi-appendices"><a href="/tutorials/part6-appendices/overview">Part VI — Appendices</a></h3>
+    <p>Lead Data Science interview talk track and the LaTeX print edition
+       of the classification chapter.</p>
+    <ol>
+      <li><a href="/tutorials/part6-appendices/01-lead-ds-interview-talk-track">Appendix A — Lead DS interview talk track</a></li>
+      <li><a href="/tutorials/part6-appendices/02-classification-latex-print">Appendix B — Classification (LaTeX print)</a></li>
+    </ol>
+  </article>
+
+</div></div></article></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col noPrint_WFHX"></div><div class="col lastUpdated_JAkA"><span class="theme-last-updated">Last updated<!-- --> on <b><time datetime="2026-07-30T01:42:42.000Z" itemprop="dateModified">Jul 30, 2026</time></b></span></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--next" href="/tutorials/content-map"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Reading guide and concept map</div></a></nav></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer"><div class="container container-fluid"><div class="row footer__links"><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Study</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/tutorials/">Book home</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/content-map">Reading guide</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/labs/rnn">Interactive RNN lab</a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Core tracks</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/tutorials/part2-backend-platform-security/overview">Backend and security</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/part3-agent-protocols/overview">Agent protocols</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/part5-deep-learning-and-llms/overview">Deep learning and LLMs</a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright">Enterprise AI, Agents & Applied ML - 2026</div></div></div></footer></div>
+</body>
+</html>

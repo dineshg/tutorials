@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-part2-backend-platform-security/modern-auth-additions" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.10.2">
+<title data-rh="true">Modern Auth Additions — Passkeys, DPoP, mTLS, Token Exchange | Enterprise AI, Agents &amp; Applied ML</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://dineshg.github.io/tutorials/part2-backend-platform-security/15-modern-auth-additions"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="keywords" content="enterprise AI, machine learning, deep learning, LLM, FastAPI, Pydantic, MCP, authentication"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Modern Auth Additions — Passkeys, DPoP, mTLS, Token Exchange | Enterprise AI, Agents &amp; Applied ML"><meta data-rh="true" name="description" content="A passkey is a WebAuthn credential bound to the user&#x27;s device (or a synced keychain like iCloud Keychain / Google Password Manager / 1Password). Instead of typing a password, the browser uses public‑key cryptography o..."><meta data-rh="true" property="og:description" content="A passkey is a WebAuthn credential bound to the user&#x27;s device (or a synced keychain like iCloud Keychain / Google Password Manager / 1Password). Instead of typing a password, the browser uses public‑key cryptography o..."><link data-rh="true" rel="icon" href="/tutorials/img/favicon.svg"><link data-rh="true" rel="canonical" href="https://dineshg.github.io/tutorials/part2-backend-platform-security/15-modern-auth-additions"><link data-rh="true" rel="alternate" href="https://dineshg.github.io/tutorials/part2-backend-platform-security/15-modern-auth-additions" hreflang="en"><link data-rh="true" rel="alternate" href="https://dineshg.github.io/tutorials/part2-backend-platform-security/15-modern-auth-additions" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Part II - Backend, Platform & Security","item":"https://dineshg.github.io/tutorials/part2-backend-platform-security/overview"},{"@type":"ListItem","position":2,"name":"11. Passkeys, DPoP, mTLS, and token exchange","item":"https://dineshg.github.io/tutorials/part2-backend-platform-security/15-modern-auth-additions"}]}</script><script>window.MathJax={startup:{typeset:!1},tex:{inlineMath:[["\\(","\\)"],["$","$"]],displayMath:[["\\[","\\]"],["$$","$$"]],processEscapes:!0},options:{skipHtmlTags:["script","noscript","style","textarea","pre","code"]}}</script>
+<link rel="stylesheet" href="/tutorials/css/book.css">
+<link rel="stylesheet" href="/tutorials/vendor/highlight.js/11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.18.1/dist/katex.min.css" integrity="sha384-5TcZemv2l/9On385z///+d7MSYlvIEw9FuZTIdZ14vJLqWphw7e7ZPuOiCHJcFCP" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-mml-chtml.js" defer="defer"></script><link rel="stylesheet" href="/tutorials/assets/css/styles.003aa738.css">
+<script src="/tutorials/assets/js/runtime~main.98c31d90.js" defer="defer"></script>
+<script src="/tutorials/assets/js/main.bd80017b.js" defer="defer"></script>
+</head>
+<body>
+<svg style="display: none;"><defs>
+<symbol id="theme-svg-external-link" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")),document.documentElement.setAttribute("data-theme-choice",t||"system")}(),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top"><div class="navbar__inner"><div class="theme-layout-navbar-left navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/tutorials/"><b class="navbar__title text--truncate">Enterprise AI Book</b></a><a class="navbar__item navbar__link" href="/tutorials/">Read</a><a class="navbar__item navbar__link" href="/tutorials/content-map">Concept map</a><a class="navbar__item navbar__link" href="/tutorials/part5-deep-learning-and-llms/10-recurrent-neural-networks">Deep learning</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><div class="navbar__item book-search-navbar-item"><button type="button" class="book-search-trigger" aria-label="Search the book">Search <kbd>Ctrl K</kbd></button></div><a href="https://github.com/dineshg/tutorials" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type="button" disabled="" title="system mode" aria-label="Switch between dark and light mode (currently system mode)"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill="currentColor" d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill="currentColor" d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill="currentColor" d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"></path></svg></button></div><div class="navbarSearchContainer_Bca1"></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class="docsWrapper_hBAB"><button aria-label="Scroll back to top" class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type="button"></button><div class="docRoot_UBD9"><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class="sidebarViewport_aRkj"><div class="sidebar_njMd"><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/tutorials/"><span class="linkLabel_WmDU">Book home</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/tutorials/content-map"><span class="linkLabel_WmDU">Reading guide and concept map</span></a></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-blue"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part1-enterprise-ai-delivery/overview"><span class="categoryLinkLabel_W154">Part I - Enterprise AI Delivery</span></a><button aria-label="Expand sidebar category &#x27;Part I - Enterprise AI Delivery&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item sidebar-category sidebar-category-teal"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--active" href="/tutorials/part2-backend-platform-security/overview"><span class="categoryLinkLabel_W154">Part II - Backend, Platform &amp; Security</span></a><button aria-label="Collapse sidebar category &#x27;Part II - Backend, Platform &amp; Security&#x27;" aria-expanded="true" type="button" class="clean-btn menu__caret"></button></div><ul class="menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/01-fastapi-uvicorn-basics"><span class="linkLabel_WmDU">1. FastAPI and Uvicorn basics</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/02-http-methods"><span class="linkLabel_WmDU">2. HTTP methods</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/03-fastapi-request-mapping"><span class="linkLabel_WmDU">3. FastAPI request mapping</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/04-pydantic-data-models"><span class="linkLabel_WmDU">4. Pydantic data models</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/04-concurrency-user-isolation"><span class="linkLabel_WmDU">5. Concurrency and user isolation</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/05-background-tasks-and-retries"><span class="linkLabel_WmDU">6. Background tasks and retries</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/06-sso-oauth2-oidc-primer"><span class="linkLabel_WmDU">7. SSO, OAuth 2.0, and OIDC primer</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/07-oidc-oauth2-pkce-fastapi"><span class="linkLabel_WmDU">8. OIDC, OAuth 2.0, and PKCE in FastAPI</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/08-registering-new-users"><span class="linkLabel_WmDU">9. First login and user provisioning</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/09-authentication-deep-dive"><span class="linkLabel_WmDU">10. Authentication deep dive</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link menu__link--active" aria-current="page" tabindex="0" href="/tutorials/part2-backend-platform-security/15-modern-auth-additions"><span class="linkLabel_WmDU">11. Passkeys, DPoP, mTLS, and token exchange</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/10-enduser-vs-workload-identity"><span class="linkLabel_WmDU">12. End-user vs workload identity</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/12-tenant-iam-ad-groups"><span class="linkLabel_WmDU">13. Tenant isolation, IAM, and groups</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/11-gcp-workload-identity"><span class="linkLabel_WmDU">14. GCP workload identity</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/13-external-service-integration"><span class="linkLabel_WmDU">15. Cross-cloud service integration</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/14-github-governance"><span class="linkLabel_WmDU">16. GitHub governance and CI</span></a></li></ul></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-violet"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part3-agent-protocols/overview"><span class="categoryLinkLabel_W154">Part III - Agent Protocols</span></a><button aria-label="Expand sidebar category &#x27;Part III - Agent Protocols&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-amber"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part4-ml-foundations/overview"><span class="categoryLinkLabel_W154">Part IV - ML Foundations</span></a><button aria-label="Expand sidebar category &#x27;Part IV - ML Foundations&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-coral"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part5-deep-learning-and-llms/overview"><span class="categoryLinkLabel_W154">Part V - Deep Learning &amp; LLMs</span></a><button aria-label="Expand sidebar category &#x27;Part V - Deep Learning &amp; LLMs&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-slate"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part6-appendices/overview"><span class="categoryLinkLabel_W154">Part VI - Appendices</span></a><button aria-label="Expand sidebar category &#x27;Part VI - Appendices&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li></ul></nav><button type="button" title="Collapse sidebar" aria-label="Collapse sidebar" class="button button--secondary button--outline collapseSidebarButton_PEFL"><svg width="20" height="20" aria-hidden="true" class="collapseSidebarButtonIcon_kv0_"><g fill="#7a7a7a"><path d="M9.992 10.023c0 .2-.062.399-.172.547l-4.996 7.492a.982.982 0 01-.828.454H1c-.55 0-1-.453-1-1 0-.2.059-.403.168-.551l4.629-6.942L.168 3.078A.939.939 0 010 2.528c0-.548.45-.997 1-.997h2.996c.352 0 .649.18.828.45L9.82 9.472c.11.148.172.347.172.55zm0 0"></path><path d="M19.98 10.023c0 .2-.058.399-.168.547l-4.996 7.492a.987.987 0 01-.828.454h-3c-.547 0-.996-.453-.996-1 0-.2.059-.403.168-.551l4.625-6.942-4.625-6.945a.939.939 0 01-.168-.55 1 1 0 01.996-.997h3c.348 0 .649.18.828.45l4.996 7.492c.11.148.168.347.168.55zm0 0"></path></g></svg></button></div></div></aside><main class="docMainContainer_TBSr"><div class="container padding-top--md padding-bottom--lg"><div class="row"><div class="col"><div class="docItemContainer_Djhp"><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label="Breadcrumbs"><ul class="breadcrumbs"><li class="breadcrumbs__item"><a aria-label="Home page" class="breadcrumbs__link" href="/tutorials/"><svg viewBox="0 0 24 24" class="breadcrumbHomeIcon_YNFT"><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill="currentColor"></path></svg></a></li><li class="breadcrumbs__item"><a class="breadcrumbs__link" href="/tutorials/part2-backend-platform-security/overview"><span>Part II - Backend, Platform &amp; Security</span></a></li><li class="breadcrumbs__item breadcrumbs__item--active"><span class="breadcrumbs__link">11. Passkeys, DPoP, mTLS, and token exchange</span></li></ul></nav><div class="theme-doc-markdown markdown"><article class="book-article tr-content" data-book-part="part2" data-book-accent="teal"><header class="articleHeader_jX4Y"><span class="partLabel_DqKR">Part II - Backend, Platform &amp; Security</span><h1>Modern Auth Additions: Passkeys, DPoP, mTLS, Token Exchange</h1><div class="articleMeta_jfH_"><span>8<!-- --> min read</span><span aria-hidden="true">·</span><span>6<!-- --> sections</span></div></header><details class="chapterToc_aQjS"><summary>On this page</summary><nav aria-label="On this page"><a href="#1-passkeys-webauthn-replacing-passwords-for-human-login">1) Passkeys / WebAuthn — replacing passwords for human login</a><a href="#2-dpop-sender-constrained-access-tokens-rfc-9449">2) DPoP — sender‑constrained access tokens (RFC 9449)</a><a href="#3-mtls-sender-constrained-tokens-for-service-to-service-rfc-8705">3) mTLS — sender‑constrained tokens for service‑to‑service (RFC 8705)</a><a href="#4-oauth-2-0-token-exchange-rfc-8693-propagating-the-user-downstream">4) OAuth 2.0 Token Exchange (RFC 8693) — propagating the user downstream</a><a href="#5-quick-decision-matrix">5) Quick decision matrix</a><a href="#6-reading-list-specs">6) Reading list (specs)</a></nav></details><div class="articleBody_b2wt"><div class="ch">
+
+
+
+<div class="tr-update">
+  <strong>Why this chapter exists</strong>
+  Chapters 6–9 in this Part cover the bedrock — bearer tokens, OAuth2, OIDC,
+  PKCE, JWT vs opaque, JWKS. This 2026 supplement covers four controls now
+  commonly assessed in enterprise designs. It uses RFC 9700 as the finalized
+  OAuth 2.0 security baseline; OAuth 2.1 remains an active Internet-Draft.
+  This chapter is a focused supplement, not a replacement.
+</div>
+
+<h2 id="1-passkeys-webauthn-replacing-passwords-for-human-login">1) Passkeys / WebAuthn — replacing passwords for human login</h2>
+
+<p>A <strong>passkey</strong> is a WebAuthn credential bound to the user's device
+(or a synced keychain like iCloud Keychain / Google Password Manager / 1Password).
+Instead of typing a password, the browser uses public‑key cryptography over
+a challenge issued by your server. The private key never leaves the
+authenticator; only a signed assertion comes back.</p>
+
+<h3 id="why-prefer-passkeys-over-passwords-and-even-over-totp">Why prefer passkeys over passwords (and even over TOTP)</h3>
+<ul>
+  <li><strong>Phishing‑resistant:</strong> the credential is bound to your
+      origin (<code>rp.id</code>), so a fake site cannot trigger a usable signature.</li>
+  <li><strong>No shared secret on the server:</strong> you store only a public key.
+      A database breach exposes nothing reusable.</li>
+  <li><strong>Less dependence on password reset:</strong> a synced passkey can
+      follow the user through the platform credential provider. Device-bound
+      credentials, lost authenticators, account takeover, and bootstrap for a
+      new device still require an explicit recovery and re-enrolment policy.</li>
+</ul>
+
+<h3 id="where-it-sits-relative-to-oidc">Where it sits relative to OIDC</h3>
+<p>You typically still use OIDC for SSO across apps; passkeys replace the
+<em>password</em> step at the Identity Provider. Major identity providers,
+including Google, GitHub, Microsoft Entra, Okta, and Auth0, support passkeys
+in their current authentication offerings, although enrolment, recovery, and
+passwordless-policy options differ. The downstream OAuth2/OIDC flow is
+unchanged from Chapter 7.</p>
+
+<h3 id="minimal-server-skeleton-fastapi-py-webauthn">Minimal server skeleton (FastAPI + py_webauthn)</h3>
+<pre><code># pip install webauthn fastapi
+from fastapi import FastAPI, HTTPException
+from webauthn import (
+    generate_registration_options, verify_registration_response,
+    generate_authentication_options, verify_authentication_response,
+)
+from webauthn.helpers.structs import (
+    PublicKeyCredentialDescriptor, AuthenticatorSelectionCriteria,
+    UserVerificationRequirement,
+)
+
+app = FastAPI()
+RP_ID   = "example.com"
+RP_NAME = "Example Corp"
+ORIGIN  = "https://example.com"
+
+USERS = {}        # user_id -&gt; {"name": ..., "credentials": [...]}
+CHALLENGES = {}   # user_id -&gt; current challenge bytes
+
+@app.post("/webauthn/register/options")
+def reg_options(user_id: str, username: str):
+    opts = generate_registration_options(
+        rp_id=RP_ID, rp_name=RP_NAME,
+        user_id=user_id.encode(), user_name=username,
+        authenticator_selection=AuthenticatorSelectionCriteria(
+            user_verification=UserVerificationRequirement.PREFERRED,
+            resident_key="required",   # creates a discoverable passkey
+        ),
+    )
+    CHALLENGES[user_id] = opts.challenge
+    USERS.setdefault(user_id, {"name": username, "credentials": []})
+    return opts            # browser calls navigator.credentials.create() with this
+
+@app.post("/webauthn/register/verify")
+def reg_verify(user_id: str, attestation: dict):
+    verification = verify_registration_response(
+        credential=attestation,
+        expected_challenge=CHALLENGES[user_id],
+        expected_origin=ORIGIN,
+        expected_rp_id=RP_ID,
+    )
+    USERS[user_id]["credentials"].append({
+        "id":         verification.credential_id,
+        "public_key": verification.credential_public_key,
+        "sign_count": verification.sign_count,
+    })
+    return {"ok": True}
+</code></pre>
+
+<p>The login side is symmetric: you call
+<code>generate_authentication_options(...)</code>, send the resulting challenge to
+the browser, and verify the assertion with the public key you stored at
+registration.</p>
+
+<div class="tr-warn">
+  <strong>The skeleton omits production state management</strong>
+  A WebAuthn challenge must be random, one-time, short-lived, and bound to the
+  intended user or anonymous ceremony session. Consume it atomically after
+  verification. Store credentials durably, validate user-verification policy,
+  update the signature counter where the authenticator supplies one, rate-limit
+  ceremonies, and design recovery so it is not weaker than the passkey.
+</div>
+
+<div class="tr-tip">
+  <strong>Production reality</strong>
+  Almost no one writes the server primitives by hand anymore. In an
+  enterprise stack you turn passkeys on at the IdP (Entra / Okta / Auth0 /
+  Keycloak) and your FastAPI app keeps using OIDC unchanged. The snippet
+  above is for understanding what the IdP does.
+</div>
+
+<h2 id="2-dpop-sender-constrained-access-tokens-rfc-9449">2) DPoP — sender‑constrained access tokens (RFC 9449)</h2>
+
+<p>A plain bearer token (Chapter 9) is like cash: whoever holds it can spend it.
+If a token leaks via logs, a misconfigured proxy, or an XSS bug, the attacker
+gets full access until expiry. <strong>DPoP (Demonstrating Proof‑of‑Possession)</strong>
+binds the token to a key pair the client holds, so a stolen token is useless
+without the private key.</p>
+
+<h3 id="how-a-dpop-request-looks">How a DPoP request looks</h3>
+<pre><code>POST /api/v1/orders HTTP/1.1
+Host: api.example.com
+Authorization: DPoP eyJhbGciOiJSUzI1NiIs...&lt;access_token&gt;
+DPoP: eyJ0eXAiOiJkcG9wK2p3dCIsImFsZyI6IkVTMjU2In0.&lt;proof_jwt&gt;
+</code></pre>
+
+<p>Two headers are sent:</p>
+<ul>
+  <li><strong>Authorization:</strong> the access token, prefixed with
+      <code>DPoP</code> instead of <code>Bearer</code>.</li>
+  <li><strong>DPoP:</strong> a short‑lived JWT, signed with the client's
+      private key, whose payload includes the HTTP method (<code>htm</code>),
+      request URL (<code>htu</code>), issued-at time (<code>iat</code>), and
+      unique proof ID (<code>jti</code>). A protected-resource proof also
+      includes a hash of the access token (<code>ath</code>). A
+      <code>nonce</code> is included when the authorization or resource server
+      has issued one; it is not present in every proof.</li>
+</ul>
+
+<p>At token issuance, the AS records the <em>JWK thumbprint</em> of the client's
+public key inside the access token's <code>cnf.jkt</code> claim. The resource server
+verifies that the DPoP proof was signed by that exact key, that the
+<code>htm</code>/<code>htu</code> match this request, that <code>jti</code>
+has not been replayed during the acceptance window, and that the proof is
+fresh.</p>
+
+<h3 id="validating-dpop-in-fastapi-sketch">Validating DPoP in FastAPI (sketch)</h3>
+<pre><code>import base64, hashlib, time, jwt   # PyJWT
+from fastapi import Header, HTTPException, Request
+from jwt import PyJWK
+
+def b64url(value: bytes) -&gt; str:
+    return base64.urlsafe_b64encode(value).rstrip(b"=").decode()
+
+async def require_dpop(
+    request: Request,
+    authorization: str = Header(...),
+    dpop: str = Header(...),
+):
+    if not authorization.startswith("DPoP "):
+        raise HTTPException(401, "Expected DPoP scheme")
+    access_token = authorization.removeprefix("DPoP ")
+
+    # 1) Inspect the JOSE header, but never let it choose any algorithm.
+    header = jwt.get_unverified_header(dpop)
+    if header.get("typ") != "dpop+jwt" or header.get("alg") != "ES256":
+        raise HTTPException(401, "unsupported DPoP header")
+    public_jwk = header.get("jwk", {})
+    if not public_jwk or "d" in public_jwk:
+        raise HTTPException(401, "invalid public JWK")
+
+    # 2) Verify with a server allowlist and require protocol claims.
+    proof_key = PyJWK.from_dict(public_jwk, algorithm="ES256").key
+    proof = jwt.decode(
+        dpop,
+        proof_key,
+        algorithms=["ES256"],
+        options={"verify_aud": False},
+        require=["htm", "htu", "iat", "jti"],
+    )
+
+    # 3) Bind to the externally visible canonical request URI and method.
+    if proof["htm"].upper() != request.method:
+        raise HTTPException(401, "htm mismatch")
+    if proof["htu"] != canonical_public_uri(request):
+        raise HTTPException(401, "htu mismatch")
+    if abs(time.time() - proof["iat"]) &gt; 60:
+        raise HTTPException(401, "stale proof")
+    if not await replay_cache.mark_once(proof["jti"], ttl_seconds=120):
+        raise HTTPException(401, "replayed proof")
+
+    # 4) Bind proof to this access token.
+    ath_expected = b64url(hashlib.sha256(access_token.encode()).digest())
+    if proof.get("ath") != ath_expected:
+        raise HTTPException(401, "ath mismatch")
+
+    # 5) Validate access token normally, then compare its key thumbprint.
+    claims = verify_access_token(access_token)  # signature, iss, aud, exp
+    if claims.get("cnf", {}).get("jkt") != jwk_thumbprint(public_jwk):
+        raise HTTPException(401, "token not bound to this key")
+
+    # 6) If the server issued a DPoP-Nonce, verify proof["nonce"] here.
+    return claims
+</code></pre>
+
+<p>This remains a teaching sketch: use an authorization-server/resource-server
+library that implements RFC 9449 where possible. Behind a reverse proxy,
+construct <code>canonical_public_uri</code> only from trusted forwarding
+configuration; accepting arbitrary <code>Forwarded</code> headers lets a client
+choose the value you compare. DPoP reduces bearer-token replay, but it does not
+protect a client whose private key and token are both stolen by XSS, malware,
+or a compromised runtime.</p>
+
+<h3 id="when-to-adopt-dpop">When to adopt DPoP</h3>
+<ul>
+  <li>Public clients (SPAs, mobile apps) that cannot be issued mTLS certs.</li>
+  <li>High‑sensitivity APIs (payments, admin) where bearer leakage is unacceptable.</li>
+  <li>MCP servers that accept tokens forwarded from a host — see Part III.</li>
+</ul>
+
+<h2 id="3-mtls-sender-constrained-tokens-for-service-to-service-rfc-8705">3) mTLS — sender‑constrained tokens for service‑to‑service (RFC 8705)</h2>
+
+<p>For workload‑to‑workload calls inside your platform (Chapter 10 / 11),
+<strong>mutual TLS</strong> is another sender-constraining mechanism. The calling
+service presents an X.509 client certificate during the TLS handshake. In the
+specific RFC 8705 OAuth profile, the authorization server binds an issued
+access token to the certificate's hash through
+<code>cnf.x5t#S256</code>.</p>
+
+<h3 id="the-flow">The flow</h3>
+<ol>
+  <li>Workload requests a token from the AS over mTLS.</li>
+  <li>AS records the SHA‑256 thumbprint of the client cert in <code>cnf.x5t#S256</code>.</li>
+  <li>Workload calls the resource server <em>also over mTLS</em> with the same cert.</li>
+  <li>Resource server verifies that the cert hash from the TLS layer
+      matches the <code>cnf.x5t#S256</code> claim in the token.</li>
+</ol>
+
+<h3 id="where-it-fits-in-your-reference-architecture">Where it fits in your reference architecture</h3>
+<p>This is a strong match for the “workload identity” boundary already
+covered in Chapter 10 (end‑user vs workload identity) and Chapter 11 (GCP
+workload identity). SPIFFE/SPIRE can issue X.509 SVIDs, and a service mesh such
+as Istio can enforce transport mTLS. That does <strong>not</strong> automatically
+turn an OAuth token into an RFC 8705 certificate-bound token: the authorization
+server and resource server must explicitly implement the RFC 8705 binding and
+compare it with the certificate authenticated at the protected endpoint.</p>
+
+<h2 id="4-oauth-2-0-token-exchange-rfc-8693-propagating-the-user-downstream">4) OAuth 2.0 Token Exchange (RFC 8693) — propagating the user downstream</h2>
+
+<p>The classic question from Chapter 10: <em>"My user calls FastAPI with their
+OIDC token. FastAPI then calls a downstream API that needs the user's
+identity, not FastAPI's. How do I forward identity safely?"</em></p>
+
+<p>A standards-based option is <strong>OAuth 2.0 Token Exchange</strong>.
+FastAPI asks the authorization server to exchange the inbound user token for
+a new, downstream-audience token with narrower scope:</p>
+
+<pre><code>POST /oauth/token HTTP/1.1
+Host: idp.example.com
+Authorization: Basic &lt;FastAPI client credentials&gt;
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=urn:ietf:params:oauth:grant-type:token-exchange
+&amp;subject_token=&lt;the inbound user access token&gt;
+&amp;subject_token_type=urn:ietf:params:oauth:token-type:access_token
+&amp;audience=https://crm.example.com
+&amp;scope=crm.read
+</code></pre>
+
+<p>If the authorization server's policy permits the exchange, it returns a new
+access token whose:</p>
+<ul>
+  <li><code>sub</code> and delegated-subject semantics follow the
+      authorization server's policy rather than being assumed to copy
+      unchanged,</li>
+  <li><code>aud</code> is the downstream API,</li>
+  <li><code>act</code> can record FastAPI as the current actor when the
+      authorization server represents delegation that way, allowing the
+      downstream API to audit “subject X via service Y.”</li>
+</ul>
+
+<div class="tr-warn">
+  <strong>Anti‑pattern alert</strong>
+  Forwarding the inbound user token verbatim to a downstream API is the
+  most common mistake. It works, but the downstream API now sees a token
+  whose <code>aud</code> claim is <em>your</em> service, which a good resource
+  server will reject. Token exchange (RFC 8693) is one standards-based fix
+  when both authorization and resource servers support it. Microsoft Entra's
+  on-behalf-of (OBO) flow addresses the same delegation problem through its
+  provider-specific contract.
+</div>
+
+<h2 id="5-quick-decision-matrix">5) Quick decision matrix</h2>
+<table>
+  <tbody><tr>
+    <th>Boundary</th><th>Use</th><th>Why</th>
+  </tr>
+  <tr>
+    <td>Human → Browser → Your app</td>
+    <td>OIDC + Passkeys at the IdP, PKCE for the app</td>
+    <td>Phishing‑resistant, no passwords stored.</td>
+  </tr>
+  <tr>
+    <td>Browser/SPA/mobile → Your API</td>
+    <td>OIDC + DPoP access tokens</td>
+    <td>Token-only replay is blocked; full client compromise remains in scope.</td>
+  </tr>
+  <tr>
+    <td>Workload → Workload (inside platform)</td>
+    <td>mTLS + cert‑bound tokens (cnf.x5t#S256)</td>
+    <td>Strong binding when the OAuth and TLS layers implement RFC 8705 together.</td>
+  </tr>
+  <tr>
+    <td>Workload → Workload (across orgs)</td>
+    <td>Workload Identity Federation (Chapter 11) + signed JWT assertion</td>
+    <td>No long‑lived secrets to rotate.</td>
+  </tr>
+  <tr>
+    <td>Your API → Downstream API on user's behalf</td>
+    <td>Token exchange (RFC 8693) / OBO</td>
+    <td>Preserves user identity, narrows audience, records the actor.</td>
+  </tr>
+</tbody></table>
+
+<h2 id="6-reading-list-specs">6) Reading list (specs)</h2>
+<ul>
+  <li><a href="https://www.w3.org/TR/webauthn-3/">WebAuthn Level 3</a></li>
+  <li><a href="https://datatracker.ietf.org/doc/html/rfc9449">RFC 9449 — OAuth 2.0 Demonstrating Proof of Possession (DPoP)</a></li>
+  <li><a href="https://datatracker.ietf.org/doc/html/rfc8705">RFC 8705 — OAuth 2.0 Mutual-TLS Client Authentication and Certificate-Bound Access Tokens</a></li>
+  <li><a href="https://datatracker.ietf.org/doc/html/rfc8693">RFC 8693 — OAuth 2.0 Token Exchange</a></li>
+  <li><a href="https://datatracker.ietf.org/doc/html/rfc9700">RFC 9700 — OAuth 2.0 Security Best Current Practice</a></li>
+  <li><a href="https://datatracker.ietf.org/doc/draft-ietf-oauth-v2-1/">OAuth 2.1 — active Internet-Draft, not yet an RFC</a></li>
+</ul>
+
+</div></div></article></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col noPrint_WFHX"></div><div class="col lastUpdated_JAkA"><span class="theme-last-updated">Last updated<!-- --> on <b><time datetime="2026-07-30T01:42:42.000Z" itemprop="dateModified">Jul 30, 2026</time></b></span></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/tutorials/part2-backend-platform-security/09-authentication-deep-dive"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">10. Authentication deep dive</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/tutorials/part2-backend-platform-security/10-enduser-vs-workload-identity"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">12. End-user vs workload identity</div></a></nav></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer"><div class="container container-fluid"><div class="row footer__links"><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Study</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/tutorials/">Book home</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/content-map">Reading guide</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/labs/rnn">Interactive RNN lab</a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Core tracks</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/tutorials/part2-backend-platform-security/overview">Backend and security</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/part3-agent-protocols/overview">Agent protocols</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/part5-deep-learning-and-llms/overview">Deep learning and LLMs</a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright">Enterprise AI, Agents & Applied ML - 2026</div></div></div></footer></div>
+</body>
+</html>

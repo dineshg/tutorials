@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-part3-agent-protocols/mcp-enterprise-pattern" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.10.2">
+<title data-rh="true">MCP Enterprise Pattern: Authentication and Salesforce Integration | Enterprise AI, Agents &amp; Applied ML</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://dineshg.github.io/tutorials/part3-agent-protocols/03-mcp-enterprise-pattern"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="keywords" content="enterprise AI, machine learning, deep learning, LLM, FastAPI, Pydantic, MCP, authentication"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="MCP Enterprise Pattern: Authentication and Salesforce Integration | Enterprise AI, Agents &amp; Applied ML"><meta data-rh="true" name="description" content="With Authentication and MCP Primitives: Tools / Resources / Prompts"><meta data-rh="true" property="og:description" content="With Authentication and MCP Primitives: Tools / Resources / Prompts"><link data-rh="true" rel="icon" href="/tutorials/img/favicon.svg"><link data-rh="true" rel="canonical" href="https://dineshg.github.io/tutorials/part3-agent-protocols/03-mcp-enterprise-pattern"><link data-rh="true" rel="alternate" href="https://dineshg.github.io/tutorials/part3-agent-protocols/03-mcp-enterprise-pattern" hreflang="en"><link data-rh="true" rel="alternate" href="https://dineshg.github.io/tutorials/part3-agent-protocols/03-mcp-enterprise-pattern" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Part III - Agent Protocols","item":"https://dineshg.github.io/tutorials/part3-agent-protocols/overview"},{"@type":"ListItem","position":2,"name":"3. MCP enterprise pattern","item":"https://dineshg.github.io/tutorials/part3-agent-protocols/03-mcp-enterprise-pattern"}]}</script><script>window.MathJax={startup:{typeset:!1},tex:{inlineMath:[["\\(","\\)"],["$","$"]],displayMath:[["\\[","\\]"],["$$","$$"]],processEscapes:!0},options:{skipHtmlTags:["script","noscript","style","textarea","pre","code"]}}</script>
+<link rel="stylesheet" href="/tutorials/css/book.css">
+<link rel="stylesheet" href="/tutorials/vendor/highlight.js/11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.18.1/dist/katex.min.css" integrity="sha384-5TcZemv2l/9On385z///+d7MSYlvIEw9FuZTIdZ14vJLqWphw7e7ZPuOiCHJcFCP" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-mml-chtml.js" defer="defer"></script><link rel="stylesheet" href="/tutorials/assets/css/styles.003aa738.css">
+<script src="/tutorials/assets/js/runtime~main.98c31d90.js" defer="defer"></script>
+<script src="/tutorials/assets/js/main.bd80017b.js" defer="defer"></script>
+</head>
+<body>
+<svg style="display: none;"><defs>
+<symbol id="theme-svg-external-link" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")),document.documentElement.setAttribute("data-theme-choice",t||"system")}(),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top"><div class="navbar__inner"><div class="theme-layout-navbar-left navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/tutorials/"><b class="navbar__title text--truncate">Enterprise AI Book</b></a><a class="navbar__item navbar__link" href="/tutorials/">Read</a><a class="navbar__item navbar__link" href="/tutorials/content-map">Concept map</a><a class="navbar__item navbar__link" href="/tutorials/part5-deep-learning-and-llms/10-recurrent-neural-networks">Deep learning</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><div class="navbar__item book-search-navbar-item"><button type="button" class="book-search-trigger" aria-label="Search the book">Search <kbd>Ctrl K</kbd></button></div><a href="https://github.com/dineshg/tutorials" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type="button" disabled="" title="system mode" aria-label="Switch between dark and light mode (currently system mode)"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill="currentColor" d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill="currentColor" d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill="currentColor" d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"></path></svg></button></div><div class="navbarSearchContainer_Bca1"></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class="docsWrapper_hBAB"><button aria-label="Scroll back to top" class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type="button"></button><div class="docRoot_UBD9"><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class="sidebarViewport_aRkj"><div class="sidebar_njMd"><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/tutorials/"><span class="linkLabel_WmDU">Book home</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/tutorials/content-map"><span class="linkLabel_WmDU">Reading guide and concept map</span></a></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-blue"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part1-enterprise-ai-delivery/overview"><span class="categoryLinkLabel_W154">Part I - Enterprise AI Delivery</span></a><button aria-label="Expand sidebar category &#x27;Part I - Enterprise AI Delivery&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-teal"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part2-backend-platform-security/overview"><span class="categoryLinkLabel_W154">Part II - Backend, Platform &amp; Security</span></a><button aria-label="Expand sidebar category &#x27;Part II - Backend, Platform &amp; Security&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item sidebar-category sidebar-category-violet"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--active" href="/tutorials/part3-agent-protocols/overview"><span class="categoryLinkLabel_W154">Part III - Agent Protocols</span></a><button aria-label="Collapse sidebar category &#x27;Part III - Agent Protocols&#x27;" aria-expanded="true" type="button" class="clean-btn menu__caret"></button></div><ul class="menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part3-agent-protocols/01-mcp-fundamentals"><span class="linkLabel_WmDU">1. MCP fundamentals</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part3-agent-protocols/02-mcp-discovery-remote-auth"><span class="linkLabel_WmDU">2. MCP discovery, remote transport, and auth</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link menu__link--active" aria-current="page" tabindex="0" href="/tutorials/part3-agent-protocols/03-mcp-enterprise-pattern"><span class="linkLabel_WmDU">3. MCP enterprise pattern</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part3-agent-protocols/04-mcp-2025-update"><span class="linkLabel_WmDU">4. MCP protocol evolution</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part3-agent-protocols/05-a2a-protocol"><span class="linkLabel_WmDU">5. A2A protocol 1.0</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part3-agent-protocols/06-javascript-typescript-primer"><span class="linkLabel_WmDU">6. JavaScript and TypeScript primer</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part3-agent-protocols/07-langchain-langgraph-flowise"><span class="linkLabel_WmDU">7. LangChain, LangGraph, and Flowise</span></a></li></ul></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-amber"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part4-ml-foundations/overview"><span class="categoryLinkLabel_W154">Part IV - ML Foundations</span></a><button aria-label="Expand sidebar category &#x27;Part IV - ML Foundations&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-coral"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part5-deep-learning-and-llms/overview"><span class="categoryLinkLabel_W154">Part V - Deep Learning &amp; LLMs</span></a><button aria-label="Expand sidebar category &#x27;Part V - Deep Learning &amp; LLMs&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-slate"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part6-appendices/overview"><span class="categoryLinkLabel_W154">Part VI - Appendices</span></a><button aria-label="Expand sidebar category &#x27;Part VI - Appendices&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li></ul></nav><button type="button" title="Collapse sidebar" aria-label="Collapse sidebar" class="button button--secondary button--outline collapseSidebarButton_PEFL"><svg width="20" height="20" aria-hidden="true" class="collapseSidebarButtonIcon_kv0_"><g fill="#7a7a7a"><path d="M9.992 10.023c0 .2-.062.399-.172.547l-4.996 7.492a.982.982 0 01-.828.454H1c-.55 0-1-.453-1-1 0-.2.059-.403.168-.551l4.629-6.942L.168 3.078A.939.939 0 010 2.528c0-.548.45-.997 1-.997h2.996c.352 0 .649.18.828.45L9.82 9.472c.11.148.172.347.172.55zm0 0"></path><path d="M19.98 10.023c0 .2-.058.399-.168.547l-4.996 7.492a.987.987 0 01-.828.454h-3c-.547 0-.996-.453-.996-1 0-.2.059-.403.168-.551l4.625-6.942-4.625-6.945a.939.939 0 01-.168-.55 1 1 0 01.996-.997h3c.348 0 .649.18.828.45l4.996 7.492c.11.148.168.347.168.55zm0 0"></path></g></svg></button></div></div></aside><main class="docMainContainer_TBSr"><div class="container padding-top--md padding-bottom--lg"><div class="row"><div class="col"><div class="docItemContainer_Djhp"><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label="Breadcrumbs"><ul class="breadcrumbs"><li class="breadcrumbs__item"><a aria-label="Home page" class="breadcrumbs__link" href="/tutorials/"><svg viewBox="0 0 24 24" class="breadcrumbHomeIcon_YNFT"><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill="currentColor"></path></svg></a></li><li class="breadcrumbs__item"><a class="breadcrumbs__link" href="/tutorials/part3-agent-protocols/overview"><span>Part III - Agent Protocols</span></a></li><li class="breadcrumbs__item breadcrumbs__item--active"><span class="breadcrumbs__link">3. MCP enterprise pattern</span></li></ul></nav><div class="theme-doc-markdown markdown"><article class="book-article tr-content" data-book-part="part3" data-book-accent="violet"><header class="articleHeader_jX4Y"><span class="partLabel_DqKR">Part III - Agent Protocols &amp; Integration</span><h1>Enterprise Example: FastAPI → MCP Server → Salesforce</h1><div class="articleMeta_jfH_"><span>6<!-- --> min read</span><span aria-hidden="true">·</span><span>5<!-- --> sections</span></div></header><details class="chapterToc_aQjS"><summary>On this page</summary><nav aria-label="On this page"><a href="#part-a-mcp-salesforce-server">Part A — MCP Salesforce Server</a><a href="#part-b-fastapi-host-endpoint">Part B — FastAPI Host Endpoint</a><a href="#what-changed-the-auth-story">What Changed: The &quot;Auth Story&quot;</a><a href="#environment-variables-required">Environment Variables Required</a><a href="#summary-why-this-architecture-matters">Summary: Why This Architecture Matters</a></nav></details><div class="articleBody_b2wt"><div class="container">
+        
+        <p style="font-size: 1.1em; color: #555; margin-bottom: 30px;">
+            <strong>With Authentication and MCP Primitives: Tools / Resources / Prompts</strong>
+        </p>
+
+        <div class="tr-update">
+            <strong>Current implementation boundary</strong>
+            The architecture and authorization boundaries are protocol-version
+            independent. For MCP <code>2026-07-28</code>, deploy the HTTP
+            server statelessly and use client/server releases that explicitly
+            support that version. Some high-level <code>fastmcp</code> APIs
+            shown here can also target the 2025 protocol family; do not assume
+            a library class name proves wire-level compatibility.
+        </div>
+
+        <div class="auth-boundaries">
+            <h3 id="three-separate-auth-boundaries-in-your-bank-style-setup">Three Separate Auth Boundaries in Your Bank-Style Setup</h3>
+            
+            <div class="auth-step">
+                <h4>1. User → FastAPI (your app auth)</h4>
+                <p>
+                    User logs in with <strong>Google Workspace (OIDC)</strong>. React calls FastAPI with 
+                    <code class="inline-code">Authorization: Bearer &lt;user_access_token&gt;</code>.
+                </p>
+            </div>
+
+            <div class="auth-step">
+                <h4>2. FastAPI → MCP server (service-to-service auth)
+                    <span class="status added">internal boundary</span>
+                </h4>
+                <p>
+                    Your FastAPI backend calls the MCP server using a <strong>separate internal Bearer token</strong> 
+                    (or OAuth/JWT/mTLS in real prod). This prevents "anyone who can reach the MCP URL" from using it.
+                </p>
+            </div>
+
+            <div class="auth-step">
+                <h4>3. MCP server → Salesforce (downstream service auth)</h4>
+                <p>
+                    MCP server authenticates to Salesforce as an <strong>integration identity</strong> (service-level) 
+                    using <strong>OAuth JWT Bearer flow</strong>.
+                </p>
+            </div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="section">
+            <h2 id="part-a-mcp-salesforce-server">Part A — MCP Salesforce Server</h2>
+            <p><strong>Components:</strong> Auth Middleware + Resource + Prompt + Tool</p>
+
+            <div class="info-box">
+                <h4>FastMCP Features Used:</h4>
+                <ul>
+                    <li><strong>Middleware:</strong> Intercept requests for authentication</li>
+                    <li><strong>Resources:</strong> Read-only URIs for policies/schemas/guardrails</li>
+                    <li><strong>Prompts:</strong> Server-defined templates to guide clients/agents consistently</li>
+                    <li><strong>Tools:</strong> Executable actions that interact with external systems</li>
+                </ul>
+            </div>
+
+            <p><strong>Save as:</strong> <code class="inline-code">mcp_salesforce_server.py</code></p>
+
+            <div class="code-block">
+                <div class="code-header">mcp_salesforce_server.py</div>
+                <pre><code class="language-python"># pip install fastmcp httpx PyJWT cryptography cachetools
+
+import os
+import re
+import time
+from typing import Any, Dict, Optional, TypedDict
+
+import httpx
+import jwt
+from cachetools import TTLCache
+
+from fastmcp import FastMCP
+from fastmcp.exceptions import ToolError
+from fastmcp.server.dependencies import get_http_headers
+from fastmcp.server.middleware import Middleware, MiddlewareContext
+
+mcp = FastMCP(
+    "DocQA-Salesforce-MCP",
+    stateless_http=True,
+    json_response=True,
+)
+
+# -----------------------------------------------------------------------------
+# 1) SERVICE-TO-SERVICE AUTH (FastAPI -&gt; MCP)
+#    MCP server requires: Authorization: Bearer &lt;MCP_SERVICE_TOKEN&gt;
+# -----------------------------------------------------------------------------
+MCP_SERVICE_TOKEN = os.environ["MCP_SERVICE_TOKEN"]
+
+class ServiceAuthMiddleware(Middleware):
+    async def on_request(self, context: MiddlewareContext, call_next):
+        # Runs for MCP "request" messages (list tools, call tool, read resource, get prompt, etc.)
+        headers = get_http_headers()
+        auth = headers.get("authorization") or headers.get("Authorization")
+
+        if not auth or not auth.startswith("Bearer "):
+            raise ToolError("Unauthorized: missing Bearer token to call MCP server")
+
+        token = auth.removeprefix("Bearer ").strip()
+        if token != MCP_SERVICE_TOKEN:
+            raise ToolError("Unauthorized: invalid MCP service token")
+
+        return await call_next(context)
+
+mcp.add_middleware(ServiceAuthMiddleware())  # FastMCP middleware registration
+
+# -----------------------------------------------------------------------------
+# 2) SALESFORCE SERVICE-LEVEL AUTH (MCP -&gt; Salesforce)
+#    OAuth JWT Bearer flow to get access_token.
+# -----------------------------------------------------------------------------
+SF_LOGIN_URL   = os.environ.get("SF_LOGIN_URL", "https://login.salesforce.com").rstrip("/")
+SF_CLIENT_ID   = os.environ["SF_CLIENT_ID"]           # Connected App consumer key
+SF_USERNAME    = os.environ["SF_USERNAME"]            # Integration user username
+SF_PRIVATE_KEY = os.environ["SF_PRIVATE_KEY_PEM"]     # PEM private key
+SF_API_VERSION = os.environ.get("SF_API_VERSION", "v67.0")  # Summer '26; configure and test explicitly
+
+_token_cache: TTLCache[str, Dict[str, Any]] = TTLCache(maxsize=1, ttl=14 * 60)  # ~14 min cache
+
+def _build_jwt_assertion() -&gt; str:
+    now = int(time.time())
+    payload = {
+        "iss": SF_CLIENT_ID,
+        "sub": SF_USERNAME,
+        "aud": SF_LOGIN_URL,
+        "exp": now + 180,  # short-lived assertion
+    }
+    return jwt.encode(payload, SF_PRIVATE_KEY, algorithm="RS256")
+
+async def _get_salesforce_token() -&gt; tuple[str, str]:
+    cached = _token_cache.get("sf_token")
+    if cached:
+        return cached["access_token"], cached["instance_url"]
+
+    token_url = f"{SF_LOGIN_URL}/services/oauth2/token"
+    data = {
+        "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
+        "assertion": _build_jwt_assertion(),
+    }
+
+    async with httpx.AsyncClient(timeout=10) as client:
+        r = await client.post(token_url, data=data)
+        if r.status_code != 200:
+            raise RuntimeError(f"Salesforce token error: {r.status_code} {r.text}")
+        tok = r.json()
+
+    _token_cache["sf_token"] = {
+        "access_token": tok["access_token"],
+        "instance_url": tok["instance_url"],
+    }
+    return tok["access_token"], tok["instance_url"]
+
+# -----------------------------------------------------------------------------
+# 3) RESOURCE: publish a "bank-safe SOQL policy" as read-only context
+# -----------------------------------------------------------------------------
+@mcp.resource("resource://salesforce/soql_policy")
+def soql_policy() -&gt; str:
+	    return (
+	        "BANK POLICY:\n"
+	        "- Only SELECT queries\n"
+	        "- LIMIT required (&lt;= 50)\n"
+	        "- No write keywords (INSERT/UPDATE/DELETE/UPSERT/MERGE)\n"
+	        "- Require allowlisted objects and fields in production\n"
+	    )
+
+# -----------------------------------------------------------------------------
+# 4) PROMPT: a reusable instruction template clients/agents can fetch
+# -----------------------------------------------------------------------------
+@mcp.prompt
+def salesforce_safe_query_prompt() -&gt; str:
+    return (
+        "You are generating Salesforce SOQL for a banking environment.\n"
+        "Follow the SOQL policy from resource://salesforce/soql_policy.\n"
+        "Always include LIMIT &lt;= 50. Only SELECT.\n"
+    )
+
+# -----------------------------------------------------------------------------
+# 5) TOOL: execute SOQL (after validation) via Salesforce Query REST endpoint
+#    /services/data/vXX.X/query?q=&lt;soql&gt;
+# -----------------------------------------------------------------------------
+def _validate_soql_bank_safe(soql: str) -&gt; None:
+    s = soql.strip()
+    if not re.match(r"(?is)^select\s", s):
+        raise ValueError("Only SELECT queries are allowed")
+
+    if re.search(r"(?is)\b(insert|update|delete|upsert|merge|drop)\b", s):
+        raise ValueError("Write operations are not allowed")
+
+    m = re.search(r"(?is)\blimit\s+(\d+)\b", s)
+    if not m:
+        raise ValueError("LIMIT is required")
+    if int(m.group(1)) &gt; 50:
+        raise ValueError("LIMIT too high (max 50)")
+
+async def _sf_query(instance_url: str, access_token: str, soql: str) -&gt; Dict[str, Any]:
+    url = f"{instance_url}/services/data/{SF_API_VERSION}/query"
+    headers = {"Authorization": f"Bearer {access_token}"}
+
+    async with httpx.AsyncClient(timeout=15) as client:
+        r = await client.get(url, headers=headers, params={"q": soql})
+        if r.status_code == 401:
+            # token expired/invalid -&gt; clear cache and retry once
+            _token_cache.pop("sf_token", None)
+            access_token, instance_url = await _get_salesforce_token()
+            headers["Authorization"] = f"Bearer {access_token}"
+            r = await client.get(url, headers=headers, params={"q": soql})
+
+        if r.status_code != 200:
+            raise RuntimeError(f"Query error: {r.status_code} {r.text}")
+
+        return r.json()
+
+@mcp.tool()
+async def sf_execute_soql(soql: str) -&gt; Dict[str, Any]:
+    """
+    Executes SOQL under the integration user's permissions.
+    """
+    _validate_soql_bank_safe(soql)
+    access_token, instance_url = await _get_salesforce_token()
+    return await _sf_query(instance_url, access_token, soql)
+
+if __name__ == "__main__":
+    # Streamable HTTP is the common production transport.
+    mcp.run(transport="streamable-http")</code></pre>
+            </div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="section">
+            <h2 id="part-b-fastapi-host-endpoint">Part B — FastAPI Host Endpoint</h2>
+            <p><strong>Calls MCP with Service Authentication</strong></p>
+
+            <div class="info-box">
+                <h4>Key Feature:</h4>
+                <p>
+                    FastMCP's <strong>Streamable HTTP client transport</strong> supports custom headers 
+                    (or a BearerAuth helper) for service-to-service authentication.
+                </p>
+            </div>
+
+            <p><strong>Save as:</strong> <code class="inline-code">main.py</code></p>
+
+            <div class="code-block">
+                <div class="code-header">main.py</div>
+                <pre><code class="language-python"># pip install fastapi uvicorn fastmcp pydantic
+
+import os
+from fastapi import FastAPI, Depends, HTTPException
+from pydantic import BaseModel
+
+from fastmcp import Client
+from fastmcp.client.transports import StreamableHttpTransport
+
+app = FastAPI()
+
+MCP_SF_URL = os.environ["MCP_SF_URL"]                  # e.g. https://mcp-salesforce.internal/mcp
+MCP_SERVICE_TOKEN = os.environ["MCP_SERVICE_TOKEN"]    # short-lived OAuth access token from client credentials/token exchange
+
+class SoqlReq(BaseModel):
+    soql: str
+
+async def get_identity():
+    # Production: verify OIDC Bearer token, map groups/roles, and return claims.
+    return {"email": "alice@bank.com", "roles": ["salesforce.query.read"]}
+
+@app.post("/admin/salesforce/query")
+async def admin_salesforce_query(req: SoqlReq, ident=Depends(get_identity)):
+    # Bank rule: free-form query text is privileged and should usually be
+    # replaced by named, parameterized tools. If kept, gate it by role/scope.
+    if "salesforce.query.read" not in ident.get("roles", []):
+        raise HTTPException(status_code=403, detail="Missing salesforce.query.read")
+
+    # Service-to-service auth to MCP server (NOT the end-user token)
+    transport = StreamableHttpTransport(
+        url=MCP_SF_URL,
+        headers={"Authorization": f"Bearer {MCP_SERVICE_TOKEN}"},
+    )
+    mcp_client = Client(transport)
+
+    async with mcp_client:
+        # Optional: read policy/prompt for debugging or to feed an agent
+        policy = await mcp_client.read_resource("resource://salesforce/soql_policy")
+        prompt = await mcp_client.get_prompt("salesforce_safe_query_prompt")
+
+        # Actual tool call
+        res = await mcp_client.call_tool("sf_execute_soql", {"soql": req.soql})
+        return {
+            "policy": policy.content,   # what the server says is allowed
+            "prompt": prompt.messages,  # how the server wants queries generated
+            "result": res,
+        }</code></pre>
+            </div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="section">
+            <h2 id="what-changed-the-auth-story">What Changed: The "Auth Story"</h2>
+
+            <div class="key-changes">
+                <h3 id="key-security-improvements">Key Security Improvements</h3>
+                <ul>
+                    <li>
+                        <strong>FastAPI doesn't just "call the MCP URL."</strong> 
+                        It must present an MCP service token (or OAuth/JWT/mTLS in stricter setups).
+                    </li>
+                    <li>
+                        <strong>The MCP server enforces that token in middleware</strong> 
+                        before allowing any MCP operation (tools/resources/prompts/listing).
+                    </li>
+                    <li>
+                        <strong>Only after that does the MCP tool do Salesforce service-level auth</strong> 
+                        (JWT Bearer) and run SOQL via Salesforce's Query REST endpoint.
+                    </li>
+                </ul>
+            </div>
+
+            <div class="architecture-note">
+                <h3 style="color: #e74c3c; margin-bottom: 20px;" id="authentication-flow">Authentication Flow</h3>
+                <p><strong>User</strong> (Google OIDC)</p>
+                <div class="flow-arrow">↓</div>
+                <p><strong>FastAPI</strong> (User token validated)</p>
+                <div class="flow-arrow">↓</div>
+                <p><strong>MCP Server</strong> (Service token validated in middleware)</p>
+                <div class="flow-arrow">↓</div>
+                <p><strong>Salesforce</strong> (OAuth JWT Bearer flow)</p>
+            </div>
+
+            <div class="warning-box">
+                <h4>Next Level Security:</h4>
+                <p>
+                    To tighten the bank-safe boundary, the client must never
+                    send arbitrary SOQL. It sends only validated
+                    <strong>parameters</strong>, such as an email address,
+                    while the MCP server constructs a
+                    <strong>fixed allowlisted query</strong> internally.
+                </p>
+            </div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="section">
+            <h2 id="environment-variables-required">Environment Variables Required</h2>
+
+            <div class="highlight-box">
+                <h4>MCP Server (mcp_salesforce_server.py):</h4>
+                <ul>
+                    <li><code class="inline-code">MCP_SERVICE_TOKEN</code> - Short-lived OAuth token for FastAPI → MCP auth</li>
+                    <li><code class="inline-code">SF_CLIENT_ID</code> - Salesforce Connected App consumer key</li>
+                    <li><code class="inline-code">SF_USERNAME</code> - Integration user username</li>
+                    <li><code class="inline-code">SF_PRIVATE_KEY_PEM</code> - PEM private key for JWT signing</li>
+                    <li><code class="inline-code">SF_LOGIN_URL</code> - (Optional) Default: https://login.salesforce.com</li>
+                    <li><code class="inline-code">SF_API_VERSION</code> - (Optional) Example default: v67.0 (Summer '26); pin a version supported by your org and regression-test upgrades</li>
+                </ul>
+            </div>
+
+            <div class="highlight-box" style="margin-top: 20px;">
+                <h4>FastAPI Host (main.py):</h4>
+                <ul>
+                    <li><code class="inline-code">MCP_SF_URL</code> - MCP server URL (e.g., http://mcp-salesforce.internal/mcp)</li>
+                    <li><code class="inline-code">MCP_SERVICE_TOKEN</code> - Short-lived OAuth token, preferably obtained at startup or per request from the IdP</li>
+                </ul>
+            </div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="section">
+            <h2 id="summary-why-this-architecture-matters">Summary: Why This Architecture Matters</h2>
+            
+            <div class="info-box">
+                <h4>Defense in Depth:</h4>
+                <ol class="numbered-list">
+                    <li><strong>User Authentication:</strong> Validates end-user identity via Google OIDC</li>
+                    <li><strong>Service Authentication:</strong> Prevents unauthorized access to MCP server</li>
+                    <li><strong>Downstream Authentication:</strong> Secures integration with Salesforce</li>
+                    <li><strong>Query Validation:</strong> Enforces bank-safe SOQL policies at MCP layer</li>
+                    <li><strong>Resource Policies:</strong> Provides read-only context for LLM agents</li>
+                    <li><strong>Prompt Templates:</strong> Standardizes agent behavior across clients</li>
+                </ol>
+            </div>
+
+            <div class="highlight-box" style="margin-top: 20px;">
+                <p><strong>Result:</strong> A secure, auditable system where each layer has its own authentication 
+                boundary and the MCP server acts as a controlled gateway to sensitive operations.</p>
+            </div>
+
+            <p><strong>Official references:</strong>
+                <a href="https://modelcontextprotocol.io/specification/2026-07-28">MCP 2026-07-28 specification</a> ·
+                <a href="https://developer.salesforce.com/blogs/2026/06/the-salesforce-developers-guide-to-the-summer-26-release">Salesforce Summer '26 / API 67.0</a> ·
+                <a href="https://developer.salesforce.com/docs/platform/connect-rest-api/guide/intro_api_eol.html">Salesforce API end-of-life policy</a>
+            </p>
+        </div>
+    </div></div></article></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col noPrint_WFHX"></div><div class="col lastUpdated_JAkA"><span class="theme-last-updated">Last updated<!-- --> on <b><time datetime="2026-07-30T01:42:42.000Z" itemprop="dateModified">Jul 30, 2026</time></b></span></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/tutorials/part3-agent-protocols/02-mcp-discovery-remote-auth"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">2. MCP discovery, remote transport, and auth</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/tutorials/part3-agent-protocols/04-mcp-2025-update"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">4. MCP protocol evolution</div></a></nav></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer"><div class="container container-fluid"><div class="row footer__links"><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Study</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/tutorials/">Book home</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/content-map">Reading guide</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/labs/rnn">Interactive RNN lab</a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Core tracks</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/tutorials/part2-backend-platform-security/overview">Backend and security</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/part3-agent-protocols/overview">Agent protocols</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/part5-deep-learning-and-llms/overview">Deep learning and LLMs</a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright">Enterprise AI, Agents & Applied ML - 2026</div></div></div></footer></div>
+</body>
+</html>

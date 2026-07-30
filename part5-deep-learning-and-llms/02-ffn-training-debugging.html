@@ -1,0 +1,649 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-part5-deep-learning-and-llms/ffn-training-debugging" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.10.2">
+<title data-rh="true">Feed-Forward Networks: Training, Evaluation, and Debugging | Enterprise AI, Agents &amp; Applied ML</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://dineshg.github.io/tutorials/part5-deep-learning-and-llms/02-ffn-training-debugging"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="keywords" content="enterprise AI, machine learning, deep learning, LLM, FastAPI, Pydantic, MCP, authentication"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Feed-Forward Networks: Training, Evaluation, and Debugging | Enterprise AI, Agents &amp; Applied ML"><meta data-rh="true" name="description" content="Training at scale with mini-batches, evaluation (accuracy + confusion matrix), and a synthetic regression example for visual intuition."><meta data-rh="true" property="og:description" content="Training at scale with mini-batches, evaluation (accuracy + confusion matrix), and a synthetic regression example for visual intuition."><link data-rh="true" rel="icon" href="/tutorials/img/favicon.svg"><link data-rh="true" rel="canonical" href="https://dineshg.github.io/tutorials/part5-deep-learning-and-llms/02-ffn-training-debugging"><link data-rh="true" rel="alternate" href="https://dineshg.github.io/tutorials/part5-deep-learning-and-llms/02-ffn-training-debugging" hreflang="en"><link data-rh="true" rel="alternate" href="https://dineshg.github.io/tutorials/part5-deep-learning-and-llms/02-ffn-training-debugging" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Part V - Deep Learning & LLMs","item":"https://dineshg.github.io/tutorials/part5-deep-learning-and-llms/overview"},{"@type":"ListItem","position":2,"name":"2. FFN training and debugging","item":"https://dineshg.github.io/tutorials/part5-deep-learning-and-llms/02-ffn-training-debugging"}]}</script><script>window.MathJax={startup:{typeset:!1},tex:{inlineMath:[["\\(","\\)"],["$","$"]],displayMath:[["\\[","\\]"],["$$","$$"]],processEscapes:!0},options:{skipHtmlTags:["script","noscript","style","textarea","pre","code"]}}</script>
+<link rel="stylesheet" href="/tutorials/css/book.css">
+<link rel="stylesheet" href="/tutorials/vendor/highlight.js/11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.18.1/dist/katex.min.css" integrity="sha384-5TcZemv2l/9On385z///+d7MSYlvIEw9FuZTIdZ14vJLqWphw7e7ZPuOiCHJcFCP" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-mml-chtml.js" defer="defer"></script><link rel="stylesheet" href="/tutorials/assets/css/styles.003aa738.css">
+<script src="/tutorials/assets/js/runtime~main.98c31d90.js" defer="defer"></script>
+<script src="/tutorials/assets/js/main.bd80017b.js" defer="defer"></script>
+</head>
+<body>
+<svg style="display: none;"><defs>
+<symbol id="theme-svg-external-link" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")),document.documentElement.setAttribute("data-theme-choice",t||"system")}(),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top"><div class="navbar__inner"><div class="theme-layout-navbar-left navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/tutorials/"><b class="navbar__title text--truncate">Enterprise AI Book</b></a><a class="navbar__item navbar__link" href="/tutorials/">Read</a><a class="navbar__item navbar__link" href="/tutorials/content-map">Concept map</a><a class="navbar__item navbar__link" href="/tutorials/part5-deep-learning-and-llms/10-recurrent-neural-networks">Deep learning</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><div class="navbar__item book-search-navbar-item"><button type="button" class="book-search-trigger" aria-label="Search the book">Search <kbd>Ctrl K</kbd></button></div><a href="https://github.com/dineshg/tutorials" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type="button" disabled="" title="system mode" aria-label="Switch between dark and light mode (currently system mode)"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill="currentColor" d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill="currentColor" d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill="currentColor" d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"></path></svg></button></div><div class="navbarSearchContainer_Bca1"></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class="docsWrapper_hBAB"><button aria-label="Scroll back to top" class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type="button"></button><div class="docRoot_UBD9"><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class="sidebarViewport_aRkj"><div class="sidebar_njMd"><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/tutorials/"><span class="linkLabel_WmDU">Book home</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/tutorials/content-map"><span class="linkLabel_WmDU">Reading guide and concept map</span></a></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-blue"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part1-enterprise-ai-delivery/overview"><span class="categoryLinkLabel_W154">Part I - Enterprise AI Delivery</span></a><button aria-label="Expand sidebar category &#x27;Part I - Enterprise AI Delivery&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-teal"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part2-backend-platform-security/overview"><span class="categoryLinkLabel_W154">Part II - Backend, Platform &amp; Security</span></a><button aria-label="Expand sidebar category &#x27;Part II - Backend, Platform &amp; Security&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-violet"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part3-agent-protocols/overview"><span class="categoryLinkLabel_W154">Part III - Agent Protocols</span></a><button aria-label="Expand sidebar category &#x27;Part III - Agent Protocols&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-amber"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part4-ml-foundations/overview"><span class="categoryLinkLabel_W154">Part IV - ML Foundations</span></a><button aria-label="Expand sidebar category &#x27;Part IV - ML Foundations&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item sidebar-category sidebar-category-coral"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--active" href="/tutorials/part5-deep-learning-and-llms/overview"><span class="categoryLinkLabel_W154">Part V - Deep Learning &amp; LLMs</span></a><button aria-label="Collapse sidebar category &#x27;Part V - Deep Learning &amp; LLMs&#x27;" aria-expanded="true" type="button" class="clean-btn menu__caret"></button></div><ul class="menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/01-ffn-concepts"><span class="linkLabel_WmDU">1. Feed-forward network concepts</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link menu__link--active" aria-current="page" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/02-ffn-training-debugging"><span class="linkLabel_WmDU">2. FFN training and debugging</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/03-ffn-canonical-merged"><span class="linkLabel_WmDU">3. FFN single-chapter reference</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/04-cnn-convolution"><span class="linkLabel_WmDU">4. CNN convolution</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/05-cnn-architecture"><span class="linkLabel_WmDU">5. CNN architecture</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/06-cnn-pytorch-implementation"><span class="linkLabel_WmDU">6. CNN PyTorch implementation</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/07-cnn-dropout-train-eval"><span class="linkLabel_WmDU">7. CNN dropout and train/eval</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/08-forecasting-sequence-data"><span class="linkLabel_WmDU">8. Forecasting and sequence data</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/09-autoregressive-linear-model"><span class="linkLabel_WmDU">9. Autoregressive linear model</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/10-recurrent-neural-networks"><span class="linkLabel_WmDU">10. Recurrent neural networks</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item sidebar-lab-link"><a class="menu__link" tabindex="0" href="/tutorials/labs/rnn"><span class="linkLabel_WmDU">Interactive lab: animated RNN</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/11-transformers-and-attention"><span class="linkLabel_WmDU">11. Transformers and attention</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/12-llm-fine-tuning"><span class="linkLabel_WmDU">12. LLM fine-tuning</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/13-modern-llm-alignment-orpo-grpo"><span class="linkLabel_WmDU">13. Modern LLM post-training</span></a></li></ul></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-slate"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part6-appendices/overview"><span class="categoryLinkLabel_W154">Part VI - Appendices</span></a><button aria-label="Expand sidebar category &#x27;Part VI - Appendices&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li></ul></nav><button type="button" title="Collapse sidebar" aria-label="Collapse sidebar" class="button button--secondary button--outline collapseSidebarButton_PEFL"><svg width="20" height="20" aria-hidden="true" class="collapseSidebarButtonIcon_kv0_"><g fill="#7a7a7a"><path d="M9.992 10.023c0 .2-.062.399-.172.547l-4.996 7.492a.982.982 0 01-.828.454H1c-.55 0-1-.453-1-1 0-.2.059-.403.168-.551l4.629-6.942L.168 3.078A.939.939 0 010 2.528c0-.548.45-.997 1-.997h2.996c.352 0 .649.18.828.45L9.82 9.472c.11.148.172.347.172.55zm0 0"></path><path d="M19.98 10.023c0 .2-.058.399-.168.547l-4.996 7.492a.987.987 0 01-.828.454h-3c-.547 0-.996-.453-.996-1 0-.2.059-.403.168-.551l4.625-6.942-4.625-6.945a.939.939 0 01-.168-.55 1 1 0 01.996-.997h3c.348 0 .649.18.828.45l4.996 7.492c.11.148.168.347.168.55zm0 0"></path></g></svg></button></div></div></aside><main class="docMainContainer_TBSr"><div class="container padding-top--md padding-bottom--lg"><div class="row"><div class="col"><div class="docItemContainer_Djhp"><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label="Breadcrumbs"><ul class="breadcrumbs"><li class="breadcrumbs__item"><a aria-label="Home page" class="breadcrumbs__link" href="/tutorials/"><svg viewBox="0 0 24 24" class="breadcrumbHomeIcon_YNFT"><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill="currentColor"></path></svg></a></li><li class="breadcrumbs__item"><a class="breadcrumbs__link" href="/tutorials/part5-deep-learning-and-llms/overview"><span>Part V - Deep Learning &amp; LLMs</span></a></li><li class="breadcrumbs__item breadcrumbs__item--active"><span class="breadcrumbs__link">2. FFN training and debugging</span></li></ul></nav><div class="theme-doc-markdown markdown"><article class="book-article tr-content" data-book-part="part5" data-book-accent="coral"><header class="articleHeader_jX4Y"><span class="partLabel_DqKR">Part V - Deep Learning &amp; Large Language Models</span><h1>Feed-Forward Networks: Training, Evaluation, and Debugging</h1><div class="articleMeta_jfH_"><span>8<!-- --> min read</span><span aria-hidden="true">·</span><span>10<!-- --> sections</span></div></header><details class="chapterToc_aQjS"><summary>On this page</summary><nav aria-label="On this page"><a href="#1-mini-batches-the-practical-way-to-train-on-large-datasets">1) Mini-batches: the practical way to train on large datasets</a><a href="#2-data-pipeline-datasets-transforms-and-dataloader">2) Data pipeline: datasets, transforms, and DataLoader</a><a href="#3-training-loop-patterns-that-scale">3) Training loop patterns that scale</a><a href="#4-accuracy-when-your-data-arrives-in-batches">4) Accuracy when your data arrives in batches</a><a href="#5-logits-vs-probabilities-why-argmax-is-enough-for-predictions">5) Logits vs probabilities: why argmax is enough for predictions</a><a href="#6-gpu-usage-avoid-tensors-on-different-devices-errors">6) GPU usage: avoid “tensors on different devices” errors</a><a href="#7-debugging-classification-confusion-matrix-misclassified-samples">7) Debugging classification: confusion matrix + misclassified samples</a><a href="#8-synthetic-regression-fit-a-non-linear-surface-you-can-visualize">8) Synthetic regression: fit a non-linear surface you can visualize</a><a href="#9-hyperparameters-a-practical-experimentation-workflow">9) Hyperparameters: a practical experimentation workflow</a><a href="#local-visuals-and-source-credits">Local visuals and source credits</a></nav></details><div class="articleBody_b2wt"><div class="wrap">
+    <header>
+      
+      <p>
+        <span class="pill">Training at scale</span> with mini-batches,
+        <span class="pill">evaluation</span> (accuracy + confusion matrix),
+        and a <span class="pill">synthetic regression</span> example for visual intuition.
+      </p>
+
+      <div class="chips">
+        <span class="chip">Mini-batch gradient descent</span>
+        <span class="chip">Argmax over logits</span>
+        <span class="chip">Accuracy over DataLoader</span>
+        <span class="chip">GPU device placement</span>
+        <span class="chip">Confusion matrix + error analysis</span>
+        <span class="chip">Synthetic data + surface fitting</span>
+      </div>
+
+      <nav>
+        <a href="#mbgd">Mini-batches &amp; why they work</a>
+        <a href="#pipeline">Data pipeline &amp; transforms</a>
+        <a href="#trainloop">Training loop patterns</a>
+        <a href="#accuracy">Accuracy with batches</a>
+        <a href="#argmax">Logits, softmax, argmax</a>
+        <a href="#gpu">GPU: keeping tensors on one device</a>
+        <a href="#confmat">Confusion matrix &amp; mistakes</a>
+        <a href="#synthetic">Synthetic regression surface</a>
+        <a href="#tuning">Hyperparameter tuning mindset</a>
+        <a href="#credits">Online plots used</a>
+      </nav>
+    </header>
+
+    <section id="mbgd">
+      <h2 id="1-mini-batches-the-practical-way-to-train-on-large-datasets">1) Mini-batches: the practical way to train on large datasets</h2>
+
+      <p>
+        Most training objectives are averages over a dataset. If your dataset has \(N\) samples and per-sample loss \(\ell_i(\theta)\),
+        the empirical risk is:
+      </p>
+      <p>
+        \[
+          L(\theta) = \frac{1}{N}\sum_{i=1}^N \ell_i(\theta)
+        \]
+      </p>
+
+      <p>
+        Computing \(\nabla_\theta L(\theta)\) over all \(N\) samples every step is expensive. Instead, we use a mini-batch \(B\)
+        (a small random subset) and approximate the loss and gradient:
+      </p>
+      <p>
+        \[
+          \widehat{L}_B(\theta) = \frac{1}{|B|}\sum_{i\in B}\ell_i(\theta),
+          \quad
+          \nabla_\theta \widehat{L}_B(\theta) \approx \nabla_\theta L(\theta)
+        \]
+      </p>
+
+      <div class="callout">
+        <p style="margin:0;">
+          <b>Intuition:</b> if batches are shuffled, each batch is a “representative sample” of the dataset.
+          Over many steps, you still see the whole dataset, but each update is much cheaper.
+        </p>
+      </div>
+
+      <figure>
+        <img alt="Optimizer animations (SGD and friends)" src="/tutorials/images/external/Optimizer_Animations-9d82ec1a32-fallback.svg">
+        <figcaption>
+          Optimizer behavior (Wikimedia Commons): <a href="https://commons.wikimedia.org/wiki/File:Optimizer_Animations.gif" target="_blank" rel="noopener">Optimizer_Animations.gif</a>
+        </figcaption>
+      </figure>
+    </section>
+
+    <section id="pipeline">
+      <h2 id="2-data-pipeline-datasets-transforms-and-dataloader">2) Data pipeline: datasets, transforms, and DataLoader</h2>
+
+      <p>
+        A clean PyTorch pipeline usually has three parts:
+      </p>
+      <ol>
+        <li><b>Dataset</b>: knows how to fetch one sample \((x,y)\)</li>
+        <li><b>Transform(s)</b>: preprocessing applied per sample</li>
+        <li><b>DataLoader</b>: batching, shuffling, parallel loading</li>
+      </ol>
+
+      <h3 id="mnist-why-values-become-0-1-only-when-transformed">MNIST: why values become 0–1 only when transformed</h3>
+      <p class="muted">
+        MNIST is stored as 8-bit integers (0–255). <code>transforms.ToTensor()</code> converts to float and scales to \([0,1]\).
+        If you inspect raw stored tensors, you’ll see 0–255. If you iterate through the DataLoader with the transform, you’ll see 0–1.
+      </p>
+
+      <div class="codewrap">
+        <div class="codebar">
+          <span class="label">python • verify raw vs transformed MNIST ranges</span>
+          
+        </div>
+<pre class="language-python"><code>from torchvision import datasets, transforms
+
+train_raw = datasets.MNIST(root="data", train=True, download=True, transform=None)
+print("raw dtype:", train_raw.data.dtype)
+print("raw min/max:", int(train_raw.data.min()), int(train_raw.data.max()))  # typically 0..255
+
+train_tf = datasets.MNIST(root="data", train=True, download=True, transform=transforms.ToTensor())
+x0, y0 = train_tf[0]
+print("transformed dtype:", x0.dtype)
+print("transformed min/max:", float(x0.min()), float(x0.max()))  # typically 0..1</code></pre>
+      </div>
+
+      <div class="callout">
+        <p style="margin:0;">
+          <b>Rule of thumb:</b> keep preprocessing inside the Dataset via <code>transform=...</code>.
+          That way every training/eval pass uses the same consistent inputs.
+        </p>
+      </div>
+    </section>
+
+    <section id="trainloop">
+      <h2 id="3-training-loop-patterns-that-scale">3) Training loop patterns that scale</h2>
+
+      <p>
+        A robust training loop separates:
+      </p>
+      <ul>
+        <li><b>training mode</b> (updates parameters) vs <b>evaluation mode</b> (no updates)</li>
+        <li><b>metrics</b> computed batch-by-batch</li>
+        <li><b>device transfers</b> done once per batch</li>
+      </ul>
+
+      <h3 id="one-update-step-on-a-batch">One update step on a batch</h3>
+      <p>
+        For a batch \((x_B, y_B)\), gradient descent performs:
+      </p>
+      <p>
+        \[
+          \theta \leftarrow \theta - \eta \nabla_\theta \widehat{L}_B(\theta)
+        \]
+      </p>
+
+      <h3 id="canonical-pytorch-inner-loop">Canonical PyTorch “inner loop”</h3>
+      <div class="codewrap">
+        <div class="codebar">
+          <span class="label">python • canonical mini-batch update step</span>
+          
+        </div>
+<pre class="language-python"><code>model.train()                 # enables train-time behavior (e.g., dropout/bn)
+for x, y in train_loader:
+    x, y = x.to(device), y.to(device)
+
+    optimizer.zero_grad()     # clear old gradients
+    logits = model(x)         # forward pass
+    loss = criterion(logits, y)
+
+    loss.backward()           # compute gradients
+    optimizer.step()          # update parameters</code></pre>
+      </div>
+
+      <h3 id="epoch-loss-average-over-batches">Epoch loss: average over batches</h3>
+      <p class="muted">
+        If you collect per-batch losses \(\{\widehat{L}_{B_k}\}\) in one epoch, a common summary is the mean:
+        \[
+          \text{epoch\_loss} = \frac{1}{K}\sum_{k=1}^K \widehat{L}_{B_k}
+        \]
+        This is a practical proxy for “how training is going” without doing a second full pass just to re-measure loss.
+      </p>
+    </section>
+
+    <section id="accuracy">
+      <h2 id="4-accuracy-when-your-data-arrives-in-batches">4) Accuracy when your data arrives in batches</h2>
+
+      <p>
+        When data comes via a DataLoader, you usually can’t compute accuracy in one shot.
+        The simple fix is to accumulate counts.
+      </p>
+
+      <p>
+        \[
+          \text{accuracy} = \frac{\sum_{i=1}^{N} \mathbb{1}\{\hat{y}_i = y_i\}}{N}
+        \]
+      </p>
+
+      <p class="muted">
+        With batches, you compute “correct in this batch” and “batch size”, then add them up.
+      </p>
+
+      <div class="codewrap">
+        <div class="codebar">
+          <span class="label">python • batched accuracy over a DataLoader</span>
+          
+        </div>
+<pre class="language-python"><code>@torch.no_grad()
+def accuracy_loader(model, loader, device):
+    model.eval()
+    correct = 0
+    total = 0
+    for x, y in loader:
+        x, y = x.to(device), y.to(device)
+        logits = model(x)
+        pred = logits.argmax(dim=1)           # class index
+        correct += (pred == y).sum().item()
+        total += y.numel()
+    return correct / total</code></pre>
+      </div>
+
+      <div class="callout">
+        <p style="margin:0;">
+          <b>Tip:</b> use <code>@torch.no_grad()</code> in evaluation to reduce memory usage and speed things up.
+        </p>
+      </div>
+    </section>
+
+    <section id="argmax">
+      <h2 id="5-logits-vs-probabilities-why-argmax-is-enough-for-predictions">5) Logits vs probabilities: why argmax is enough for predictions</h2>
+
+      <p>
+        Many classification models output <b>logits</b> \(z \in \mathbb{R}^K\). Softmax converts logits into probabilities:
+      </p>
+      <p>
+        \[
+          \mathrm{softmax}(z)_i = \frac{e^{z_i}}{\sum_{j=1}^K e^{z_j}}
+        \]
+      </p>
+
+      <p>
+        For <b>choosing the predicted class</b>, you almost never need the probabilities. You only need:
+        \[
+          \hat{y} = \arg\max_i z_i
+        \]
+      </p>
+
+      <div class="callout">
+        <p style="margin:0;">
+          <b>Key fact:</b> <code>argmax(softmax(z)) == argmax(z)</code>. Exponentials preserve ordering and the denominator is shared.
+        </p>
+      </div>
+
+      <figure>
+        <img alt="Softmax illustration (English)" src="/tutorials/images/external/Softmax_en-13b6657f61-fallback.svg">
+        <figcaption>
+          Softmax illustration (Wikimedia Commons): <a href="https://commons.wikimedia.org/wiki/File:Softmax_en.svg" target="_blank" rel="noopener">Softmax_en.svg</a>
+        </figcaption>
+      </figure>
+
+      <h3 id="pytorch-get-indices-classes-from-logits">PyTorch: get indices (classes) from logits</h3>
+      <div class="codewrap">
+        <div class="codebar">
+          <span class="label">python • logits → predicted class indices</span>
+          
+        </div>
+<pre class="language-python"><code>logits = model(x)            # shape: (B, K)
+pred = torch.argmax(logits, dim=1)  # shape: (B,)</code></pre>
+      </div>
+
+      <p class="muted">
+        If you want probabilities for interpretability (e.g., confidence), you can still compute:
+        <code>probs = torch.softmax(logits, dim=1)</code>.
+        For training with <code>nn.CrossEntropyLoss</code>, keep the model output as logits.
+      </p>
+    </section>
+
+    <section id="gpu">
+      <h2 id="6-gpu-usage-avoid-tensors-on-different-devices-errors">6) GPU usage: avoid “tensors on different devices” errors</h2>
+
+      <p>
+        In PyTorch, your model parameters live on a device (CPU or GPU). Your data must be on the same device
+        before you do operations between them.
+      </p>
+
+      <div class="grid two">
+        <div class="callout">
+          <p style="margin:0;">
+            <b>Do:</b>
+            <br>• <code>model.to(device)</code>
+            <br>• <code>x.to(device), y.to(device)</code> each batch
+          </p>
+        </div>
+        <div class="callout">
+          <p style="margin:0;">
+            <b>Don’t:</b>
+            <br>• keep model on GPU and data on CPU (or vice versa)
+            <br>• mix tensors across devices in one computation
+          </p>
+        </div>
+      </div>
+
+      <div class="codewrap">
+        <div class="codebar">
+          <span class="label">python • device selection + consistent placement</span>
+          
+        </div>
+<pre class="language-python"><code>device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+model = model.to(device)
+
+for x, y in train_loader:
+    x, y = x.to(device), y.to(device)
+    logits = model(x)
+    ...</code></pre>
+      </div>
+    </section>
+
+    <section id="confmat">
+      <h2 id="7-debugging-classification-confusion-matrix-misclassified-samples">7) Debugging classification: confusion matrix + misclassified samples</h2>
+
+      <p>
+        Overall accuracy hides <i>which</i> classes are being confused. A confusion matrix breaks errors down by class.
+        For a \(K\)-class problem, it’s a \(K \times K\) table where entry \((i,j)\) counts:
+        “true label \(i\) predicted as \(j\)”.
+      </p>
+
+      <figure>
+        <img alt="Confusion matrix example" src="/tutorials/images/external/Confusion_matrix-71f9dc8b35-fallback.svg">
+        <figcaption>
+          Confusion matrix example (Wikimedia Commons): <a href="https://commons.wikimedia.org/wiki/File:Confusion_matrix.png" target="_blank" rel="noopener">Confusion_matrix.png</a>
+        </figcaption>
+      </figure>
+
+      <h3 id="collect-predictions-for-a-full-dataloader-pass">Collect predictions for a full DataLoader pass</h3>
+      <div class="codewrap">
+        <div class="codebar">
+          <span class="label">python • gather all predictions + labels</span>
+          
+        </div>
+<pre class="language-python"><code>@torch.no_grad()
+def collect_preds(model, loader, device):
+    model.eval()
+    all_pred = []
+    all_y = []
+    for x, y in loader:
+        x = x.to(device)
+        logits = model(x)
+        pred = logits.argmax(dim=1).cpu()
+        all_pred.append(pred)
+        all_y.append(y.cpu())
+    return torch.cat(all_y), torch.cat(all_pred)</code></pre>
+      </div>
+
+      <h3 id="compute-confusion-matrix-two-options">Compute confusion matrix (two options)</h3>
+
+      <div class="grid two">
+        <div>
+          <p class="muted"><b>Option A:</b> pure PyTorch (no extra deps)</p>
+          <div class="codewrap">
+            <div class="codebar">
+              <span class="label">python • confusion matrix in pure torch</span>
+              
+            </div>
+<pre class="language-python"><code>def confusion_matrix_torch(y_true, y_pred, num_classes):
+    cm = torch.zeros((num_classes, num_classes), dtype=torch.int64)
+    for t, p in zip(y_true, y_pred):
+        cm[t, p] += 1
+    return cm
+
+y_true, y_pred = collect_preds(model, test_loader, device)
+cm = confusion_matrix_torch(y_true, y_pred, num_classes=10)
+print(cm)</code></pre>
+          </div>
+        </div>
+
+        <div>
+          <p class="muted"><b>Option B:</b> scikit-learn (convenient)</p>
+          <div class="codewrap">
+            <div class="codebar">
+              <span class="label">python • confusion matrix via scikit-learn</span>
+              
+            </div>
+<pre class="language-python"><code># pip install scikit-learn
+from sklearn.metrics import confusion_matrix
+
+y_true, y_pred = collect_preds(model, test_loader, device)
+cm = confusion_matrix(y_true.numpy(), y_pred.numpy(), labels=list(range(10)))
+print(cm)</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <h3 id="find-and-visualize-misclassified-samples">Find and visualize misclassified samples</h3>
+      <p class="muted">
+        Once you know common confusions, actually look at examples. (The code below generates plots when <i>you</i> run it.)
+      </p>
+
+      <div class="codewrap">
+        <div class="codebar">
+          <span class="label">python • extract misclassified MNIST examples + plot a grid</span>
+          
+        </div>
+<pre class="language-python"><code>import matplotlib.pyplot as plt
+
+@torch.no_grad()
+def get_misclassified(model, loader, device, max_items=25):
+    model.eval()
+    items = []
+    for x, y in loader:
+        x, y = x.to(device), y.to(device)
+        logits = model(x)
+        pred = logits.argmax(dim=1)
+        wrong = pred != y
+        if wrong.any():
+            xw = x[wrong].cpu()
+            yw = y[wrong].cpu()
+            pw = pred[wrong].cpu()
+            for i in range(xw.size(0)):
+                items.append((xw[i], int(yw[i]), int(pw[i])))
+                if len(items) &gt;= max_items:
+                    return items
+    return items
+
+mis = get_misclassified(model, test_loader, device, max_items=16)
+
+# Plot (runs locally; not generated in this HTML)
+fig, axes = plt.subplots(4, 4, figsize=(6, 6))
+for ax, (img, y, p) in zip(axes.ravel(), mis):
+    ax.imshow(img.squeeze(0), cmap="gray")
+    ax.set_title(f"true={y}, pred={p}", fontsize=9)
+    ax.axis("off")
+plt.tight_layout()
+plt.show()</code></pre>
+      </div>
+    </section>
+
+    <section id="synthetic">
+      <h2 id="8-synthetic-regression-fit-a-non-linear-surface-you-can-visualize">8) Synthetic regression: fit a non-linear surface you can visualize</h2>
+
+      <p>
+        Classification isn’t the only job for feed-forward nets. For regression, the output layer is typically <b>identity</b> (no activation),
+        and the loss is often mean squared error (MSE).
+      </p>
+
+      <h3 id="define-a-bumpy-2d-function">Define a “bumpy” 2D function</h3>
+      <p>
+        We’ll sample \(x \in \mathbb{R}^2\) uniformly in a box and define targets:
+      </p>
+      <p>
+        \[
+          y = \cos(2x_1) + \cos(3x_2)
+        \]
+      </p>
+
+      <figure>
+        <img alt="3D surface plot example" src="/tutorials/images/external/3-D_surface_plot-dd978c9fe8-fallback.svg">
+        <figcaption>
+          Example 3D surface plot (Wikimedia Commons): <a href="https://commons.wikimedia.org/wiki/File:3-D_surface_plot.jpg" target="_blank" rel="noopener">3-D_surface_plot.jpg</a>
+        </figcaption>
+      </figure>
+
+      <h3 id="generate-data-3d-scatter-run-locally">Generate data + 3D scatter (run locally)</h3>
+      <div class="codewrap">
+        <div class="codebar">
+          <span class="label">python • synthetic dataset + 3D scatter</span>
+          
+        </div>
+<pre class="language-python"><code>import numpy as np
+import torch
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 (needed for 3D)
+
+# Reproducibility
+torch.manual_seed(0)
+np.random.seed(0)
+
+N = 5000
+x = (torch.rand(N, 2) * 6.0) - 3.0                 # uniform in [-3, 3]^2
+y = torch.cos(2.0 * x[:, 0]) + torch.cos(3.0 * x[:, 1])
+y = y.unsqueeze(1)                                  # shape (N, 1)
+
+# 3D scatter (generated when you run this)
+fig = plt.figure(figsize=(6, 5))
+ax = fig.add_subplot(111, projection="3d")
+ax.scatter(x[:,0].numpy(), x[:,1].numpy(), y[:,0].numpy(), s=3)
+ax.set_xlabel("x1"); ax.set_ylabel("x2"); ax.set_zlabel("y")
+plt.show()</code></pre>
+      </div>
+
+      <h3 id="model-2-128-1-relu-hidden-identity-output">Model: 2 → 128 → 1 (ReLU hidden, identity output)</h3>
+      <div class="codewrap">
+        <div class="codebar">
+          <span class="label">python • regression FFN + training loop</span>
+          
+        </div>
+<pre class="language-python"><code>import torch.nn as nn
+from torch.utils.data import TensorDataset, DataLoader
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+ds = TensorDataset(x, y)
+loader = DataLoader(ds, batch_size=256, shuffle=True)
+
+model = nn.Sequential(
+    nn.Linear(2, 128),
+    nn.ReLU(),
+    nn.Linear(128, 1),
+).to(device)
+
+criterion = nn.MSELoss()
+optimizer = torch.optim.Adam(model.parameters(), lr=3e-2)
+
+def train_epochs(epochs=50):
+    model.train()
+    history = []
+    for ep in range(epochs):
+        losses = []
+        for xb, yb in loader:
+            xb, yb = xb.to(device), yb.to(device)
+            optimizer.zero_grad()
+            pred = model(xb)
+            loss = criterion(pred, yb)
+            loss.backward()
+            optimizer.step()
+            losses.append(loss.item())
+        history.append(float(np.mean(losses)))
+        if (ep + 1) % 10 == 0:
+            print(f"epoch {ep+1:03d} | mse {history[-1]:.6f}")
+    return history
+
+loss_hist = train_epochs(epochs=60)</code></pre>
+      </div>
+
+      <h3 id="predict-on-a-grid-meshgrid-model-reshape-surface">Predict on a grid: meshgrid → model → reshape → surface</h3>
+      <p class="muted">
+        To draw a smooth surface, you evaluate the model on a grid of \((x_1, x_2)\) points.
+        The key is reshaping: grids are 2D, the model wants a 2-column matrix, and the output must be reshaped back to the grid.
+      </p>
+
+      <div class="codewrap">
+        <div class="codebar">
+          <span class="label">python • meshgrid predictions + 3D surface plot (run locally)</span>
+          
+        </div>
+<pre class="language-python"><code>@torch.no_grad()
+def plot_surface(model, lim=3.0, steps=80):
+    model.eval()
+    xs = torch.linspace(-lim, lim, steps)
+    ys = torch.linspace(-lim, lim, steps)
+    X, Y = torch.meshgrid(xs, ys, indexing="ij")       # shapes (steps, steps)
+
+    grid = torch.stack([X.reshape(-1), Y.reshape(-1)], dim=1).to(device)  # (steps*steps, 2)
+    Z = model(grid).reshape(steps, steps).cpu()
+
+    # Plot
+    import matplotlib.pyplot as plt
+    from mpl_toolkits.mplot3d import Axes3D  # noqa: F401
+    fig = plt.figure(figsize=(7, 5))
+    ax = fig.add_subplot(111, projection="3d")
+    ax.plot_surface(X.numpy(), Y.numpy(), Z.numpy(), linewidth=0, antialiased=True)
+    ax.set_xlabel("x1"); ax.set_ylabel("x2"); ax.set_zlabel("pred y")
+    plt.show()
+
+plot_surface(model)</code></pre>
+      </div>
+
+      <div class="callout">
+        <p style="margin:0;">
+          <b>What you’re checking visually:</b> does the learned surface match the “bumpy” cosine structure?
+          If not, try adjusting learning rate, epochs, batch size, or hidden width.
+        </p>
+      </div>
+    </section>
+
+    <section id="tuning">
+      <h2 id="9-hyperparameters-a-practical-experimentation-workflow">9) Hyperparameters: a practical experimentation workflow</h2>
+
+      <p>
+        Hyperparameters (learning rate, batch size, number of epochs, hidden width, optimizer choice) don’t come with universal rules
+        that always win. A reliable workflow is:
+      </p>
+      <ol>
+        <li><b>Start reasonable</b> (common defaults: Adam or SGD, moderate LR, moderate batch size)</li>
+        <li><b>Confirm learning</b> (loss decreases; accuracy increases)</li>
+        <li><b>Search locally</b> (try a small grid around current settings)</li>
+        <li><b>Use evidence</b> (plots/metrics) to decide next changes</li>
+      </ol>
+
+      <h3 id="minimal-grid-search-skeleton">Minimal grid-search skeleton</h3>
+      <div class="codewrap">
+        <div class="codebar">
+          <span class="label">python • tiny hyperparameter sweep skeleton</span>
+          
+        </div>
+<pre class="language-python"><code>def run_experiment(lr, hidden, epochs=3):
+    model = nn.Sequential(
+        nn.Linear(28*28, hidden),
+        nn.ReLU(),
+        nn.Linear(hidden, 10),
+    ).to(device)
+
+    opt = torch.optim.SGD(model.parameters(), lr=lr)
+    crit = nn.CrossEntropyLoss()
+
+    for _ in range(epochs):
+        model.train()
+        for x, y in train_loader:
+            x = x.view(x.size(0), -1).to(device)
+            y = y.to(device)
+            opt.zero_grad()
+            logits = model(x)
+            loss = crit(logits, y)
+            loss.backward()
+            opt.step()
+
+    acc = accuracy_loader(model, test_loader, device)
+    return acc
+
+for lr in [0.3, 0.1, 0.03]:
+    for hidden in [64, 128, 256]:
+        acc = run_experiment(lr=lr, hidden=hidden, epochs=2)
+        print(f"lr={lr:&lt;5} hidden={hidden:&lt;4} -&gt; test acc {acc:.4f}")</code></pre>
+      </div>
+
+      <div class="callout">
+        <p style="margin:0;">
+          <b>Goal:</b> don’t hunt for mystical “best” defaults—build a habit of quick, disciplined experiments.
+        </p>
+      </div>
+    </section>
+
+    <section id="credits">
+      <h2 id="local-visuals-and-source-credits">Local visuals and source credits</h2>
+      <ul class="small">
+        <li>Optimizer animation (SGD variants): <a href="https://commons.wikimedia.org/wiki/File:Optimizer_Animations.gif" target="_blank" rel="noopener">Optimizer_Animations.gif</a></li>
+        <li>Softmax illustration: <a href="https://commons.wikimedia.org/wiki/File:Softmax_en.svg" target="_blank" rel="noopener">Softmax_en.svg</a></li>
+        <li>Confusion matrix example: <a href="https://commons.wikimedia.org/wiki/File:Confusion_matrix.png" target="_blank" rel="noopener">Confusion_matrix.png</a></li>
+        <li>3D surface plot example: <a href="https://commons.wikimedia.org/wiki/File:3-D_surface_plot.jpg" target="_blank" rel="noopener">3-D_surface_plot.jpg</a></li>
+      </ul>
+
+      <div class="hr"></div>
+      <p class="muted small">
+        This page serves displayed images from local assets, with source credits retained where applicable.
+        Code blocks are formatted by the shared book styling and include copy buttons.
+        When you run the plotting code locally, it will generate the visualizations (this HTML itself does not generate plots).
+      </p>
+    </section>
+
+  </div></div></article></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col noPrint_WFHX"></div><div class="col lastUpdated_JAkA"><span class="theme-last-updated">Last updated<!-- --> on <b><time datetime="2026-07-30T01:42:42.000Z" itemprop="dateModified">Jul 30, 2026</time></b></span></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/tutorials/part5-deep-learning-and-llms/01-ffn-concepts"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">1. Feed-forward network concepts</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/tutorials/part5-deep-learning-and-llms/03-ffn-canonical-merged"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">3. FFN single-chapter reference</div></a></nav></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer"><div class="container container-fluid"><div class="row footer__links"><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Study</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/tutorials/">Book home</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/content-map">Reading guide</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/labs/rnn">Interactive RNN lab</a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Core tracks</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/tutorials/part2-backend-platform-security/overview">Backend and security</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/part3-agent-protocols/overview">Agent protocols</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/part5-deep-learning-and-llms/overview">Deep learning and LLMs</a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright">Enterprise AI, Agents & Applied ML - 2026</div></div></div></footer></div>
+</body>
+</html>

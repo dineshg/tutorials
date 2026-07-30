@@ -1,0 +1,537 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-part2-backend-platform-security/http-methods" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.10.2">
+<title data-rh="true">HTTP Methods (Beginner-Friendly) — FastAPI | Enterprise AI, Agents &amp; Applied ML</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://dineshg.github.io/tutorials/part2-backend-platform-security/02-http-methods"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="keywords" content="enterprise AI, machine learning, deep learning, LLM, FastAPI, Pydantic, MCP, authentication"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="HTTP Methods (Beginner-Friendly) — FastAPI | Enterprise AI, Agents &amp; Applied ML"><meta data-rh="true" name="description" content="HTTP methods tell the server (and intermediaries like browsers, proxies, CDNs) what you intend to do with a URL: read, create, replace, patch, delete. That intent unlocks important behavior like caching, retries, idem..."><meta data-rh="true" property="og:description" content="HTTP methods tell the server (and intermediaries like browsers, proxies, CDNs) what you intend to do with a URL: read, create, replace, patch, delete. That intent unlocks important behavior like caching, retries, idem..."><link data-rh="true" rel="icon" href="/tutorials/img/favicon.svg"><link data-rh="true" rel="canonical" href="https://dineshg.github.io/tutorials/part2-backend-platform-security/02-http-methods"><link data-rh="true" rel="alternate" href="https://dineshg.github.io/tutorials/part2-backend-platform-security/02-http-methods" hreflang="en"><link data-rh="true" rel="alternate" href="https://dineshg.github.io/tutorials/part2-backend-platform-security/02-http-methods" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Part II - Backend, Platform & Security","item":"https://dineshg.github.io/tutorials/part2-backend-platform-security/overview"},{"@type":"ListItem","position":2,"name":"2. HTTP methods","item":"https://dineshg.github.io/tutorials/part2-backend-platform-security/02-http-methods"}]}</script><script>window.MathJax={startup:{typeset:!1},tex:{inlineMath:[["\\(","\\)"],["$","$"]],displayMath:[["\\[","\\]"],["$$","$$"]],processEscapes:!0},options:{skipHtmlTags:["script","noscript","style","textarea","pre","code"]}}</script>
+<link rel="stylesheet" href="/tutorials/css/book.css">
+<link rel="stylesheet" href="/tutorials/vendor/highlight.js/11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.18.1/dist/katex.min.css" integrity="sha384-5TcZemv2l/9On385z///+d7MSYlvIEw9FuZTIdZ14vJLqWphw7e7ZPuOiCHJcFCP" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-mml-chtml.js" defer="defer"></script><link rel="stylesheet" href="/tutorials/assets/css/styles.003aa738.css">
+<script src="/tutorials/assets/js/runtime~main.98c31d90.js" defer="defer"></script>
+<script src="/tutorials/assets/js/main.bd80017b.js" defer="defer"></script>
+</head>
+<body>
+<svg style="display: none;"><defs>
+<symbol id="theme-svg-external-link" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")),document.documentElement.setAttribute("data-theme-choice",t||"system")}(),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top"><div class="navbar__inner"><div class="theme-layout-navbar-left navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/tutorials/"><b class="navbar__title text--truncate">Enterprise AI Book</b></a><a class="navbar__item navbar__link" href="/tutorials/">Read</a><a class="navbar__item navbar__link" href="/tutorials/content-map">Concept map</a><a class="navbar__item navbar__link" href="/tutorials/part5-deep-learning-and-llms/10-recurrent-neural-networks">Deep learning</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><div class="navbar__item book-search-navbar-item"><button type="button" class="book-search-trigger" aria-label="Search the book">Search <kbd>Ctrl K</kbd></button></div><a href="https://github.com/dineshg/tutorials" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type="button" disabled="" title="system mode" aria-label="Switch between dark and light mode (currently system mode)"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill="currentColor" d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill="currentColor" d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill="currentColor" d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"></path></svg></button></div><div class="navbarSearchContainer_Bca1"></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class="docsWrapper_hBAB"><button aria-label="Scroll back to top" class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type="button"></button><div class="docRoot_UBD9"><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class="sidebarViewport_aRkj"><div class="sidebar_njMd"><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/tutorials/"><span class="linkLabel_WmDU">Book home</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/tutorials/content-map"><span class="linkLabel_WmDU">Reading guide and concept map</span></a></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-blue"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part1-enterprise-ai-delivery/overview"><span class="categoryLinkLabel_W154">Part I - Enterprise AI Delivery</span></a><button aria-label="Expand sidebar category &#x27;Part I - Enterprise AI Delivery&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item sidebar-category sidebar-category-teal"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--active" href="/tutorials/part2-backend-platform-security/overview"><span class="categoryLinkLabel_W154">Part II - Backend, Platform &amp; Security</span></a><button aria-label="Collapse sidebar category &#x27;Part II - Backend, Platform &amp; Security&#x27;" aria-expanded="true" type="button" class="clean-btn menu__caret"></button></div><ul class="menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/01-fastapi-uvicorn-basics"><span class="linkLabel_WmDU">1. FastAPI and Uvicorn basics</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link menu__link--active" aria-current="page" tabindex="0" href="/tutorials/part2-backend-platform-security/02-http-methods"><span class="linkLabel_WmDU">2. HTTP methods</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/03-fastapi-request-mapping"><span class="linkLabel_WmDU">3. FastAPI request mapping</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/04-pydantic-data-models"><span class="linkLabel_WmDU">4. Pydantic data models</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/04-concurrency-user-isolation"><span class="linkLabel_WmDU">5. Concurrency and user isolation</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/05-background-tasks-and-retries"><span class="linkLabel_WmDU">6. Background tasks and retries</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/06-sso-oauth2-oidc-primer"><span class="linkLabel_WmDU">7. SSO, OAuth 2.0, and OIDC primer</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/07-oidc-oauth2-pkce-fastapi"><span class="linkLabel_WmDU">8. OIDC, OAuth 2.0, and PKCE in FastAPI</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/08-registering-new-users"><span class="linkLabel_WmDU">9. First login and user provisioning</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/09-authentication-deep-dive"><span class="linkLabel_WmDU">10. Authentication deep dive</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/15-modern-auth-additions"><span class="linkLabel_WmDU">11. Passkeys, DPoP, mTLS, and token exchange</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/10-enduser-vs-workload-identity"><span class="linkLabel_WmDU">12. End-user vs workload identity</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/12-tenant-iam-ad-groups"><span class="linkLabel_WmDU">13. Tenant isolation, IAM, and groups</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/11-gcp-workload-identity"><span class="linkLabel_WmDU">14. GCP workload identity</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/13-external-service-integration"><span class="linkLabel_WmDU">15. Cross-cloud service integration</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/14-github-governance"><span class="linkLabel_WmDU">16. GitHub governance and CI</span></a></li></ul></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-violet"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part3-agent-protocols/overview"><span class="categoryLinkLabel_W154">Part III - Agent Protocols</span></a><button aria-label="Expand sidebar category &#x27;Part III - Agent Protocols&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-amber"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part4-ml-foundations/overview"><span class="categoryLinkLabel_W154">Part IV - ML Foundations</span></a><button aria-label="Expand sidebar category &#x27;Part IV - ML Foundations&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-coral"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part5-deep-learning-and-llms/overview"><span class="categoryLinkLabel_W154">Part V - Deep Learning &amp; LLMs</span></a><button aria-label="Expand sidebar category &#x27;Part V - Deep Learning &amp; LLMs&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-slate"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part6-appendices/overview"><span class="categoryLinkLabel_W154">Part VI - Appendices</span></a><button aria-label="Expand sidebar category &#x27;Part VI - Appendices&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li></ul></nav><button type="button" title="Collapse sidebar" aria-label="Collapse sidebar" class="button button--secondary button--outline collapseSidebarButton_PEFL"><svg width="20" height="20" aria-hidden="true" class="collapseSidebarButtonIcon_kv0_"><g fill="#7a7a7a"><path d="M9.992 10.023c0 .2-.062.399-.172.547l-4.996 7.492a.982.982 0 01-.828.454H1c-.55 0-1-.453-1-1 0-.2.059-.403.168-.551l4.629-6.942L.168 3.078A.939.939 0 010 2.528c0-.548.45-.997 1-.997h2.996c.352 0 .649.18.828.45L9.82 9.472c.11.148.172.347.172.55zm0 0"></path><path d="M19.98 10.023c0 .2-.058.399-.168.547l-4.996 7.492a.987.987 0 01-.828.454h-3c-.547 0-.996-.453-.996-1 0-.2.059-.403.168-.551l4.625-6.942-4.625-6.945a.939.939 0 01-.168-.55 1 1 0 01.996-.997h3c.348 0 .649.18.828.45l4.996 7.492c.11.148.168.347.168.55zm0 0"></path></g></svg></button></div></div></aside><main class="docMainContainer_TBSr"><div class="container padding-top--md padding-bottom--lg"><div class="row"><div class="col"><div class="docItemContainer_Djhp"><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label="Breadcrumbs"><ul class="breadcrumbs"><li class="breadcrumbs__item"><a aria-label="Home page" class="breadcrumbs__link" href="/tutorials/"><svg viewBox="0 0 24 24" class="breadcrumbHomeIcon_YNFT"><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill="currentColor"></path></svg></a></li><li class="breadcrumbs__item"><a class="breadcrumbs__link" href="/tutorials/part2-backend-platform-security/overview"><span>Part II - Backend, Platform &amp; Security</span></a></li><li class="breadcrumbs__item breadcrumbs__item--active"><span class="breadcrumbs__link">2. HTTP methods</span></li></ul></nav><div class="theme-doc-markdown markdown"><article class="book-article tr-content" data-book-part="part2" data-book-accent="teal"><header class="articleHeader_jX4Y"><span class="partLabel_DqKR">Part II - Backend, Platform &amp; Security</span><h1>HTTP methods (the “verbs” of the web) — beginner friendly</h1><div class="articleMeta_jfH_"><span>6<!-- --> min read</span><span aria-hidden="true">·</span><span>10<!-- --> sections</span></div></header><details class="chapterToc_aQjS"><summary>On this page</summary><nav aria-label="On this page"><a href="#core">Core ideas you should know</a><a href="#contract-flow">How this connects to Pydantic: method, URL, and body are separate jobs</a><a href="#methods-table">Quick table (print-this-in-your-brain)</a><a href="#widely-used">Widely used methods (you’ll use these 99% of the time)</a><a href="#less-used">Common but less used (still important)</a><a href="#rare">Rare / niche methods (you’ll see them sometimes)</a><a href="#rest">Practical mapping to REST-style endpoints</a><a href="#put-vs-post">The “PUT vs POST feels same” confusion (quick intuition)</a><a href="#request-shape">What an HTTP request looks like</a><a href="#fastapi">How FastAPI “decodes” the message</a></nav></details><div class="articleBody_b2wt"><div class="container">
+        <div class="header">
+            <div>
+                
+                <p class="lead">
+                    HTTP methods tell the server (and intermediaries like browsers, proxies, CDNs) what you intend to do with a URL:
+                    read, create, replace, patch, delete. That intent unlocks important behavior like caching, retries, idempotency,
+                    and clearer security controls.
+                </p>
+
+                <ul class="toc">
+                    <li><a href="#core">Core ideas</a></li>
+                    <li><a href="#contract-flow">Method to Python contract</a></li>
+                    <li><a href="#methods-table">Quick table</a></li>
+                    <li><a href="#widely-used">Widely used (⭐)</a></li>
+                    <li><a href="#less-used">Less used but important</a></li>
+                    <li><a href="#rare">Rare / niche</a></li>
+                    <li><a href="#rest">REST-style mapping</a></li>
+                    <li><a href="#put-vs-post">PUT vs POST confusion</a></li>
+                    <li><a href="#request-shape">HTTP request shape</a></li>
+                    <li><a href="#fastapi">How FastAPI decodes</a></li>
+                </ul>
+            </div>
+
+            <aside class="quickbox" aria-label="Quick takeaway">
+                <h3 id="quick-takeaway">Quick takeaway</h3>
+                <ul>
+                    <li><span class="badge get">GET</span> read (safe)</li>
+                    <li><span class="badge post">POST</span> create or run an action</li>
+                    <li><span class="badge put">PUT</span> replace full resource</li>
+                    <li><span class="badge patch">PATCH</span> partial update</li>
+                    <li><span class="badge delete">DELETE</span> remove</li>
+                </ul>
+                <p class="cap" style="margin: 10px 0 0; color: var(--muted);">
+                    You’ll use the ⭐ methods 99% of the time.
+                </p>
+            </aside>
+        </div>
+
+
+        <h2 id="core">Core ideas you should know</h2>
+        <p class="subtitle">These concepts explain why method choice matters (caching, retries, correctness).</p>
+
+        <div class="grid">
+            <div class="mini col-6">
+                <h3 id="safe-vs-unsafe">Safe vs unsafe</h3>
+                <p><strong>Safe</strong> means: “should not change server state” (read-only).</p>
+                <div class="tag">
+                    <span class="chip safe">Safe: GET, HEAD, OPTIONS</span>
+                    <span class="chip unsafe">Unsafe: POST, PUT, PATCH, DELETE</span>
+                </div>
+            </div>
+            <div class="mini col-6">
+                <h3 id="idempotent-vs-non-idempotent">Idempotent vs non-idempotent</h3>
+                <p><strong>Idempotent</strong> means: repeating the same request leads to the same final state as doing it once.</p>
+                <div class="tag">
+                    <span class="chip idem">Idempotent: GET, PUT, DELETE, HEAD, OPTIONS</span>
+                    <span class="chip nidem">Often non-idempotent: POST (and sometimes PATCH)</span>
+                </div>
+            </div>
+            <div class="mini col-12">
+                <h3 id="cacheable-common-in-practice">Cacheable (common in practice)</h3>
+                <p>
+                    <span class="chip cache">GET is commonly cacheable</span>
+                    <span class="chip body">Others are usually not cached unless explicitly configured</span>
+                </p>
+            </div>
+        </div>
+
+        <div class="concept-box">
+            <strong>Beginner rule:</strong> Pick the method that matches intent first.
+            Then think about safety, idempotency, caching, and security.
+            <span class="pill">Method + URL = contract</span>
+        </div>
+
+        <h2 id="contract-flow">How this connects to Pydantic: method, URL, and body are separate jobs</h2>
+        <p>
+            A clean backend design separates three questions. First, the HTTP method says the intent:
+            are we reading, creating, replacing, patching, or deleting? Second, the URL says which resource
+            or collection the intent applies to. Third, if the request has a JSON body, a Pydantic model says
+            the exact shape of that body.
+        </p>
+
+        <div class="concept-box">
+            <strong>Flow to remember:</strong>
+            <code>METHOD + URL</code> chooses the endpoint.
+            <code>path/query/header</code> values become function parameters.
+            <code>JSON body</code> becomes a Pydantic model instance when you declare one.
+        </div>
+
+        <table aria-label="HTTP method and Pydantic contract relationship">
+            <thead>
+                <tr>
+                    <th>Request part</th>
+                    <th>Example</th>
+                    <th>Who handles it in FastAPI?</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Method + path</td>
+                    <td><code>POST /orders</code></td>
+                    <td>The route decorator: <code>@app.post("/orders")</code></td>
+                </tr>
+                <tr>
+                    <td>Path parameter</td>
+                    <td><code>/users/42</code></td>
+                    <td>A typed argument: <code>user_id: int</code></td>
+                </tr>
+                <tr>
+                    <td>Query parameter</td>
+                    <td><code>?limit=20</code></td>
+                    <td>A typed argument with a default: <code>limit: int = 20</code></td>
+                </tr>
+                <tr>
+                    <td>Header</td>
+                    <td><code>Authorization: Bearer ...</code></td>
+                    <td><code>Header(...)</code> or a security dependency</td>
+                </tr>
+                <tr>
+                    <td>JSON body</td>
+                    <td><code>{"items": [...]}</code></td>
+                    <td>A Pydantic model such as <code>CreateOrderRequest</code></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <p>
+            This means Pydantic is not a replacement for HTTP methods. It is the next layer down.
+            The method tells the server what the client is trying to do; Pydantic validates the structured
+            data the client sends while doing it.
+        </p>
+
+        <h2 id="methods-table">Quick table (print-this-in-your-brain)</h2>
+        <p class="subtitle">⭐ = widely used. Most APIs are mostly these 5.</p>
+
+        <table aria-label="HTTP methods quick reference">
+            <thead>
+                <tr>
+                    <th>Method</th>
+                    <th>Intent</th>
+                    <th>Safe?</th>
+                    <th>Idempotent?</th>
+                    <th>Commonly cacheable?</th>
+                    <th>Body typical?</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="badge star">⭐</span> <span class="badge get">GET</span></td>
+                    <td>Read data</td>
+                    <td>Yes</td>
+                    <td>Yes</td>
+                    <td>Often</td>
+                    <td>Usually no</td>
+                </tr>
+                <tr>
+                    <td><span class="badge star">⭐</span> <span class="badge post">POST</span></td>
+                    <td>Create / run action</td>
+                    <td>No</td>
+                    <td>No (by default)</td>
+                    <td>Usually no</td>
+                    <td>Often yes</td>
+                </tr>
+                <tr>
+                    <td><span class="badge star">⭐</span> <span class="badge put">PUT</span></td>
+                    <td>Replace full resource (or create at known URL)</td>
+                    <td>No</td>
+                    <td>Yes</td>
+                    <td>Usually no</td>
+                    <td>Often yes</td>
+                </tr>
+                <tr>
+                    <td><span class="badge star">⭐</span> <span class="badge patch">PATCH</span></td>
+                    <td>Partial update</td>
+                    <td>No</td>
+                    <td>Depends</td>
+                    <td>Usually no</td>
+                    <td>Often yes</td>
+                </tr>
+                <tr>
+                    <td><span class="badge star">⭐</span> <span class="badge delete">DELETE</span></td>
+                    <td>Remove resource</td>
+                    <td>No</td>
+                    <td>Yes (in intent)</td>
+                    <td>Usually no</td>
+                    <td>Usually no</td>
+                </tr>
+                <tr>
+                    <td><span class="badge">HEAD</span></td>
+                    <td>Like GET, but headers only</td>
+                    <td>Yes</td>
+                    <td>Yes</td>
+                    <td>Often</td>
+                    <td>No</td>
+                </tr>
+                <tr>
+                    <td><span class="badge">OPTIONS</span></td>
+                    <td>Discover what’s allowed</td>
+                    <td>Yes</td>
+                    <td>Yes</td>
+                    <td>Usually no</td>
+                    <td>No</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2 id="widely-used">Widely used methods (you’ll use these 99% of the time)</h2>
+
+        <div class="svgwrap" aria-label="Inline diagram: method intent">
+            <svg viewBox="0 0 900 170" width="100%" role="img" aria-label="Method intent diagram">
+                <defs>
+                    <linearGradient id="g1" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0" stop-color="rgba(97,175,254,.35)"></stop>
+                        <stop offset="1" stop-color="rgba(94,234,212,.18)"></stop>
+                    </linearGradient>
+                </defs>
+                <rect x="12" y="14" width="876" height="142" rx="16" fill="url(#g1)" stroke="rgba(255,255,255,.16)"></rect>
+                <text x="32" y="55" fill="rgba(230,234,242,.92)" font-size="22" font-family="ui-sans-serif, system-ui">Think of a URL like a noun (resource). Methods are verbs.</text>
+                <text x="32" y="88" fill="rgba(230,234,242,.88)" font-size="18" font-family="ui-sans-serif, system-ui">GET = read</text>
+                <text x="178" y="88" fill="rgba(230,234,242,.88)" font-size="18" font-family="ui-sans-serif, system-ui">POST = create/action</text>
+                <text x="392" y="88" fill="rgba(230,234,242,.88)" font-size="18" font-family="ui-sans-serif, system-ui">PUT = replace</text>
+                <text x="535" y="88" fill="rgba(230,234,242,.88)" font-size="18" font-family="ui-sans-serif, system-ui">PATCH = partial</text>
+                <text x="700" y="88" fill="rgba(230,234,242,.88)" font-size="18" font-family="ui-sans-serif, system-ui">DELETE = remove</text>
+                <path fill="none" d="M32 110 H868" stroke="rgba(255,255,255,.22)" stroke-width="2"></path>
+                <circle cx="120" cy="110" r="7" fill="#61affe"></circle>
+                <circle cx="292" cy="110" r="7" fill="#49cc90"></circle>
+                <circle cx="468" cy="110" r="7" fill="#fca130"></circle>
+                <circle cx="622" cy="110" r="7" fill="#50e3c2"></circle>
+                <circle cx="800" cy="110" r="7" fill="#f93e3e"></circle>
+            </svg>
+            <div class="cap">Inline SVG “image”: self-contained, no external assets.</div>
+        </div>
+
+        <!-- ⭐ GET -->
+        <div class="card">
+            <h3 id="get-read"><span class="badge star">⭐</span> <span class="badge get">GET</span> — read</h3>
+            <p><strong>Use when</strong>: fetching data (read-only).</p>
+            <p><strong>Example</strong>: <code>GET /users/42</code> → return user 42</p>
+            <div class="tag">
+                <span class="chip safe">Safe</span>
+                <span class="chip idem">Idempotent</span>
+                <span class="chip cache">Commonly cacheable</span>
+            </div>
+
+            <h4>Full request message</h4>
+<pre>GET /users/42?include=orders HTTP/1.1
+Host: api.example.com
+Authorization: Bearer &lt;token&gt;
+Accept: application/json</pre>
+
+            <h4>FastAPI</h4>
+<pre>from fastapi import FastAPI
+
+app = FastAPI()
+
+@app.get("/users/{user_id}")
+def get_user(user_id: int, include: str | None = None):
+    return {"user_id": user_id, "include": include}</pre>
+            <div class="concept-box">
+                <strong>Beginner tip:</strong> If you can bookmark it, refresh it, or share the URL and it still makes sense,
+                it’s probably a <code>GET</code>.
+            </div>
+        </div>
+
+        <!-- ⭐ POST -->
+        <div class="card">
+            <h3 id="post-create-or-do-an-action"><span class="badge star">⭐</span> <span class="badge post">POST</span> — create or “do an action”</h3>
+            <p><strong>Use when</strong>:</p>
+            <ul>
+                <li>Creating a new resource under a collection (<code>POST /orders</code>)</li>
+                <li>Triggering an operation that doesn’t map cleanly to CRUD (<code>POST /reports/run</code>)</li>
+            </ul>
+            <p><strong>Example</strong>: <code>POST /orders</code> with body <code>{"items": [...]}</code> → creates a new order</p>
+            <div class="tag">
+                <span class="chip unsafe">Unsafe</span>
+                <span class="chip nidem">Not idempotent by default</span>
+                <span class="chip body">Body usually contains the “create/action” input</span>
+            </div>
+
+            <h4>Full request message</h4>
+<pre>POST /orders HTTP/1.1
+Host: api.example.com
+Authorization: Bearer &lt;token&gt;
+Content-Type: application/json
+Accept: application/json
+
+{ "items": [{"sku": "ABC", "qty": 2}] }</pre>
+
+            <h4>FastAPI</h4>
+<pre>from pydantic import BaseModel
+
+class OrderItem(BaseModel):
+    sku: str
+    qty: int
+
+class CreateOrderRequest(BaseModel):
+    items: list[OrderItem]
+
+@app.post("/orders")
+def create_order(payload: CreateOrderRequest):
+    return {"created": True, "order_id": 123, "items": payload.items}</pre>
+
+            <p>
+                The method <code>POST</code> says this is a create/action request.
+                The Pydantic model <code>CreateOrderRequest</code> says what the JSON body must contain.
+                Those are two different parts of the same API contract.
+            </p>
+        </div>
+
+        <!-- ⭐ PUT -->
+        <div class="card">
+            <h3 id="put-replace-or-create-at-a-known-url"><span class="badge star">⭐</span> <span class="badge put">PUT</span> — replace (or create at a known URL)</h3>
+            <p><strong>Use when</strong>: you want the resource at a URL to become exactly what you send.</p>
+            <p><strong>Example</strong>: <code>PUT /users/42</code> with a full user object → replaces user 42</p>
+            <div class="tag">
+                <span class="chip unsafe">Unsafe</span>
+                <span class="chip idem">Idempotent</span>
+                <span class="chip body">Body usually contains the full resource state</span>
+            </div>
+
+            <h4>Full request message</h4>
+<pre>PUT /users/42 HTTP/1.1
+Host: api.example.com
+Authorization: Bearer &lt;token&gt;
+Content-Type: application/json
+Accept: application/json
+
+{ "id": 42, "name": "Asha", "email": "asha@example.com" }</pre>
+
+            <div class="warn">
+                <strong>Common beginner bug:</strong> Using <code>PUT</code> with a partial body.
+                <br>By intent, <code>PUT</code> is “replace the full resource”, so missing fields might get wiped unless you implement merge behavior.
+            </div>
+        </div>
+
+        <!-- ⭐ PATCH -->
+        <div class="card">
+            <h3 id="patch-partial-update"><span class="badge star">⭐</span> <span class="badge patch">PATCH</span> — partial update</h3>
+            <p><strong>Use when</strong>: updating only some fields.</p>
+            <p><strong>Example</strong>: <code>PATCH /users/42</code> with <code>{"email": "new@x.com"}</code></p>
+            <div class="tag">
+                <span class="chip unsafe">Unsafe</span>
+                <span class="chip nidem">Idempotency depends on design</span>
+                <span class="chip body">Body contains only changed fields (usually)</span>
+            </div>
+
+            <h4>Example PATCH request message</h4>
+<pre>PATCH /users/42 HTTP/1.1
+Host: api.example.com
+Authorization: Bearer &lt;token&gt;
+Content-Type: application/json
+Accept: application/json
+
+{ "email": "new@x.com" }</pre>
+
+            <div class="concept-box">
+                <strong>Idempotency note:</strong> A patch like “set email to X” is usually idempotent.
+                A patch like “increment login_count by 1” is not.
+            </div>
+        </div>
+
+        <!-- ⭐ DELETE -->
+        <div class="card">
+            <h3 id="delete-remove"><span class="badge star">⭐</span> <span class="badge delete">DELETE</span> — remove</h3>
+            <p><strong>Use when</strong>: deleting a resource.</p>
+            <p><strong>Example</strong>: <code>DELETE /users/42</code></p>
+            <div class="tag">
+                <span class="chip unsafe">Unsafe</span>
+                <span class="chip idem">Idempotent in intent</span>
+            </div>
+            <div class="concept-box">
+                <strong>Beginner intuition:</strong> Deleting twice should still end “deleted”.
+                The second delete often returns <code>404</code> or <code>204</code> depending on API design.
+            </div>
+        </div>
+
+        <h2 id="less-used">Common but less used (still important)</h2>
+
+        <div class="card">
+            <h3 id="head-like-get-but-only-headers"><span class="badge">HEAD</span> — like GET, but only headers</h3>
+            <p><strong>Use when</strong>: you want metadata without downloading the body.</p>
+            <p><strong>Example</strong>: check if a file changed using <code>ETag</code>/<code>Last-Modified</code>.</p>
+        </div>
+
+        <div class="card">
+            <h3 id="options-what-s-allowed-here"><span class="badge">OPTIONS</span> — “what’s allowed here?”</h3>
+            <p><strong>Use when</strong>: discovering supported methods/headers.</p>
+            <p><strong>Most common real-world use</strong>: CORS preflight (browser checks if it can call your API cross-origin).</p>
+            <div class="concept-box">
+                If you ever see a browser sending an <code>OPTIONS</code> request before your real request,
+                that’s usually CORS, not “your frontend being weird”.
+            </div>
+        </div>
+
+        <h2 id="rare">Rare / niche methods (you’ll see them sometimes)</h2>
+        <div class="card">
+            <h3 id="trace-diagnostic-often-disabled"><span class="badge">TRACE</span> — diagnostic (often disabled)</h3>
+            <p>Often disabled for security reasons.</p>
+        </div>
+        <div class="card">
+            <h3 id="connect-tunneling-proxies-https"><span class="badge">CONNECT</span> — tunneling (proxies + HTTPS)</h3>
+            <p>Used to establish a tunnel through an HTTP proxy (common in corporate networks).</p>
+        </div>
+
+        <h2 id="rest">Practical mapping to REST-style endpoints</h2>
+        <p class="subtitle">Collections vs single resources</p>
+
+        <table aria-label="REST mapping examples">
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Method</th>
+                    <th>Example</th>
+                    <th>Meaning</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Collection</td>
+                    <td><span class="badge get">GET</span></td>
+                    <td><code>GET /items</code></td>
+                    <td>List/search items</td>
+                </tr>
+                <tr>
+                    <td>Collection</td>
+                    <td><span class="badge post">POST</span></td>
+                    <td><code>POST /items</code></td>
+                    <td>Create a new item (server assigns ID)</td>
+                </tr>
+                <tr>
+                    <td>Single resource</td>
+                    <td><span class="badge get">GET</span></td>
+                    <td><code>GET /items/{id}</code></td>
+                    <td>Read one item</td>
+                </tr>
+                <tr>
+                    <td>Single resource</td>
+                    <td><span class="badge put">PUT</span></td>
+                    <td><code>PUT /items/{id}</code></td>
+                    <td>Replace item (or create if not exists)</td>
+                </tr>
+                <tr>
+                    <td>Single resource</td>
+                    <td><span class="badge patch">PATCH</span></td>
+                    <td><code>PATCH /items/{id}</code></td>
+                    <td>Partial update</td>
+                </tr>
+                <tr>
+                    <td>Single resource</td>
+                    <td><span class="badge delete">DELETE</span></td>
+                    <td><code>DELETE /items/{id}</code></td>
+                    <td>Delete</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2 id="put-vs-post">The “PUT vs POST feels same” confusion (quick intuition)</h2>
+        <div class="grid">
+            <div class="mini col-6">
+                <h3 id="post-you-decide-what-happens"><span class="badge post">POST</span> = “You decide what happens”</h3>
+                <p>
+                    Think: “Here’s something; you decide what happens (often create a new thing).”
+                    The server usually chooses the new ID.
+                </p>
+            </div>
+            <div class="mini col-6">
+                <h3 id="put-make-this-url-have-this-exact-content"><span class="badge put">PUT</span> = “Make this URL have this exact content”</h3>
+                <p>
+                    Think: “Make <code>/users/42</code> look exactly like this payload.”
+                    You’re targeting a specific URL.
+                </p>
+            </div>
+        </div>
+
+        <div class="concept-box">
+            <strong>If you repeat the same request:</strong>
+            <ul>
+                <li>Repeating <code>PUT</code> should converge to the same final state (idempotent).</li>
+                <li>Repeating <code>POST</code> can create duplicates unless you add idempotency keys.</li>
+            </ul>
+        </div>
+
+        <h2 id="request-shape">What an HTTP request looks like</h2>
+        <p>A client talks to your FastAPI backend by sending an HTTP request message:</p>
+
+        <pre>METHOD /path?query=string HTTP/1.1
+Header-Name: value
+Authorization: Bearer &lt;token&gt;
+Content-Type: application/json
+
+{ "optional": "body" }</pre>
+
+        <ul>
+            <li><strong>METHOD</strong>: intent (<code>GET</code>/<code>POST</code>/<code>PUT</code>/<code>PATCH</code>/<code>DELETE</code>)</li>
+            <li><strong>/path</strong>: which resource (e.g. <code>/documents/123</code>)</li>
+            <li><strong>?query=…</strong>: options/filters (e.g. <code>?limit=20</code>)</li>
+            <li><strong>Headers</strong>: metadata (auth token, content type)</li>
+            <li><strong>Body</strong>: payload (often JSON; usually only for POST/PUT/PATCH)</li>
+        </ul>
+
+        <h2 id="fastapi">How FastAPI “decodes” the message</h2>
+        <p>FastAPI turns parts of the HTTP message into Python values using type hints:</p>
+        <ul>
+            <li><strong>Path params</strong> → function args (e.g. <code>user_id: int</code>)</li>
+            <li><strong>Query params</strong> → function args (e.g. <code>limit: int = 20</code>)</li>
+            <li><strong>Headers</strong> → via <code>Header(...)</code> or security dependencies</li>
+            <li><strong>JSON body</strong> → Pydantic models (request schemas)</li>
+        </ul>
+        <p style="color: #c0392b; font-style: italic;">If types don’t match, FastAPI returns a 422 validation error automatically.</p>
+
+        <p class="footer-note">
+            Next step: read <a href="/tutorials/part2-backend-platform-security/03-fastapi-request-mapping">the FastAPI request mapping chapter</a>
+            to see one HTTP message become Python function arguments, then
+            <a href="/tutorials/part2-backend-platform-security/04-pydantic-data-models">the Pydantic chapter</a> to understand how JSON bodies
+            become validated Python objects.
+        </p>
+    </div></div></article></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col noPrint_WFHX"></div><div class="col lastUpdated_JAkA"><span class="theme-last-updated">Last updated<!-- --> on <b><time datetime="2026-07-30T01:42:42.000Z" itemprop="dateModified">Jul 30, 2026</time></b></span></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/tutorials/part2-backend-platform-security/01-fastapi-uvicorn-basics"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">1. FastAPI and Uvicorn basics</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/tutorials/part2-backend-platform-security/03-fastapi-request-mapping"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">3. FastAPI request mapping</div></a></nav></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer"><div class="container container-fluid"><div class="row footer__links"><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Study</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/tutorials/">Book home</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/content-map">Reading guide</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/labs/rnn">Interactive RNN lab</a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Core tracks</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/tutorials/part2-backend-platform-security/overview">Backend and security</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/part3-agent-protocols/overview">Agent protocols</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/part5-deep-learning-and-llms/overview">Deep learning and LLMs</a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright">Enterprise AI, Agents & Applied ML - 2026</div></div></div></footer></div>
+</body>
+</html>

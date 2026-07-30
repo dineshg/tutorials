@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-part2-backend-platform-security/gcp-workload-identity" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.10.2">
+<title data-rh="true">GCP Project Setup and Workload Identity | Enterprise AI, Agents &amp; Applied ML</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://dineshg.github.io/tutorials/part2-backend-platform-security/11-gcp-workload-identity"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="keywords" content="enterprise AI, machine learning, deep learning, LLM, FastAPI, Pydantic, MCP, authentication"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="GCP Project Setup and Workload Identity | Enterprise AI, Agents &amp; Applied ML"><meta data-rh="true" name="description" content="Begin by organizing your Google Cloud resources under a single Organization (especially if you have Google Workspace). Under the organization, use Folders and Projects to separate concerns. A common approach is one pr..."><meta data-rh="true" property="og:description" content="Begin by organizing your Google Cloud resources under a single Organization (especially if you have Google Workspace). Under the organization, use Folders and Projects to separate concerns. A common approach is one pr..."><link data-rh="true" rel="icon" href="/tutorials/img/favicon.svg"><link data-rh="true" rel="canonical" href="https://dineshg.github.io/tutorials/part2-backend-platform-security/11-gcp-workload-identity"><link data-rh="true" rel="alternate" href="https://dineshg.github.io/tutorials/part2-backend-platform-security/11-gcp-workload-identity" hreflang="en"><link data-rh="true" rel="alternate" href="https://dineshg.github.io/tutorials/part2-backend-platform-security/11-gcp-workload-identity" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Part II - Backend, Platform & Security","item":"https://dineshg.github.io/tutorials/part2-backend-platform-security/overview"},{"@type":"ListItem","position":2,"name":"14. GCP workload identity","item":"https://dineshg.github.io/tutorials/part2-backend-platform-security/11-gcp-workload-identity"}]}</script><script>window.MathJax={startup:{typeset:!1},tex:{inlineMath:[["\\(","\\)"],["$","$"]],displayMath:[["\\[","\\]"],["$$","$$"]],processEscapes:!0},options:{skipHtmlTags:["script","noscript","style","textarea","pre","code"]}}</script>
+<link rel="stylesheet" href="/tutorials/css/book.css">
+<link rel="stylesheet" href="/tutorials/vendor/highlight.js/11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.18.1/dist/katex.min.css" integrity="sha384-5TcZemv2l/9On385z///+d7MSYlvIEw9FuZTIdZ14vJLqWphw7e7ZPuOiCHJcFCP" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-mml-chtml.js" defer="defer"></script><link rel="stylesheet" href="/tutorials/assets/css/styles.003aa738.css">
+<script src="/tutorials/assets/js/runtime~main.98c31d90.js" defer="defer"></script>
+<script src="/tutorials/assets/js/main.bd80017b.js" defer="defer"></script>
+</head>
+<body>
+<svg style="display: none;"><defs>
+<symbol id="theme-svg-external-link" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")),document.documentElement.setAttribute("data-theme-choice",t||"system")}(),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top"><div class="navbar__inner"><div class="theme-layout-navbar-left navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/tutorials/"><b class="navbar__title text--truncate">Enterprise AI Book</b></a><a class="navbar__item navbar__link" href="/tutorials/">Read</a><a class="navbar__item navbar__link" href="/tutorials/content-map">Concept map</a><a class="navbar__item navbar__link" href="/tutorials/part5-deep-learning-and-llms/10-recurrent-neural-networks">Deep learning</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><div class="navbar__item book-search-navbar-item"><button type="button" class="book-search-trigger" aria-label="Search the book">Search <kbd>Ctrl K</kbd></button></div><a href="https://github.com/dineshg/tutorials" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type="button" disabled="" title="system mode" aria-label="Switch between dark and light mode (currently system mode)"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill="currentColor" d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill="currentColor" d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill="currentColor" d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"></path></svg></button></div><div class="navbarSearchContainer_Bca1"></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class="docsWrapper_hBAB"><button aria-label="Scroll back to top" class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type="button"></button><div class="docRoot_UBD9"><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class="sidebarViewport_aRkj"><div class="sidebar_njMd"><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/tutorials/"><span class="linkLabel_WmDU">Book home</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/tutorials/content-map"><span class="linkLabel_WmDU">Reading guide and concept map</span></a></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-blue"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part1-enterprise-ai-delivery/overview"><span class="categoryLinkLabel_W154">Part I - Enterprise AI Delivery</span></a><button aria-label="Expand sidebar category &#x27;Part I - Enterprise AI Delivery&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item sidebar-category sidebar-category-teal"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--active" href="/tutorials/part2-backend-platform-security/overview"><span class="categoryLinkLabel_W154">Part II - Backend, Platform &amp; Security</span></a><button aria-label="Collapse sidebar category &#x27;Part II - Backend, Platform &amp; Security&#x27;" aria-expanded="true" type="button" class="clean-btn menu__caret"></button></div><ul class="menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/01-fastapi-uvicorn-basics"><span class="linkLabel_WmDU">1. FastAPI and Uvicorn basics</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/02-http-methods"><span class="linkLabel_WmDU">2. HTTP methods</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/03-fastapi-request-mapping"><span class="linkLabel_WmDU">3. FastAPI request mapping</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/04-pydantic-data-models"><span class="linkLabel_WmDU">4. Pydantic data models</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/04-concurrency-user-isolation"><span class="linkLabel_WmDU">5. Concurrency and user isolation</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/05-background-tasks-and-retries"><span class="linkLabel_WmDU">6. Background tasks and retries</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/06-sso-oauth2-oidc-primer"><span class="linkLabel_WmDU">7. SSO, OAuth 2.0, and OIDC primer</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/07-oidc-oauth2-pkce-fastapi"><span class="linkLabel_WmDU">8. OIDC, OAuth 2.0, and PKCE in FastAPI</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/08-registering-new-users"><span class="linkLabel_WmDU">9. First login and user provisioning</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/09-authentication-deep-dive"><span class="linkLabel_WmDU">10. Authentication deep dive</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/15-modern-auth-additions"><span class="linkLabel_WmDU">11. Passkeys, DPoP, mTLS, and token exchange</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/10-enduser-vs-workload-identity"><span class="linkLabel_WmDU">12. End-user vs workload identity</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/12-tenant-iam-ad-groups"><span class="linkLabel_WmDU">13. Tenant isolation, IAM, and groups</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link menu__link--active" aria-current="page" tabindex="0" href="/tutorials/part2-backend-platform-security/11-gcp-workload-identity"><span class="linkLabel_WmDU">14. GCP workload identity</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/13-external-service-integration"><span class="linkLabel_WmDU">15. Cross-cloud service integration</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/14-github-governance"><span class="linkLabel_WmDU">16. GitHub governance and CI</span></a></li></ul></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-violet"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part3-agent-protocols/overview"><span class="categoryLinkLabel_W154">Part III - Agent Protocols</span></a><button aria-label="Expand sidebar category &#x27;Part III - Agent Protocols&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-amber"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part4-ml-foundations/overview"><span class="categoryLinkLabel_W154">Part IV - ML Foundations</span></a><button aria-label="Expand sidebar category &#x27;Part IV - ML Foundations&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-coral"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part5-deep-learning-and-llms/overview"><span class="categoryLinkLabel_W154">Part V - Deep Learning &amp; LLMs</span></a><button aria-label="Expand sidebar category &#x27;Part V - Deep Learning &amp; LLMs&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-slate"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part6-appendices/overview"><span class="categoryLinkLabel_W154">Part VI - Appendices</span></a><button aria-label="Expand sidebar category &#x27;Part VI - Appendices&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li></ul></nav><button type="button" title="Collapse sidebar" aria-label="Collapse sidebar" class="button button--secondary button--outline collapseSidebarButton_PEFL"><svg width="20" height="20" aria-hidden="true" class="collapseSidebarButtonIcon_kv0_"><g fill="#7a7a7a"><path d="M9.992 10.023c0 .2-.062.399-.172.547l-4.996 7.492a.982.982 0 01-.828.454H1c-.55 0-1-.453-1-1 0-.2.059-.403.168-.551l4.629-6.942L.168 3.078A.939.939 0 010 2.528c0-.548.45-.997 1-.997h2.996c.352 0 .649.18.828.45L9.82 9.472c.11.148.172.347.172.55zm0 0"></path><path d="M19.98 10.023c0 .2-.058.399-.168.547l-4.996 7.492a.987.987 0 01-.828.454h-3c-.547 0-.996-.453-.996-1 0-.2.059-.403.168-.551l4.625-6.942-4.625-6.945a.939.939 0 01-.168-.55 1 1 0 01.996-.997h3c.348 0 .649.18.828.45l4.996 7.492c.11.148.168.347.168.55zm0 0"></path></g></svg></button></div></div></aside><main class="docMainContainer_TBSr"><div class="container padding-top--md padding-bottom--lg"><div class="row"><div class="col"><div class="docItemContainer_Djhp"><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label="Breadcrumbs"><ul class="breadcrumbs"><li class="breadcrumbs__item"><a aria-label="Home page" class="breadcrumbs__link" href="/tutorials/"><svg viewBox="0 0 24 24" class="breadcrumbHomeIcon_YNFT"><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill="currentColor"></path></svg></a></li><li class="breadcrumbs__item"><a class="breadcrumbs__link" href="/tutorials/part2-backend-platform-security/overview"><span>Part II - Backend, Platform &amp; Security</span></a></li><li class="breadcrumbs__item breadcrumbs__item--active"><span class="breadcrumbs__link">14. GCP workload identity</span></li></ul></nav><div class="theme-doc-markdown markdown"><article class="book-article tr-content" data-book-part="part2" data-book-accent="teal"><header class="articleHeader_jX4Y"><span class="partLabel_DqKR">Part II - Backend, Platform &amp; Security</span><h1>GCP Project Setup and Workload Identity</h1><div class="articleMeta_jfH_"><span>13<!-- --> min read</span><span aria-hidden="true">·</span><span>7<!-- --> sections</span></div></header><details class="chapterToc_aQjS"><summary>On this page</summary><nav aria-label="On this page"><a href="#project-setup">Project Setup</a><a href="#iam-and-service-accounts">IAM and Service Accounts</a><a href="#authentication-with-google-identity-oidc">Authentication with Google Identity (OIDC)</a><a href="#data-storage-design">Data Storage Design</a><a href="#deployment-architecture">Deployment Architecture</a><a href="#networking-and-resource-governance">Networking and Resource Governance</a><a href="#official-references">Official references</a></nav></details><div class="articleBody_b2wt"><h2 id="project-setup">Project Setup</h2>
+<p>Begin by organizing your Google Cloud resources under a single Organization (especially if you have Google Workspace). Under the organization, use Folders and Projects to separate concerns. A common approach is one project per environment (e.g. myapp-dev, myapp-prod). This isolates IAM boundaries and billing by environment. For example:</p>
+
+<ul>
+    <li>Create a project for production and one for development:
+<pre><code class="language-bash">gcloud projects create myapp-prod --name="MyApp Production" --organization=ORG_ID 
+gcloud projects create myapp-dev  --name="MyApp Development" --organization=ORG_ID</code></pre>
+    </li>
+    <li>Link each project to a billing account:
+<pre><code class="language-bash">gcloud billing projects link myapp-prod --billing-account=BILLING_ACCOUNT_ID  
+gcloud billing projects link myapp-dev  --billing-account=BILLING_ACCOUNT_ID</code></pre>
+    (You can list billing accounts via <code>gcloud billing accounts list</code>.)
+    </li>
+    <li>Optionally, use Folders to group projects (e.g. Network, Platform, Services folders). Folders allow applying policies to multiple projects, and projects segregate environments and teams.</li>
+</ul>
+
+<p>A project can contain one or more VPC networks. Google Cloud may create a
+<code>default</code> network for a new standalone project, unless an organization
+policy suppresses it, but production platforms should create and manage their
+network topology explicitly. You can use separate custom VPCs per project or a
+centrally governed Shared VPC host project. For example, create a custom VPC in
+the prod project:</p>
+
+<pre><code class="language-bash">gcloud compute networks create my-vpc --project=myapp-prod --subnet-mode=custom
+gcloud compute networks subnets create subnet-us --project=myapp-prod \
+    --network=my-vpc --region=us-central1 --range=10.10.0.0/16</code></pre>
+
+<p>If using Shared VPC, set up one “host” project containing the VPC, and attach service projects (e.g. myapp-prod) to it. Configure firewall rules to allow only necessary traffic (for example, allow public HTTPS only to the external load balancer, allow Google health-check ranges to backend services, and keep database traffic private). These are separate controls: <strong>Private Google Access</strong> lets resources without external IP addresses reach supported Google APIs, while <strong>Cloud SQL private IP</strong> requires private services access or the currently supported Private Service Connect design. Enabling one does not configure the other.</p>
+
+<p>Finally, tag and label your projects and resources for clarity (e.g. env=prod). At the org level, enforce policies (such as disabling default-credential grants) so that service accounts must have only the permissions you grant.</p>
+
+<h2 id="iam-and-service-accounts">IAM and Service Accounts</h2>
+<p>Use IAM roles and service accounts with least privilege. For each project, create Google service accounts (GSAs) for the workloads and grant them only needed roles. For example:</p>
+
+<ul>
+    <li><strong>Cloud Run frontend:</strong> Create a service account (e.g. frontend-sa@myapp-prod.iam.gserviceaccount.com) and give it only the roles needed (e.g. roles/storage.objectViewer if it reads from Cloud Storage, or other roles for backend calls). Assign this SA to the Cloud Run service with <code>--service-account=frontend-sa@...</code>. Avoid using the default Compute Engine SA broadly; instead use user-managed SAs with minimal permissions.</li>
+    
+    <li><strong>GKE backend:</strong> Create a Google SA (e.g. backend-sa@myapp-prod.iam.gserviceaccount.com) for the FastAPI pods. Grant it roles like roles/cloudsql.client (to access Cloud SQL) and roles/logging.logWriter. For example:
+<pre><code class="language-bash">gcloud iam service-accounts create backend-sa --display-name="Backend Service Account"
+gcloud projects add-iam-policy-binding myapp-prod \
+    --member="serviceAccount:backend-sa@myapp-prod.iam.gserviceaccount.com" \
+    --role="roles/cloudsql.client"
+
+gcloud projects add-iam-policy-binding myapp-prod \
+    --member="serviceAccount:backend-sa@myapp-prod.iam.gserviceaccount.com" \
+    --role="roles/logging.logWriter"</code></pre>
+    </li>
+
+    <li><strong>Workload Identity Federation for GKE:</strong> Enable it so pods can obtain short-lived Google credentials without service-account key files. When creating the GKE cluster, use <code>--workload-pool=PROJECT_ID.svc.id.goog</code>. GKE creates the workload identity pool <code>PROJECT_ID.svc.id.goog</code> for the project. Then choose one of two authorization patterns:
+      <ol>
+        <li><strong>Direct resource access, preferred when the target API supports federated principals:</strong> grant the Kubernetes workload principal the required role directly on the resource or project.</li>
+        <li><strong>IAM service-account impersonation, for compatibility:</strong> allow a Kubernetes ServiceAccount (KSA) to impersonate a Google service account (GSA), then annotate the KSA with that GSA.</li>
+      </ol>
+      A direct grant for <code>default/backend-ksa</code> looks like this:
+<pre><code class="language-bash">PROJECT_ID=myapp-prod
+PROJECT_NUMBER="$(gcloud projects describe "$PROJECT_ID" --format='value(projectNumber)')"
+
+gcloud projects add-iam-policy-binding "$PROJECT_ID" \
+  --role="roles/logging.logWriter" \
+  --member="principal://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${PROJECT_ID}.svc.id.goog/subject/ns/default/sa/backend-ksa"</code></pre>
+      If a service requires GSA impersonation, the IAM binding and KSA annotation are both required:
+<pre><code class="language-bash">gcloud iam service-accounts add-iam-policy-binding \
+  backend-sa@myapp-prod.iam.gserviceaccount.com \
+  --role="roles/iam.workloadIdentityUser" \
+  --member="serviceAccount:myapp-prod.svc.id.goog[default/backend-ksa]"</code></pre>
+<pre><code class="language-yaml">apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: backend-ksa
+  namespace: default
+  annotations:
+    iam.gke.io/gcp-service-account: backend-sa@myapp-prod.iam.gserviceaccount.com</code></pre>
+    Then deploy the KSA and set <code>serviceAccountName: backend-ksa</code> on the Pod. The annotation alone is not an authorization grant: the <code>roles/iam.workloadIdentityUser</code> binding above is what permits impersonation. Google client libraries use Application Default Credentials (ADC), and the GKE metadata server exchanges the KSA token for short-lived credentials.
+    </li>
+
+    <li><strong>Cloud Run authentication to GCP:</strong> Cloud Run uses its service identity (the Google SA you assign) to call other Google Cloud services. By default Cloud Run will fetch tokens from its metadata server and use ADC. Ensure the Cloud Run SA has the right roles (for example <code>roles/storage.objectViewer</code> to read static objects, <code>roles/storage.objectUser</code> to write objects, and <code>roles/iam.serviceAccountTokenCreator</code> only if it truly needs to mint tokens). As above, use a user-managed SA and avoid broad roles like Editor or project-wide Storage Admin unless there is a specific operational reason.</li>
+</ul>
+
+<p>Remember to use Google Groups to manage user access to projects. Assign IAM roles to groups (e.g. “NetworkAdmin”, “DevOps”, “AppDeveloper”) rather than individual users.</p>
+
+<h2 id="authentication-with-google-identity-oidc">Authentication with Google Identity (OIDC)</h2>
+<p>To authenticate end-users, use Google’s OAuth2/OpenID Connect. First, create OAuth 2.0 credentials in your project: in the Cloud Console go to APIs &amp; Services &gt; Credentials &gt; Create &gt; OAuth Client ID. Choose “Web application” and set your React app’s origin and redirect URI (e.g. https://myapp.example.com and https://myapp.example.com/oauth2callback). This gives you a Client ID.</p>
+
+<p>In your React frontend, use Google Identity Services or another maintained OAuth/OIDC library to implement the authorization code flow with PKCE. The authorization endpoint returns a short-lived <strong>authorization code</strong>; the client or a backend-for-frontend exchanges that code at the token endpoint. With <code>scope=openid email profile</code>, the token response can include an ID token that describes the authenticated user. For higher-sensitivity applications, a backend-for-frontend can perform the exchange and establish an <code>HttpOnly</code>, <code>Secure</code>, <code>SameSite</code> session cookie so browser JavaScript does not retain long-lived tokens.</p>
+
+<p>An ID token is evidence of authentication for the OAuth client; it is not a general-purpose access token for arbitrary APIs. Validate it at the login/session boundary, then establish your own application session. If your API directly accepts Google-issued access tokens, validate their intended audience and scopes using the resource-server rules for that API. The following ID-token check is appropriate at a sign-in endpoint:</p>
+
+<pre><code class="language-python">from google.oauth2 import id_token
+from google.auth.transport import requests
+
+try:
+    # TOKEN is the ID token string from the client, and CLIENT_ID is your OAuth 2.0 client ID
+    id_info = id_token.verify_oauth2_token(TOKEN, requests.Request(), CLIENT_ID)
+    # The token is valid. You can trust id_info['sub'], id_info['email'], etc.
+except ValueError:
+    # Invalid token
+    raise Unauthorized()</code></pre>
+
+<p>The <code>verify_oauth2_token</code> call checks the token’s signature, issuer (<code>https://accounts.google.com</code> or Google’s equivalent issuer form), audience, and lifetime. If valid, <code>id_info</code> contains the user’s Google identity. Use the stable <code>sub</code> claim as the external identity key; treat email as mutable display/contact data, and enforce hosted-domain policy explicitly if your application requires it. The backend can then create its own session without handling the user’s Google password.</p>
+
+<p><strong>Key points:</strong> Local ID-token verification does not require the obsolete Google+ API. Configure the OAuth consent screen and the correct web OAuth client, use that client ID as the expected audience, register exact origins and redirect URIs, and use maintained Google Identity/OAuth libraries rather than writing the protocol by hand.</p>
+
+<h2 id="data-storage-design">Data Storage Design</h2>
+<p>For application data, choose managed GCP services:</p>
+
+<ul>
+    <li><strong>Relational data (Cloud SQL for PostgreSQL):</strong> Cloud SQL is a fully managed PostgreSQL database (with high availability, automated backups, patching). Create a Cloud SQL instance in your project:
+<pre><code class="language-bash">gcloud sql instances create my-postgres --database-version=POSTGRES_15 \
+    --tier=db-f1-micro --region=us-central1 --network=my-vpc
+gcloud sql databases create mydb --instance=my-postgres</code></pre>
+    Grant the workload principal or impersonated GSA the Cloud SQL Client role so it can open an authorized connection through the Cloud SQL Auth Proxy or a connector. On GKE, you can also use private IP after configuring the required private network connection. Keep the layers separate: Workload Identity supplies Google credentials for the connector and Cloud SQL control plane; <code>roles/cloudsql.client</code> does not by itself log into PostgreSQL. The database still authenticates a database user with a password, or you explicitly enable Cloud SQL IAM database authentication and use a connector/proxy flow that supports it.
+    <br><em>Why not alternatives?</em> We prefer Cloud SQL over a self-hosted database because it offloads operations to Google (automated failover, backups, scaling). Compared to NoSQL options like Firestore or Firebase RTDB, Postgres offers strong consistency and complex relational queries. BigQuery is purely analytic (not suited for OLTP). (If you needed wide-column or global scale, Cloud Spanner could be considered, but it’s more complex and costly.)
+    </li>
+
+    <li><strong>File/object storage (Cloud Storage):</strong> For user-uploaded files, static assets, or backups, use Cloud Storage buckets. It is a durable managed object store, but replication and data residency depend on the bucket location you choose: region, dual-region, or multi-region. Select that location deliberately rather than assuming every bucket is globally replicated. Example:
+<pre><code class="language-bash">gcloud storage buckets create gs://myapp-prod-files \
+    --project=myapp-prod \
+    --location=us-central1 \
+    --uniform-bucket-level-access</code></pre>
+    Then grant your backend SA a Storage role (e.g. roles/storage.objectAdmin) on that bucket. In code you can use the Cloud Storage client, which under the hood uses Workload Identity for auth:
+<pre><code class="language-python">from google.cloud import storage
+client = storage.Client()
+bucket = client.bucket('myapp-prod-files')
+blob = bucket.blob('somefile.png')
+blob.upload_from_filename('localfile.png')</code></pre>
+    <em>Why not alternatives?</em> Cloud Storage is simpler and cheaper for large blobs than, say, storing files in a SQL database. It replaces running a custom file server. We don’t use Firestore or Firebase for file storage. (You could store small JSON data in Firestore, but it is not transactional SQL.) Cloud Storage integrates with other GCP tools (logging, CDN, etc.) and automatically handles encryption and scaling.
+    </li>
+</ul>
+
+<p>Using Workload Identity, both Cloud SQL and Cloud Storage access are secured without embedding keys. The KSA mapping ensures the Pod’s Google SA (with its IAM roles) is used by the Google client libraries.</p>
+
+<h2 id="deployment-architecture">Deployment Architecture</h2>
+<p>Our frontend is a React Single-Page App; our backend is a FastAPI microservice.</p>
+
+<h3 id="frontend-on-cloud-run">Frontend on Cloud Run</h3>
+<p>For a purely static React SPA, Cloud Storage + Cloud CDN, Firebase Hosting, or a managed static host is often the simplest industry-standard deployment. Use Cloud Run when you want a containerized frontend, SSR, a backend-for-frontend, or the same release controls as the rest of your services. If you do containerize the SPA, use reproducible installs and a non-root runtime image:</p>
+<pre><code class="language-dockerfile"># Build stage
+FROM node:lts-bookworm-slim AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+# Serve with nginx as a non-root user; pin image digests in production.
+FROM nginxinc/nginx-unprivileged:stable-alpine
+COPY --from=builder /app/build /usr/share/nginx/html</code></pre>
+
+<p>Build and push the container image. New GCP projects usually use Artifact Registry rather than the older Container Registry-style <code>gcr.io</code> path:</p>
+<pre><code class="language-bash">REGION=us-central1
+PROJECT_ID=myapp-prod
+REPOSITORY=app-images
+TAG=2026-05-17
+
+gcloud artifacts repositories create "$REPOSITORY" \
+    --repository-format=docker \
+    --location="$REGION"
+
+docker build -t "$REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/react-frontend:$TAG" .
+docker push "$REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/react-frontend:$TAG"</code></pre>
+
+<p>For production, prefer immutable version tags or image digests over <code>latest</code>. That makes rollbacks and audit trails much easier.</p>
+
+<p>Deploy it to Cloud Run:</p>
+<pre><code class="language-bash">gcloud run deploy react-frontend \
+    --image us-central1-docker.pkg.dev/myapp-prod/app-images/react-frontend:2026-05-17 \
+    --region us-central1 \
+    --platform managed \
+    --allow-unauthenticated \
+    --service-account=frontend-sa@myapp-prod.iam.gserviceaccount.com</code></pre>
+
+<p><code>--allow-unauthenticated</code> is appropriate for a public marketing site or public SPA shell. For internal/admin frontends, remove it and put Cloud Run behind IAM, Identity-Aware Proxy, or your enterprise IdP.</p>
+
+<p>Cloud Run automatically provisions an HTTPS endpoint for you (for example https://react-frontend-abcd1234-uc.a.run.app). It only serves over HTTPS – HTTP is redirected to HTTPS by default. If you want a custom domain (e.g. www.myapp.com), you can map it in Cloud Run settings.</p>
+
+<p>Set environment variables on the Cloud Run service for any configuration (e.g. the backend API URL or OAuth client ID). Cloud Run containers use the assigned service account (frontend-sa@…) as their identity when calling other GCP services.</p>
+
+<h3 id="backend-on-gke">Backend on GKE</h3>
+<p>Create a GKE cluster for the FastAPI service. For example, a Standard cluster with Workload Identity and alias IPs:</p>
+<pre><code class="language-bash">gcloud container clusters create my-cluster \
+    --region us-central1 \
+    --workload-pool=myapp-prod.svc.id.goog \
+    --num-nodes=3 \
+    --machine-type=e2-standard-4 \
+    --enable-ip-alias</code></pre>
+
+<p>This sets up my-cluster with a default node pool of 3 VMs. The <code>--workload-pool</code> flag enables Workload Identity Federation. You could also use a GKE Autopilot cluster (which has WI on by default) to avoid managing nodes at all.</p>
+
+<p>You can add more node pools if desired. For example, to separate workloads:</p>
+<pre><code class="language-bash">gcloud container node-pools create backend-pool \
+    --cluster=my-cluster \
+    --num-nodes=2 \
+    --machine-type=e2-medium \
+    --node-labels=role=backend</code></pre>
+
+<p>Use node pools to apply different machine types or taints. Always enable IP alias (<code>--enable-ip-alias</code>) to allow private pod ranges.</p>
+
+<p>Deploy your FastAPI app as a Kubernetes Deployment + Service. For example:</p>
+<pre><code class="language-yaml">apiVersion: apps/v1
+kind: Deployment
+metadata: { name: fastapi-deployment }
+spec:
+  replicas: 2
+  selector: { matchLabels: { app: fastapi } }
+  template:
+    metadata: { labels: { app: fastapi } }
+    spec:
+      serviceAccountName: backend-ksa
+      containers:
+      - name: fastapi
+        image: us-central1-docker.pkg.dev/myapp-prod/app-images/fastapi-backend:2026-05-17
+        ports: [ { containerPort: 80 } ]
+
+apiVersion: v1
+kind: Service
+metadata: { name: fastapi-service }
+spec:
+  selector: { app: fastapi }
+  ports: [ { port: 80, targetPort: 80 } ]</code></pre>
+
+<p>These expose the app on port 80 internally. Note the <code>serviceAccountName: backend-ksa</code> (the K8s SA we annotated earlier); this ensures the pod assumes the Google service account identity.</p>
+
+<h3 id="ingress-and-load-balancing">Ingress and Load Balancing</h3>
+<p>To expose the backend publicly, create a Kubernetes Ingress (which uses an external HTTP(S) Load Balancer):</p>
+<pre><code class="language-yaml">apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: fastapi-ingress
+  annotations:
+    kubernetes.io/ingress.class: "gce"
+spec:
+  rules:
+  - host: api.myapp.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: fastapi-service
+            port: { number: 80 }</code></pre>
+
+<p>When applied, GKE can provision an external Application Load Balancer with a public IP. The Ingress alone does <strong>not</strong> automatically prove domain ownership or create a certificate. Reserve the address, point DNS at it, and configure a Google-managed certificate (or Certificate Manager) using the supported GKE annotation/Gateway design. Wait for the certificate to become active before enforcing HTTPS. Make sure the backend permits Google health checks; in a Shared VPC, coordinate the required firewall policy with the host-project administrators.</p>
+
+<p>A browser-hosted SPA normally calls the public GKE endpoint directly. If Cloud Run is acting as an SSR service or backend-for-frontend, it can call that endpoint over HTTPS. For private connectivity, use an internal load balancer and Cloud Run VPC egress. Prefer Direct VPC egress where it is supported; use a Serverless VPC Access connector when its compatibility or topology is required.</p>
+
+<h3 id="observability-and-scaling">Observability and Scaling</h3>
+<p>Enable Cloud Logging and Monitoring on the cluster (this is on by default in GKE). Export logs via the Kubernetes Logging agent or use aggregated sinks. Define uptime checks and alerts in Cloud Monitoring (for example, an alert if the health endpoint of your service fails). Use horizontal pod autoscaling on the FastAPI Deployment if needed (<code>kubectl autoscale deploy fastapi-deployment --cpu-percent=70 --min=1 --max=5</code>).</p>
+
+<h2 id="networking-and-resource-governance">Networking and Resource Governance</h2>
+<ul>
+    <li><strong>VPC and Subnets:</strong> Use a custom VPC (or Shared VPC host) with appropriately sized subnets. Enable Private Google Access when private workloads need supported Google APIs without external IP addresses. Configure Cloud SQL private IP separately through private services access or the supported Private Service Connect topology. The GKE metadata server is link-local and governed separately. Use hierarchical firewall policies for organization/folder defaults while allowing required DNS, metadata, health-check, control-plane, and application traffic. If using Shared VPC, the host project owns the network and service projects attach workloads to it.</li>
+    <li><strong>Project-level Security:</strong> Disable overly broad Org policies like automatic Editor grants for default SAs. Regularly audit IAM policies (Cloud IAM Recommender can surface over-privileged identities). Use Google Groups for role assignments (e.g. “DevOps” group with Compute Admin on dev, but Cloud SQL Client on prod).</li>
+    <li><strong>Networking Security:</strong> Consider enabling VPC Service Controls if you need to protect against data exfiltration from managed services. At a minimum, configure Kubernetes Network Policies to restrict traffic between pods if you run multiple services.</li>
+    <li><strong>Cost and Billing:</strong> Since billing is at the project level, use separate projects (or folders) per environment to track costs. Use billing reports or Cloud Billing budget alerts to monitor spend. Tag resources (with labels like env=prod) and set up budgets per tag. Regularly clean up unused resources (old node pools, images, volumes) to control costs. Consider using Cloud Budgets with alerts on 50%/75%/90% spend thresholds.</li>
+    <li><strong>VPC Quotas and Limits:</strong> Use VPC native clusters (alias IP) to avoid exhaustion of IPs. Plan subnet sizes for pods and services, anticipating scale. For example, if you expect 100 Pods per node pool, allocate a /14 for pod range. Use Cloud NAT if your nodes need to access the Internet without external IPs.</li>
+    <li><strong>DNS and TLS:</strong> Use Cloud DNS (or your provider) for domain names. For Cloud Run, GKE Ingress, or Gateway, use the product’s supported Google-managed certificate integration or Certificate Manager. “ACM” commonly refers to AWS Certificate Manager and is not the Google Cloud product name.</li>
+</ul>
+
+<p>By following these steps and best practices, you’ll have a robust GCP foundation: isolated projects and IAM, secure service identities (Workload Identity) for accessing Cloud SQL and Storage, user login via Google OIDC in the React app, and autoscaled deployments of your frontend and backend on Cloud Run and GKE. All communication is over HTTPS, and data access from code is locked down to specific service accounts with minimal privileges. This architecture is production-ready and scalable for an enterprise SaaS with Google Workspace authentication.</p>
+
+<h2 id="official-references">Official references</h2>
+<ul>
+    <li><a href="https://docs.cloud.google.com/kubernetes-engine/docs/concepts/workload-identity">Workload Identity Federation for GKE: concepts and credential flow</a></li>
+    <li><a href="https://docs.cloud.google.com/kubernetes-engine/docs/how-to/workload-identity">GKE: configure workload access to Google Cloud APIs</a></li>
+    <li><a href="https://docs.cloud.google.com/sql/docs/postgres/connect-kubernetes-engine">Cloud SQL for PostgreSQL: connect from GKE</a></li>
+    <li><a href="https://docs.cloud.google.com/storage/docs/locations">Cloud Storage bucket locations</a></li>
+    <li><a href="https://docs.cloud.google.com/kubernetes-engine/docs/how-to/secure-traffic-management">GKE: secure traffic with managed certificates</a></li>
+    <li><a href="https://docs.cloud.google.com/run/docs/configuring/connecting-vpc">Cloud Run: Direct VPC egress and VPC connectors</a></li>
+</ul></div></article></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col noPrint_WFHX"></div><div class="col lastUpdated_JAkA"><span class="theme-last-updated">Last updated<!-- --> on <b><time datetime="2026-07-30T01:42:42.000Z" itemprop="dateModified">Jul 30, 2026</time></b></span></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/tutorials/part2-backend-platform-security/12-tenant-iam-ad-groups"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">13. Tenant isolation, IAM, and groups</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/tutorials/part2-backend-platform-security/13-external-service-integration"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">15. Cross-cloud service integration</div></a></nav></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer"><div class="container container-fluid"><div class="row footer__links"><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Study</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/tutorials/">Book home</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/content-map">Reading guide</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/labs/rnn">Interactive RNN lab</a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Core tracks</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/tutorials/part2-backend-platform-security/overview">Backend and security</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/part3-agent-protocols/overview">Agent protocols</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/part5-deep-learning-and-llms/overview">Deep learning and LLMs</a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright">Enterprise AI, Agents & Applied ML - 2026</div></div></div></footer></div>
+</body>
+</html>

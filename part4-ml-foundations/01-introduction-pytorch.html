@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-part4-ml-foundations/introduction-pytorch" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.10.2">
+<title data-rh="true">PyTorch Foundations: Tensors, Autograd, Modules, and Training | Enterprise AI, Agents &amp; Applied ML</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://dineshg.github.io/tutorials/part4-ml-foundations/01-introduction-pytorch"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="keywords" content="enterprise AI, machine learning, deep learning, LLM, FastAPI, Pydantic, MCP, authentication"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="PyTorch Foundations: Tensors, Autograd, Modules, and Training | Enterprise AI, Agents &amp; Applied ML"><meta data-rh="true" name="description" content="A practical journey through modern deep learning with PyTorch—from first principles to real applications."><meta data-rh="true" property="og:description" content="A practical journey through modern deep learning with PyTorch—from first principles to real applications."><link data-rh="true" rel="icon" href="/tutorials/img/favicon.svg"><link data-rh="true" rel="canonical" href="https://dineshg.github.io/tutorials/part4-ml-foundations/01-introduction-pytorch"><link data-rh="true" rel="alternate" href="https://dineshg.github.io/tutorials/part4-ml-foundations/01-introduction-pytorch" hreflang="en"><link data-rh="true" rel="alternate" href="https://dineshg.github.io/tutorials/part4-ml-foundations/01-introduction-pytorch" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Part IV - ML Foundations","item":"https://dineshg.github.io/tutorials/part4-ml-foundations/overview"},{"@type":"ListItem","position":2,"name":"1. PyTorch foundations","item":"https://dineshg.github.io/tutorials/part4-ml-foundations/01-introduction-pytorch"}]}</script><script>window.MathJax={startup:{typeset:!1},tex:{inlineMath:[["\\(","\\)"],["$","$"]],displayMath:[["\\[","\\]"],["$$","$$"]],processEscapes:!0},options:{skipHtmlTags:["script","noscript","style","textarea","pre","code"]}}</script>
+<link rel="stylesheet" href="/tutorials/css/book.css">
+<link rel="stylesheet" href="/tutorials/vendor/highlight.js/11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.18.1/dist/katex.min.css" integrity="sha384-5TcZemv2l/9On385z///+d7MSYlvIEw9FuZTIdZ14vJLqWphw7e7ZPuOiCHJcFCP" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-mml-chtml.js" defer="defer"></script><link rel="stylesheet" href="/tutorials/assets/css/styles.003aa738.css">
+<script src="/tutorials/assets/js/runtime~main.98c31d90.js" defer="defer"></script>
+<script src="/tutorials/assets/js/main.bd80017b.js" defer="defer"></script>
+</head>
+<body>
+<svg style="display: none;"><defs>
+<symbol id="theme-svg-external-link" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")),document.documentElement.setAttribute("data-theme-choice",t||"system")}(),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top"><div class="navbar__inner"><div class="theme-layout-navbar-left navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/tutorials/"><b class="navbar__title text--truncate">Enterprise AI Book</b></a><a class="navbar__item navbar__link" href="/tutorials/">Read</a><a class="navbar__item navbar__link" href="/tutorials/content-map">Concept map</a><a class="navbar__item navbar__link" href="/tutorials/part5-deep-learning-and-llms/10-recurrent-neural-networks">Deep learning</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><div class="navbar__item book-search-navbar-item"><button type="button" class="book-search-trigger" aria-label="Search the book">Search <kbd>Ctrl K</kbd></button></div><a href="https://github.com/dineshg/tutorials" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type="button" disabled="" title="system mode" aria-label="Switch between dark and light mode (currently system mode)"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill="currentColor" d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill="currentColor" d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill="currentColor" d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"></path></svg></button></div><div class="navbarSearchContainer_Bca1"></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class="docsWrapper_hBAB"><button aria-label="Scroll back to top" class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type="button"></button><div class="docRoot_UBD9"><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class="sidebarViewport_aRkj"><div class="sidebar_njMd"><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/tutorials/"><span class="linkLabel_WmDU">Book home</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/tutorials/content-map"><span class="linkLabel_WmDU">Reading guide and concept map</span></a></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-blue"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part1-enterprise-ai-delivery/overview"><span class="categoryLinkLabel_W154">Part I - Enterprise AI Delivery</span></a><button aria-label="Expand sidebar category &#x27;Part I - Enterprise AI Delivery&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-teal"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part2-backend-platform-security/overview"><span class="categoryLinkLabel_W154">Part II - Backend, Platform &amp; Security</span></a><button aria-label="Expand sidebar category &#x27;Part II - Backend, Platform &amp; Security&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-violet"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part3-agent-protocols/overview"><span class="categoryLinkLabel_W154">Part III - Agent Protocols</span></a><button aria-label="Expand sidebar category &#x27;Part III - Agent Protocols&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item sidebar-category sidebar-category-amber"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--active" href="/tutorials/part4-ml-foundations/overview"><span class="categoryLinkLabel_W154">Part IV - ML Foundations</span></a><button aria-label="Collapse sidebar category &#x27;Part IV - ML Foundations&#x27;" aria-expanded="true" type="button" class="clean-btn menu__caret"></button></div><ul class="menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link menu__link--active" aria-current="page" tabindex="0" href="/tutorials/part4-ml-foundations/01-introduction-pytorch"><span class="linkLabel_WmDU">1. PyTorch foundations</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part4-ml-foundations/02-ml-as-geometry"><span class="linkLabel_WmDU">2. Machine learning as geometry</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part4-ml-foundations/03-linear-regression"><span class="linkLabel_WmDU">3. Linear regression</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part4-ml-foundations/04-linear-classification"><span class="linkLabel_WmDU">4. Linear classification</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part4-ml-foundations/05-trees-bagging-boosting"><span class="linkLabel_WmDU">5. Trees, bagging, and boosting</span></a></li></ul></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-coral"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part5-deep-learning-and-llms/overview"><span class="categoryLinkLabel_W154">Part V - Deep Learning &amp; LLMs</span></a><button aria-label="Expand sidebar category &#x27;Part V - Deep Learning &amp; LLMs&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-slate"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part6-appendices/overview"><span class="categoryLinkLabel_W154">Part VI - Appendices</span></a><button aria-label="Expand sidebar category &#x27;Part VI - Appendices&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li></ul></nav><button type="button" title="Collapse sidebar" aria-label="Collapse sidebar" class="button button--secondary button--outline collapseSidebarButton_PEFL"><svg width="20" height="20" aria-hidden="true" class="collapseSidebarButtonIcon_kv0_"><g fill="#7a7a7a"><path d="M9.992 10.023c0 .2-.062.399-.172.547l-4.996 7.492a.982.982 0 01-.828.454H1c-.55 0-1-.453-1-1 0-.2.059-.403.168-.551l4.629-6.942L.168 3.078A.939.939 0 010 2.528c0-.548.45-.997 1-.997h2.996c.352 0 .649.18.828.45L9.82 9.472c.11.148.172.347.172.55zm0 0"></path><path d="M19.98 10.023c0 .2-.058.399-.168.547l-4.996 7.492a.987.987 0 01-.828.454h-3c-.547 0-.996-.453-.996-1 0-.2.059-.403.168-.551l4.625-6.942-4.625-6.945a.939.939 0 01-.168-.55 1 1 0 01.996-.997h3c.348 0 .649.18.828.45l4.996 7.492c.11.148.168.347.168.55zm0 0"></path></g></svg></button></div></div></aside><main class="docMainContainer_TBSr"><div class="container padding-top--md padding-bottom--lg"><div class="row"><div class="col"><div class="docItemContainer_Djhp"><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label="Breadcrumbs"><ul class="breadcrumbs"><li class="breadcrumbs__item"><a aria-label="Home page" class="breadcrumbs__link" href="/tutorials/"><svg viewBox="0 0 24 24" class="breadcrumbHomeIcon_YNFT"><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill="currentColor"></path></svg></a></li><li class="breadcrumbs__item"><a class="breadcrumbs__link" href="/tutorials/part4-ml-foundations/overview"><span>Part IV - ML Foundations</span></a></li><li class="breadcrumbs__item breadcrumbs__item--active"><span class="breadcrumbs__link">1. PyTorch foundations</span></li></ul></nav><div class="theme-doc-markdown markdown"><article class="book-article tr-content" data-book-part="part4" data-book-accent="amber"><header class="articleHeader_jX4Y"><span class="partLabel_DqKR">Part IV - Machine Learning Foundations</span><h1>PyTorch Foundations: Tensors, Autograd, Modules, and Training</h1><div class="articleMeta_jfH_"><span>5<!-- --> min read</span><span aria-hidden="true">·</span><span>10<!-- --> sections</span></div></header><details class="chapterToc_aQjS"><summary>On this page</summary><nav aria-label="On this page"><a href="#start-from-basics">We start from the very beginning</a><a href="#why-pytorch">Why PyTorch</a><a href="#practical-apps">Practical applications</a><a href="#tensor-model">The four objects behind every PyTorch example</a><a href="#tensors">Tensors: arrays with shape, dtype, and device</a><a href="#autograd">Autograd: gradients from a recorded computation</a><a href="#modules">Modules and parameters: a model is a callable object</a><a href="#first-loop">The smallest complete training loop</a><a href="#debug-contract">The first debugging contract: inspect shape, dtype, device, and range</a><a href="#how-to-use">How we’ll work</a></nav></details><div class="articleBody_b2wt"><div class="wrap">
+			<article class="card">
+				<div class="card__topbar" aria-hidden="true"></div>
+
+				<header>
+					<div class="kicker">Part IV • Machine Learning Foundations</div>
+					
+					<p class="subtitle">
+						A practical journey through modern deep learning with PyTorch—from first principles to
+						real applications.
+					</p>
+				</header>
+
+				<main>
+					<p>
+						Deep learning has transformed how we work with data, from recognizing images and
+						understanding language to powering recommendation engines and game-playing agents. This
+						book is a practical journey through modern deep learning with PyTorch, designed to take
+						you from beginner to advanced without requiring a heavy math background (though pointers
+						to deeper theory are provided if you want them).
+					</p>
+
+					<section class="section" aria-labelledby="start-from-basics">
+						<h2 id="start-from-basics">We start from the very beginning</h2>
+						<p>
+							We start from the very beginning: linear regression and the idea of a neuron as a
+							simple nonlinear transformation of a linear model. From there, we build up to deep
+							neural networks, then explore specialized architectures:
+						</p>
+						<ul>
+							<li><strong>Convolutional Neural Networks (CNNs)</strong> for images and signals</li>
+							<li>
+								<strong>Recurrent Neural Networks (RNNs)</strong> and LSTMs for sequences and time
+								series
+							</li>
+							<li>
+								<strong>Best practices</strong> for time series forecasting, including what commonly
+								goes wrong in stock prediction tutorials
+							</li>
+						</ul>
+					</section>
+
+					<section class="section" aria-labelledby="why-pytorch">
+						<h2 id="why-pytorch">Why PyTorch</h2>
+						<p>
+							Along the way, you’ll see how PyTorch’s automatic differentiation and rich set of
+							prebuilt layers let you focus on ideas and experiments instead of manually deriving and
+							coding gradients. PyTorch became popular partly because its eager, Python-first execution
+							model was easier to inspect than the static-graph-first workflows used by Theano and
+							early TensorFlow. Modern TensorFlow also supports eager execution; both frameworks remain
+							capable, while this book uses PyTorch for one consistent implementation path.
+						</p>
+					</section>
+
+					<section class="section" aria-labelledby="practical-apps">
+						<h2 id="practical-apps">Practical applications</h2>
+						<p>The second half of the book focuses on applications that matter in practice:</p>
+						<ul>
+							<li><strong>Natural Language Processing (NLP)</strong> and text classification</li>
+							<li><strong>Embeddings</strong> for words and other categorical data</li>
+							<li>
+								<strong>Recommender systems</strong> as used by companies like Amazon, Facebook, and
+								Google
+							</li>
+							<li>
+								<strong>Transfer learning</strong> with pretrained models, allowing you to leverage
+								massive datasets like ImageNet
+							</li>
+							<li>
+								<strong>Generative Adversarial Networks (GANs)</strong> for realistic image generation
+							</li>
+							<li>
+								<strong>Reinforcement Learning (RL)</strong> for sequential decision-making and
+								control
+							</li>
+						</ul>
+					</section>
+
+					<section class="section" aria-labelledby="tensor-model">
+						<h2 id="tensor-model">The four objects behind every PyTorch example</h2>
+						<p>
+							Later chapters introduce many architectures, but the training machinery
+							changes very little. Hold these four objects in your head:
+						</p>
+
+						<table>
+							<thead>
+								<tr><th>Object</th><th>Job</th><th>Typical PyTorch form</th></tr>
+							</thead>
+							<tbody>
+								<tr><td>Tensor</td><td>Stores numeric inputs, targets, parameters, and intermediate values.</td><td><code>torch.Tensor</code></td></tr>
+								<tr><td>Model</td><td>Maps an input tensor to an output tensor using learnable parameters.</td><td><code>nn.Module</code></td></tr>
+								<tr><td>Loss</td><td>Measures how wrong the model output is for the target.</td><td><code>nn.MSELoss</code>, <code>nn.CrossEntropyLoss</code></td></tr>
+								<tr><td>Optimizer</td><td>Updates parameters using their gradients.</td><td><code>torch.optim.SGD</code>, <code>AdamW</code></td></tr>
+							</tbody>
+						</table>
+
+						<div class="figure-card">
+							<h3 id="visual-the-reusable-training-loop">Visual: the reusable training loop</h3>
+							<svg class="viz" viewBox="0 0 980 260" role="img" aria-label="Tensor, model, loss, gradient, and optimizer training loop">
+								<defs>
+									<marker id="pytorch-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+										<path d="M0 0 L10 5 L0 10 z" class="accentFill"></path>
+									</marker>
+									<marker id="pytorch-arrow-purple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+										<path d="M0 0 L10 5 L0 10 z" class="accent2Fill"></path>
+									</marker>
+								</defs>
+								<rect x="24" y="74" width="150" height="90" rx="14" class="box2"></rect>
+								<text x="99" y="110" text-anchor="middle" class="title">Input x</text>
+								<text x="99" y="138" text-anchor="middle" class="muted">tensor</text>
+
+								<rect x="230" y="74" width="180" height="90" rx="14" class="box"></rect>
+								<text x="320" y="110" text-anchor="middle" class="title">Model</text>
+								<text x="320" y="138" text-anchor="middle" class="muted">prediction = f(x)</text>
+
+								<rect x="466" y="74" width="180" height="90" rx="14" class="box2"></rect>
+								<text x="556" y="110" text-anchor="middle" class="title">Loss</text>
+								<text x="556" y="138" text-anchor="middle" class="muted">compare to y</text>
+
+								<rect x="702" y="74" width="244" height="90" rx="14" class="box"></rect>
+								<text x="824" y="110" text-anchor="middle" class="title">Optimizer</text>
+								<text x="824" y="138" text-anchor="middle" class="muted">update parameters</text>
+
+								<line x1="174" y1="119" x2="230" y2="119" class="accent" stroke-width="2" marker-end="url(#pytorch-arrow)"></line>
+								<line x1="410" y1="119" x2="466" y2="119" class="accent" stroke-width="2" marker-end="url(#pytorch-arrow)"></line>
+								<line x1="646" y1="119" x2="702" y2="119" class="accent2" stroke-width="2" marker-end="url(#pytorch-arrow-purple)"></line>
+								<path d="M824 164 C804 224 392 230 320 164" class="accent2" stroke-width="2" marker-end="url(#pytorch-arrow-purple)"></path>
+								<text x="560" y="222" text-anchor="middle" class="muted">backward computes gradients; step changes parameters</text>
+							</svg>
+						</div>
+					</section>
+
+					<section class="section" aria-labelledby="tensors">
+						<h2 id="tensors">Tensors: arrays with shape, dtype, and device</h2>
+
+						<p>A tensor is a multidimensional numeric array. A scalar
+						has no axes, a vector has one, a matrix has two, and a batch
+						of color images often has four:
+						<code>[batch, channels, height, width]</code>.</p>
+
+<pre><code class="language-python">import torch
+
+scalar = torch.tensor(3.0)                       # shape: []
+vector = torch.tensor([1.0, 2.0, 3.0])          # shape: [3]
+matrix = torch.tensor([[1.0, 2.0], [3.0, 4.0]]) # shape: [2, 2]
+
+print(matrix.shape)  # torch.Size([2, 2])
+print(matrix.dtype)  # usually torch.float32 here
+print(matrix.device) # cpu, unless moved to an accelerator</code></pre>
+
+						<p>Shape describes axis lengths. <strong>Dtype</strong>
+						describes numeric representation, such as
+						<code>float32</code> or <code>int64</code>.
+						<strong>Device</strong> says where the storage and operation
+						live, such as CPU, CUDA GPU, or Apple MPS. Tensors used in
+						one operation must have compatible shapes, dtypes, and
+						devices.</p>
+
+<pre><code class="language-python">device = (
+    "cuda" if torch.cuda.is_available()
+    else "mps" if torch.backends.mps.is_available()
+    else "cpu"
+)
+
+x = torch.randn(32, 10, device=device)  # 32 examples, 10 features each</code></pre>
+					</section>
+
+					<section class="section" aria-labelledby="autograd">
+						<h2 id="autograd">Autograd: gradients from a recorded computation</h2>
+
+						<p>Training asks: “How should each parameter change to
+						reduce the loss?” PyTorch records operations involving
+						tensors that require gradients. Calling
+						<code>backward()</code> applies the chain rule backward
+						through that computation graph.</p>
+
+<pre><code class="language-python">w = torch.tensor(2.0, requires_grad=True)
+x = torch.tensor(3.0)
+y = w * x ** 2
+
+y.backward()
+print(w.grad)  # 9.0 because dy/dw = x^2</code></pre>
+
+						<p>The graph is a record of operations for this forward
+						pass, not a drawing you have to create manually. A new
+						graph is normally built on the next pass. Gradients
+						accumulate in <code>.grad</code>, which is why training
+						loops clear them before the next backward pass.</p>
+					</section>
+
+					<section class="section" aria-labelledby="modules">
+						<h2 id="modules">Modules and parameters: a model is a callable object</h2>
+
+						<p><code>nn.Module</code> is the base class for trainable
+						PyTorch components. It registers nested modules and
+						parameters so the optimizer, device movement, saving, and
+						training/evaluation modes work recursively.</p>
+
+<pre><code class="language-python">from torch import nn
+
+class LinearRegressor(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.linear = nn.Linear(in_features=1, out_features=1)
+
+    def forward(self, x: torch.Tensor) -&gt; torch.Tensor:
+        return self.linear(x)
+
+model = LinearRegressor()
+prediction = model(torch.tensor([[2.0]]))  # call model(...), not forward(...)</code></pre>
+
+						<p>The learnable weight and bias are
+						<code>nn.Parameter</code> objects. They are tensors with
+						gradient tracking that were registered because
+						<code>self.linear</code> is a child module.</p>
+					</section>
+
+					<section class="section" aria-labelledby="first-loop">
+						<h2 id="first-loop">The smallest complete training loop</h2>
+
+						<p>This example learns the relationship
+						<code>y = 2x + 1</code>. Later chapters change the data,
+						model, and loss, but keep this loop structure.</p>
+
+<pre><code class="language-python">import torch
+from torch import nn
+
+x = torch.tensor([[0.0], [1.0], [2.0], [3.0]])
+y = torch.tensor([[1.0], [3.0], [5.0], [7.0]])
+
+model = nn.Linear(1, 1)
+loss_fn = nn.MSELoss()
+optimizer = torch.optim.SGD(model.parameters(), lr=0.05)
+
+for step in range(500):
+    model.train()
+
+    prediction = model(x)           # 1) forward pass
+    loss = loss_fn(prediction, y)   # 2) measure error
+
+    optimizer.zero_grad()           # 3) clear old gradients
+    loss.backward()                 # 4) compute new gradients
+    optimizer.step()                # 5) update weight and bias
+
+model.eval()
+with torch.no_grad():
+    print(model(torch.tensor([[4.0]])))  # close to 9</code></pre>
+
+						<p><code>model.train()</code> and
+						<code>model.eval()</code> control layers whose behavior
+						differs by mode, such as dropout and batch normalization.
+						<code>torch.no_grad()</code> disables gradient recording
+						for this evaluation block, reducing memory and work. It
+						does not replace <code>eval()</code>; the two controls solve
+						different problems.</p>
+					</section>
+
+					<section class="section" aria-labelledby="debug-contract">
+						<h2 id="debug-contract">The first debugging contract: inspect shape, dtype, device, and range</h2>
+
+						<p>Before changing an architecture, print the boundary
+						facts. Many apparent “model problems” are tensor contract
+						problems:</p>
+
+<pre><code class="language-python">print("x:", x.shape, x.dtype, x.device)
+print("y:", y.shape, y.dtype, y.device)
+print("prediction:", prediction.shape)
+print("finite:", torch.isfinite(loss).item())</code></pre>
+
+						<ul>
+							<li>Regression predictions and targets usually need matching floating-point shapes.</li>
+							<li>Class indices for <code>CrossEntropyLoss</code> are normally <code>torch.long</code>.</li>
+							<li>Do not mix CPU inputs with a GPU model.</li>
+							<li>Do not silently broadcast incompatible target and prediction shapes.</li>
+							<li>Check for NaN or infinity before tuning hyperparameters.</li>
+						</ul>
+					</section>
+
+					<section class="section" aria-labelledby="how-to-use">
+						<h2 id="how-to-use">How we’ll work</h2>
+						<p>
+							Throughout, we will rely on PyTorch and GPU-backed environments (such as Google Colab),
+							so you can train powerful models even if you don’t have specialized hardware. The goal
+							is not just to show you which buttons to press, but to help you understand why the
+							architectures work, where they fail, and how to adapt them to your own projects.
+						</p>
+
+						<div class="callout" role="note">
+							<strong>Progression:</strong> The next chapter turns
+							tensors into geometry: rows become points, model
+							parameters define lines or separating boundaries, and
+							loss measures how poorly that geometry fits the data.
+							The regression chapter then implements the same loop
+							above one line at a time.
+						</div>
+					</section>
+				</main>
+
+				<div class="footer">Deep Learning with PyTorch • Chapter 1</div>
+			</article>
+		</div></div></article></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col noPrint_WFHX"></div><div class="col lastUpdated_JAkA"><span class="theme-last-updated">Last updated<!-- --> on <b><time datetime="2026-07-30T01:42:42.000Z" itemprop="dateModified">Jul 30, 2026</time></b></span></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/tutorials/part4-ml-foundations/overview"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Part overview</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/tutorials/part4-ml-foundations/02-ml-as-geometry"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">2. Machine learning as geometry</div></a></nav></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer"><div class="container container-fluid"><div class="row footer__links"><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Study</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/tutorials/">Book home</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/content-map">Reading guide</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/labs/rnn">Interactive RNN lab</a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Core tracks</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/tutorials/part2-backend-platform-security/overview">Backend and security</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/part3-agent-protocols/overview">Agent protocols</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/part5-deep-learning-and-llms/overview">Deep learning and LLMs</a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright">Enterprise AI, Agents & Applied ML - 2026</div></div></div></footer></div>
+</body>
+</html>

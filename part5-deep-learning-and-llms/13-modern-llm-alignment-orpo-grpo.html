@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-part5-deep-learning-and-llms/modern-llm-alignment-orpo-grpo" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.10.2">
+<title data-rh="true">Modern LLM Post-Training — DPO, ORPO, KTO, GRPO, RLAIF, and PPO | Enterprise AI, Agents &amp; Applied ML</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://dineshg.github.io/tutorials/part5-deep-learning-and-llms/13-modern-llm-alignment-orpo-grpo"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="keywords" content="enterprise AI, machine learning, deep learning, LLM, FastAPI, Pydantic, MCP, authentication"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Modern LLM Post-Training — DPO, ORPO, KTO, GRPO, RLAIF, and PPO | Enterprise AI, Agents &amp; Applied ML"><meta data-rh="true" name="description" content="Post-training discussions become confusing when three different decisions are collapsed into one:"><meta data-rh="true" property="og:description" content="Post-training discussions become confusing when three different decisions are collapsed into one:"><link data-rh="true" rel="icon" href="/tutorials/img/favicon.svg"><link data-rh="true" rel="canonical" href="https://dineshg.github.io/tutorials/part5-deep-learning-and-llms/13-modern-llm-alignment-orpo-grpo"><link data-rh="true" rel="alternate" href="https://dineshg.github.io/tutorials/part5-deep-learning-and-llms/13-modern-llm-alignment-orpo-grpo" hreflang="en"><link data-rh="true" rel="alternate" href="https://dineshg.github.io/tutorials/part5-deep-learning-and-llms/13-modern-llm-alignment-orpo-grpo" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Part V - Deep Learning & LLMs","item":"https://dineshg.github.io/tutorials/part5-deep-learning-and-llms/overview"},{"@type":"ListItem","position":2,"name":"13. Modern LLM post-training","item":"https://dineshg.github.io/tutorials/part5-deep-learning-and-llms/13-modern-llm-alignment-orpo-grpo"}]}</script><script>window.MathJax={startup:{typeset:!1},tex:{inlineMath:[["\\(","\\)"],["$","$"]],displayMath:[["\\[","\\]"],["$$","$$"]],processEscapes:!0},options:{skipHtmlTags:["script","noscript","style","textarea","pre","code"]}}</script>
+<link rel="stylesheet" href="/tutorials/css/book.css">
+<link rel="stylesheet" href="/tutorials/vendor/highlight.js/11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.18.1/dist/katex.min.css" integrity="sha384-5TcZemv2l/9On385z///+d7MSYlvIEw9FuZTIdZ14vJLqWphw7e7ZPuOiCHJcFCP" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-mml-chtml.js" defer="defer"></script><link rel="stylesheet" href="/tutorials/assets/css/styles.003aa738.css">
+<script src="/tutorials/assets/js/runtime~main.98c31d90.js" defer="defer"></script>
+<script src="/tutorials/assets/js/main.bd80017b.js" defer="defer"></script>
+</head>
+<body>
+<svg style="display: none;"><defs>
+<symbol id="theme-svg-external-link" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")),document.documentElement.setAttribute("data-theme-choice",t||"system")}(),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top"><div class="navbar__inner"><div class="theme-layout-navbar-left navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/tutorials/"><b class="navbar__title text--truncate">Enterprise AI Book</b></a><a class="navbar__item navbar__link" href="/tutorials/">Read</a><a class="navbar__item navbar__link" href="/tutorials/content-map">Concept map</a><a class="navbar__item navbar__link" href="/tutorials/part5-deep-learning-and-llms/10-recurrent-neural-networks">Deep learning</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><div class="navbar__item book-search-navbar-item"><button type="button" class="book-search-trigger" aria-label="Search the book">Search <kbd>Ctrl K</kbd></button></div><a href="https://github.com/dineshg/tutorials" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type="button" disabled="" title="system mode" aria-label="Switch between dark and light mode (currently system mode)"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill="currentColor" d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill="currentColor" d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill="currentColor" d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"></path></svg></button></div><div class="navbarSearchContainer_Bca1"></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class="docsWrapper_hBAB"><button aria-label="Scroll back to top" class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type="button"></button><div class="docRoot_UBD9"><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class="sidebarViewport_aRkj"><div class="sidebar_njMd"><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/tutorials/"><span class="linkLabel_WmDU">Book home</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/tutorials/content-map"><span class="linkLabel_WmDU">Reading guide and concept map</span></a></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-blue"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part1-enterprise-ai-delivery/overview"><span class="categoryLinkLabel_W154">Part I - Enterprise AI Delivery</span></a><button aria-label="Expand sidebar category &#x27;Part I - Enterprise AI Delivery&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-teal"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part2-backend-platform-security/overview"><span class="categoryLinkLabel_W154">Part II - Backend, Platform &amp; Security</span></a><button aria-label="Expand sidebar category &#x27;Part II - Backend, Platform &amp; Security&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-violet"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part3-agent-protocols/overview"><span class="categoryLinkLabel_W154">Part III - Agent Protocols</span></a><button aria-label="Expand sidebar category &#x27;Part III - Agent Protocols&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-amber"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part4-ml-foundations/overview"><span class="categoryLinkLabel_W154">Part IV - ML Foundations</span></a><button aria-label="Expand sidebar category &#x27;Part IV - ML Foundations&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item sidebar-category sidebar-category-coral"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--active" href="/tutorials/part5-deep-learning-and-llms/overview"><span class="categoryLinkLabel_W154">Part V - Deep Learning &amp; LLMs</span></a><button aria-label="Collapse sidebar category &#x27;Part V - Deep Learning &amp; LLMs&#x27;" aria-expanded="true" type="button" class="clean-btn menu__caret"></button></div><ul class="menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/01-ffn-concepts"><span class="linkLabel_WmDU">1. Feed-forward network concepts</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/02-ffn-training-debugging"><span class="linkLabel_WmDU">2. FFN training and debugging</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/03-ffn-canonical-merged"><span class="linkLabel_WmDU">3. FFN single-chapter reference</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/04-cnn-convolution"><span class="linkLabel_WmDU">4. CNN convolution</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/05-cnn-architecture"><span class="linkLabel_WmDU">5. CNN architecture</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/06-cnn-pytorch-implementation"><span class="linkLabel_WmDU">6. CNN PyTorch implementation</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/07-cnn-dropout-train-eval"><span class="linkLabel_WmDU">7. CNN dropout and train/eval</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/08-forecasting-sequence-data"><span class="linkLabel_WmDU">8. Forecasting and sequence data</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/09-autoregressive-linear-model"><span class="linkLabel_WmDU">9. Autoregressive linear model</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/10-recurrent-neural-networks"><span class="linkLabel_WmDU">10. Recurrent neural networks</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item sidebar-lab-link"><a class="menu__link" tabindex="0" href="/tutorials/labs/rnn"><span class="linkLabel_WmDU">Interactive lab: animated RNN</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/11-transformers-and-attention"><span class="linkLabel_WmDU">11. Transformers and attention</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/12-llm-fine-tuning"><span class="linkLabel_WmDU">12. LLM fine-tuning</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link menu__link--active" aria-current="page" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/13-modern-llm-alignment-orpo-grpo"><span class="linkLabel_WmDU">13. Modern LLM post-training</span></a></li></ul></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-slate"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part6-appendices/overview"><span class="categoryLinkLabel_W154">Part VI - Appendices</span></a><button aria-label="Expand sidebar category &#x27;Part VI - Appendices&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li></ul></nav><button type="button" title="Collapse sidebar" aria-label="Collapse sidebar" class="button button--secondary button--outline collapseSidebarButton_PEFL"><svg width="20" height="20" aria-hidden="true" class="collapseSidebarButtonIcon_kv0_"><g fill="#7a7a7a"><path d="M9.992 10.023c0 .2-.062.399-.172.547l-4.996 7.492a.982.982 0 01-.828.454H1c-.55 0-1-.453-1-1 0-.2.059-.403.168-.551l4.629-6.942L.168 3.078A.939.939 0 010 2.528c0-.548.45-.997 1-.997h2.996c.352 0 .649.18.828.45L9.82 9.472c.11.148.172.347.172.55zm0 0"></path><path d="M19.98 10.023c0 .2-.058.399-.168.547l-4.996 7.492a.987.987 0 01-.828.454h-3c-.547 0-.996-.453-.996-1 0-.2.059-.403.168-.551l4.625-6.942-4.625-6.945a.939.939 0 01-.168-.55 1 1 0 01.996-.997h3c.348 0 .649.18.828.45l4.996 7.492c.11.148.168.347.168.55zm0 0"></path></g></svg></button></div></div></aside><main class="docMainContainer_TBSr"><div class="container padding-top--md padding-bottom--lg"><div class="row"><div class="col"><div class="docItemContainer_Djhp"><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label="Breadcrumbs"><ul class="breadcrumbs"><li class="breadcrumbs__item"><a aria-label="Home page" class="breadcrumbs__link" href="/tutorials/"><svg viewBox="0 0 24 24" class="breadcrumbHomeIcon_YNFT"><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill="currentColor"></path></svg></a></li><li class="breadcrumbs__item"><a class="breadcrumbs__link" href="/tutorials/part5-deep-learning-and-llms/overview"><span>Part V - Deep Learning &amp; LLMs</span></a></li><li class="breadcrumbs__item breadcrumbs__item--active"><span class="breadcrumbs__link">13. Modern LLM post-training</span></li></ul></nav><div class="theme-doc-markdown markdown"><article class="book-article tr-content" data-book-part="part5" data-book-accent="coral"><header class="articleHeader_jX4Y"><span class="partLabel_DqKR">Part V - Deep Learning &amp; Large Language Models</span><h1>Modern LLM Post-Training — DPO, ORPO, KTO, GRPO, RLAIF, and PPO</h1><div class="articleMeta_jfH_"><span>11<!-- --> min read</span><span aria-hidden="true">·</span><span>11<!-- --> sections</span></div></header><details class="chapterToc_aQjS"><summary>On this page</summary><nav aria-label="On this page"><a href="#1-build-the-map-before-comparing-acronyms">1) Build the map before comparing acronyms</a><a href="#2-dpo-recap-the-baseline">2) DPO recap (the baseline)</a><a href="#3-orpo-odds-ratio-preference-optimization-hong-et-al-2024">3) ORPO — Odds‑Ratio Preference Optimization (Hong et al., 2024)</a><a href="#4-kto-kahneman-tversky-optimization-ethayarajh-et-al-2024">4) KTO — Kahneman–Tversky Optimization (Ethayarajh et al., 2024)</a><a href="#5-the-crucial-split-offline-preference-learning-vs-online-rl">5) The crucial split: offline preference learning vs online RL</a><a href="#6-grpo-group-relative-policy-optimization-deepseekmath-and-deepseek-r1">6) GRPO — Group Relative Policy Optimization (DeepSeekMath and DeepSeek‑R1)</a><a href="#7-rlaif-and-constitutional-ai-are-related-not-synonyms">7) RLAIF and Constitutional AI are related, not synonyms</a><a href="#8-choosing-between-them">8) Choosing between them</a><a href="#9-a-practical-enterprise-decision-sequence">9) A practical enterprise decision sequence</a><a href="#10-failure-modes-to-test-explicitly">10) Failure modes to test explicitly</a><a href="#11-primary-papers-and-current-official-documentation">11) Primary papers and current official documentation</a></nav></details><div class="articleBody_b2wt"><div class="ch">
+
+
+
+<div class="tr-note">
+  <strong>Where this fits</strong>
+  Chapter 12 covered SFT (supervised fine‑tuning) and PEFT (LoRA / QLoRA) —
+  how to make a base LLM follow your instructions and your domain. This
+  chapter is about the next step: <em>preference and reward-based
+  post-training</em> — how to improve choices after SFT, and how to decide
+  whether an offline preference objective or an online RL loop matches the
+  evidence you actually have.
+</div>
+
+<div class="tr-note">
+  <strong>Alignment reading path</strong>
+  <a href="/tutorials/part5-deep-learning-and-llms/12-llm-fine-tuning">Chapter 12</a> covers the adaptation stack:
+  SFT, PEFT, LoRA/QLoRA, evaluation, and an introduction to DPO/RLHF. This
+  chapter intentionally repeats the DPO/RLHF baseline only so ORPO, KTO, GRPO,
+  RLAIF, and PPO-style RLHF can be compared in one coherent decision section.
+</div>
+
+<div class="tr-warn">
+  <strong>Current tooling boundary (verified July 2026)</strong>
+  The algorithms below come from their primary papers. Library APIs move more
+  quickly: current TRL documentation presents DPO, KTO, and GRPO on its main
+  trainer API, while ORPO and PPO are experimental. Pin the TRL release and
+  model revision used by a real experiment; do not copy a trainer signature
+  from an undated tutorial.
+</div>
+
+<h2 id="1-build-the-map-before-comparing-acronyms">1) Build the map before comparing acronyms</h2>
+
+<p>Post-training discussions become confusing when three different decisions
+are collapsed into one:</p>
+
+<table>
+  <tbody><tr><th>Decision</th><th>Question</th><th>Examples</th></tr>
+  <tr>
+    <td><strong>Signal source</strong></td>
+    <td>Who or what says an output is good?</td>
+    <td>Human comparison, thumbs-up/down, AI judge, unit test, schema validator.</td>
+  </tr>
+  <tr>
+    <td><strong>Data shape</strong></td>
+    <td>What evidence reaches the trainer?</td>
+    <td>Demonstration, chosen/rejected pair, binary label, prompt plus numeric reward.</td>
+  </tr>
+  <tr>
+    <td><strong>Optimization method</strong></td>
+    <td>How are model parameters changed?</td>
+    <td>SFT, DPO, ORPO, KTO, GRPO, PPO.</td>
+  </tr>
+</tbody></table>
+
+<p><strong>RLAIF</strong>, for example, describes feedback produced by an AI
+system. That feedback can train a reward model for PPO, create pairs for DPO
+or ORPO, or create binary labels for KTO. RLAIF is therefore a signal source
+and data-generation process, not a competing optimizer.</p>
+
+<h3 id="1-1-the-classic-rlhf-lineage">1.1 The classic RLHF lineage</h3>
+
+<p><strong>RLHF</strong> (Christiano et al., 2017; InstructGPT, 2022) commonly
+collects human preference pairs, fits a reward model, and then uses PPO to
+optimize an SFT policy against that learned reward. A KL term or related
+constraint limits destructive drift from a reference policy.</p>
+
+<p>At the algorithm level, PPO-style RLHF has four distinct roles:
+<strong>policy</strong>, <strong>reference or old-policy distribution</strong>,
+<strong>reward model or grader</strong>, and <strong>value/critic estimate</strong>.
+That does not mean four complete models must always be resident in VRAM.
+Backbones can be shared, adapters can separate roles, reference scores can be
+precomputed, and components can be sharded or offloaded. The roles explain the
+algorithm; a profiler explains the memory bill.</p>
+
+<h3 id="1-2-why-direct-preference-methods-appeared">1.2 Why direct preference methods appeared</h3>
+
+<p><strong>DPO</strong> (Rafailov et al., 2023) showed that, under its preference
+model assumptions, a policy can be optimized directly from chosen/rejected
+pairs without fitting an explicit reward model and without an online PPO
+rollout loop. KTO and ORPO change the required data or reference-policy role;
+GRPO returns to online sampling but removes the learned critic. These methods
+therefore trade different forms of complexity rather than forming a single
+strict ladder from old to new.</p>
+
+<h2 id="2-dpo-recap-the-baseline">2) DPO recap (the baseline)</h2>
+
+<p>DPO assumes a Bradley–Terry preference model and trains directly on triples
+$(x, y_w, y_l)$ where $y_w$ is the chosen response and $y_l$ is the rejected
+one. The loss is:</p>
+
+<div class="eq">
+$\mathcal{L}_{\mathrm{DPO}}
+= -\log\sigma\!\left(
+   \beta \log\dfrac{\pi_\theta(y_w|x)}{\pi_{\mathrm{ref}}(y_w|x)}
+ - \beta \log\dfrac{\pi_\theta(y_l|x)}{\pi_{\mathrm{ref}}(y_l|x)}
+\right)$
+</div>
+
+<p>The objective compares the trainable policy with a fixed reference policy.
+The scale $\beta$ controls the strength of that reference-relative
+regularization; in the common interpretation, larger values penalize departure
+more strongly. A strong SFT checkpoint is the usual practical starting point,
+and the method requires paired preferences whose chosen and rejected responses
+answer the same prompt.</p>
+
+<p><strong>Operationally:</strong> DPO needs reference log-probabilities, but not
+necessarily a second fully resident model throughout training. Current
+implementations can keep a frozen reference model, precompute its
+log-probabilities, or derive policy and reference behavior from different
+adapters over one base checkpoint.</p>
+
+<ul>
+  <li><strong>Advantage:</strong> no learned reward model and no on-policy rollout loop.</li>
+  <li><strong>Risk:</strong> contradictory, position-biased, or trivially easy pairs teach the wrong preference boundary.</li>
+  <li><strong>Use when:</strong> paired preferences are trustworthy and offline training is sufficient.</li>
+</ul>
+
+<h2 id="3-orpo-odds-ratio-preference-optimization-hong-et-al-2024">3) ORPO — Odds‑Ratio Preference Optimization (Hong et al., 2024)</h2>
+
+<p>ORPO removes the reference model entirely and merges SFT and preference
+optimization into a single loss:</p>
+
+<div class="eq">
+$\mathcal{L}_{\mathrm{ORPO}}
+= \mathcal{L}_{\mathrm{SFT}}(y_w \mid x) + \lambda \cdot \mathcal{L}_{\mathrm{OR}}$
+</div>
+
+<p>where $\mathcal{L}_{\mathrm{OR}}$ is the negative log‑sigmoid of the
+log odds‑ratio between the chosen and rejected responses:</p>
+
+<div class="eq">
+$\mathcal{L}_{\mathrm{OR}} = -\log\sigma\!\left(\log\dfrac{\mathrm{odds}_\theta(y_w|x)}{\mathrm{odds}_\theta(y_l|x)}\right),
+\quad \mathrm{odds}_\theta(y|x) = \dfrac{\pi_\theta(y|x)}{1-\pi_\theta(y|x)}$
+</div>
+
+<p>In implementation, those probabilities are computed from sequence log
+probabilities or length-normalized token log probabilities. The displayed
+formula is the intuition; raw full-sequence probabilities are tiny, so real
+code works in log space for numerical stability.</p>
+
+<p><strong>Why people like it:</strong></p>
+<ul>
+  <li>No frozen reference policy is required, so one major source of memory and
+      compute overhead is removed. The actual saving depends on adapters,
+      precomputation, sharding, optimizer state, and sequence length; there is
+      no universal “50 percent” guarantee.</li>
+  <li>You can go from a base model directly to an aligned model in a single
+      ORPO training objective rather than running separate SFT and preference
+      phases. Starting-model and data quality still matter.</li>
+  <li>The ORPO paper reported competitive results across Phi-2, Llama-2, and
+      Mistral experiments up to 7B parameters; that is evidence from those
+      settings, not a guarantee for every domain.</li>
+</ul>
+
+<p><strong>Use when:</strong> you have paired preference data and want the simplest,
+reference-free candidate to benchmark. In current TRL,
+<code>ORPOTrainer</code> is experimental and has its own configuration and
+constructor contract; do not assume it is a drop-in alias for
+<code>DPOTrainer</code>.</p>
+
+<h2 id="4-kto-kahneman-tversky-optimization-ethayarajh-et-al-2024">4) KTO — Kahneman–Tversky Optimization (Ethayarajh et al., 2024)</h2>
+
+<p>KTO removes the requirement for <em>paired</em> preference data. Instead of
+$(x, y_w, y_l)$ triples, you label each $(x, y)$ as simply
+<strong>desirable</strong> or <strong>undesirable</strong> — the kind of data you can
+collect at scale from thumbs‑up / thumbs‑down telemetry.</p>
+
+<p>The loss is shaped after Kahneman–Tversky prospect theory: gains on
+desirable samples and losses on undesirable samples are weighted
+asymmetrically (loss aversion). This makes KTO a natural candidate for product
+telemetry where users rarely write paired comparisons but can still provide a
+positive or negative signal. It does not make raw clicks automatically valid
+labels: selection bias, accidental clicks, exposure bias, and class imbalance
+still need explicit treatment.</p>
+
+<p><strong>Use when:</strong> your feedback is binary, unpaired, and noisy
+(production telemetry, customer ratings). Like DPO, the standard KTO
+formulation uses a reference-policy baseline; current TRL can precompute those
+reference log-probabilities.</p>
+
+<h2 id="5-the-crucial-split-offline-preference-learning-vs-online-rl">5) The crucial split: offline preference learning vs online RL</h2>
+
+<p>DPO, ORPO, and KTO are normally <strong>offline</strong>: the training set
+already contains responses and preference information. PPO and GRPO are
+<strong>online policy optimization</strong>: the current policy generates new
+responses during training, a reward function scores them, and those fresh
+samples drive the update.</p>
+
+<table>
+  <tbody><tr><th>Mode</th><th>Main benefit</th><th>Main risk</th></tr>
+  <tr>
+    <td>Offline preference optimization</td>
+    <td>Reproducible data, simpler infrastructure, no rollout serving loop.</td>
+    <td>The fixed dataset may not cover behavior produced by the changing policy.</td>
+  </tr>
+  <tr>
+    <td>Online RL</td>
+    <td>Training explores the policy's current outputs and can optimize a direct grader.</td>
+    <td>Rollouts are expensive, and a flawed reward can be exploited in new ways.</td>
+  </tr>
+</tbody></table>
+
+<p>This distinction is more useful than saying that one acronym is universally
+“more modern.” Choose the loop that matches your feedback and evaluation
+system.</p>
+
+<h2 id="6-grpo-group-relative-policy-optimization-deepseekmath-and-deepseek-r1">6) GRPO — Group Relative Policy Optimization (DeepSeekMath and DeepSeek‑R1)</h2>
+
+<p>GRPO was introduced in the DeepSeekMath work and later used as an important
+RL component in the DeepSeek‑R1 program. It is closer to PPO than to DPO in
+spirit: the current policy samples responses and learns from rewards. Its key
+simplification is that it removes the learned value/critic network and uses
+relative rewards within a group of responses instead.</p>
+
+<p>For each prompt $x$ you sample a <strong>group</strong> of $G$ responses
+$\{y_1, \dots, y_G\}$ from the current policy. Each is scored by a reward
+function $r_i$ (which can be a learned reward model, but in practice is
+often a <em>verifiable</em> signal: unit‑test pass/fail, math answer match,
+format check). Compute the advantage as the in‑group standardization:</p>
+
+<div class="eq">
+$A_i = \dfrac{r_i - \mathrm{mean}(r_1,\dots,r_G)}
+{\mathrm{std}(r_1,\dots,r_G) + \varepsilon}$
+</div>
+
+<p>The small $\varepsilon$ in this teaching form prevents division by zero.
+If every response in a group receives the same reward, the group provides no
+relative learning signal and should be logged rather than silently treated as
+informative.</p>
+
+<p>The original family of objectives applies a policy-gradient or clipped
+update using the group-relative advantage and can include a KL penalty against
+a reference policy. Removing the critic reduces one substantial model role and
+its training burden. It does <em>not</em> guarantee lower total memory or better
+stability in every system: sampling $G$ completions per prompt is expensive,
+and sequence length, rollout concurrency, inference acceleration, and optional
+reference-policy use can dominate the footprint.</p>
+
+<p><strong>Why it matters:</strong></p>
+<ul>
+  <li>Uses <em>verifiable rewards</em> (RLVR). For math and code you don't need
+      a reward model at all — graders are deterministic.</li>
+  <li>The group mean acts as a Monte-Carlo baseline, replacing the learned
+      value network with comparisons among sibling responses.</li>
+  <li>The DeepSeek‑R1 report describes GRPO-style RL with verifiable and
+      model-based rewards as one major ingredient in its reasoning gains.</li>
+</ul>
+
+<p><strong>Use when:</strong> your task has a programmatic grader (math, code,
+JSON‑schema compliance, tool‑use success) — i.e. RLVR settings.</p>
+
+<div class="tr-note">
+  <strong>Do not reduce DeepSeek‑R1 to one optimizer</strong>
+  DeepSeek‑R1 was a multi-stage training pipeline: cold-start supervised data,
+  reasoning-oriented RL, rejection sampling and additional SFT, followed by
+  further alignment RL. DeepSeek‑R1‑Zero was the experiment that began with
+  large-scale RL without preliminary SFT. “GRPO trained R1” is therefore true
+  only as a partial description.
+</div>
+
+<h3 id="6-1-current-implementation-caveats">6.1 Current implementation caveats</h3>
+
+<p>GRPO implementations have continued to evolve. Current TRL documentation
+defaults to no KL reference model when <code>beta=0</code> and exposes several
+loss-normalization choices because the original sequence-level formulation can
+introduce response-length bias. Group standard-deviation scaling can also
+create question-difficulty bias. Treat reward scaling, zero-variance groups,
+completion truncation, and length normalization as first-class evaluation
+variables, not harmless defaults.</p>
+
+<h2 id="7-rlaif-and-constitutional-ai-are-related-not-synonyms">7) RLAIF and Constitutional AI are related, not synonyms</h2>
+
+<p><strong>RLAIF</strong> (reinforcement learning from AI feedback) uses an AI
+system to produce some or all of the preference signal that human annotators
+would otherwise provide. A capable judge can compare response pairs against a
+rubric, assign scalar scores, or label desirable and undesirable outputs.
+Those labels may then feed a reward model, DPO, ORPO, KTO, PPO, or another
+optimizer.</p>
+
+<p><strong>Constitutional AI</strong> is a more specific procedure. In the
+original work, a written constitution guides self-critique and revision during
+a supervised phase, then AI-generated preference labels support an RL phase.
+A normal RLAIF judge does not automatically become Constitutional AI merely
+because its prompt contains a rubric.</p>
+
+<p>AI feedback can scale beyond what human labelers can review directly, but
+the judge introduces its own position bias, verbosity bias, self-preference,
+rubric ambiguity, and correlated blind spots. Calibrate it against a
+human-reviewed holdout set, randomize answer order, allow ties or abstention,
+and keep judge and policy versions in the experiment record. Active learning
+can reserve expensive judgments for uncertain or high-impact cases, but the
+uncertainty rule itself must be evaluated.</p>
+
+<h2 id="8-choosing-between-them">8) Choosing between them</h2>
+
+<table>
+  <tbody><tr>
+    <th>Method</th><th>Data shape / mode</th><th>Main training roles</th>
+    <th>Current TRL status</th><th>Pick when…</th>
+  </tr>
+  <tr>
+    <td>SFT (Ch. 12)</td><td>$(x, y)$ demonstrations; offline</td>
+    <td>Policy model</td><td>Main API</td><td>You have trusted target responses.</td>
+  </tr>
+  <tr>
+    <td>DPO</td><td>$(x, y_w, y_l)$; offline</td>
+    <td>Policy + reference log-probabilities</td><td>Main API</td>
+    <td>Strong baseline; paired preferences are available.</td>
+  </tr>
+  <tr>
+    <td>ORPO</td><td>$(x, y_w, y_l)$; offline</td>
+    <td>Policy model; reference-free objective</td><td>Experimental</td>
+    <td>You want to benchmark joint SFT + preference alignment.</td>
+  </tr>
+  <tr>
+    <td>KTO</td><td>$(x, y,\text{label})$; offline</td>
+    <td>Policy + reference log-probabilities</td><td>Main API</td>
+    <td>You have useful binary feedback but no pairs.</td>
+  </tr>
+  <tr>
+    <td>GRPO</td><td>Prompt + online rollouts + reward</td>
+    <td>Policy + grader; optional reference; no critic</td><td>Main API</td>
+    <td>A reliable grader can score several completions per prompt.</td>
+  </tr>
+  <tr>
+    <td>RLAIF</td><td>AI-generated feedback</td>
+    <td>Judge plus whichever optimizer you choose</td><td>Not an optimizer</td>
+    <td>You can calibrate an AI judge against human decisions.</td>
+  </tr>
+  <tr>
+    <td>PPO‑RLHF</td><td>Prompt + online rollouts + reward</td>
+    <td>Policy, old/reference policy, reward, value/critic roles</td><td>Experimental</td>
+    <td>You need online control and can operate the full RL stack.</td>
+  </tr>
+</tbody></table>
+
+<p>“Main roles” is deliberately not “models in VRAM.” Measure resident weights,
+optimizer state, activations, KV caches, rollout concurrency, communication,
+and precomputed artifacts in the implementation you actually run.</p>
+
+<h2 id="9-a-practical-enterprise-decision-sequence">9) A practical enterprise decision sequence</h2>
+
+<ol>
+  <li>Define the held-out evaluation suite, safety constraints, and acceptable
+      regressions before changing the model.</li>
+  <li>Establish a strong <strong>SFT</strong> baseline on domain demonstrations
+      (LoRA / QLoRA where appropriate — Chapter 12).</li>
+  <li>Collect provenance-rich feedback. Thumbs-up/down can seed KTO, while
+      reviewed chosen/rejected pairs can seed DPO or ORPO. Do not convert
+      ambiguous telemetry into labels without a sampling and audit policy.</li>
+  <li>Benchmark at least one simple offline baseline. DPO is a strong default;
+      KTO fits unpaired labels; ORPO remains a useful reference-free candidate.
+      Choose from evaluation evidence, not an assumed VRAM percentage.</li>
+  <li>For extraction, JSON, code, SQL, math, or tool-use tasks with reliable
+      graders, compare rejection-sampling/SFT baselines with a small
+      <strong>GRPO</strong> or other online-RL experiment. A narrow grader may
+      be fewer than 100 lines of Python, but adversarial tests, sandboxing,
+      observability, and governance are usually the larger job.</li>
+  <li>Use <strong>RLAIF</strong> when a written rubric and calibrated judge can
+      expand coverage. DPO, KTO, ORPO, reward-model training, and PPO remain
+      alternative consumers of that feedback; “RLAIF → ORPO” is one candidate,
+      not a universal recipe.</li>
+  <li>Re-measure the committed product metrics and the full regression suite.
+      Ship through a canary only when the intended gain survives human review
+      and safety evaluation.</li>
+</ol>
+
+<div class="tr-warn">
+  <strong>Common pitfall</strong>
+  Alignment methods reward what you measure. If your reward model — or your
+  verifiable grader — has a loophole, the policy will find it (reward
+  hacking). Always hold out an evaluation set and inspect samples by hand
+  every iteration.
+</div>
+
+<h2 id="10-failure-modes-to-test-explicitly">10) Failure modes to test explicitly</h2>
+
+<ul>
+  <li><strong>Reward hacking:</strong> the policy satisfies the grader while
+      violating the real intent.</li>
+  <li><strong>Preference inconsistency:</strong> annotators or judges apply
+      different criteria to similar pairs.</li>
+  <li><strong>Judge bias:</strong> order, length, style, or model-family cues
+      determine the AI judge's choice.</li>
+  <li><strong>Distribution shift:</strong> offline pairs do not resemble outputs
+      from the updated policy or production traffic.</li>
+  <li><strong>Zero-variance groups:</strong> every GRPO completion gets the same
+      reward, so the prompt contributes no relative signal.</li>
+  <li><strong>Length and truncation bias:</strong> objective normalization or a
+      maximum completion length changes what behavior is rewarded.</li>
+  <li><strong>Capability regression:</strong> target metrics improve while
+      general instruction following, calibration, or safety deteriorates.</li>
+</ul>
+
+<h2 id="11-primary-papers-and-current-official-documentation">11) Primary papers and current official documentation</h2>
+<ul>
+  <li><a href="https://arxiv.org/abs/2203.02155" target="_blank" rel="noreferrer">Ouyang et al., 2022 — Training language models to follow instructions with human feedback</a>.</li>
+  <li><a href="https://arxiv.org/abs/2305.18290" target="_blank" rel="noreferrer">Rafailov et al., 2023 — Direct Preference Optimization</a>.</li>
+  <li><a href="https://arxiv.org/abs/2403.07691" target="_blank" rel="noreferrer">Hong et al., 2024 — ORPO: Monolithic Preference Optimization without Reference Model</a>.</li>
+  <li><a href="https://arxiv.org/abs/2402.01306" target="_blank" rel="noreferrer">Ethayarajh et al., 2024 — KTO: Model Alignment as Prospect Theoretic Optimization</a>.</li>
+  <li><a href="https://arxiv.org/abs/2402.03300" target="_blank" rel="noreferrer">DeepSeek‑AI, 2024 — DeepSeekMath</a> and <a href="https://arxiv.org/abs/2501.12948" target="_blank" rel="noreferrer">DeepSeek‑AI, 2025 — DeepSeek‑R1</a>.</li>
+  <li><a href="https://arxiv.org/abs/2212.08073" target="_blank" rel="noreferrer">Bai et al., 2022 — Constitutional AI</a> and <a href="https://arxiv.org/abs/2309.00267" target="_blank" rel="noreferrer">Lee et al., 2023 — RLAIF</a>.</li>
+  <li><a href="https://huggingface.co/docs/trl/" target="_blank" rel="noreferrer">Hugging Face TRL — current trainer index</a>, <a href="https://huggingface.co/docs/trl/dpo_trainer" target="_blank" rel="noreferrer">DPO</a>, <a href="https://huggingface.co/docs/trl/kto_trainer" target="_blank" rel="noreferrer">KTO</a>, <a href="https://huggingface.co/docs/trl/grpo_trainer" target="_blank" rel="noreferrer">GRPO</a>, <a href="https://huggingface.co/docs/trl/orpo_trainer" target="_blank" rel="noreferrer">ORPO</a>, and <a href="https://huggingface.co/docs/trl/ppo_trainer" target="_blank" rel="noreferrer">PPO</a> documentation.</li>
+</ul>
+
+</div></div></article></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col noPrint_WFHX"></div><div class="col lastUpdated_JAkA"><span class="theme-last-updated">Last updated<!-- --> on <b><time datetime="2026-07-30T01:42:42.000Z" itemprop="dateModified">Jul 30, 2026</time></b></span></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/tutorials/part5-deep-learning-and-llms/12-llm-fine-tuning"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">12. LLM fine-tuning</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/tutorials/part6-appendices/overview"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Part overview</div></a></nav></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer"><div class="container container-fluid"><div class="row footer__links"><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Study</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/tutorials/">Book home</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/content-map">Reading guide</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/labs/rnn">Interactive RNN lab</a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Core tracks</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/tutorials/part2-backend-platform-security/overview">Backend and security</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/part3-agent-protocols/overview">Agent protocols</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/part5-deep-learning-and-llms/overview">Deep learning and LLMs</a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright">Enterprise AI, Agents & Applied ML - 2026</div></div></div></footer></div>
+</body>
+</html>

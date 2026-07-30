@@ -1,0 +1,613 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-part3-agent-protocols/mcp-2025-update" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.10.2">
+<title data-rh="true">MCP Protocol Evolution: 2025 Foundations to the 2026 Stateless Core | Enterprise AI, Agents &amp; Applied ML</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://dineshg.github.io/tutorials/part3-agent-protocols/04-mcp-2025-update"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="keywords" content="enterprise AI, machine learning, deep learning, LLM, FastAPI, Pydantic, MCP, authentication"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="MCP Protocol Evolution: 2025 Foundations to the 2026 Stateless Core | Enterprise AI, Agents &amp; Applied ML"><meta data-rh="true" name="description" content="The earlier chapters establish MCP&#x27;s durable mental model: a host contains clients, clients connect to servers, and servers expose tools, resources, and prompts. This chapter adds the version dimension. MCP changed su..."><meta data-rh="true" property="og:description" content="The earlier chapters establish MCP&#x27;s durable mental model: a host contains clients, clients connect to servers, and servers expose tools, resources, and prompts. This chapter adds the version dimension. MCP changed su..."><link data-rh="true" rel="icon" href="/tutorials/img/favicon.svg"><link data-rh="true" rel="canonical" href="https://dineshg.github.io/tutorials/part3-agent-protocols/04-mcp-2025-update"><link data-rh="true" rel="alternate" href="https://dineshg.github.io/tutorials/part3-agent-protocols/04-mcp-2025-update" hreflang="en"><link data-rh="true" rel="alternate" href="https://dineshg.github.io/tutorials/part3-agent-protocols/04-mcp-2025-update" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Part III - Agent Protocols","item":"https://dineshg.github.io/tutorials/part3-agent-protocols/overview"},{"@type":"ListItem","position":2,"name":"4. MCP protocol evolution","item":"https://dineshg.github.io/tutorials/part3-agent-protocols/04-mcp-2025-update"}]}</script><script>window.MathJax={startup:{typeset:!1},tex:{inlineMath:[["\\(","\\)"],["$","$"]],displayMath:[["\\[","\\]"],["$$","$$"]],processEscapes:!0},options:{skipHtmlTags:["script","noscript","style","textarea","pre","code"]}}</script>
+<link rel="stylesheet" href="/tutorials/css/book.css">
+<link rel="stylesheet" href="/tutorials/vendor/highlight.js/11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.18.1/dist/katex.min.css" integrity="sha384-5TcZemv2l/9On385z///+d7MSYlvIEw9FuZTIdZ14vJLqWphw7e7ZPuOiCHJcFCP" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-mml-chtml.js" defer="defer"></script><link rel="stylesheet" href="/tutorials/assets/css/styles.003aa738.css">
+<script src="/tutorials/assets/js/runtime~main.98c31d90.js" defer="defer"></script>
+<script src="/tutorials/assets/js/main.bd80017b.js" defer="defer"></script>
+</head>
+<body>
+<svg style="display: none;"><defs>
+<symbol id="theme-svg-external-link" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")),document.documentElement.setAttribute("data-theme-choice",t||"system")}(),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top"><div class="navbar__inner"><div class="theme-layout-navbar-left navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/tutorials/"><b class="navbar__title text--truncate">Enterprise AI Book</b></a><a class="navbar__item navbar__link" href="/tutorials/">Read</a><a class="navbar__item navbar__link" href="/tutorials/content-map">Concept map</a><a class="navbar__item navbar__link" href="/tutorials/part5-deep-learning-and-llms/10-recurrent-neural-networks">Deep learning</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><div class="navbar__item book-search-navbar-item"><button type="button" class="book-search-trigger" aria-label="Search the book">Search <kbd>Ctrl K</kbd></button></div><a href="https://github.com/dineshg/tutorials" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type="button" disabled="" title="system mode" aria-label="Switch between dark and light mode (currently system mode)"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill="currentColor" d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill="currentColor" d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill="currentColor" d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"></path></svg></button></div><div class="navbarSearchContainer_Bca1"></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class="docsWrapper_hBAB"><button aria-label="Scroll back to top" class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type="button"></button><div class="docRoot_UBD9"><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class="sidebarViewport_aRkj"><div class="sidebar_njMd"><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/tutorials/"><span class="linkLabel_WmDU">Book home</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/tutorials/content-map"><span class="linkLabel_WmDU">Reading guide and concept map</span></a></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-blue"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part1-enterprise-ai-delivery/overview"><span class="categoryLinkLabel_W154">Part I - Enterprise AI Delivery</span></a><button aria-label="Expand sidebar category &#x27;Part I - Enterprise AI Delivery&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-teal"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part2-backend-platform-security/overview"><span class="categoryLinkLabel_W154">Part II - Backend, Platform &amp; Security</span></a><button aria-label="Expand sidebar category &#x27;Part II - Backend, Platform &amp; Security&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item sidebar-category sidebar-category-violet"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--active" href="/tutorials/part3-agent-protocols/overview"><span class="categoryLinkLabel_W154">Part III - Agent Protocols</span></a><button aria-label="Collapse sidebar category &#x27;Part III - Agent Protocols&#x27;" aria-expanded="true" type="button" class="clean-btn menu__caret"></button></div><ul class="menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part3-agent-protocols/01-mcp-fundamentals"><span class="linkLabel_WmDU">1. MCP fundamentals</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part3-agent-protocols/02-mcp-discovery-remote-auth"><span class="linkLabel_WmDU">2. MCP discovery, remote transport, and auth</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part3-agent-protocols/03-mcp-enterprise-pattern"><span class="linkLabel_WmDU">3. MCP enterprise pattern</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link menu__link--active" aria-current="page" tabindex="0" href="/tutorials/part3-agent-protocols/04-mcp-2025-update"><span class="linkLabel_WmDU">4. MCP protocol evolution</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part3-agent-protocols/05-a2a-protocol"><span class="linkLabel_WmDU">5. A2A protocol 1.0</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part3-agent-protocols/06-javascript-typescript-primer"><span class="linkLabel_WmDU">6. JavaScript and TypeScript primer</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part3-agent-protocols/07-langchain-langgraph-flowise"><span class="linkLabel_WmDU">7. LangChain, LangGraph, and Flowise</span></a></li></ul></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-amber"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part4-ml-foundations/overview"><span class="categoryLinkLabel_W154">Part IV - ML Foundations</span></a><button aria-label="Expand sidebar category &#x27;Part IV - ML Foundations&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-coral"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part5-deep-learning-and-llms/overview"><span class="categoryLinkLabel_W154">Part V - Deep Learning &amp; LLMs</span></a><button aria-label="Expand sidebar category &#x27;Part V - Deep Learning &amp; LLMs&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-slate"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part6-appendices/overview"><span class="categoryLinkLabel_W154">Part VI - Appendices</span></a><button aria-label="Expand sidebar category &#x27;Part VI - Appendices&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li></ul></nav><button type="button" title="Collapse sidebar" aria-label="Collapse sidebar" class="button button--secondary button--outline collapseSidebarButton_PEFL"><svg width="20" height="20" aria-hidden="true" class="collapseSidebarButtonIcon_kv0_"><g fill="#7a7a7a"><path d="M9.992 10.023c0 .2-.062.399-.172.547l-4.996 7.492a.982.982 0 01-.828.454H1c-.55 0-1-.453-1-1 0-.2.059-.403.168-.551l4.629-6.942L.168 3.078A.939.939 0 010 2.528c0-.548.45-.997 1-.997h2.996c.352 0 .649.18.828.45L9.82 9.472c.11.148.172.347.172.55zm0 0"></path><path d="M19.98 10.023c0 .2-.058.399-.168.547l-4.996 7.492a.987.987 0 01-.828.454h-3c-.547 0-.996-.453-.996-1 0-.2.059-.403.168-.551l4.625-6.942-4.625-6.945a.939.939 0 01-.168-.55 1 1 0 01.996-.997h3c.348 0 .649.18.828.45l4.996 7.492c.11.148.168.347.168.55zm0 0"></path></g></svg></button></div></div></aside><main class="docMainContainer_TBSr"><div class="container padding-top--md padding-bottom--lg"><div class="row"><div class="col"><div class="docItemContainer_Djhp"><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label="Breadcrumbs"><ul class="breadcrumbs"><li class="breadcrumbs__item"><a aria-label="Home page" class="breadcrumbs__link" href="/tutorials/"><svg viewBox="0 0 24 24" class="breadcrumbHomeIcon_YNFT"><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill="currentColor"></path></svg></a></li><li class="breadcrumbs__item"><a class="breadcrumbs__link" href="/tutorials/part3-agent-protocols/overview"><span>Part III - Agent Protocols</span></a></li><li class="breadcrumbs__item breadcrumbs__item--active"><span class="breadcrumbs__link">4. MCP protocol evolution</span></li></ul></nav><div class="theme-doc-markdown markdown"><article class="book-article tr-content" data-book-part="part3" data-book-accent="violet"><header class="articleHeader_jX4Y"><span class="partLabel_DqKR">Part III - Agent Protocols &amp; Integration</span><h1>MCP Protocol Evolution: 2025 Foundations to the 2026 Stateless Core</h1><div class="articleMeta_jfH_"><span>9<!-- --> min read</span><span aria-hidden="true">·</span><span>11<!-- --> sections</span></div></header><details class="chapterToc_aQjS"><summary>On this page</summary><nav aria-label="On this page"><a href="#1-what-stays-stable-across-versions">1) What stays stable across versions</a><a href="#2-the-two-protocol-eras">2) The two protocol eras</a><a href="#3-the-current-stateless-request-model">3) The current stateless request model</a><a href="#4-transport-evolution-http-sse-to-streamable-http">4) Transport evolution: HTTP+SSE to Streamable HTTP</a><a href="#5-authorization-protected-resources-and-least-privilege">5) Authorization: protected resources and least privilege</a><a href="#6-from-elicitation-to-multi-round-trip-requests">6) From elicitation to multi-round-trip requests</a><a href="#7-structured-tool-output">7) Structured tool output</a><a href="#8-resource-links-keep-large-data-out-of-the-immediate-context">8) Resource links keep large data out of the immediate context</a><a href="#9-operational-changes-worth-remembering">9) Operational changes worth remembering</a><a href="#10-migration-checklist">10) Migration checklist</a><a href="#official-references">Official references</a></nav></details><div class="articleBody_b2wt"><div class="ch">
+
+
+
+<p>
+  The earlier chapters establish MCP's durable mental model: a host contains
+  clients, clients connect to servers, and servers expose
+  <strong>tools</strong>, <strong>resources</strong>, and
+  <strong>prompts</strong>. This chapter adds the version dimension. MCP
+  changed substantially during 2025 and again in the
+  <code>2026-07-28</code> specification. The capability model remains
+  recognizable, but connection state, discovery, subscriptions, server
+  requests, tasks, and registration changed.
+</p>
+
+<div class="tr-warn">
+  <strong>Read the version before copying a wire example.</strong>
+  The 2025 session-based protocol and the 2026 stateless protocol are both
+  explained because existing systems may still implement either one. A
+  production client should negotiate or explicitly select the protocol
+  version; it should never combine fields from the two eras.
+</div>
+
+<figure class="figure-card">
+  <svg viewBox="0 0 1040 350" role="img" aria-labelledby="mcp-evolution-title mcp-evolution-desc">
+    <title id="mcp-evolution-title">MCP evolution from two-endpoint HTTP to stateless requests</title>
+    <desc id="mcp-evolution-desc">A timeline showing HTTP plus SSE, 2025 Streamable HTTP with sessions, and the 2026 stateless protocol.</desc>
+    <defs>
+      <marker id="mcp-arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+        <path d="M0,0 L10,5 L0,10 Z" fill="#1769e0"></path>
+      </marker>
+      <linearGradient id="mcp-current" x1="0" x2="1">
+        <stop offset="0" stop-color="#e8f2ff"></stop>
+        <stop offset="1" stop-color="#e9fbf2"></stop>
+      </linearGradient>
+    </defs>
+
+    <text x="60" y="45" font-size="18" font-weight="700" fill="#162033">Early HTTP transport</text>
+    <rect x="45" y="70" width="250" height="205" rx="14" fill="#fff4e5" stroke="#d78b00" stroke-width="2"></rect>
+    <rect x="75" y="105" width="190" height="46" rx="9" fill="#ffffff" stroke="#d78b00"></rect>
+    <text x="170" y="134" text-anchor="middle" font-size="16" fill="#162033">POST /messages</text>
+    <rect x="75" y="172" width="190" height="46" rx="9" fill="#ffffff" stroke="#d78b00"></rect>
+    <text x="170" y="201" text-anchor="middle" font-size="16" fill="#162033">GET /sse</text>
+    <text x="170" y="248" text-anchor="middle" font-size="14" fill="#6b4a00">two coordinated endpoints</text>
+
+    <line x1="310" y1="173" x2="370" y2="173" stroke="#1769e0" stroke-width="4" marker-end="url(#mcp-arrow)"></line>
+
+    <text x="390" y="45" font-size="18" font-weight="700" fill="#162033">2025 foundation</text>
+    <rect x="375" y="70" width="285" height="205" rx="14" fill="#f1ecff" stroke="#7548d8" stroke-width="2"></rect>
+    <rect x="412" y="105" width="210" height="46" rx="9" fill="#ffffff" stroke="#7548d8"></rect>
+    <text x="517" y="134" text-anchor="middle" font-size="16" fill="#162033">POST or GET /mcp</text>
+    <rect x="412" y="172" width="210" height="46" rx="9" fill="#ffffff" stroke="#7548d8"></rect>
+    <text x="517" y="201" text-anchor="middle" font-size="16" fill="#162033">initialize + session ID</text>
+    <text x="517" y="248" text-anchor="middle" font-size="14" fill="#54349a">Streamable HTTP</text>
+
+    <line x1="675" y1="173" x2="735" y2="173" stroke="#1769e0" stroke-width="4" marker-end="url(#mcp-arrow)"></line>
+
+    <text x="755" y="45" font-size="18" font-weight="700" fill="#162033">2026 current core</text>
+    <rect x="740" y="70" width="255" height="205" rx="14" fill="url(#mcp-current)" stroke="#14875a" stroke-width="2.5"></rect>
+    <rect x="775" y="102" width="185" height="42" rx="9" fill="#ffffff" stroke="#1769e0"></rect>
+    <text x="867" y="128" text-anchor="middle" font-size="15" fill="#162033">server/discover</text>
+    <rect x="775" y="158" width="185" height="42" rx="9" fill="#ffffff" stroke="#14875a"></rect>
+    <text x="867" y="184" text-anchor="middle" font-size="15" fill="#162033">self-contained request</text>
+    <rect x="775" y="214" width="185" height="42" rx="9" fill="#ffffff" stroke="#d78b00"></rect>
+    <text x="867" y="240" text-anchor="middle" font-size="15" fill="#162033">explicit state handles</text>
+
+    <text x="520" y="322" text-anchor="middle" font-size="16" font-weight="700" fill="#162033">
+      Stable concepts: JSON-RPC, tools, resources, prompts, consent, and authorization
+    </text>
+  </svg>
+  <figcaption>
+    MCP kept its capability model while moving transport and conversational
+    context out of implicit connection state.
+  </figcaption>
+</figure>
+
+<h2 id="1-what-stays-stable-across-versions">1) What stays stable across versions</h2>
+
+<p>
+  MCP standardizes how an AI application discovers and invokes external
+  capabilities. All versions in this chapter use JSON-RPC 2.0 messages and
+  preserve three server-facing primitives:
+</p>
+
+<table>
+  <thead>
+    <tr><th>Primitive</th><th>Purpose</th><th>Typical example</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Tool</strong></td>
+      <td>Perform an operation with typed arguments.</td>
+      <td><code>orders/create</code> or <code>weather/get</code></td>
+    </tr>
+    <tr>
+      <td><strong>Resource</strong></td>
+      <td>Expose addressable context that can be read on demand.</td>
+      <td><code>doc://contracts/acme-msa</code></td>
+    </tr>
+    <tr>
+      <td><strong>Prompt</strong></td>
+      <td>Publish a reusable, parameterized message template or workflow.</td>
+      <td>A code-review or incident-triage prompt</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>
+  The host still owns the trust decision. A tool description is not proof
+  that the tool is safe; the host must authenticate the server, constrain
+  what can be called, validate arguments, obtain appropriate user consent,
+  and render results as untrusted content.
+</p>
+
+<h2 id="2-the-two-protocol-eras">2) The two protocol eras</h2>
+
+<table>
+  <thead>
+    <tr><th>Concern</th><th>2025 protocol family</th><th><code>2026-07-28</code> core</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Context</td>
+      <td>Negotiated during <code>initialize</code>; optionally tied to <code>Mcp-Session-Id</code>.</td>
+      <td>Every request is self-contained; protocol version and capabilities travel in <code>_meta</code>.</td>
+    </tr>
+    <tr>
+      <td>Discovery</td>
+      <td>Initialization and feature-specific list calls.</td>
+      <td><code>server/discover</code> advertises versions, capabilities, and server identity.</td>
+    </tr>
+    <tr>
+      <td>Server notifications</td>
+      <td>A transport-level GET stream and resource subscribe/unsubscribe calls.</td>
+      <td><code>subscriptions/listen</code> is an explicit long-lived request.</td>
+    </tr>
+    <tr>
+      <td>More client input</td>
+      <td>Server-initiated requests such as <code>elicitation/create</code>.</td>
+      <td>An <code>input_required</code> result asks the client to retry with input responses.</td>
+    </tr>
+    <tr>
+      <td>Long-running tasks</td>
+      <td>Introduced experimentally in the core.</td>
+      <td>Moved to the official <code>io.modelcontextprotocol/tasks</code> extension.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="tr-note">
+  <strong>Compatibility rule</strong>
+  The 2025 sections below are not disposable history. They explain why
+  Streamable HTTP, protected-resource metadata, structured output, and
+  resource links exist. When implementing, however, use the message shapes
+  for the version your client and server actually select.
+</div>
+
+<h2 id="3-the-current-stateless-request-model">3) The current stateless request model</h2>
+
+<h3 id="3-1-discovery-replaces-the-mandatory-handshake">3.1 Discovery replaces the mandatory handshake</h3>
+
+<p>
+  In the current protocol, a server must implement
+  <code>server/discover</code>. A client may call it before other methods to
+  choose a supported version and inspect capabilities, or it may optimistically
+  send another request and handle an unsupported-version error.
+</p>
+
+<pre><code class="language-json">{
+  "jsonrpc": "2.0",
+  "id": "discover-1",
+  "method": "server/discover",
+  "params": {
+    "_meta": {
+      "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+      "io.modelcontextprotocol/clientInfo": {
+        "name": "book-example-host",
+        "version": "1.0.0"
+      },
+      "io.modelcontextprotocol/clientCapabilities": {}
+    }
+  }
+}</code></pre>
+
+<p>
+  A successful result includes <code>resultType: "complete"</code>, supported
+  protocol versions, server capabilities, server identity metadata, and cache
+  hints. Discovery is useful for up-front negotiation, but it does not create
+  a session.
+</p>
+
+<h3 id="3-2-every-request-carries-its-own-protocol-context">3.2 Every request carries its own protocol context</h3>
+
+<pre><code class="language-json">{
+  "jsonrpc": "2.0",
+  "id": 42,
+  "method": "tools/call",
+  "params": {
+    "name": "quote",
+    "arguments": {"symbol": "ACME"},
+    "_meta": {
+      "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+      "io.modelcontextprotocol/clientCapabilities": {},
+      "io.modelcontextprotocol/clientInfo": {
+        "name": "book-example-host",
+        "version": "1.0.0"
+      }
+    }
+  }
+}</code></pre>
+
+<p>
+  The server must be able to process this request without remembering an
+  earlier initialize call, connection, conversation, or process. If an
+  application needs state across calls, the server returns an explicit
+  identifier, such as <code>task_7f12</code> or
+  <code>checkout_session_91</code>, and the client passes that handle in later
+  arguments.
+</p>
+
+<div class="tr-tip">
+  <strong>Why statelessness matters</strong>
+  Any healthy instance can process the next request. Load balancers no longer
+  need sticky sessions, a reconnect does not erase hidden protocol state, and
+  task or conversation identity is visible in application data rather than
+  inferred from a socket.
+</div>
+
+<h3 id="3-3-result-types-make-continuation-explicit">3.3 Result types make continuation explicit</h3>
+
+<p>
+  Every current result has a <code>resultType</code>. Ordinary final responses
+  use <code>"complete"</code>. A response that needs more information uses
+  <code>"input_required"</code>. Clients talking to an older server treat a
+  missing <code>resultType</code> as <code>"complete"</code> for backward
+  compatibility.
+</p>
+
+<h2 id="4-transport-evolution-http-sse-to-streamable-http">4) Transport evolution: HTTP+SSE to Streamable HTTP</h2>
+
+<h3 id="4-1-before-streamable-http">4.1 Before Streamable HTTP</h3>
+
+<p>
+  Early remote MCP examples exposed two coordinated endpoints:
+  <code>POST /messages</code> carried client-to-server requests and
+  <code>GET /sse</code> held a Server-Sent Events channel for
+  server-to-client messages. Deployments had to coordinate two endpoints,
+  preserve connection affinity, and survive load-balancer idle timeouts.
+</p>
+
+<h3 id="4-2-the-2025-streamable-http-model">4.2 The 2025 Streamable HTTP model</h3>
+
+<p>
+  The <code>2025-03-26</code> family introduced one endpoint, commonly
+  <code>/mcp</code>:
+</p>
+
+<ul>
+  <li>
+    <strong><code>POST /mcp</code></strong> accepted a JSON-RPC request and
+    returned either one JSON response or an SSE response stream containing
+    the result and request-scoped progress.
+  </li>
+  <li>
+    <strong><code>GET /mcp</code></strong> could open an independent SSE stream
+    for notifications such as resource changes, sampling, or elicitation.
+  </li>
+  <li>
+    The initialize response could issue <code>Mcp-Session-Id</code>, and later
+    requests sent the negotiated <code>MCP-Protocol-Version</code>.
+  </li>
+</ul>
+
+<p>
+  This was a major improvement over the two-endpoint HTTP+SSE transport, and
+  many deployed clients still use it. It is also the context in which calls
+  such as <code>mcp.run(transport="streamable-http")</code> first appeared in
+  SDK examples.
+</p>
+
+<h3 id="4-3-the-2026-streamable-http-model">4.3 The 2026 Streamable HTTP model</h3>
+
+<p>
+  Streamable HTTP remains, but the protocol-level session and GET notification
+  stream do not. The current model uses:
+</p>
+
+<ul>
+  <li>self-contained <code>POST</code> requests with required protocol metadata;</li>
+  <li>the <code>Mcp-Method</code> and <code>Mcp-Name</code> request headers for HTTP routing consistency;</li>
+  <li>request-scoped response streams for progress and log notifications;</li>
+  <li><code>subscriptions/listen</code> when a client explicitly wants selected change notifications;</li>
+  <li>a new request ID when retrying after a broken in-flight response stream.</li>
+</ul>
+
+<div class="tr-warn">
+  <strong>HTTP boundary security</strong>
+  Validate the <code>Origin</code> header to defend against DNS rebinding,
+  bind local-only servers to loopback, require HTTPS and authentication for
+  remote servers, and never treat CORS as authorization.
+</div>
+
+<h2 id="5-authorization-protected-resources-and-least-privilege">5) Authorization: protected resources and least privilege</h2>
+
+<p>
+  A simple bearer-token middleware is useful for learning. Production remote
+  MCP uses the protocol's OAuth profile and the same resource-server
+  principles developed in Part II:
+</p>
+
+<ol>
+  <li>
+    The MCP server is the <strong>protected resource</strong>. Its
+    <code>/.well-known/oauth-protected-resource</code> metadata identifies
+    trusted authorization servers.
+  </li>
+  <li>
+    Public clients use Authorization Code with PKCE. OAuth 2.1 remains an
+    Internet-Draft, so treat "OAuth 2.1" as a modern profile: follow the
+    current OAuth security best practices and avoid implicit and password
+    grants.
+  </li>
+  <li>
+    The client includes a resource indicator so the access token is minted
+    for this MCP resource rather than silently replayed at another server.
+  </li>
+  <li>
+    The server validates JWTs with issuer metadata and JWKS, or validates
+    opaque tokens through introspection. It checks issuer, audience/resource,
+    expiry, and required scopes.
+  </li>
+  <li>
+    Authorization-server issuer binding matters: credentials issued by one
+    authorization server must not be reused at another.
+  </li>
+</ol>
+
+<p>
+  The 2025 guidance used Dynamic Client Registration (RFC 7591) for clients
+  unknown to the authorization server. In the current specification it is
+  deprecated in favor of <strong>Client ID Metadata Documents</strong>,
+  although DCR remains a compatibility path for authorization servers that
+  do not yet support the replacement.
+</p>
+
+<div class="tr-tip">
+  <strong>End-user versus workload identity</strong>
+  DPoP can sender-constrain a public-client token; mTLS is common between
+  workloads; token exchange is the cleanest way for a host to obtain a
+  downstream token that represents an authorized user delegation. Do not
+  forward an upstream access token merely because both services accept JWTs.
+</div>
+
+<h2 id="6-from-elicitation-to-multi-round-trip-requests">6) From elicitation to multi-round-trip requests</h2>
+
+<h3 id="6-1-the-2025-elicitation-model">6.1 The 2025 elicitation model</h3>
+
+<p>
+  A tool sometimes needs a missing parameter, clarification, or confirmation.
+  The 2025 protocol introduced <code>elicitation/create</code>, a
+  server-initiated request routed through the host to the user:
+</p>
+
+<pre><code class="language-python"># Historical 2025-style conceptual FastMCP API
+@mcp.tool()
+async def book_flight(ctx, origin: str, destination: str) -&gt; dict:
+    if not origin:
+        response = await ctx.elicit(
+            message="Which city should I book the flight from?",
+            schema={
+                "type": "object",
+                "properties": {"origin": {"type": "string"}},
+                "required": ["origin"],
+            },
+        )
+        if response.action != "accept":
+            return {"error": "user_declined"}
+        origin = response.content["origin"]
+    return await reserve(origin, destination)</code></pre>
+
+<p>
+  The host displayed the prompt, validated the structured response, and
+  returned an <code>accept</code>, <code>decline</code>, or
+  <code>cancel</code> outcome. This established a clean human-in-the-loop
+  contract for sensitive tools.
+</p>
+
+<h3 id="6-2-the-2026-mrtr-model">6.2 The 2026 MRTR model</h3>
+
+<p>
+  The current protocol removes server-initiated requests from the core
+  transport. Instead, the server returns an
+  <code>InputRequiredResult</code>. Its <code>inputRequests</code> describe
+  the required elicitation, sampling, or roots input. The client gathers the
+  information and retries the original method with
+  <code>inputResponses</code>.
+</p>
+
+<pre><code class="language-json">{
+  "jsonrpc": "2.0",
+  "id": 42,
+  "result": {
+    "resultType": "input_required",
+    "inputRequests": [
+      {
+        "requestId": "origin-city",
+        "type": "elicitation",
+        "message": "Which city should I book the flight from?"
+      }
+    ]
+  }
+}</code></pre>
+
+<p>
+  The exact schema should come from the selected SDK and protocol version.
+  The important mental shift is that the server does not call backward over
+  an assumed session: it returns a continuation requirement, and the client
+  explicitly resumes the operation.
+</p>
+
+<h2 id="7-structured-tool-output">7) Structured tool output</h2>
+
+<p>
+  Plain text is useful for a human, but fragile for application code.
+  Structured output lets a tool declare a JSON Schema and return machine-ready
+  data in <code>structuredContent</code>, optionally alongside a readable
+  content rendering:
+</p>
+
+<pre><code class="language-python">@mcp.tool(
+    output_schema={
+        "type": "object",
+        "properties": {
+            "price": {"type": "number"},
+            "currency": {"type": "string"},
+        },
+        "required": ["price", "currency"],
+        "additionalProperties": False,
+    },
+)
+def quote(symbol: str) -&gt; dict:
+    return {"price": 142.55, "currency": "USD"}</code></pre>
+
+<p>
+  The host can render the result as a chart, badge, form, or JSON view without
+  asking the language model to re-parse prose. Current MCP accepts JSON Schema
+  2020-12 by default and permits a full JSON value in
+  <code>structuredContent</code>. Validators should bound schema depth and
+  composition complexity, and they must not automatically fetch arbitrary
+  network <code>$ref</code> targets.
+</p>
+
+<h2 id="8-resource-links-keep-large-data-out-of-the-immediate-context">8) Resource links keep large data out of the immediate context</h2>
+
+<p>
+  A search result, PDF, or table dump can consume the model's context before
+  the model knows whether it is relevant. A tool can return a typed resource
+  link instead:
+</p>
+
+<pre><code class="language-json">{
+  "content": [
+    {
+      "type": "text",
+      "text": "I found three matching contracts."
+    },
+    {
+      "type": "resource_link",
+      "uri": "doc://contracts/2024-Q4/acme-msa.pdf",
+      "mimeType": "application/pdf",
+      "name": "Acme MSA (2024-Q4)"
+    }
+  ]
+}</code></pre>
+
+<p>
+  The model receives a compact handle. The host can fetch the referenced
+  resource with <code>resources/read</code> only when needed and only after
+  applying authorization and size limits. A URI is a reference, not evidence
+  that the target is safe: defend against SSRF, disallowed schemes, oversized
+  content, and cross-tenant access.
+</p>
+
+<h2 id="9-operational-changes-worth-remembering">9) Operational changes worth remembering</h2>
+
+<table>
+  <thead>
+    <tr><th>Feature</th><th>Current guidance</th><th>Reason</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>JSON-RPC batching</td>
+      <td>Use one request per call; batching was removed in <code>2025-06-18</code>.</td>
+      <td>Clear request lifecycle and streaming semantics.</td>
+    </tr>
+    <tr>
+      <td>Progress</td>
+      <td>Keep request-scoped progress on that request's response stream.</td>
+      <td>Avoid cross-request ambiguity.</td>
+    </tr>
+    <tr>
+      <td>Change notifications</td>
+      <td>Use <code>subscriptions/listen</code> and opt into specific notification types.</td>
+      <td>Subscriptions become explicit request state.</td>
+    </tr>
+    <tr>
+      <td>Tasks</td>
+      <td>Use the official tasks extension, with <code>tasks/get</code> polling and <code>tasks/update</code> for later input.</td>
+      <td>Durable work evolves independently of the core.</td>
+    </tr>
+    <tr>
+      <td>Roots, sampling, logging</td>
+      <td>Existing implementations may support them, but new implementations should follow the documented migration paths because these features are deprecated.</td>
+      <td>Reduce connection-coupled client features.</td>
+    </tr>
+    <tr>
+      <td>Tool annotations</td>
+      <td>Treat read-only, destructive, idempotent, and open-world hints as untrusted metadata.</td>
+      <td>The host still enforces policy and consent.</td>
+    </tr>
+    <tr>
+      <td>Caching</td>
+      <td>Honor <code>ttlMs</code> and <code>cacheScope</code> on cacheable list/read results.</td>
+      <td>Reduce polling without leaking private results through shared caches.</td>
+    </tr>
+    <tr>
+      <td>Tracing</td>
+      <td>Propagate <code>traceparent</code>, <code>tracestate</code>, and <code>baggage</code> in <code>_meta</code>.</td>
+      <td>Trace one operation across host, server, and downstream systems.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="10-migration-checklist">10) Migration checklist</h2>
+
+<table>
+  <thead>
+    <tr><th>Older design</th><th>2025 improvement</th><th>Current destination</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>/messages</code> plus <code>/sse</code></td>
+      <td>One Streamable HTTP <code>/mcp</code> endpoint</td>
+      <td>Keep Streamable HTTP, remove the independent GET stream, and use <code>subscriptions/listen</code>.</td>
+    </tr>
+    <tr>
+      <td>Implicit connection assumptions</td>
+      <td><code>initialize</code> plus optional <code>Mcp-Session-Id</code></td>
+      <td>Per-request version and capabilities in <code>_meta</code>; explicit application handles.</td>
+    </tr>
+    <tr>
+      <td>Ad hoc feature detection</td>
+      <td>Initialization capabilities</td>
+      <td><code>server/discover</code> plus per-request capability declaration.</td>
+    </tr>
+    <tr>
+      <td>Custom bearer authentication</td>
+      <td>Protected Resource Metadata, PKCE, and resource indicators</td>
+      <td>Retain the resource-server model; prefer Client ID Metadata Documents over new DCR integrations.</td>
+    </tr>
+    <tr>
+      <td>Plain-text-only tool result</td>
+      <td>Output schema and <code>structuredContent</code></td>
+      <td>Use JSON Schema 2020-12 and bounded validation.</td>
+    </tr>
+    <tr>
+      <td>Inline large blobs</td>
+      <td><code>resource_link</code></td>
+      <td>Keep links compact and fetch with authorization and network-safety controls.</td>
+    </tr>
+    <tr>
+      <td>Fail when information is missing</td>
+      <td><code>elicitation/create</code></td>
+      <td>Return <code>input_required</code> and resume through MRTR.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="tr-note">
+  <strong>Chapter transition</strong>
+  The next chapter moves from connecting one host to capabilities toward
+  collaboration between autonomous agents. MCP and A2A overlap at the system
+  boundary, but they solve different primary problems: MCP exposes context
+  and operations; A2A delegates stateful work to another agent.
+</div>
+
+<h2 id="official-references">Official references</h2>
+<ul>
+  <li><a href="https://modelcontextprotocol.io/specification/2026-07-28">MCP <code>2026-07-28</code> specification</a></li>
+  <li><a href="https://modelcontextprotocol.io/specification/2026-07-28/changelog">MCP <code>2026-07-28</code> key changes</a></li>
+  <li><a href="https://modelcontextprotocol.io/specification/2026-07-28/server/discover"><code>server/discover</code> reference</a></li>
+</ul>
+
+</div></div></article></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col noPrint_WFHX"></div><div class="col lastUpdated_JAkA"><span class="theme-last-updated">Last updated<!-- --> on <b><time datetime="2026-07-30T01:42:42.000Z" itemprop="dateModified">Jul 30, 2026</time></b></span></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/tutorials/part3-agent-protocols/03-mcp-enterprise-pattern"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">3. MCP enterprise pattern</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/tutorials/part3-agent-protocols/05-a2a-protocol"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">5. A2A protocol 1.0</div></a></nav></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer"><div class="container container-fluid"><div class="row footer__links"><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Study</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/tutorials/">Book home</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/content-map">Reading guide</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/labs/rnn">Interactive RNN lab</a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Core tracks</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/tutorials/part2-backend-platform-security/overview">Backend and security</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/part3-agent-protocols/overview">Agent protocols</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/part5-deep-learning-and-llms/overview">Deep learning and LLMs</a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright">Enterprise AI, Agents & Applied ML - 2026</div></div></div></footer></div>
+</body>
+</html>

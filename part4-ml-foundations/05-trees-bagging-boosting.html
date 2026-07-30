@@ -1,0 +1,763 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-part4-ml-foundations/trees-bagging-boosting" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.10.2">
+<title data-rh="true">Bagging &amp; Boosting (AdaBoost + XGBoost) — Trees, Impurities, and How Splits Work | Enterprise AI, Agents &amp; Applied ML</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://dineshg.github.io/tutorials/part4-ml-foundations/05-trees-bagging-boosting"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="keywords" content="enterprise AI, machine learning, deep learning, LLM, FastAPI, Pydantic, MCP, authentication"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Bagging &amp; Boosting (AdaBoost + XGBoost) — Trees, Impurities, and How Splits Work | Enterprise AI, Agents &amp; Applied ML"><meta data-rh="true" name="description" content="This page is a complete, friendly walkthrough of what we discussed: how decision trees split using Gini impurity and Information Gain, how Bagging (Random Forests) works, how Boosting works, a deep step-by-step of Ada..."><meta data-rh="true" property="og:description" content="This page is a complete, friendly walkthrough of what we discussed: how decision trees split using Gini impurity and Information Gain, how Bagging (Random Forests) works, how Boosting works, a deep step-by-step of Ada..."><link data-rh="true" rel="icon" href="/tutorials/img/favicon.svg"><link data-rh="true" rel="canonical" href="https://dineshg.github.io/tutorials/part4-ml-foundations/05-trees-bagging-boosting"><link data-rh="true" rel="alternate" href="https://dineshg.github.io/tutorials/part4-ml-foundations/05-trees-bagging-boosting" hreflang="en"><link data-rh="true" rel="alternate" href="https://dineshg.github.io/tutorials/part4-ml-foundations/05-trees-bagging-boosting" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Part IV - ML Foundations","item":"https://dineshg.github.io/tutorials/part4-ml-foundations/overview"},{"@type":"ListItem","position":2,"name":"5. Trees, bagging, and boosting","item":"https://dineshg.github.io/tutorials/part4-ml-foundations/05-trees-bagging-boosting"}]}</script><script>window.MathJax={startup:{typeset:!1},tex:{inlineMath:[["\\(","\\)"],["$","$"]],displayMath:[["\\[","\\]"],["$$","$$"]],processEscapes:!0},options:{skipHtmlTags:["script","noscript","style","textarea","pre","code"]}}</script>
+<link rel="stylesheet" href="/tutorials/css/book.css">
+<link rel="stylesheet" href="/tutorials/vendor/highlight.js/11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.18.1/dist/katex.min.css" integrity="sha384-5TcZemv2l/9On385z///+d7MSYlvIEw9FuZTIdZ14vJLqWphw7e7ZPuOiCHJcFCP" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-mml-chtml.js" defer="defer"></script><link rel="stylesheet" href="/tutorials/assets/css/styles.003aa738.css">
+<script src="/tutorials/assets/js/runtime~main.98c31d90.js" defer="defer"></script>
+<script src="/tutorials/assets/js/main.bd80017b.js" defer="defer"></script>
+</head>
+<body>
+<svg style="display: none;"><defs>
+<symbol id="theme-svg-external-link" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")),document.documentElement.setAttribute("data-theme-choice",t||"system")}(),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top"><div class="navbar__inner"><div class="theme-layout-navbar-left navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/tutorials/"><b class="navbar__title text--truncate">Enterprise AI Book</b></a><a class="navbar__item navbar__link" href="/tutorials/">Read</a><a class="navbar__item navbar__link" href="/tutorials/content-map">Concept map</a><a class="navbar__item navbar__link" href="/tutorials/part5-deep-learning-and-llms/10-recurrent-neural-networks">Deep learning</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><div class="navbar__item book-search-navbar-item"><button type="button" class="book-search-trigger" aria-label="Search the book">Search <kbd>Ctrl K</kbd></button></div><a href="https://github.com/dineshg/tutorials" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type="button" disabled="" title="system mode" aria-label="Switch between dark and light mode (currently system mode)"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill="currentColor" d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill="currentColor" d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill="currentColor" d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"></path></svg></button></div><div class="navbarSearchContainer_Bca1"></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class="docsWrapper_hBAB"><button aria-label="Scroll back to top" class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type="button"></button><div class="docRoot_UBD9"><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class="sidebarViewport_aRkj"><div class="sidebar_njMd"><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/tutorials/"><span class="linkLabel_WmDU">Book home</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/tutorials/content-map"><span class="linkLabel_WmDU">Reading guide and concept map</span></a></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-blue"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part1-enterprise-ai-delivery/overview"><span class="categoryLinkLabel_W154">Part I - Enterprise AI Delivery</span></a><button aria-label="Expand sidebar category &#x27;Part I - Enterprise AI Delivery&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-teal"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part2-backend-platform-security/overview"><span class="categoryLinkLabel_W154">Part II - Backend, Platform &amp; Security</span></a><button aria-label="Expand sidebar category &#x27;Part II - Backend, Platform &amp; Security&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-violet"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part3-agent-protocols/overview"><span class="categoryLinkLabel_W154">Part III - Agent Protocols</span></a><button aria-label="Expand sidebar category &#x27;Part III - Agent Protocols&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item sidebar-category sidebar-category-amber"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--active" href="/tutorials/part4-ml-foundations/overview"><span class="categoryLinkLabel_W154">Part IV - ML Foundations</span></a><button aria-label="Collapse sidebar category &#x27;Part IV - ML Foundations&#x27;" aria-expanded="true" type="button" class="clean-btn menu__caret"></button></div><ul class="menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part4-ml-foundations/01-introduction-pytorch"><span class="linkLabel_WmDU">1. PyTorch foundations</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part4-ml-foundations/02-ml-as-geometry"><span class="linkLabel_WmDU">2. Machine learning as geometry</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part4-ml-foundations/03-linear-regression"><span class="linkLabel_WmDU">3. Linear regression</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part4-ml-foundations/04-linear-classification"><span class="linkLabel_WmDU">4. Linear classification</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link menu__link--active" aria-current="page" tabindex="0" href="/tutorials/part4-ml-foundations/05-trees-bagging-boosting"><span class="linkLabel_WmDU">5. Trees, bagging, and boosting</span></a></li></ul></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-coral"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part5-deep-learning-and-llms/overview"><span class="categoryLinkLabel_W154">Part V - Deep Learning &amp; LLMs</span></a><button aria-label="Expand sidebar category &#x27;Part V - Deep Learning &amp; LLMs&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-slate"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part6-appendices/overview"><span class="categoryLinkLabel_W154">Part VI - Appendices</span></a><button aria-label="Expand sidebar category &#x27;Part VI - Appendices&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li></ul></nav><button type="button" title="Collapse sidebar" aria-label="Collapse sidebar" class="button button--secondary button--outline collapseSidebarButton_PEFL"><svg width="20" height="20" aria-hidden="true" class="collapseSidebarButtonIcon_kv0_"><g fill="#7a7a7a"><path d="M9.992 10.023c0 .2-.062.399-.172.547l-4.996 7.492a.982.982 0 01-.828.454H1c-.55 0-1-.453-1-1 0-.2.059-.403.168-.551l4.629-6.942L.168 3.078A.939.939 0 010 2.528c0-.548.45-.997 1-.997h2.996c.352 0 .649.18.828.45L9.82 9.472c.11.148.172.347.172.55zm0 0"></path><path d="M19.98 10.023c0 .2-.058.399-.168.547l-4.996 7.492a.987.987 0 01-.828.454h-3c-.547 0-.996-.453-.996-1 0-.2.059-.403.168-.551l4.625-6.942-4.625-6.945a.939.939 0 01-.168-.55 1 1 0 01.996-.997h3c.348 0 .649.18.828.45l4.996 7.492c.11.148.168.347.168.55zm0 0"></path></g></svg></button></div></div></aside><main class="docMainContainer_TBSr"><div class="container padding-top--md padding-bottom--lg"><div class="row"><div class="col"><div class="docItemContainer_Djhp"><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label="Breadcrumbs"><ul class="breadcrumbs"><li class="breadcrumbs__item"><a aria-label="Home page" class="breadcrumbs__link" href="/tutorials/"><svg viewBox="0 0 24 24" class="breadcrumbHomeIcon_YNFT"><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill="currentColor"></path></svg></a></li><li class="breadcrumbs__item"><a class="breadcrumbs__link" href="/tutorials/part4-ml-foundations/overview"><span>Part IV - ML Foundations</span></a></li><li class="breadcrumbs__item breadcrumbs__item--active"><span class="breadcrumbs__link">5. Trees, bagging, and boosting</span></li></ul></nav><div class="theme-doc-markdown markdown"><article class="book-article tr-content" data-book-part="part4" data-book-accent="amber"><header class="articleHeader_jX4Y"><span class="partLabel_DqKR">Part IV - Machine Learning Foundations</span><h1>Bagging &amp; Boosting (AdaBoost + XGBoost)with Decision Tree Splits &amp; Impurities</h1><div class="articleMeta_jfH_"><span>10<!-- --> min read</span><span aria-hidden="true">·</span><span>11<!-- --> sections</span></div></header><details class="chapterToc_aQjS"><summary>On this page</summary><nav aria-label="On this page"><a href="#1-what-is-an-ensemble-big-picture">1) What is an Ensemble? Big Picture</a><a href="#2-decision-trees-how-they-learn-foundation">2) Decision Trees: How They Learn Foundation</a><a href="#3-impurity-measures-gini-and-information-gain-splitting-criteria">3) Impurity Measures: Gini and Information Gain Splitting Criteria</a><a href="#4-a-concrete-split-example-step-by-step-intuition">4) A Concrete Split Example (Step-by-Step) Intuition</a><a href="#5-bagging-and-random-forests-variance-reduction">5) Bagging and Random Forests Variance Reduction</a><a href="#6-boosting-overview-bias-reduction">6) Boosting Overview Bias Reduction</a><a href="#7-adaboost-adaptive-boosting-deep-dive-weights-weak-learners">7) AdaBoost (Adaptive Boosting) — Deep Dive Weights + Weak Learners</a><a href="#8-gradient-boosting-and-xgboost-loss-optimization">8) Gradient Boosting and XGBoost Loss Optimization</a><a href="#9-sequential-vs-parallel-in-boosting-xgboost-important-detail">9) Sequential vs Parallel in Boosting (XGBoost) Important Detail</a><a href="#10-random-forest-vs-xgboost-practical-comparison">10) Random Forest vs XGBoost Practical Comparison</a><a href="#11-quick-cheat-sheet-remember-fast">11) Quick Cheat Sheet Remember Fast</a></nav></details><div class="articleBody_b2wt"><div class="wrap">
+    <header class="hero" id="top">
+      <div class="hero-inner">
+        <div class="kicker">
+          <span class="pill"><span class="dot"></span> One-page tutorial</span>
+          <span class="pill"><span class="dot" style="background:var(--green); box-shadow:0 0 0 4px rgba(5,150,105,0.14)"></span> Trees → Ensembles</span>
+          <span class="pill"><span class="dot" style="background:var(--amber); box-shadow:0 0 0 4px rgba(245,158,11,0.16)"></span> Impurities explained</span>
+        </div>
+        
+        <p class="sub">
+          This page is a complete, friendly walkthrough of what we discussed:
+          how decision trees split using <strong>Gini impurity</strong> and <strong>Information Gain</strong>,
+          how <strong>Bagging</strong> (Random Forests) works, how <strong>Boosting</strong> works,
+          a deep step-by-step of <strong>AdaBoost</strong>, and what makes <strong>XGBoost</strong> fast and powerful —
+          including what’s <em>sequential</em> vs what can be <em>parallelized</em>.
+        </p>
+        <nav class="toc">
+          <a href="#ensembles">Ensembles</a>
+          <a href="#trees">Decision Trees</a>
+          <a href="#impurity">Gini &amp; Information Gain</a>
+          <a href="#split-example">A Split Example</a>
+          <a href="#bagging">Bagging &amp; Random Forest</a>
+          <a href="#boosting">Boosting Overview</a>
+          <a href="#adaboost">AdaBoost Deep Dive</a>
+          <a href="#xgboost">Gradient Boosting &amp; XGBoost</a>
+          <a href="#parallel">Sequential vs Parallel</a>
+          <a href="#compare">Random Forest vs XGBoost</a>
+          <a href="#cheatsheet">Cheat Sheet</a>
+        </nav>
+      </div>
+    </header>
+
+    <!-- 1) Ensembles -->
+    <section id="ensembles">
+      <h2 id="1-what-is-an-ensemble-big-picture">1) What is an Ensemble? <span class="tag">Big Picture</span></h2>
+
+      <div class="callout">
+        <strong>Ensemble learning</strong> means we combine many simple models to create one strong model.
+        The individual models are called <strong>base learners</strong> (often decision trees).
+      </div>
+
+      <div class="grid cols2">
+        <div class="card">
+          <h3 id="why-does-combining-models-help">Why does combining models help?</h3>
+          <ul>
+            <li><strong>Reduce variance</strong>: if one model is “noisy”, averaging many models smooths errors.</li>
+            <li><strong>Reduce bias</strong>: if one model is “too simple”, sequential correction can capture complex patterns.</li>
+            <li><strong>Stability</strong>: ensembles are less sensitive to small changes in data.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3 id="the-two-main-families">The two main families</h3>
+          <p><span class="badge"><span class="b"></span>Bagging</span> builds many models independently and averages/votes.</p>
+          <p><span class="badge"><span class="g g"></span>Boosting</span> builds models sequentially, each correcting earlier mistakes.</p>
+          <p class="callout amber" style="margin-top:10px">
+            <strong>Key theme:</strong> Bagging focuses on <strong>variance reduction</strong>. Boosting focuses on <strong>bias reduction</strong> (and can also reduce variance with regularization).
+          </p>
+        </div>
+      </div>
+
+      <div class="mini-diagram" aria-label="Bagging vs Boosting diagram">
+        <svg viewBox="0 0 980 210" role="img">
+          <defs>
+            <linearGradient id="g1" x1="0" x2="1">
+              <stop offset="0" stop-color="rgba(37,99,235,0.18)"></stop>
+              <stop offset="1" stop-color="rgba(6,182,212,0.14)"></stop>
+            </linearGradient>
+            <linearGradient id="g2" x1="0" x2="1">
+              <stop offset="0" stop-color="rgba(5,150,105,0.16)"></stop>
+              <stop offset="1" stop-color="rgba(124,58,237,0.14)"></stop>
+            </linearGradient>
+          </defs>
+
+          <rect x="15" y="16" width="455" height="178" rx="16" fill="url(#g1)" stroke="rgba(15,23,42,0.14)"></rect>
+          <text x="34" y="44" font-size="16" font-weight="800" fill="#0b2a4a">Bagging (Random Forest style)</text>
+          <text x="34" y="70" font-size="13" fill="#0b2a4a">Trees trained independently (can run in parallel)</text>
+
+          <!-- bagging trees -->
+          <g transform="translate(35,88)">
+            <rect x="0" y="0" width="60" height="58" rx="12" fill="rgba(255,255,255,0.75)" stroke="rgba(15,23,42,0.15)"></rect>
+            <text x="10" y="34" font-size="12" font-weight="800" fill="#0b2a4a">Tree 1</text>
+
+            <rect x="72" y="0" width="60" height="58" rx="12" fill="rgba(255,255,255,0.75)" stroke="rgba(15,23,42,0.15)"></rect>
+            <text x="82" y="34" font-size="12" font-weight="800" fill="#0b2a4a">Tree 2</text>
+
+            <rect x="144" y="0" width="60" height="58" rx="12" fill="rgba(255,255,255,0.75)" stroke="rgba(15,23,42,0.15)"></rect>
+            <text x="154" y="34" font-size="12" font-weight="800" fill="#0b2a4a">Tree 3</text>
+
+            <rect x="216" y="0" width="60" height="58" rx="12" fill="rgba(255,255,255,0.75)" stroke="rgba(15,23,42,0.15)"></rect>
+            <text x="226" y="34" font-size="12" font-weight="800" fill="#0b2a4a">Tree 4</text>
+
+            <text x="286" y="34" font-size="22" font-weight="900" fill="#0b2a4a">→</text>
+            <rect x="314" y="-2" width="105" height="62" rx="14" fill="rgba(255,255,255,0.82)" stroke="rgba(15,23,42,0.18)"></rect>
+            <text x="328" y="26" font-size="12" font-weight="900" fill="#0b2a4a">Average /</text>
+            <text x="328" y="44" font-size="12" font-weight="900" fill="#0b2a4a">Vote</text>
+          </g>
+
+          <rect x="510" y="16" width="455" height="178" rx="16" fill="url(#g2)" stroke="rgba(15,23,42,0.14)"></rect>
+          <text x="529" y="44" font-size="16" font-weight="800" fill="#0b2a4a">Boosting (AdaBoost / XGBoost style)</text>
+          <text x="529" y="70" font-size="13" fill="#0b2a4a">Trees trained sequentially (each corrects previous errors)</text>
+
+          <!-- boosting chain -->
+          <g transform="translate(525,92)">
+            <rect x="0" y="0" width="68" height="55" rx="12" fill="rgba(255,255,255,0.75)" stroke="rgba(15,23,42,0.15)"></rect>
+            <text x="12" y="33" font-size="12" font-weight="800" fill="#0b2a4a">Tree 1</text>
+
+            <text x="72" y="35" font-size="20" font-weight="900" fill="#0b2a4a">→</text>
+
+            <rect x="92" y="0" width="68" height="55" rx="12" fill="rgba(255,255,255,0.75)" stroke="rgba(15,23,42,0.15)"></rect>
+            <text x="104" y="33" font-size="12" font-weight="800" fill="#0b2a4a">Tree 2</text>
+
+            <text x="164" y="35" font-size="20" font-weight="900" fill="#0b2a4a">→</text>
+
+            <rect x="184" y="0" width="68" height="55" rx="12" fill="rgba(255,255,255,0.75)" stroke="rgba(15,23,42,0.15)"></rect>
+            <text x="196" y="33" font-size="12" font-weight="800" fill="#0b2a4a">Tree 3</text>
+
+            <text x="256" y="35" font-size="20" font-weight="900" fill="#0b2a4a">→</text>
+
+            <rect x="280" y="0" width="150" height="55" rx="12" fill="rgba(255,255,255,0.82)" stroke="rgba(15,23,42,0.18)"></rect>
+            <text x="293" y="24" font-size="12" font-weight="900" fill="#0b2a4a">Add weighted</text>
+            <text x="293" y="42" font-size="12" font-weight="900" fill="#0b2a4a">contributions</text>
+          </g>
+        </svg>
+      </div>
+    </section>
+
+    <!-- 2) Decision Trees -->
+    <section id="trees">
+      <h2 id="2-decision-trees-how-they-learn-foundation">2) Decision Trees: How They Learn <span class="tag">Foundation</span></h2>
+
+      <div class="grid cols2">
+        <div class="card">
+          <h3 id="what-a-split-really-is">What a split really is</h3>
+          <p>
+            At a node, a decision tree searches for a question like:
+            <span class="math">$\text{feature}_j \le \text{threshold}$</span>
+            that divides the data into two groups (left/right).
+          </p>
+          <p>
+            The tree wants the children nodes to be <strong>more “pure”</strong> than the parent —
+            meaning each child contains mostly one class (for classification),
+            or reduced spread (for regression).
+          </p>
+        </div>
+
+        <div class="card">
+          <h3 id="the-tree-s-greedy-rule">The tree’s “greedy” rule</h3>
+          <p>
+            Trees usually use a greedy strategy:
+            <strong>pick the best split right now</strong>,
+            then repeat inside each child node.
+          </p>
+          <div class="callout amber">
+            Greedy means: it doesn’t look ahead many steps; it chooses the best local improvement.
+            That’s why trees are fast and intuitive — but also why a single tree can be unstable.
+          </div>
+        </div>
+      </div>
+
+      <details>
+        <summary>Optional: what does “best” mean in practice?</summary>
+        <p>
+          “Best” means the split that most reduces a chosen impurity measure (Gini/Entropy),
+          or for modern boosting (XGBoost) the split that most reduces the training loss (objective).
+          The spirit is identical: <strong>choose the split that creates the most useful separation</strong>.
+        </p>
+      </details>
+    </section>
+
+    <!-- 3) Impurity -->
+    <section id="impurity">
+      <h2 id="3-impurity-measures-gini-and-information-gain-splitting-criteria">3) Impurity Measures: Gini and Information Gain <span class="tag">Splitting Criteria</span></h2>
+
+      <div class="callout violet">
+        <strong>Impurity</strong> is a number that tells you how mixed the classes are inside a node.
+        Lower impurity = node is closer to “all one class”.
+      </div>
+
+      <div class="grid cols2">
+        <div class="card">
+          <h3 id="gini-impurity-cart-very-common">Gini Impurity (CART; very common)</h3>
+          <p><strong>Idea:</strong> if a node is mostly one class, it’s pure; if it’s evenly mixed, it’s impure.</p>
+          <div class="math">
+            $$\mathrm{Gini}(\text{node}) = 1 - \sum_k p_k^2$$
+          </div>
+          <ul>
+            <li>Binary example: if p = 0.7 and 0.3 → Gini = 1 − (0.49 + 0.09) = 0.42</li>
+            <li>Pure node: p = 1.0 and 0.0 → Gini = 0</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3 id="entropy-and-information-gain-id3-c4-5-style">Entropy &amp; Information Gain (ID3/C4.5 style)</h3>
+          <p><strong>Idea:</strong> entropy measures “surprise” or uncertainty in the class label.</p>
+          <div class="math">
+            $$\mathrm{Entropy}(\text{node}) = -\sum_k p_k\,\log_2(p_k)$$
+          </div>
+          <p>
+            A split is chosen by maximizing Information Gain:
+          </p>
+          <div class="math">
+            $$IG = \mathrm{Entropy}(\text{parent}) - \left(\frac{N_L}{N}\,\mathrm{Entropy}(L) + \frac{N_R}{N}\,\mathrm{Entropy}(R)\right)$$
+          </div>
+        </div>
+      </div>
+
+      <div class="callout green">
+        <strong>How the tree uses impurity:</strong><br>
+        For each candidate split, compute the children impurities, take a weighted average,
+        then choose the split with the <strong>largest impurity reduction</strong>.
+      </div>
+
+      <details>
+        <summary>Gini reduction formula (same shape as Information Gain)</summary>
+        <div class="math">
+          $$\mathrm{GiniSplit} = \frac{N_L}{N}\,\mathrm{Gini}(L) + \frac{N_R}{N}\,\mathrm{Gini}(R) \qquad
+          \mathrm{GiniGain} = \mathrm{Gini}(\text{parent}) - \mathrm{GiniSplit}$$
+        </div>
+      </details>
+    </section>
+
+    <!-- 4) Split example -->
+    <section id="split-example">
+      <h2 id="4-a-concrete-split-example-step-by-step-intuition">4) A Concrete Split Example (Step-by-Step) <span class="tag">Intuition</span></h2>
+
+      <p>
+        Imagine a node contains 10 training samples for binary classification (Yes/No):
+        <strong>6 Yes</strong>, <strong>4 No</strong>.
+      </p>
+
+      <div class="grid cols2">
+        <div class="card">
+          <h3 id="parent-impurity-gini">Parent impurity (Gini)</h3>
+          <p>p(Yes)=0.6, p(No)=0.4</p>
+          <div class="math">
+            $$\mathrm{Gini}(\text{parent}) = 1 - (0.6^2 + 0.4^2) = 1 - (0.36 + 0.16) = 0.48$$
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 id="try-a-candidate-split">Try a candidate split</h3>
+          <p>Suppose we test: <span class="math">$\text{Age} \le 30$</span></p>
+          <ul>
+            <li>Left child: 6 samples → 5 Yes, 1 No</li>
+            <li>Right child: 4 samples → 1 Yes, 3 No</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="grid cols2">
+        <div class="card">
+          <h3 id="child-impurities">Child impurities</h3>
+          <div class="math">
+            $$\begin{aligned}
+            \mathrm{Gini}(L) &amp;= 1 - \left(\left(\frac{5}{6}\right)^2 + \left(\frac{1}{6}\right)^2\right) = 1 - \frac{26}{36} = \frac{10}{36} \approx 0.2778 \\
+            \mathrm{Gini}(R) &amp;= 1 - \left(\left(\frac{1}{4}\right)^2 + \left(\frac{3}{4}\right)^2\right) = 1 - \frac{10}{16} = \frac{6}{16} = 0.375
+            \end{aligned}$$
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 id="weighted-average-and-gain">Weighted average &amp; gain</h3>
+          <div class="math">
+            $$\begin{aligned}
+            \mathrm{GiniSplit} &amp;= \frac{6}{10}\cdot 0.2778 + \frac{4}{10}\cdot 0.375 = 0.3167 \\
+            \mathrm{GiniGain} &amp;= 0.48 - 0.3167 = 0.1633
+            \end{aligned}$$
+          </div>
+          <p>
+            The tree would compare this gain with all other possible splits and choose the biggest.
+          </p>
+        </div>
+      </div>
+
+      <div class="callout">
+        <strong>Core takeaway:</strong> every split is “just” computing impurity before and after.
+        Ensembles (bagging/boosting) change <em>how</em> trees are trained, not the basic logic of splitting.
+      </div>
+    </section>
+
+    <!-- 5) Bagging -->
+    <section id="bagging">
+      <h2 id="5-bagging-and-random-forests-variance-reduction">5) Bagging and Random Forests <span class="tag">Variance Reduction</span></h2>
+
+      <div class="grid cols2">
+        <div class="card">
+          <h3 id="bagging-in-plain-words">Bagging in plain words</h3>
+          <p>
+            Bagging trains many trees on slightly different versions of the dataset.
+            Each tree makes its own prediction, then we combine predictions by
+            <strong>averaging</strong> (regression) or <strong>voting</strong> (classification).
+          </p>
+          <div class="callout green">
+            Bagging is powerful because averaging many noisy models tends to cancel out random errors.
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 id="how-do-we-get-different-versions-of-the-data">How do we get “different versions” of the data?</h3>
+          <p>
+            Using <strong>bootstrap sampling</strong>:
+            sample N points from the training set <em>with replacement</em>.
+            Some points repeat, some are missing.
+          </p>
+          <ul>
+            <li>Each tree sees a different dataset → trees become less correlated.</li>
+            <li>Less correlation → averaging works better.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3 id="random-forest-bagging-feature-randomness">Random Forest: Bagging + Feature Randomness</h3>
+      <div class="grid cols2">
+        <div class="card">
+          <p>
+            Random Forest adds one more trick:
+            at each split, it considers only a <strong>random subset of features</strong>.
+          </p>
+          <ul>
+            <li>This makes trees even more diverse.</li>
+            <li>Diversity improves the power of averaging.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <p><strong>What split criterion is used?</strong></p>
+          <p>
+            Usually <strong>Gini impurity</strong> for classification (CART-style),
+            and variance/MSE for regression.
+          </p>
+          <div class="callout amber">
+            In Random Forest, trees are independent, so you can train trees in parallel very easily.
+          </div>
+        </div>
+      </div>
+
+      <details>
+        <summary>Common Random Forest terms</summary>
+        <ul>
+          <li><strong>n_estimators</strong>: number of trees.</li>
+          <li><strong>max_features</strong>: how many features to try at each split.</li>
+          <li><strong>OOB (out-of-bag) error</strong>: estimate accuracy using samples left out of each bootstrap.</li>
+        </ul>
+      </details>
+    </section>
+
+    <!-- 6) Boosting overview -->
+    <section id="boosting">
+      <h2 id="6-boosting-overview-bias-reduction">6) Boosting Overview <span class="tag">Bias Reduction</span></h2>
+
+      <div class="callout">
+        <strong>Boosting</strong> trains trees one after another.
+        Each new tree is trained to correct mistakes made by the current ensemble.
+      </div>
+
+      <div class="grid cols2">
+        <div class="card">
+          <h3 id="boosting-as-learning-from-errors">Boosting as “learning from errors”</h3>
+          <p>
+            Suppose the first model is a little better than random.
+            It will still make mistakes on “hard” examples.
+            Boosting increases focus on those hard examples, so the next model improves where it matters.
+          </p>
+          <p>
+            Over many rounds, the ensemble becomes very strong.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3 id="two-major-boosting-styles">Two major boosting styles</h3>
+          <ul>
+            <li><strong>AdaBoost</strong>: reweights training examples; uses a weighted vote.</li>
+            <li><strong>Gradient Boosting / XGBoost</strong>: minimizes a loss function using gradients; adds trees as corrections.</li>
+          </ul>
+          <div class="callout amber">
+            Boosting is sequential at the “tree level”: tree (t) depends on results from tree (t−1).
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7) AdaBoost -->
+    <section id="adaboost">
+      <h2 id="7-adaboost-adaptive-boosting-deep-dive-weights-weak-learners">7) AdaBoost (Adaptive Boosting) — Deep Dive <span class="tag">Weights + Weak Learners</span></h2>
+
+      <div class="callout violet">
+        AdaBoost is easiest to understand if you imagine the algorithm is “turning up the volume” on points it got wrong.
+        Those points become more important in the next round.
+      </div>
+
+      <h3 id="what-adaboost-uses-as-base-learners">What AdaBoost uses as base learners</h3>
+      <div class="grid cols2">
+        <div class="card">
+          <p>
+            Most commonly: <strong>decision stumps</strong> (depth-1 trees).
+            A stump is one split like:
+            <span class="math">$\text{feature}_j \le \text{threshold}$</span>.
+          </p>
+          <p>
+            A stump is weak by itself, but many stumps combined can form a complex boundary.
+          </p>
+        </div>
+        <div class="card">
+          <p>
+            AdaBoost is typically described for binary labels:
+            <span class="math">$y \in \{-1, +1\}$</span>.
+            (It can be extended, but binary is the cleanest story.)
+          </p>
+        </div>
+      </div>
+
+      <h3 id="adaboost-algorithm-step-by-step">AdaBoost algorithm (step-by-step)</h3>
+      <pre class="code">Initialize weights: w_i = 1/N for i=1..N
+
+For t = 1..T:
+  1) Train weak learner h_t(x) using weights w_i
+  2) Compute weighted error:
+       ε_t = Σ w_i * 1[y_i ≠ h_t(x_i)]
+  3) Compute learner weight (importance):
+       α_t = 0.5 * ln( (1 − ε_t) / ε_t )
+  4) Update sample weights:
+       w_i ← w_i * exp( −α_t * y_i * h_t(x_i) )
+     (misclassified points get upweighted)
+  5) Normalize weights so Σ w_i = 1
+
+Final prediction:
+  H(x) = sign( Σ α_t * h_t(x) )
+      </pre>
+
+      <div class="grid cols2">
+        <div class="card">
+          <h3 id="what-does-mean">What does α mean?</h3>
+          <p>
+            <strong>α<sub>t</sub></strong> is how much we trust the stump.
+            If a stump has low error, it gets a larger α (more voting power).
+          </p>
+          <div class="math">
+            $$\alpha_t = \tfrac{1}{2}\ln\left(\frac{1-\varepsilon_t}{\varepsilon_t}\right)$$
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 id="why-weights-focus-on-mistakes">Why weights focus on mistakes</h3>
+          <p>
+            If a point is misclassified, the term
+            <span class="math">$\exp(-\alpha\, y\, h(x))$</span>
+            becomes <strong>exp(+α)</strong>, increasing its weight.
+            Correct points shrink by <strong>exp(−α)</strong>.
+          </p>
+          <div class="callout amber">
+            This is why AdaBoost can be sensitive to noise/outliers:
+            if an outlier is repeatedly misclassified, its weight can become huge.
+          </div>
+        </div>
+      </div>
+
+      <h3 id="how-splitting-impurity-works-inside-adaboost">How splitting/impurity works inside AdaBoost</h3>
+      <div class="callout green">
+        AdaBoost changes the “importance” of each training sample via weights.
+        That means when the stump chooses a split, it effectively uses a <strong>weighted impurity</strong> (or weighted classification error).
+      </div>
+
+      <details>
+        <summary>Weighted Gini idea (intuition)</summary>
+        <p>
+          In a normal node, class probability is “count of class / total count”.
+          In AdaBoost, it becomes “sum of weights of class / sum of all weights”.
+        </p>
+        <div class="math">
+          $$p_k = \frac{\sum_i w_i\,\mathbf{1}[y_i = k]}{\sum_i w_i} \qquad
+          \mathrm{WeightedGini} = 1 - \sum_k p_k^2$$
+        </div>
+        <p>
+          The stump still tries to reduce impurity — but now mistakes have larger weights,
+          so splits that fix mistakes become more attractive.
+        </p>
+      </details>
+
+      <details>
+        <summary>Mini numeric example (why a weak learner can get high α)</summary>
+        <p>
+          If ε = 0.2 (20% weighted error), then:
+        </p>
+        <div class="math">
+          $$\alpha = \tfrac{1}{2}\ln\left(\frac{0.8}{0.2}\right) = \tfrac{1}{2}\ln(4) \approx 0.693$$
+        </div>
+        <p>
+          That’s a strong positive weight, meaning the stump gets a meaningful vote.
+          If ε approaches 0.5, α approaches 0 (weak vote).
+        </p>
+      </details>
+    </section>
+
+    <!-- 8) XGBoost -->
+    <section id="xgboost">
+      <h2 id="8-gradient-boosting-and-xgboost-loss-optimization">8) Gradient Boosting and XGBoost <span class="tag">Loss Optimization</span></h2>
+
+      <div class="callout">
+        <strong>Gradient Boosting</strong> generalizes boosting by saying:
+        “Let’s minimize a loss function (objective) by adding trees that move us in the best direction.”
+      </div>
+
+      <h3 id="gradient-boosting-idea-in-simple-steps">Gradient Boosting idea in simple steps</h3>
+      <div class="grid cols2">
+        <div class="card">
+          <ol>
+            <li>Start with a simple prediction (like the average).</li>
+            <li>Compute how wrong you are (residuals / gradients).</li>
+            <li>Train a small tree to predict those errors.</li>
+            <li>Add the tree (scaled by a learning rate) to improve predictions.</li>
+            <li>Repeat.</li>
+          </ol>
+        </div>
+        <div class="card">
+          <p><strong>Additive model view:</strong></p>
+          <div class="math">
+            $$\hat{y}^{(t)}(x) = \hat{y}^{(t-1)}(x) + \eta\, f_t(x)$$
+          </div>
+          <p>
+            Here <strong>η</strong> is the learning rate (shrinkage).
+            Smaller η usually needs more trees but improves generalization.
+          </p>
+        </div>
+      </div>
+
+      <div class="callout amber">
+        <strong>Regression vs classification nuance:</strong>
+        for squared-error regression, the “errors” are literal residuals.
+        For logistic loss and other objectives, boosting fits negative
+        gradients (pseudo-residuals), not raw label errors.
+      </div>
+
+      <h3 id="what-makes-xgboost-special">What makes XGBoost special?</h3>
+      <div class="grid cols3">
+        <div class="card">
+          <p><strong>Second-order optimization</strong></p>
+          <p>
+            Uses gradients (g) <em>and</em> Hessians (h) to choose better splits.
+          </p>
+          <span class="badge"><span class="v v"></span> More accurate split scoring</span>
+        </div>
+        <div class="card">
+          <p><strong>Regularization</strong></p>
+          <p>
+            Penalizes complex trees to reduce overfitting.
+            (Think: don’t let the model become “too wiggly”.)
+          </p>
+          <span class="badge"><span class="a a"></span> Better generalization</span>
+        </div>
+        <div class="card">
+          <p><strong>Engineering for speed</strong></p>
+          <p>
+            Histogram splits, cache efficiency, parallel computation, GPU support, distributed training.
+          </p>
+          <span class="badge"><span class="g g"></span> Much faster on large data</span>
+        </div>
+      </div>
+
+      <h3 id="how-does-xgboost-decide-splits-vs-gini-entropy">How does XGBoost decide splits (vs Gini/Entropy)?</h3>
+      <div class="callout violet">
+        Random Forest uses <strong>impurity reduction</strong> (Gini/Entropy).<br>
+        XGBoost uses <strong>objective reduction</strong> (loss + regularization).<br><br>
+        But conceptually, both are choosing the split that gives the “best improvement”.
+      </div>
+
+      <details>
+        <summary>Split “gain” intuition (no heavy math)</summary>
+        <p>
+          For a candidate split, XGBoost summarizes the node using two numbers:
+          the sum of gradients (G) and sum of Hessians (H) in that node.
+          It estimates how much the regularized objective improves if we split into left and right.
+        </p>
+        <div class="math">
+          $$\mathrm{Gain} =
+          \frac{1}{2}\left[
+          \frac{G_L^2}{H_L+\lambda} +
+          \frac{G_R^2}{H_R+\lambda} -
+          \frac{(G_L+G_R)^2}{H_L+H_R+\lambda}
+          \right] - \gamma$$
+        </div>
+        <p>
+          Where λ is L2 regularization on leaf weights and γ is a penalty for creating a new split
+          (discouraging unnecessary splits).
+        </p>
+      </details>
+
+      <details>
+        <summary>Parallel-friendly split finding (histograms)</summary>
+        <p>
+          XGBoost often uses a histogram algorithm:
+        </p>
+        <ul>
+          <li>Bucket each feature into bins (like 256 bins).</li>
+          <li>Accumulate gradient/Hessian sums per bin.</li>
+          <li>Scan bins to find the best threshold.</li>
+        </ul>
+        <p>
+          This makes split-finding fast and parallelizable across features and bins.
+        </p>
+      </details>
+    </section>
+
+    <!-- 9) Sequential vs Parallel -->
+    <section id="parallel">
+      <h2 id="9-sequential-vs-parallel-in-boosting-xgboost-important-detail">9) Sequential vs Parallel in Boosting (XGBoost) <span class="tag">Important Detail</span></h2>
+
+      <div class="callout amber">
+        <strong>Boosting is sequential across trees</strong> because tree t needs the gradients/residuals from the current model (trees 1..t−1).
+        So you can’t train all trees at once.
+      </div>
+
+      <h3 id="so-how-can-xgboost-still-be-fast">So how can XGBoost still be fast?</h3>
+      <p>
+        Because XGBoost parallelizes <strong>within each boosting round</strong>.
+        Think: “We can’t write Chapter 5 before Chapter 4, but many people can work in parallel on Chapter 4.”
+      </p>
+
+      <div class="grid cols2">
+        <div class="card">
+          <h3 id="what-can-be-parallelized-inside-a-round">What can be parallelized inside a round?</h3>
+          <ul>
+            <li><strong>Gradient &amp; Hessian computation</strong> per data point (independent operations).</li>
+            <li><strong>Split search across features</strong> (each feature can be evaluated separately).</li>
+            <li><strong>Histogram building</strong> (bin counts/aggregations can be parallelized).</li>
+            <li><strong>Node processing at the same depth</strong> (level-wise growth enables parallel node expansion).</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3 id="distributed-multi-gpu-idea">Distributed / multi-GPU idea</h3>
+          <ul>
+            <li>Each worker computes local gradient statistics.</li>
+            <li>Workers do a <strong>reduce</strong> (sum) to combine stats.</li>
+            <li>Then the best split is chosen globally.</li>
+          </ul>
+          <div class="callout green">
+            Trees stay sequential, but the expensive computations inside each tree are distributed.
+          </div>
+        </div>
+      </div>
+
+      <details>
+        <summary>What XGBoost does NOT parallelize</summary>
+        <ul>
+          <li>Training tree (t+1) before finishing tree (t)</li>
+          <li>Skipping gradient dependency (that would break boosting)</li>
+        </ul>
+      </details>
+    </section>
+
+    <!-- 10) Comparison -->
+    <section id="compare">
+      <h2 id="10-random-forest-vs-xgboost-practical-comparison">10) Random Forest vs XGBoost <span class="tag">Practical Comparison</span></h2>
+
+      <table>
+        <tbody><tr>
+          <th>Aspect</th>
+          <th>Random Forest (Bagging)</th>
+          <th>XGBoost (Boosting)</th>
+        </tr>
+        <tr>
+          <td><strong>Training style</strong></td>
+          <td>Independent trees (parallel)</td>
+          <td>Sequential trees (each corrects errors)</td>
+        </tr>
+        <tr>
+          <td><strong>Main benefit</strong></td>
+          <td>Reduces variance, very robust</td>
+          <td>Reduces bias strongly, often best accuracy</td>
+        </tr>
+        <tr>
+          <td><strong>Split criterion</strong></td>
+          <td>Gini / Entropy (classification) or MSE (regression)</td>
+          <td>Objective gain using gradients &amp; Hessians + regularization</td>
+        </tr>
+        <tr>
+          <td><strong>Noise sensitivity</strong></td>
+          <td>Usually more tolerant</td>
+          <td>More sensitive; needs regularization/tuning</td>
+        </tr>
+        <tr>
+          <td><strong>Hyperparameters</strong></td>
+          <td>Fewer critical knobs</td>
+          <td>More knobs; more control (and more tuning)</td>
+        </tr>
+        <tr>
+          <td><strong>Parallelism</strong></td>
+          <td>Across trees</td>
+          <td>Within each tree / round (features, bins, nodes)</td>
+        </tr>
+      </tbody></table>
+
+      <div class="callout">
+        <strong>Rule of thumb:</strong>
+        If you want a strong baseline with little tuning, Random Forest is great.
+        If you want maximum performance on tabular data and can tune/regularize, XGBoost often wins.
+      </div>
+    </section>
+
+    <!-- 11) Cheat sheet -->
+    <section id="cheatsheet">
+      <h2 id="11-quick-cheat-sheet-remember-fast">11) Quick Cheat Sheet <span class="tag">Remember Fast</span></h2>
+
+      <div class="grid cols2">
+        <div class="card">
+          <h3 id="bagging-random-forest">Bagging (Random Forest)</h3>
+          <ul>
+            <li><strong>Goal:</strong> reduce variance.</li>
+            <li><strong>How:</strong> bootstrap samples + random feature subsets.</li>
+            <li><strong>Combine:</strong> vote / average.</li>
+            <li><strong>Splits:</strong> Gini/Entropy (classification).</li>
+            <li><strong>Parallel:</strong> yes, across trees.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3 id="boosting-adaboost-xgboost">Boosting (AdaBoost / XGBoost)</h3>
+          <ul>
+            <li><strong>Goal:</strong> reduce bias by fixing errors.</li>
+            <li><strong>AdaBoost:</strong> reweight samples; weighted vote with α.</li>
+            <li><strong>Gradient Boosting:</strong> fit residuals/gradients; add trees.</li>
+            <li><strong>XGBoost:</strong> optimized objective + regularization + fast splits.</li>
+            <li><strong>Parallel:</strong> not across trees, but inside each round.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="callout rose">
+        <strong>If you only remember one thing:</strong><br>
+        Trees split by reducing “badness” (impurity or loss).<br>
+        Bagging improves stability by averaging many independent trees.<br>
+        Boosting improves accuracy by sequentially correcting mistakes.
+      </div>
+
+      <p style="margin-top:16px;">
+        Jump back to the top: <a href="#top">↑</a>
+      </p>
+    </section>
+
+    <footer>
+      This chapter closes the classical tabular-model path and prepares the
+      transition to learned representations in Part V.
+    </footer>
+  </div></div></article></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col noPrint_WFHX"></div><div class="col lastUpdated_JAkA"><span class="theme-last-updated">Last updated<!-- --> on <b><time datetime="2026-07-30T01:42:42.000Z" itemprop="dateModified">Jul 30, 2026</time></b></span></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/tutorials/part4-ml-foundations/04-linear-classification"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">4. Linear classification</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/tutorials/part5-deep-learning-and-llms/overview"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Part overview</div></a></nav></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer"><div class="container container-fluid"><div class="row footer__links"><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Study</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/tutorials/">Book home</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/content-map">Reading guide</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/labs/rnn">Interactive RNN lab</a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Core tracks</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/tutorials/part2-backend-platform-security/overview">Backend and security</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/part3-agent-protocols/overview">Agent protocols</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/part5-deep-learning-and-llms/overview">Deep learning and LLMs</a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright">Enterprise AI, Agents & Applied ML - 2026</div></div></div></footer></div>
+</body>
+</html>

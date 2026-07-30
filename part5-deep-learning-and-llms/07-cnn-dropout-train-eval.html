@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-part5-deep-learning-and-llms/cnn-dropout-train-eval" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.10.2">
+<title data-rh="true">CNN Training in PyTorch: Flattening, Dropout, Train, and Eval | Enterprise AI, Agents &amp; Applied ML</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://dineshg.github.io/tutorials/part5-deep-learning-and-llms/07-cnn-dropout-train-eval"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="keywords" content="enterprise AI, machine learning, deep learning, LLM, FastAPI, Pydantic, MCP, authentication"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="CNN Training in PyTorch: Flattening, Dropout, Train, and Eval | Enterprise AI, Agents &amp; Applied ML"><meta data-rh="true" name="description" content="This chapter develops Dropout from first principles: what gets masked, how often masks change, why scaling exists, how gradients behave, and why train()/eval() matters."><meta data-rh="true" property="og:description" content="This chapter develops Dropout from first principles: what gets masked, how often masks change, why scaling exists, how gradients behave, and why train()/eval() matters."><link data-rh="true" rel="icon" href="/tutorials/img/favicon.svg"><link data-rh="true" rel="canonical" href="https://dineshg.github.io/tutorials/part5-deep-learning-and-llms/07-cnn-dropout-train-eval"><link data-rh="true" rel="alternate" href="https://dineshg.github.io/tutorials/part5-deep-learning-and-llms/07-cnn-dropout-train-eval" hreflang="en"><link data-rh="true" rel="alternate" href="https://dineshg.github.io/tutorials/part5-deep-learning-and-llms/07-cnn-dropout-train-eval" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Part V - Deep Learning & LLMs","item":"https://dineshg.github.io/tutorials/part5-deep-learning-and-llms/overview"},{"@type":"ListItem","position":2,"name":"7. CNN dropout and train/eval","item":"https://dineshg.github.io/tutorials/part5-deep-learning-and-llms/07-cnn-dropout-train-eval"}]}</script><script>window.MathJax={startup:{typeset:!1},tex:{inlineMath:[["\\(","\\)"],["$","$"]],displayMath:[["\\[","\\]"],["$$","$$"]],processEscapes:!0},options:{skipHtmlTags:["script","noscript","style","textarea","pre","code"]}}</script>
+<link rel="stylesheet" href="/tutorials/css/book.css">
+<link rel="stylesheet" href="/tutorials/vendor/highlight.js/11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.18.1/dist/katex.min.css" integrity="sha384-5TcZemv2l/9On385z///+d7MSYlvIEw9FuZTIdZ14vJLqWphw7e7ZPuOiCHJcFCP" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-mml-chtml.js" defer="defer"></script><link rel="stylesheet" href="/tutorials/assets/css/styles.003aa738.css">
+<script src="/tutorials/assets/js/runtime~main.98c31d90.js" defer="defer"></script>
+<script src="/tutorials/assets/js/main.bd80017b.js" defer="defer"></script>
+</head>
+<body>
+<svg style="display: none;"><defs>
+<symbol id="theme-svg-external-link" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")),document.documentElement.setAttribute("data-theme-choice",t||"system")}(),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top"><div class="navbar__inner"><div class="theme-layout-navbar-left navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/tutorials/"><b class="navbar__title text--truncate">Enterprise AI Book</b></a><a class="navbar__item navbar__link" href="/tutorials/">Read</a><a class="navbar__item navbar__link" href="/tutorials/content-map">Concept map</a><a class="navbar__item navbar__link" href="/tutorials/part5-deep-learning-and-llms/10-recurrent-neural-networks">Deep learning</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><div class="navbar__item book-search-navbar-item"><button type="button" class="book-search-trigger" aria-label="Search the book">Search <kbd>Ctrl K</kbd></button></div><a href="https://github.com/dineshg/tutorials" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type="button" disabled="" title="system mode" aria-label="Switch between dark and light mode (currently system mode)"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill="currentColor" d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill="currentColor" d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill="currentColor" d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"></path></svg></button></div><div class="navbarSearchContainer_Bca1"></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class="docsWrapper_hBAB"><button aria-label="Scroll back to top" class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type="button"></button><div class="docRoot_UBD9"><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class="sidebarViewport_aRkj"><div class="sidebar_njMd"><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/tutorials/"><span class="linkLabel_WmDU">Book home</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/tutorials/content-map"><span class="linkLabel_WmDU">Reading guide and concept map</span></a></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-blue"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part1-enterprise-ai-delivery/overview"><span class="categoryLinkLabel_W154">Part I - Enterprise AI Delivery</span></a><button aria-label="Expand sidebar category &#x27;Part I - Enterprise AI Delivery&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-teal"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part2-backend-platform-security/overview"><span class="categoryLinkLabel_W154">Part II - Backend, Platform &amp; Security</span></a><button aria-label="Expand sidebar category &#x27;Part II - Backend, Platform &amp; Security&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-violet"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part3-agent-protocols/overview"><span class="categoryLinkLabel_W154">Part III - Agent Protocols</span></a><button aria-label="Expand sidebar category &#x27;Part III - Agent Protocols&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-amber"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part4-ml-foundations/overview"><span class="categoryLinkLabel_W154">Part IV - ML Foundations</span></a><button aria-label="Expand sidebar category &#x27;Part IV - ML Foundations&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item sidebar-category sidebar-category-coral"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--active" href="/tutorials/part5-deep-learning-and-llms/overview"><span class="categoryLinkLabel_W154">Part V - Deep Learning &amp; LLMs</span></a><button aria-label="Collapse sidebar category &#x27;Part V - Deep Learning &amp; LLMs&#x27;" aria-expanded="true" type="button" class="clean-btn menu__caret"></button></div><ul class="menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/01-ffn-concepts"><span class="linkLabel_WmDU">1. Feed-forward network concepts</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/02-ffn-training-debugging"><span class="linkLabel_WmDU">2. FFN training and debugging</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/03-ffn-canonical-merged"><span class="linkLabel_WmDU">3. FFN single-chapter reference</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/04-cnn-convolution"><span class="linkLabel_WmDU">4. CNN convolution</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/05-cnn-architecture"><span class="linkLabel_WmDU">5. CNN architecture</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/06-cnn-pytorch-implementation"><span class="linkLabel_WmDU">6. CNN PyTorch implementation</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link menu__link--active" aria-current="page" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/07-cnn-dropout-train-eval"><span class="linkLabel_WmDU">7. CNN dropout and train/eval</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/08-forecasting-sequence-data"><span class="linkLabel_WmDU">8. Forecasting and sequence data</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/09-autoregressive-linear-model"><span class="linkLabel_WmDU">9. Autoregressive linear model</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/10-recurrent-neural-networks"><span class="linkLabel_WmDU">10. Recurrent neural networks</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item sidebar-lab-link"><a class="menu__link" tabindex="0" href="/tutorials/labs/rnn"><span class="linkLabel_WmDU">Interactive lab: animated RNN</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/11-transformers-and-attention"><span class="linkLabel_WmDU">11. Transformers and attention</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/12-llm-fine-tuning"><span class="linkLabel_WmDU">12. LLM fine-tuning</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/13-modern-llm-alignment-orpo-grpo"><span class="linkLabel_WmDU">13. Modern LLM post-training</span></a></li></ul></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-slate"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part6-appendices/overview"><span class="categoryLinkLabel_W154">Part VI - Appendices</span></a><button aria-label="Expand sidebar category &#x27;Part VI - Appendices&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li></ul></nav><button type="button" title="Collapse sidebar" aria-label="Collapse sidebar" class="button button--secondary button--outline collapseSidebarButton_PEFL"><svg width="20" height="20" aria-hidden="true" class="collapseSidebarButtonIcon_kv0_"><g fill="#7a7a7a"><path d="M9.992 10.023c0 .2-.062.399-.172.547l-4.996 7.492a.982.982 0 01-.828.454H1c-.55 0-1-.453-1-1 0-.2.059-.403.168-.551l4.629-6.942L.168 3.078A.939.939 0 010 2.528c0-.548.45-.997 1-.997h2.996c.352 0 .649.18.828.45L9.82 9.472c.11.148.172.347.172.55zm0 0"></path><path d="M19.98 10.023c0 .2-.058.399-.168.547l-4.996 7.492a.987.987 0 01-.828.454h-3c-.547 0-.996-.453-.996-1 0-.2.059-.403.168-.551l4.625-6.942-4.625-6.945a.939.939 0 01-.168-.55 1 1 0 01.996-.997h3c.348 0 .649.18.828.45l4.996 7.492c.11.148.168.347.168.55zm0 0"></path></g></svg></button></div></div></aside><main class="docMainContainer_TBSr"><div class="container padding-top--md padding-bottom--lg"><div class="row"><div class="col"><div class="docItemContainer_Djhp"><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label="Breadcrumbs"><ul class="breadcrumbs"><li class="breadcrumbs__item"><a aria-label="Home page" class="breadcrumbs__link" href="/tutorials/"><svg viewBox="0 0 24 24" class="breadcrumbHomeIcon_YNFT"><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill="currentColor"></path></svg></a></li><li class="breadcrumbs__item"><a class="breadcrumbs__link" href="/tutorials/part5-deep-learning-and-llms/overview"><span>Part V - Deep Learning &amp; LLMs</span></a></li><li class="breadcrumbs__item breadcrumbs__item--active"><span class="breadcrumbs__link">7. CNN dropout and train/eval</span></li></ul></nav><div class="theme-doc-markdown markdown"><article class="book-article tr-content" data-book-part="part5" data-book-accent="coral"><header class="articleHeader_jX4Y"><span class="partLabel_DqKR">Part V - Deep Learning &amp; Large Language Models</span><h1>CNN Training in PyTorch: Conv2d, Custom Models, Flattening, and Dropout</h1><div class="articleMeta_jfH_"><span>4<!-- --> min read</span><span aria-hidden="true">·</span><span>4<!-- --> sections</span></div></header><details class="chapterToc_aQjS"><summary>On this page</summary><nav aria-label="On this page"><a href="#dropout-what-it-actually-does-and-what-it-does-not-do">Dropout: what it actually does (and what it does NOT do)</a><a href="#train-vs-eval-why-dropout-turns-off-for-predictions">train() vs eval(): why dropout “turns off” for predictions</a><a href="#dropout-faq-common-confusions">Dropout FAQ (common confusions)</a><a href="#local-visuals-and-source-credits">Local visuals and source credits</a></nav></details><div class="articleBody_b2wt"><div class="wrap">
+
+  <header>
+    
+    <p>
+      This chapter develops Dropout from first principles: what gets masked, how often masks change, why scaling exists,
+      how gradients behave, and why <code>train()</code>/<code>eval()</code> matters.
+    </p>
+
+    <div class="tr-note">
+      <strong>Deep-dive chapter</strong>
+      <a href="/tutorials/part5-deep-learning-and-llms/06-cnn-pytorch-implementation">Chapter 6</a> introduces
+      dropout as part of the CNN implementation checklist. This chapter owns
+      the detailed explanation: random masks, inverted scaling,
+      <code>train()</code> vs <code>eval()</code>, flattening, and common
+      mistakes.
+    </div>
+
+    <div class="chips">
+      <span class="chip">Conv2d arguments &amp; shapes</span>
+      <span class="chip">nn.Module &amp; inheritance</span>
+      <span class="chip">Sequential vs custom nn.Module</span>
+      <span class="chip">Flatten/view boundary</span>
+      <span class="chip">Dropout: masks, scaling, gradients</span>
+      <span class="chip">train() vs eval()</span>
+    </div>
+
+    <nav>
+      <a href="#dropout">Dropout (updated)</a>
+      <a href="#train-eval">train() vs eval()</a>
+      <a href="#dropout-faq">Dropout FAQ</a>
+    </nav>
+  </header>
+
+  <!-- (To keep this response focused on your request, only the updated Dropout-related parts are shown below.) -->
+
+  <section id="dropout">
+    <h2 id="dropout-what-it-actually-does-and-what-it-does-not-do">Dropout: what it actually does (and what it does NOT do)</h2>
+
+    <div class="callout">
+      <p style="margin:0;">
+        <b>Correct mental model:</b> Dropout applies a <b>new random mask every forward pass</b> (typically every mini-batch).
+        It does <b>not</b> permanently “turn off” a neuron, and it does <b>not</b> remove it for the whole training run.
+      </p>
+    </div>
+
+    <h3 id="what-gets-dropped">What gets dropped?</h3>
+    <p>
+      In standard dropout, we drop <b>activations</b> (the outputs of a layer), not the parameter tensors directly.
+      Think: “for this forward pass, some activation values become zero.”
+    </p>
+
+    <h3 id="training-mode-math-inverted-dropout">Training mode math (inverted dropout)</h3>
+    <p>
+      Let a layer output be \(h\). Dropout samples a mask \(m\) where:
+      \[
+        m_i \sim \mathrm{Bernoulli}(q), \quad q = 1-p
+      \]
+      Then it computes:
+      \[
+        \tilde{h} = \frac{m \odot h}{q}
+      \]
+    </p>
+    <ul>
+      <li>If \(m_i = 0\): that activation is <b>zeroed</b> for this pass.</li>
+      <li>If \(m_i = 1\): it’s kept, and scaled by \(1/q\).</li>
+      <li>The scaling keeps the <b>expected activation magnitude</b> consistent between training and inference.</li>
+    </ul>
+
+    <h3 id="inference-mode-math">Inference mode math</h3>
+    <p>
+      In eval mode, dropout is disabled:
+      \[
+        \tilde{h} = h
+      \]
+      No randomness, no masking.
+    </p>
+
+    <h3 id="what-happens-to-gradients-when-an-activation-is-dropped">What happens to gradients when an activation is dropped?</h3>
+    <p>
+      When an activation is dropped (\(m_i=0\)), it contributes nothing to the output, so the gradient through that activation is zero for that sample:
+      \[
+        \frac{\partial \tilde{h}_i}{\partial h_i} = \frac{m_i}{q}
+      \]
+      If \(m_i=0\), then \(\partial \tilde{h}_i / \partial h_i = 0\). Practically:
+    </p>
+    <ul>
+      <li>Weights feeding into that activation receive <b>no update from that sample</b>.</li>
+      <li>But next iteration, the mask changes, so the same unit may be active and updated then.</li>
+    </ul>
+
+    <figure>
+      <img alt="Dropout illustration" src="/tutorials/images/external/Dropout_en-d57ec7c14c-fallback.svg">
+      <figcaption>
+        Local book diagram of dropout. Primary reference:
+        <a href="https://jmlr.org/papers/v15/srivastava14a.html" target="_blank" rel="noopener">Srivastava et al., 2014</a>.
+      </figcaption>
+    </figure>
+
+    <h3 id="interactive-mini-demo-mask-changes-every-forward-pass">Interactive mini-demo (mask changes every “forward pass”)</h3>
+    <p class="muted">
+      This toy demo uses a vector <span class="mono">[1..12]</span> as “activations”.
+      Click “Run one forward pass” multiple times in train mode and watch the mask change.
+    </p>
+
+    <div class="demo" aria-label="Dropout demo widget">
+      <div class="row">
+        <label>Drop probability p: <b id="pVal">0.50</b></label>
+        <input id="pSlider" type="range" min="0" max="0.9" step="0.05" value="0.5">
+        <button id="toggleMode" type="button">Toggle train/eval</button>
+        <span id="modeOut" class="tag warn">train (random mask each forward pass)</span>
+      </div>
+
+      <div class="row" style="margin-top:10px;">
+        <button id="runDropout" type="button">Run one forward pass</button>
+        <span class="muted small">Train mode: new random mask each click.</span>
+      </div>
+
+      <div class="kv">
+        <div class="k">h (input)</div> <div class="mono" id="xOut"></div>
+        <div class="k">m (mask)</div>  <div class="mono" id="mOut"></div>
+        <div class="k">scaling</div>   <div class="mono" id="scaleOut"></div>
+        <div class="k">h̃ (output)</div> <div class="mono" id="yOut"></div>
+      </div>
+    </div>
+
+    <h3 id="pytorch-the-exact-behavior-you-should-remember">PyTorch: the exact behavior you should remember</h3>
+    <ul>
+      <li><code>nn.Dropout(p)</code> applies random masking only when the module is in <code>train()</code> mode.</li>
+      <li>In <code>eval()</code> mode, it becomes an identity function (no change).</li>
+      <li>For standard dropout, mask entries are sampled independently for activations during each forward call. Structured variants such as <code>Dropout2d</code> drop whole channels instead.</li>
+    </ul>
+
+    <div class="codewrap">
+      <div class="codebar">
+        <span class="label">python • verify mask randomness in train vs determinism in eval</span>
+        
+      </div>
+<pre class="language-python"><code>import torch
+import torch.nn as nn
+
+drop = nn.Dropout(p=0.5)
+x = torch.ones(1, 10)
+
+drop.train()
+y1 = drop(x)
+y2 = drop(x)  # different mask, usually different output
+
+drop.eval()
+y3 = drop(x)
+y4 = drop(x)  # same output, dropout disabled
+
+print("train different:", not torch.allclose(y1, y2))
+print("eval same:", torch.allclose(y3, y4))</code></pre>
+    </div>
+
+    <h3 id="where-to-put-dropout-practical-default">Where to put dropout (practical default)</h3>
+    <p>
+      Most commonly: between dense layers. For conv feature maps, many projects skip it or use specialized variants.
+    </p>
+
+    <div class="codewrap">
+      <div class="codebar">
+        <span class="label">python • common pattern: Dense → ReLU → Dropout → Dense</span>
+        
+      </div>
+<pre class="language-python"><code>import torch.nn as nn
+
+head = nn.Sequential(
+    nn.Linear(512, 256),
+    nn.ReLU(),
+    nn.Dropout(p=0.5),
+    nn.Linear(256, 10)  # logits
+)</code></pre>
+    </div>
+
+    <p class="muted">
+      For conv nets, you may also see <code>nn.Dropout2d</code> / <code>nn.Dropout3d</code>:
+      these drop entire channels (feature maps), not individual pixels.
+    </p>
+  </section>
+
+  <section id="train-eval">
+    <h2 id="train-vs-eval-why-dropout-turns-off-for-predictions">train() vs eval(): why dropout “turns off” for predictions</h2>
+
+    <p>
+      PyTorch modules can have different behavior depending on whether you’re training or evaluating.
+      Dropout is the classic example:
+    </p>
+
+    <ul>
+      <li><code>model.train()</code> → dropout ON (random masking), batchnorm uses batch stats</li>
+      <li><code>model.eval()</code> → dropout OFF (no masking), batchnorm uses running stats</li>
+    </ul>
+
+    <div class="callout">
+      <p style="margin:0;">
+        <b>Standard pattern:</b> call <code>model.train()</code> before the training loop,
+        and <code>model.eval()</code> during validation/testing (usually with <code>torch.no_grad()</code>).
+      </p>
+    </div>
+
+    <div class="codewrap">
+      <div class="codebar">
+        <span class="label">python • training/evaluation skeleton (dropout-safe)</span>
+        
+      </div>
+<pre class="language-python"><code>model.train()
+for xb, yb in train_loader:
+    optimizer.zero_grad()
+    logits = model(xb)        # dropout active here
+    loss = loss_fn(logits, yb)
+    loss.backward()
+    optimizer.step()
+
+model.eval()
+correct = 0
+total = 0
+with torch.no_grad():
+    for xb, yb in val_loader:
+        logits = model(xb)    # dropout disabled here
+        preds = logits.argmax(dim=1)
+        correct += (preds == yb).sum().item()
+        total += yb.size(0)
+print("val acc:", correct / total)</code></pre>
+    </div>
+  </section>
+
+  <section id="dropout-faq">
+    <h2 id="dropout-faq-common-confusions">Dropout FAQ (common confusions)</h2>
+
+    <h3 id="does-dropout-stop-training-a-random-node-each-iteration">“Does dropout stop training a random node each iteration?”</h3>
+    <p>
+      It temporarily <b>zeros a random subset of activations</b> each forward pass.
+      Those dropped activations have <b>zero gradient for that sample</b>, so their incoming weights don’t update from that sample.
+      Next iteration, the mask changes, so they can update again.
+      <span class="tag warn">Not permanent</span>
+    </p>
+
+    <h3 id="is-the-same-set-of-nodes-masked-all-the-time">“Is the same set of nodes masked all the time?”</h3>
+    <p>
+      No—standard dropout resamples a new mask per forward pass.
+      Some specialized variants (e.g., “locked/variational dropout” in some sequence models) reuse a mask across time steps,
+      but that’s not the default behavior of <code>nn.Dropout</code>.
+    </p>
+
+    <h3 id="does-dropout-remove-weights">“Does dropout remove weights?”</h3>
+    <p>
+      No. The parameters are still there. Dropout modifies the activations during training. At inference, nothing is removed.
+    </p>
+
+    <h3 id="why-is-there-scaling-by-1-1-p">“Why is there scaling by 1/(1-p)?”</h3>
+    <p>
+      Without scaling, the average activation magnitude would shrink during training.
+      Inverted dropout keeps the expected activation scale similar between train and eval.
+    </p>
+
+    <h3 id="should-i-use-dropout-in-conv-layers">“Should I use dropout in conv layers?”</h3>
+    <p>
+      Often not necessary. If you do, consider channel-wise dropout (<code>Dropout2d</code>) rather than pixel-wise dropout,
+      and verify by experiment—sometimes it helps, sometimes it’s neutral.
+    </p>
+    <p>
+      In modern CNNs, batch normalization, data augmentation, weight decay, early stopping, and larger datasets often reduce
+      the need for heavy dropout. Dropout is still valid, but it is a regularization choice to validate, not a mandatory CNN ingredient.
+    </p>
+  </section>
+
+  <section id="sources">
+    <h2 id="local-visuals-and-source-credits">Local visuals and source credits</h2>
+    <ul class="small">
+      <li>Dropout diagram: local book asset; primary reference: <a href="https://jmlr.org/papers/v15/srivastava14a.html" target="_blank" rel="noopener">Srivastava et al., 2014</a></li>
+    </ul>
+    <p class="muted small">
+      This page is self-contained: MathJax renders equations, shared highlighting formats code, and visuals are served from local assets.
+    </p>
+  </section>
+
+</div></div></article></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col noPrint_WFHX"></div><div class="col lastUpdated_JAkA"><span class="theme-last-updated">Last updated<!-- --> on <b><time datetime="2026-07-30T01:42:42.000Z" itemprop="dateModified">Jul 30, 2026</time></b></span></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/tutorials/part5-deep-learning-and-llms/06-cnn-pytorch-implementation"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">6. CNN PyTorch implementation</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/tutorials/part5-deep-learning-and-llms/08-forecasting-sequence-data"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">8. Forecasting and sequence data</div></a></nav></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer"><div class="container container-fluid"><div class="row footer__links"><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Study</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/tutorials/">Book home</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/content-map">Reading guide</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/labs/rnn">Interactive RNN lab</a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Core tracks</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/tutorials/part2-backend-platform-security/overview">Backend and security</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/part3-agent-protocols/overview">Agent protocols</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/part5-deep-learning-and-llms/overview">Deep learning and LLMs</a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright">Enterprise AI, Agents & Applied ML - 2026</div></div></div></footer></div>
+</body>
+</html>

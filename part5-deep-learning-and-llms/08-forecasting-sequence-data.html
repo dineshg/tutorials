@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-part5-deep-learning-and-llms/forecasting-sequence-data" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.10.2">
+<title data-rh="true">Forecasting and Sequence Data (Time Series) | Enterprise AI, Agents &amp; Applied ML</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://dineshg.github.io/tutorials/part5-deep-learning-and-llms/08-forecasting-sequence-data"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="keywords" content="enterprise AI, machine learning, deep learning, LLM, FastAPI, Pydantic, MCP, authentication"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Forecasting and Sequence Data (Time Series) | Enterprise AI, Agents &amp; Applied ML"><meta data-rh="true" name="description" content="A standalone tutorial on what sequence data is, how to shape it for ML, what “forecasting” really means, and how to avoid the most common multi-step forecasting mistake: data leakage through future inputs."><meta data-rh="true" property="og:description" content="A standalone tutorial on what sequence data is, how to shape it for ML, what “forecasting” really means, and how to avoid the most common multi-step forecasting mistake: data leakage through future inputs."><link data-rh="true" rel="icon" href="/tutorials/img/favicon.svg"><link data-rh="true" rel="canonical" href="https://dineshg.github.io/tutorials/part5-deep-learning-and-llms/08-forecasting-sequence-data"><link data-rh="true" rel="alternate" href="https://dineshg.github.io/tutorials/part5-deep-learning-and-llms/08-forecasting-sequence-data" hreflang="en"><link data-rh="true" rel="alternate" href="https://dineshg.github.io/tutorials/part5-deep-learning-and-llms/08-forecasting-sequence-data" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Part V - Deep Learning & LLMs","item":"https://dineshg.github.io/tutorials/part5-deep-learning-and-llms/overview"},{"@type":"ListItem","position":2,"name":"8. Forecasting and sequence data","item":"https://dineshg.github.io/tutorials/part5-deep-learning-and-llms/08-forecasting-sequence-data"}]}</script><script>window.MathJax={startup:{typeset:!1},tex:{inlineMath:[["\\(","\\)"],["$","$"]],displayMath:[["\\[","\\]"],["$$","$$"]],processEscapes:!0},options:{skipHtmlTags:["script","noscript","style","textarea","pre","code"]}}</script>
+<link rel="stylesheet" href="/tutorials/css/book.css">
+<link rel="stylesheet" href="/tutorials/vendor/highlight.js/11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.18.1/dist/katex.min.css" integrity="sha384-5TcZemv2l/9On385z///+d7MSYlvIEw9FuZTIdZ14vJLqWphw7e7ZPuOiCHJcFCP" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-mml-chtml.js" defer="defer"></script><link rel="stylesheet" href="/tutorials/assets/css/styles.003aa738.css">
+<script src="/tutorials/assets/js/runtime~main.98c31d90.js" defer="defer"></script>
+<script src="/tutorials/assets/js/main.bd80017b.js" defer="defer"></script>
+</head>
+<body>
+<svg style="display: none;"><defs>
+<symbol id="theme-svg-external-link" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")),document.documentElement.setAttribute("data-theme-choice",t||"system")}(),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top"><div class="navbar__inner"><div class="theme-layout-navbar-left navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/tutorials/"><b class="navbar__title text--truncate">Enterprise AI Book</b></a><a class="navbar__item navbar__link" href="/tutorials/">Read</a><a class="navbar__item navbar__link" href="/tutorials/content-map">Concept map</a><a class="navbar__item navbar__link" href="/tutorials/part5-deep-learning-and-llms/10-recurrent-neural-networks">Deep learning</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><div class="navbar__item book-search-navbar-item"><button type="button" class="book-search-trigger" aria-label="Search the book">Search <kbd>Ctrl K</kbd></button></div><a href="https://github.com/dineshg/tutorials" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type="button" disabled="" title="system mode" aria-label="Switch between dark and light mode (currently system mode)"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill="currentColor" d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill="currentColor" d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill="currentColor" d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"></path></svg></button></div><div class="navbarSearchContainer_Bca1"></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class="docsWrapper_hBAB"><button aria-label="Scroll back to top" class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type="button"></button><div class="docRoot_UBD9"><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class="sidebarViewport_aRkj"><div class="sidebar_njMd"><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/tutorials/"><span class="linkLabel_WmDU">Book home</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/tutorials/content-map"><span class="linkLabel_WmDU">Reading guide and concept map</span></a></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-blue"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part1-enterprise-ai-delivery/overview"><span class="categoryLinkLabel_W154">Part I - Enterprise AI Delivery</span></a><button aria-label="Expand sidebar category &#x27;Part I - Enterprise AI Delivery&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-teal"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part2-backend-platform-security/overview"><span class="categoryLinkLabel_W154">Part II - Backend, Platform &amp; Security</span></a><button aria-label="Expand sidebar category &#x27;Part II - Backend, Platform &amp; Security&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-violet"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part3-agent-protocols/overview"><span class="categoryLinkLabel_W154">Part III - Agent Protocols</span></a><button aria-label="Expand sidebar category &#x27;Part III - Agent Protocols&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-amber"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part4-ml-foundations/overview"><span class="categoryLinkLabel_W154">Part IV - ML Foundations</span></a><button aria-label="Expand sidebar category &#x27;Part IV - ML Foundations&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item sidebar-category sidebar-category-coral"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--active" href="/tutorials/part5-deep-learning-and-llms/overview"><span class="categoryLinkLabel_W154">Part V - Deep Learning &amp; LLMs</span></a><button aria-label="Collapse sidebar category &#x27;Part V - Deep Learning &amp; LLMs&#x27;" aria-expanded="true" type="button" class="clean-btn menu__caret"></button></div><ul class="menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/01-ffn-concepts"><span class="linkLabel_WmDU">1. Feed-forward network concepts</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/02-ffn-training-debugging"><span class="linkLabel_WmDU">2. FFN training and debugging</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/03-ffn-canonical-merged"><span class="linkLabel_WmDU">3. FFN single-chapter reference</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/04-cnn-convolution"><span class="linkLabel_WmDU">4. CNN convolution</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/05-cnn-architecture"><span class="linkLabel_WmDU">5. CNN architecture</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/06-cnn-pytorch-implementation"><span class="linkLabel_WmDU">6. CNN PyTorch implementation</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/07-cnn-dropout-train-eval"><span class="linkLabel_WmDU">7. CNN dropout and train/eval</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link menu__link--active" aria-current="page" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/08-forecasting-sequence-data"><span class="linkLabel_WmDU">8. Forecasting and sequence data</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/09-autoregressive-linear-model"><span class="linkLabel_WmDU">9. Autoregressive linear model</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/10-recurrent-neural-networks"><span class="linkLabel_WmDU">10. Recurrent neural networks</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item sidebar-lab-link"><a class="menu__link" tabindex="0" href="/tutorials/labs/rnn"><span class="linkLabel_WmDU">Interactive lab: animated RNN</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/11-transformers-and-attention"><span class="linkLabel_WmDU">11. Transformers and attention</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/12-llm-fine-tuning"><span class="linkLabel_WmDU">12. LLM fine-tuning</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/13-modern-llm-alignment-orpo-grpo"><span class="linkLabel_WmDU">13. Modern LLM post-training</span></a></li></ul></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-slate"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part6-appendices/overview"><span class="categoryLinkLabel_W154">Part VI - Appendices</span></a><button aria-label="Expand sidebar category &#x27;Part VI - Appendices&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li></ul></nav><button type="button" title="Collapse sidebar" aria-label="Collapse sidebar" class="button button--secondary button--outline collapseSidebarButton_PEFL"><svg width="20" height="20" aria-hidden="true" class="collapseSidebarButtonIcon_kv0_"><g fill="#7a7a7a"><path d="M9.992 10.023c0 .2-.062.399-.172.547l-4.996 7.492a.982.982 0 01-.828.454H1c-.55 0-1-.453-1-1 0-.2.059-.403.168-.551l4.629-6.942L.168 3.078A.939.939 0 010 2.528c0-.548.45-.997 1-.997h2.996c.352 0 .649.18.828.45L9.82 9.472c.11.148.172.347.172.55zm0 0"></path><path d="M19.98 10.023c0 .2-.058.399-.168.547l-4.996 7.492a.987.987 0 01-.828.454h-3c-.547 0-.996-.453-.996-1 0-.2.059-.403.168-.551l4.625-6.942-4.625-6.945a.939.939 0 01-.168-.55 1 1 0 01.996-.997h3c.348 0 .649.18.828.45l4.996 7.492c.11.148.168.347.168.55zm0 0"></path></g></svg></button></div></div></aside><main class="docMainContainer_TBSr"><div class="container padding-top--md padding-bottom--lg"><div class="row"><div class="col"><div class="docItemContainer_Djhp"><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label="Breadcrumbs"><ul class="breadcrumbs"><li class="breadcrumbs__item"><a aria-label="Home page" class="breadcrumbs__link" href="/tutorials/"><svg viewBox="0 0 24 24" class="breadcrumbHomeIcon_YNFT"><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill="currentColor"></path></svg></a></li><li class="breadcrumbs__item"><a class="breadcrumbs__link" href="/tutorials/part5-deep-learning-and-llms/overview"><span>Part V - Deep Learning &amp; LLMs</span></a></li><li class="breadcrumbs__item breadcrumbs__item--active"><span class="breadcrumbs__link">8. Forecasting and sequence data</span></li></ul></nav><div class="theme-doc-markdown markdown"><article class="book-article tr-content" data-book-part="part5" data-book-accent="coral"><header class="articleHeader_jX4Y"><span class="partLabel_DqKR">Part V - Deep Learning &amp; Large Language Models</span><h1>Forecasting &amp; Sequence Data (Time Series)</h1><div class="articleMeta_jfH_"><span>9<!-- --> min read</span><span aria-hidden="true">·</span><span>12<!-- --> sections</span></div></header><details class="chapterToc_aQjS"><summary>On this page</summary><nav aria-label="On this page"><a href="#1-what-counts-as-sequence-data">1) What counts as sequence data?</a><a href="#2-what-makes-time-series-different-from-ordinary-tabular-ml">2) What makes time series different from ordinary tabular ML?</a><a href="#3-how-to-represent-sequence-data-n-times-t-times-d">3) How to represent sequence data: \(N \times T \times D\)</a><a href="#4-forecast-origin-lookback-target-and-horizon">4) Forecast origin, lookback, target, and horizon</a><a href="#5-turning-a-long-series-into-supervised-learning-windows">5) Turning a long series into supervised learning windows</a><a href="#6-a-dumb-but-great-baseline-linear-regression-as-an-ar-model">6) A “dumb but great” baseline: linear regression as an AR model</a><a href="#7-exogenous-variables-what-is-known-in-the-future">7) Exogenous variables: what is known in the future?</a><a href="#8-the-most-common-forecasting-mistake-leaking-future-inputs">8) The most common forecasting mistake: leaking future inputs</a><a href="#9-forecasting-strategies-for-h-1">9) Forecasting strategies for \(H&gt;1\)</a><a href="#10-minimal-correct-forecasting-code-baseline-ar-with-recursion">10) Minimal, correct forecasting code: baseline AR with recursion</a><a href="#11-evaluation-one-split-is-a-start-backtesting-is-better">11) Evaluation: one split is a start, backtesting is better</a><a href="#12-where-rnns-fit-next">12) Where RNNs fit next</a></nav></details><div class="articleBody_b2wt"><main class="wrap">
+    
+    <p class="sub">
+      A standalone tutorial on what sequence data is, how to shape it for ML, what “forecasting” really means,
+      and how to avoid the most common multi-step forecasting mistake: data leakage through future inputs.
+    </p>
+
+    <div class="card">
+      <span class="badge">Key idea</span>
+      <p>
+        Sequences are not just “lots of rows.” They have <strong>order</strong>. The value at time \(t\) is often related to
+        values at \(t-1, t-2, \dots\). Forecasting is the discipline of exploiting that ordered dependence to predict values
+        that have not happened yet.
+      </p>
+    </div>
+
+    <h2 id="1-what-counts-as-sequence-data">1) What counts as sequence data?</h2>
+    <div class="grid">
+      <div class="card">
+        <h3 id="time-series-values-indexed-by-time">Time series: values indexed by time</h3>
+        <ul>
+          <li><strong>Finance:</strong> prices, returns, volume, spreads sampled every minute/day.</li>
+          <li><strong>Weather:</strong> temperature, rain, humidity, pressure, wind over time.</li>
+          <li><strong>Audio:</strong> a waveform is amplitude measured over time.</li>
+          <li><strong>Sensor streams:</strong> accelerometers, ECG, machines, IoT, clickstreams, logs.</li>
+        </ul>
+        <p class="mini">
+          The sequence axis is the time axis: rows arrive in order and nearby rows tend to be statistically related.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3 id="example-time-series-plot">Example time series plot</h3>
+        <figure>
+          <img src="/tutorials/images/external/COVID-19_Confirmed_Cases-d7a49434a6-fallback.svg" alt="Example time series plot" style="width:100%; height:auto; border:1px solid var(--border); border-radius:12px;">
+          <figcaption>
+            Any “value vs time” curve is a time series. Displayed as a local asset; source credit retained where applicable.
+          </figcaption>
+        </figure>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 id="text-is-also-sequential-but-with-discrete-tokens">Text is also sequential, but with discrete tokens</h3>
+      <p>
+        A sentence is a sequence of tokens. Older ML often used <strong>bag-of-words</strong>: convert a document into a
+        word-count vector and ignore order. That makes standard classifiers easy to use, but it destroys the sequential signal.
+      </p>
+      <div class="callout tight">
+        <p><strong>Why bag-of-words can fail:</strong> “dog toy” and “toy dog” have the same word counts but different meaning.</p>
+      </div>
+      <p>
+        Time-series forecasting and language modeling are not identical, but they share one deep idea: the next output depends
+        on ordered context. Chapter 10 uses recurrent state for ordered context; Chapter 11 replaces that with attention.
+      </p>
+    </div>
+
+    <h2 id="2-what-makes-time-series-different-from-ordinary-tabular-ml">2) What makes time series different from ordinary tabular ML?</h2>
+    <div class="grid">
+      <div class="card">
+        <h3 id="rows-are-not-exchangeable">Rows are not exchangeable</h3>
+        <p>
+          In ordinary tabular ML, you often treat rows as independent examples and shuffle them before training. In forecasting,
+          shuffling can destroy the question. Training on 2025 and validating on 2020 is not a forecast.
+        </p>
+        <p class="mini">
+          The split must respect time: train on the past, validate/test on the future.
+        </p>
+      </div>
+      <div class="card">
+        <h3 id="the-data-generating-process-can-change">The data-generating process can change</h3>
+        <p>
+          Time series can have <strong>trend</strong>, <strong>seasonality</strong>, <strong>cycles</strong>, structural breaks,
+          missing periods, outliers, and changing variance. A model trained on one regime can fail when the future regime changes.
+        </p>
+        <p class="mini">
+          This is why backtesting over multiple forecast origins is often more trustworthy than one lucky split.
+        </p>
+      </div>
+    </div>
+
+    <figure>
+      <svg class="viz" viewBox="0 0 980 270" role="img" aria-label="Time series components: trend seasonality noise and events">
+        <defs>
+          <marker id="ts-components-arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+            <path d="M0,0 L8,3 L0,6 Z" fill="#0969da"></path>
+          </marker>
+        </defs>
+        <text x="30" y="34" class="title">A forecast is trying to separate signal from time-dependent structure</text>
+        <text x="30" y="60" class="muted">The future is not just the last value repeated; it may contain trend, seasonality, shocks, and noise.</text>
+
+        <polyline points="70,190 135,178 200,164 265,150 330,138 395,124 460,110 525,98 590,84" fill="none" stroke="#0969da" stroke-width="4"></polyline>
+        <text x="310" y="218" class="label" text-anchor="middle">trend</text>
+
+        <path d="M70 128 C105 82 140 82 175 128 S245 174 280 128 S350 82 385 128 S455 174 490 128 S560 82 595 128" fill="none" stroke="#8250df" stroke-width="4"></path>
+        <text x="330" y="78" class="label" text-anchor="middle">seasonality</text>
+
+        <circle cx="665" cy="124" r="12" fill="#cf222e"></circle>
+        <path fill="none" d="M665 136 L665 184" stroke="#cf222e" stroke-width="3" marker-end="url(#ts-components-arrow)"></path>
+        <text x="665" y="214" class="label" text-anchor="middle">event / shock</text>
+
+        <g transform="translate(755,96)">
+          <rect x="0" y="0" width="160" height="92" rx="14" fill="#f6f8fa" stroke="#d0d7de"></rect>
+          <path d="M18 46 L34 35 L50 59 L66 40 L82 53 L98 30 L114 62 L132 42 L146 50" fill="none" stroke="#1a7f37" stroke-width="3"></path>
+          <text x="80" y="122" class="label" text-anchor="middle">noise / residual</text>
+        </g>
+      </svg>
+      <figcaption>
+        A useful baseline should make these ideas explicit: what repeats, what drifts, what is random, and what information is actually known at forecast time.
+      </figcaption>
+    </figure>
+
+    <h2 id="3-how-to-represent-sequence-data-n-times-t-times-d">3) How to represent sequence data: \(N \times T \times D\)</h2>
+    <div class="card">
+      <p>
+        For non-sequential data you are used to \(X \in \mathbb{R}^{N \times D}\): samples by features.
+        For sequences, we add a <strong>time axis</strong>:
+      </p>
+      <p style="font-size:1.05rem;">
+        \[
+          X \in \mathbb{R}^{N \times T \times D}
+        \]
+      </p>
+      <ul>
+        <li><strong>\(N\)</strong>: number of samples. Each sample is one sequence window.</li>
+        <li><strong>\(T\)</strong>: number of time steps in the window. This is also called lookback, context length, or lag length.</li>
+        <li><strong>\(D\)</strong>: number of features measured at each time step.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3 id="concrete-examples-so-n-t-and-d-do-not-get-mixed-up">Concrete examples so \(N\), \(T\), and \(D\) do not get mixed up</h3>
+      <ul>
+        <li><strong>GPS commute tracking:</strong> each trip is one sample (\(N\)); each timestamp is one step (\(T\)); latitude/longitude means \(D=2\).</li>
+        <li><strong>Single stock price:</strong> \(D=1\). If you slice the long series into windows of length \(T\), each window is one sample.</li>
+        <li><strong>500 stocks:</strong> \(D=500\). Each time step contains a 500-dimensional market snapshot.</li>
+        <li><strong>Brain electrodes:</strong> \(D=\) number of electrodes. With 1 kHz sampling for one second, \(T=1000\).</li>
+      </ul>
+      <p class="mini">
+        The axis order \(N \times T \times D\) is common in Python sequence modeling when `batch_first=True`.
+      </p>
+    </div>
+
+    <h2 id="4-forecast-origin-lookback-target-and-horizon">4) Forecast origin, lookback, target, and horizon</h2>
+    <div class="card">
+      <p>
+        Forecasting starts from a <strong>forecast origin</strong>: the last time point you are allowed to know.
+        You choose a <strong>lookback</strong> \(T\), then predict one or more future steps.
+      </p>
+      <ul>
+        <li><strong>Lookback \(T\):</strong> how many past steps the model sees.</li>
+        <li><strong>Target:</strong> the value you ask the model to predict.</li>
+        <li><strong>Horizon \(H\):</strong> how far into the future you want predictions.</li>
+      </ul>
+      <p>
+        If steps are hours and you forecast 7 days hourly, \(H = 7 \times 24 = 168\).
+        If steps are days and you forecast the next 5 days, \(H=5\).
+      </p>
+    </div>
+
+    <figure>
+      <svg class="viz" viewBox="0 0 980 260" role="img" aria-label="Lookback forecast origin target and horizon timeline">
+        <defs>
+          <marker id="timeline-arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+            <path d="M0,0 L8,3 L0,6 Z" fill="#0969da"></path>
+          </marker>
+        </defs>
+        <text x="30" y="34" class="title">Forecasting vocabulary on one timeline</text>
+        <text x="30" y="60" class="muted">Everything to the left of the origin is known. Everything to the right must be predicted or known in advance.</text>
+
+        <line x1="70" y1="148" x2="910" y2="148" stroke="#d0d7de" stroke-width="3"></line>
+        <g fill="#eaf3ff" stroke="#0969da">
+          <rect x="110" y="122" width="66" height="52" rx="10"></rect>
+          <rect x="194" y="122" width="66" height="52" rx="10"></rect>
+          <rect x="278" y="122" width="66" height="52" rx="10"></rect>
+          <rect x="362" y="122" width="66" height="52" rx="10"></rect>
+        </g>
+        <g fill="#f3f8f1" stroke="#1a7f37">
+          <rect x="530" y="122" width="66" height="52" rx="10"></rect>
+          <rect x="614" y="122" width="66" height="52" rx="10"></rect>
+          <rect x="698" y="122" width="66" height="52" rx="10"></rect>
+        </g>
+        <line x1="475" y1="92" x2="475" y2="204" stroke="#8250df" stroke-width="3"></line>
+        <text x="475" y="84" class="label" text-anchor="middle">forecast origin</text>
+        <text x="269" y="102" class="label" text-anchor="middle">lookback window T</text>
+        <text x="647" y="102" class="label" text-anchor="middle">horizon H</text>
+        <path fill="none" d="M110 192 L428 192" stroke="#0969da" stroke-width="2.4" marker-end="url(#timeline-arrow)"></path>
+        <path fill="none" d="M530 192 L764 192" stroke="#1a7f37" stroke-width="2.4" marker-end="url(#timeline-arrow)"></path>
+        <text x="143" y="154" class="label" text-anchor="middle">x[t-3]</text>
+        <text x="227" y="154" class="label" text-anchor="middle">x[t-2]</text>
+        <text x="311" y="154" class="label" text-anchor="middle">x[t-1]</text>
+        <text x="395" y="154" class="label" text-anchor="middle">x[t]</text>
+        <text x="563" y="154" class="label" text-anchor="middle">t+1</text>
+        <text x="647" y="154" class="label" text-anchor="middle">t+2</text>
+        <text x="731" y="154" class="label" text-anchor="middle">t+3</text>
+      </svg>
+      <figcaption>
+        Forecasting is not “predict any random held-out row.” It is “stand at an origin and predict what comes after it.”
+      </figcaption>
+    </figure>
+
+    <h2 id="5-turning-a-long-series-into-supervised-learning-windows">5) Turning a long series into supervised learning windows</h2>
+    <div class="card">
+      <p>
+        A model such as linear regression expects input-output pairs. A raw time series is one long ordered list.
+        Windowing converts the long list into many supervised examples.
+      </p>
+      <p>
+        If the full series has length \(L\) and you use lookback \(T\) to predict the next value, the number of one-step
+        training windows is:
+      </p>
+      <p style="font-size:1.05rem;">
+        \[
+          \text{windows} = L - (T+1) + 1 = L - T
+        \]
+      </p>
+      <p class="mini">
+        Why \(T+1\)? Because each supervised example needs \(T\) input values plus one target value.
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Raw series</th>
+            <th>Lookback \(T=3\)</th>
+            <th>Target</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>[10, 12, 13, 15, 18, 20]</td><td>[10, 12, 13]</td><td>15</td></tr>
+          <tr><td>[10, 12, 13, 15, 18, 20]</td><td>[12, 13, 15]</td><td>18</td></tr>
+          <tr><td>[10, 12, 13, 15, 18, 20]</td><td>[13, 15, 18]</td><td>20</td></tr>
+        </tbody>
+      </table>
+
+      <pre><code class="language-python">import numpy as np
+
+def make_supervised_1d(series: np.ndarray, lookback: int):
+    """
+    Converts a 1D time series into supervised learning data:
+      X[i] = series[i : i+lookback]
+      y[i] = series[i+lookback]
+    """
+    series = np.asarray(series, dtype=np.float32)
+    L = len(series)
+    if L &lt;= lookback:
+        raise ValueError("series is too short for the chosen lookback")
+
+    X = []
+    y = []
+    for i in range(L - lookback):
+        X.append(series[i : i + lookback])
+        y.append(series[i + lookback])
+    return np.stack(X), np.asarray(y)
+
+x = np.arange(10, dtype=np.float32)  # [0..9]
+X, y = make_supervised_1d(x, lookback=3)
+print(X.shape, y.shape)  # (7, 3) (7,)</code></pre>
+    </div>
+
+    <h2 id="6-a-dumb-but-great-baseline-linear-regression-as-an-ar-model">6) A “dumb but great” baseline: linear regression as an AR model</h2>
+    <div class="card">
+      <p>
+        Before you reach for RNNs, use a simple baseline. For a 1D time series (\(D=1\)), treat the previous \(p\) values
+        as features and use linear regression.
+      </p>
+
+      <p style="font-size:1.05rem;">
+        \[
+          \hat{x}_t = w_0 + w_1 x_{t-1} + w_2 x_{t-2} + \dots + w_p x_{t-p}
+        \]
+      </p>
+
+      <p>
+        In statistics this is an <strong>autoregressive (AR)</strong> model: the series is predicted from its own past.
+        In ML language, it is a supervised learning model built from lag features.
+      </p>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h3 id="persistence-baseline">Persistence baseline</h3>
+        <p>
+          The simplest forecast is \(\hat{x}_{t+1}=x_t\): tomorrow equals today. This is surprisingly hard to beat for
+          some noisy series and should be your first sanity check.
+        </p>
+      </div>
+      <div class="card">
+        <h3 id="seasonal-naive-baseline">Seasonal naive baseline</h3>
+        <p>
+          If the series repeats every \(s\) steps, forecast \(\hat{x}_{t+1}=x_{t+1-s}\). For hourly daily seasonality,
+          \(s=24\); for daily weekly seasonality, \(s=7\).
+        </p>
+      </div>
+    </div>
+
+    <h2 id="7-exogenous-variables-what-is-known-in-the-future">7) Exogenous variables: what is known in the future?</h2>
+    <div class="card">
+      <p>
+        Many forecasts use extra features besides the target’s own past. These are often called <strong>exogenous variables</strong>
+        or covariates.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Feature type</th>
+            <th>Examples</th>
+            <th>Can you use it for future horizons?</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Known in advance</td>
+            <td>day of week, holidays, planned price, calendar month</td>
+            <td>Yes, if it is truly known at forecast time.</td>
+          </tr>
+          <tr>
+            <td>Observed only later</td>
+            <td>future sales, future weather observations, future demand, future sensor values</td>
+            <td>No, unless you separately forecast it first or use a scenario.</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="callout tight">
+        <p>
+          <strong>Leakage rule:</strong> every input feature for a forecast horizon must be information you would actually have at the forecast origin.
+        </p>
+      </div>
+    </div>
+
+    <h2 id="8-the-most-common-forecasting-mistake-leaking-future-inputs">8) The most common forecasting mistake: leaking future inputs</h2>
+    <div class="callout">
+      <p><strong>The wrong way for multi-step forecasting:</strong></p>
+      <p>
+        Predicting day 5 using inputs that include the <em>true</em> day 4 value, when day 4 is not known at forecast time.
+        This makes the plot look nice but it is not a valid multi-step forecast.
+      </p>
+    </div>
+
+    <div class="ok">
+      <p><strong>The correct recursive / rolling forecast:</strong></p>
+      <p>
+        When you need multiple steps ahead, feed the model’s <strong>own previous predictions</strong> back as inputs.
+        This matches reality: once you step into the future, you no longer have ground-truth observations.
+      </p>
+    </div>
+
+    <figure>
+      <svg class="viz" viewBox="0 0 980 310" role="img" aria-label="Recursive forecasting diagram">
+        <defs>
+          <marker id="recursive-arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+            <path d="M0,0 L8,3 L0,6 Z" fill="#0969da"></path>
+          </marker>
+        </defs>
+        <text x="30" y="34" class="title">Recursive multi-step forecasting</text>
+        <text x="30" y="60" class="muted">After the first future step, the model must consume its own predictions, not hidden true values.</text>
+
+        <g transform="translate(44,104)">
+          <text x="110" y="-14" class="label" text-anchor="middle">known history</text>
+          <rect x="0" y="22" width="68" height="44" rx="9" fill="#eaf3ff" stroke="#0969da"></rect>
+          <rect x="84" y="22" width="68" height="44" rx="9" fill="#eaf3ff" stroke="#0969da"></rect>
+          <rect x="168" y="22" width="68" height="44" rx="9" fill="#eaf3ff" stroke="#0969da"></rect>
+          <text x="34" y="49" class="label" text-anchor="middle">x[t-2]</text>
+          <text x="118" y="49" class="label" text-anchor="middle">x[t-1]</text>
+          <text x="202" y="49" class="label" text-anchor="middle">x[t]</text>
+        </g>
+
+        <rect x="340" y="126" width="120" height="58" rx="13" fill="#f5f0ff" stroke="#8250df"></rect>
+        <text x="400" y="160" class="label" text-anchor="middle">AR model</text>
+        <rect x="548" y="126" width="96" height="58" rx="13" fill="#f3f8f1" stroke="#1a7f37"></rect>
+        <text x="596" y="160" class="label" text-anchor="middle">xhat[t+1]</text>
+        <rect x="722" y="126" width="96" height="58" rx="13" fill="#f3f8f1" stroke="#1a7f37"></rect>
+        <text x="770" y="160" class="label" text-anchor="middle">xhat[t+2]</text>
+
+        <path fill="none" d="M280 148 L340 148 M460 155 L548 155 M644 155 L722 155" stroke="#0969da" stroke-width="2.4" marker-end="url(#recursive-arrow)"></path>
+        <path d="M596 184 C548 245 208 245 160 170" stroke="#1a7f37" stroke-width="2.3" fill="none" marker-end="url(#recursive-arrow)"></path>
+        <text x="350" y="270" class="muted" text-anchor="middle">slide the window: drop oldest, append prediction, repeat until horizon H</text>
+      </svg>
+      <figcaption>
+        This is the same autoregressive idea that later appears in language generation: predicted outputs become part of the next input context.
+      </figcaption>
+    </figure>
+
+    <h2 id="9-forecasting-strategies-for-h-1">9) Forecasting strategies for \(H&gt;1\)</h2>
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>Strategy</th>
+            <th>How it works</th>
+            <th>Tradeoff</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Recursive</td>
+            <td>Train one-step model; roll it forward by feeding predictions back in.</td>
+            <td>Simple and uses all one-step data, but errors compound.</td>
+          </tr>
+          <tr>
+            <td>Direct</td>
+            <td>Train a separate model for each horizon step: one for \(t+1\), one for \(t+2\), etc.</td>
+            <td>Avoids recursive feedback, but needs more models and less data per horizon.</td>
+          </tr>
+          <tr>
+            <td>Multi-output</td>
+            <td>Train one model to output all \(H\) future steps at once.</td>
+            <td>Can learn horizon relationships, but the output layer and loss must match the forecast task.</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        Chapter 9 focuses on the recursive version because it exposes the core forecasting issue most clearly: after the origin,
+        real future observations are unavailable.
+      </p>
+    </div>
+
+    <h2 id="10-minimal-correct-forecasting-code-baseline-ar-with-recursion">10) Minimal, correct forecasting code: baseline AR with recursion</h2>
+    <div class="card">
+      <h3 id="train-a-linear-model-scikit-learn-style-and-forecast-recursively">Train a linear model (scikit-learn style) and forecast recursively</h3>
+      <pre><code class="language-python">import numpy as np
+from sklearn.linear_model import LinearRegression
+
+def fit_ar_linear(train_series: np.ndarray, lookback: int) -&gt; LinearRegression:
+    X_train, y_train = make_supervised_1d(train_series, lookback)
+    model = LinearRegression()
+    model.fit(X_train, y_train)
+    return model
+
+def recursive_forecast_1d(model, history: np.ndarray, lookback: int, horizon: int):
+    """
+    history: last observed values, at least lookback long.
+    Returns: horizon predictions [xhat(t+1), xhat(t+2), ...].
+    """
+    hist = list(np.asarray(history, dtype=np.float32))
+    if len(hist) &lt; lookback:
+        raise ValueError("history must contain at least lookback values")
+
+    preds = []
+    for _ in range(horizon):
+        x_in = np.array(hist[-lookback:], dtype=np.float32).reshape(1, -1)
+        y_hat = float(model.predict(x_in)[0])
+        preds.append(y_hat)
+        hist.append(y_hat)  # key step: feed prediction back in
+    return np.array(preds, dtype=np.float32)
+
+series = np.sin(np.linspace(0, 10*np.pi, 500)).astype(np.float32)
+train, test = series[:400], series[400:]
+
+lookback = 20
+horizon = 30
+
+ar = fit_ar_linear(train, lookback=lookback)
+history = train[-lookback:]
+preds = recursive_forecast_1d(ar, history, lookback=lookback, horizon=horizon)
+
+print("First 5 predictions:", preds[:5])</code></pre>
+
+      <div class="callout tight">
+        <p>
+          <strong>Important:</strong> this evaluates a real forecast. After the split point, the model does not receive true future target values as inputs.
+        </p>
+      </div>
+    </div>
+
+    <h2 id="11-evaluation-one-split-is-a-start-backtesting-is-better">11) Evaluation: one split is a start, backtesting is better</h2>
+    <div class="card">
+      <p>
+        A single chronological train/test split is better than random splitting, but it can still be lucky or unlucky.
+        In production forecasting, you often use <strong>walk-forward backtesting</strong>: choose several forecast origins,
+        forecast the next \(H\) steps from each origin, and aggregate the errors.
+      </p>
+      <ul>
+        <li><strong>MAE:</strong> average absolute error; easy to interpret in original units.</li>
+        <li><strong>RMSE:</strong> penalizes large errors more strongly.</li>
+        <li><strong>MAPE:</strong> percentage error; fragile when true values are near zero.</li>
+        <li><strong>MASE / scaled error:</strong> compares against a naive baseline, useful across series with different scales.</li>
+      </ul>
+    </div>
+
+    <h2 id="12-where-rnns-fit-next">12) Where RNNs fit next</h2>
+    <div class="card">
+      <p>
+        This tutorial intentionally starts with the simplest correct approach: an autoregressive baseline. RNNs and later
+        sequence models help when relationships are nonlinear, depend on longer context, or involve high-dimensional inputs.
+      </p>
+      <p>
+        Chapter 10 replaces a fixed lookback vector with recurrent hidden state. It then uses translation to show the same
+        step-by-step idea in text: tokens become embeddings, a decoder produces one output at a time, and autoregressive
+        decoding feeds previous outputs back into the next step.
+      </p>
+      <p>
+        The data-shape thinking (\(N \times T \times D\)) and the “no future leakage” rule remain the same no matter how
+        sophisticated the model becomes.
+      </p>
+      <p class="mini">
+        If the baseline evaluation is wrong, you cannot trust the advanced model evaluation either.
+      </p>
+    </div>
+
+    <div class="card">
+      <h3 id="checklist-a-correct-forecasting-setup">Checklist: a correct forecasting setup</h3>
+      <ul>
+        <li><strong>Define the horizon \(H\)</strong>: one-step prediction and multi-step forecasting are different tasks.</li>
+        <li><strong>Choose the lookback \(T\)</strong>: enough context to model the pattern without unnecessary noise.</li>
+        <li><strong>Split by time</strong>: train on the past, validate/test on the future.</li>
+        <li><strong>Fit preprocessing on training only</strong>: scaling, imputation, feature selection, and hyperparameters must not see the future period.</li>
+        <li><strong>No leakage</strong>: future target values cannot be used as future inputs.</li>
+        <li><strong>Start with baselines</strong>: persistence, seasonal naive, and AR/linear regression before complex sequence models.</li>
+      </ul>
+    </div>
+
+    <div class="tr-note">
+      <strong>Chapter transition</strong>
+      With the forecasting contract, baselines, and leakage-safe evaluation in
+      place, the next chapter implements the autoregressive linear baseline in
+      PyTorch before recurrent state is introduced.
+    </div>
+  </main></div></article></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col noPrint_WFHX"></div><div class="col lastUpdated_JAkA"><span class="theme-last-updated">Last updated<!-- --> on <b><time datetime="2026-07-30T01:42:42.000Z" itemprop="dateModified">Jul 30, 2026</time></b></span></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/tutorials/part5-deep-learning-and-llms/07-cnn-dropout-train-eval"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">7. CNN dropout and train/eval</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/tutorials/part5-deep-learning-and-llms/09-autoregressive-linear-model"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">9. Autoregressive linear model</div></a></nav></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer"><div class="container container-fluid"><div class="row footer__links"><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Study</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/tutorials/">Book home</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/content-map">Reading guide</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/labs/rnn">Interactive RNN lab</a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Core tracks</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/tutorials/part2-backend-platform-security/overview">Backend and security</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/part3-agent-protocols/overview">Agent protocols</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/part5-deep-learning-and-llms/overview">Deep learning and LLMs</a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright">Enterprise AI, Agents & Applied ML - 2026</div></div></div></footer></div>
+</body>
+</html>

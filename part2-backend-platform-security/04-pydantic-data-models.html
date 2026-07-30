@@ -1,0 +1,1322 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-part2-backend-platform-security/pydantic-data-models" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.10.2">
+<title data-rh="true">Pydantic Data Models: From Python Classes to API Contracts | Enterprise AI, Agents &amp; Applied ML</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://dineshg.github.io/tutorials/part2-backend-platform-security/04-pydantic-data-models"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="keywords" content="enterprise AI, machine learning, deep learning, LLM, FastAPI, Pydantic, MCP, authentication"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Pydantic Data Models: From Python Classes to API Contracts | Enterprise AI, Agents &amp; Applied ML"><meta data-rh="true" name="description" content="FastAPI uses Pydantic because web applications live at the boundary between untyped external data and typed Python code. This chapter starts from ordinary Python classes, moves through dataclasses, then shows why Pyda..."><meta data-rh="true" property="og:description" content="FastAPI uses Pydantic because web applications live at the boundary between untyped external data and typed Python code. This chapter starts from ordinary Python classes, moves through dataclasses, then shows why Pyda..."><link data-rh="true" rel="icon" href="/tutorials/img/favicon.svg"><link data-rh="true" rel="canonical" href="https://dineshg.github.io/tutorials/part2-backend-platform-security/04-pydantic-data-models"><link data-rh="true" rel="alternate" href="https://dineshg.github.io/tutorials/part2-backend-platform-security/04-pydantic-data-models" hreflang="en"><link data-rh="true" rel="alternate" href="https://dineshg.github.io/tutorials/part2-backend-platform-security/04-pydantic-data-models" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Part II - Backend, Platform & Security","item":"https://dineshg.github.io/tutorials/part2-backend-platform-security/overview"},{"@type":"ListItem","position":2,"name":"4. Pydantic data models","item":"https://dineshg.github.io/tutorials/part2-backend-platform-security/04-pydantic-data-models"}]}</script><script>window.MathJax={startup:{typeset:!1},tex:{inlineMath:[["\\(","\\)"],["$","$"]],displayMath:[["\\[","\\]"],["$$","$$"]],processEscapes:!0},options:{skipHtmlTags:["script","noscript","style","textarea","pre","code"]}}</script>
+<link rel="stylesheet" href="/tutorials/css/book.css">
+<link rel="stylesheet" href="/tutorials/vendor/highlight.js/11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.18.1/dist/katex.min.css" integrity="sha384-5TcZemv2l/9On385z///+d7MSYlvIEw9FuZTIdZ14vJLqWphw7e7ZPuOiCHJcFCP" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-mml-chtml.js" defer="defer"></script><link rel="stylesheet" href="/tutorials/assets/css/styles.003aa738.css">
+<script src="/tutorials/assets/js/runtime~main.98c31d90.js" defer="defer"></script>
+<script src="/tutorials/assets/js/main.bd80017b.js" defer="defer"></script>
+</head>
+<body>
+<svg style="display: none;"><defs>
+<symbol id="theme-svg-external-link" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")),document.documentElement.setAttribute("data-theme-choice",t||"system")}(),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top"><div class="navbar__inner"><div class="theme-layout-navbar-left navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/tutorials/"><b class="navbar__title text--truncate">Enterprise AI Book</b></a><a class="navbar__item navbar__link" href="/tutorials/">Read</a><a class="navbar__item navbar__link" href="/tutorials/content-map">Concept map</a><a class="navbar__item navbar__link" href="/tutorials/part5-deep-learning-and-llms/10-recurrent-neural-networks">Deep learning</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><div class="navbar__item book-search-navbar-item"><button type="button" class="book-search-trigger" aria-label="Search the book">Search <kbd>Ctrl K</kbd></button></div><a href="https://github.com/dineshg/tutorials" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type="button" disabled="" title="system mode" aria-label="Switch between dark and light mode (currently system mode)"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill="currentColor" d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill="currentColor" d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill="currentColor" d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"></path></svg></button></div><div class="navbarSearchContainer_Bca1"></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class="docsWrapper_hBAB"><button aria-label="Scroll back to top" class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type="button"></button><div class="docRoot_UBD9"><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class="sidebarViewport_aRkj"><div class="sidebar_njMd"><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/tutorials/"><span class="linkLabel_WmDU">Book home</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/tutorials/content-map"><span class="linkLabel_WmDU">Reading guide and concept map</span></a></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-blue"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part1-enterprise-ai-delivery/overview"><span class="categoryLinkLabel_W154">Part I - Enterprise AI Delivery</span></a><button aria-label="Expand sidebar category &#x27;Part I - Enterprise AI Delivery&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item sidebar-category sidebar-category-teal"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--active" href="/tutorials/part2-backend-platform-security/overview"><span class="categoryLinkLabel_W154">Part II - Backend, Platform &amp; Security</span></a><button aria-label="Collapse sidebar category &#x27;Part II - Backend, Platform &amp; Security&#x27;" aria-expanded="true" type="button" class="clean-btn menu__caret"></button></div><ul class="menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/01-fastapi-uvicorn-basics"><span class="linkLabel_WmDU">1. FastAPI and Uvicorn basics</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/02-http-methods"><span class="linkLabel_WmDU">2. HTTP methods</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/03-fastapi-request-mapping"><span class="linkLabel_WmDU">3. FastAPI request mapping</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link menu__link--active" aria-current="page" tabindex="0" href="/tutorials/part2-backend-platform-security/04-pydantic-data-models"><span class="linkLabel_WmDU">4. Pydantic data models</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/04-concurrency-user-isolation"><span class="linkLabel_WmDU">5. Concurrency and user isolation</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/05-background-tasks-and-retries"><span class="linkLabel_WmDU">6. Background tasks and retries</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/06-sso-oauth2-oidc-primer"><span class="linkLabel_WmDU">7. SSO, OAuth 2.0, and OIDC primer</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/07-oidc-oauth2-pkce-fastapi"><span class="linkLabel_WmDU">8. OIDC, OAuth 2.0, and PKCE in FastAPI</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/08-registering-new-users"><span class="linkLabel_WmDU">9. First login and user provisioning</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/09-authentication-deep-dive"><span class="linkLabel_WmDU">10. Authentication deep dive</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/15-modern-auth-additions"><span class="linkLabel_WmDU">11. Passkeys, DPoP, mTLS, and token exchange</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/10-enduser-vs-workload-identity"><span class="linkLabel_WmDU">12. End-user vs workload identity</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/12-tenant-iam-ad-groups"><span class="linkLabel_WmDU">13. Tenant isolation, IAM, and groups</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/11-gcp-workload-identity"><span class="linkLabel_WmDU">14. GCP workload identity</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/13-external-service-integration"><span class="linkLabel_WmDU">15. Cross-cloud service integration</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/14-github-governance"><span class="linkLabel_WmDU">16. GitHub governance and CI</span></a></li></ul></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-violet"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part3-agent-protocols/overview"><span class="categoryLinkLabel_W154">Part III - Agent Protocols</span></a><button aria-label="Expand sidebar category &#x27;Part III - Agent Protocols&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-amber"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part4-ml-foundations/overview"><span class="categoryLinkLabel_W154">Part IV - ML Foundations</span></a><button aria-label="Expand sidebar category &#x27;Part IV - ML Foundations&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-coral"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part5-deep-learning-and-llms/overview"><span class="categoryLinkLabel_W154">Part V - Deep Learning &amp; LLMs</span></a><button aria-label="Expand sidebar category &#x27;Part V - Deep Learning &amp; LLMs&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-slate"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part6-appendices/overview"><span class="categoryLinkLabel_W154">Part VI - Appendices</span></a><button aria-label="Expand sidebar category &#x27;Part VI - Appendices&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li></ul></nav><button type="button" title="Collapse sidebar" aria-label="Collapse sidebar" class="button button--secondary button--outline collapseSidebarButton_PEFL"><svg width="20" height="20" aria-hidden="true" class="collapseSidebarButtonIcon_kv0_"><g fill="#7a7a7a"><path d="M9.992 10.023c0 .2-.062.399-.172.547l-4.996 7.492a.982.982 0 01-.828.454H1c-.55 0-1-.453-1-1 0-.2.059-.403.168-.551l4.629-6.942L.168 3.078A.939.939 0 010 2.528c0-.548.45-.997 1-.997h2.996c.352 0 .649.18.828.45L9.82 9.472c.11.148.172.347.172.55zm0 0"></path><path d="M19.98 10.023c0 .2-.058.399-.168.547l-4.996 7.492a.987.987 0 01-.828.454h-3c-.547 0-.996-.453-.996-1 0-.2.059-.403.168-.551l4.625-6.942-4.625-6.945a.939.939 0 01-.168-.55 1 1 0 01.996-.997h3c.348 0 .649.18.828.45l4.996 7.492c.11.148.168.347.168.55zm0 0"></path></g></svg></button></div></div></aside><main class="docMainContainer_TBSr"><div class="container padding-top--md padding-bottom--lg"><div class="row"><div class="col"><div class="docItemContainer_Djhp"><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label="Breadcrumbs"><ul class="breadcrumbs"><li class="breadcrumbs__item"><a aria-label="Home page" class="breadcrumbs__link" href="/tutorials/"><svg viewBox="0 0 24 24" class="breadcrumbHomeIcon_YNFT"><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill="currentColor"></path></svg></a></li><li class="breadcrumbs__item"><a class="breadcrumbs__link" href="/tutorials/part2-backend-platform-security/overview"><span>Part II - Backend, Platform &amp; Security</span></a></li><li class="breadcrumbs__item breadcrumbs__item--active"><span class="breadcrumbs__link">4. Pydantic data models</span></li></ul></nav><div class="theme-doc-markdown markdown"><article class="book-article tr-content" data-book-part="part2" data-book-accent="teal"><header class="articleHeader_jX4Y"><span class="partLabel_DqKR">Part II - Backend, Platform &amp; Security</span><h1>Pydantic Data Models: From Python Classes to API Contracts</h1><div class="articleMeta_jfH_"><span>22<!-- --> min read</span><span aria-hidden="true">·</span><span>27<!-- --> sections</span></div></header><details class="chapterToc_aQjS"><summary>On this page</summary><nav aria-label="On this page"><a href="#1-start-with-python-objects-class-variables-instance-variables-and-init">1) Start with Python Objects: Class Variables, Instance Variables, and __init__</a><a href="#2-the-data-problem-before-pydantic">2) The Data Problem Before Pydantic</a><a href="#3-dataclasses-the-first-improvement">3) Dataclasses: The First Improvement</a><a href="#4-why-pydantic-exists">4) Why Pydantic Exists</a><a href="#5-pydantic-models-dataclass-ergonomics-runtime-validation">5) Pydantic Models: Dataclass Ergonomics + Runtime Validation</a><a href="#6-validation-errors-are-part-of-the-contract">6) Validation Errors Are Part of the Contract</a><a href="#7-required-optional-nullable-and-defaults">7) Required, Optional, Nullable, and Defaults</a><a href="#8-field-constraints-with-field">8) Field Constraints with Field</a><a href="#9-coercion-mode-vs-strict-mode">9) Coercion Mode vs Strict Mode</a><a href="#10-aliases-json-camelcase-and-python-snake-case">10) Aliases: JSON camelCase and Python snake_case</a><a href="#11-nested-models">11) Nested Models</a><a href="#12-validators-field-level-and-model-level-rules">12) Validators: Field-Level and Model-Level Rules</a><a href="#13-model-configuration-class-level-behavior-for-fields">13) Model Configuration: Class-Level Behavior for Fields</a><a href="#14-deserialization-and-serialization">14) Deserialization and Serialization</a><a href="#15-json-schema-and-openapi">15) JSON Schema and OpenAPI</a><a href="#16-typeadapter-validate-a-type-without-creating-a-model">16) TypeAdapter: Validate a Type Without Creating a Model</a><a href="#17-settings-management-with-pydantic-settings">17) Settings Management with pydantic-settings</a><a href="#18-fastapi-integration-request-and-response-contracts">18) FastAPI Integration: Request and Response Contracts</a><a href="#19-external-api-and-queue-message-validation">19) External API and Queue Message Validation</a><a href="#20-llm-output-validation">20) LLM Output Validation</a><a href="#21-pydantic-dataclasses">21) Pydantic Dataclasses</a><a href="#22-practical-design-patterns">22) Practical Design Patterns</a><a href="#23-common-pitfalls">23) Common Pitfalls</a><a href="#24-end-to-end-example-api-payload-alias-validation-and-response">24) End-to-End Example: API Payload, Alias, Validation, and Response</a><a href="#25-decision-guide">25) Decision Guide</a><a href="#26-what-to-remember">26) What to Remember</a><a href="#official-references">Official references</a></nav></details><div class="articleBody_b2wt"><p class="lead">FastAPI uses Pydantic because web applications live at the
+boundary between untyped external data and typed Python code. This chapter
+starts from ordinary Python classes, moves through dataclasses, then shows why
+Pydantic became the standard way to validate JSON, serialize objects, manage
+settings, and enforce structured LLM outputs.</p>
+
+<div class="tr-note">
+  <strong>Where this fits in the book</strong>
+  Chapter 3 showed how FastAPI maps HTTP requests into function arguments.
+  This chapter explains the data model layer behind that mapping. After this,
+  the concurrency, authentication, tenancy, and integration chapters can rely
+  on one consistent idea: external data must be validated at the boundary and
+  converted into explicit Python objects before business logic touches it.
+</div>
+
+<h2 id="1-start-with-python-objects-class-variables-instance-variables-and-init">1) Start with Python Objects: Class Variables, Instance Variables, and <code>__init__</code></h2>
+
+<p>Before Pydantic makes sense, the reader needs a clear mental model of a
+normal Python object. A class is the blueprint. An instance is one concrete
+object built from that blueprint. Variables can live in either place, and that
+difference matters when you model API data.</p>
+
+<pre><code class="language-python">class User:
+    species = "human"          # class variable: shared by the class
+
+    def __init__(self, user_id: int, name: str):
+        self.user_id = user_id # instance variable: belongs to this object
+        self.name = name       # instance variable: belongs to this object
+
+alice = User(1, "Alice")
+bob = User(2, "Bob")
+
+print(alice.name)     # Alice
+print(bob.name)       # Bob
+print(User.species)   # human</code></pre>
+
+<p><code>__init__</code> is the initializer that runs after Python creates a
+new object. It is where ordinary classes usually copy constructor arguments
+onto <code>self</code>. In the example above, <code>alice.name</code> and
+<code>bob.name</code> are different because each instance has its own
+<code>name</code> attribute.</p>
+
+<div class="tr-note">
+  <strong>Precise wording:</strong> <code>__init__</code> creates or assigns
+  instance variables on <code>self</code>. A class variable belongs to the
+  class object itself and is shared by instances unless an instance overrides
+  that attribute with its own value.
+</div>
+
+<h3 id="why-class-variables-can-surprise-you">Why class variables can surprise you</h3>
+
+<p>Class variables are useful for constants, shared configuration, registries,
+or metadata. They are dangerous when you accidentally use them for per-object
+state, especially with mutable values such as lists or dictionaries.</p>
+
+<pre><code class="language-python">class BadCart:
+    items: list[str] = []  # shared class-level list, not per-cart state
+
+cart_a = BadCart()
+cart_b = BadCart()
+
+cart_a.items.append("keyboard")
+print(cart_b.items)
+# ["keyboard"]  # cart_b sees cart_a's item because the list is shared</code></pre>
+
+<p>The correct plain-class version creates the mutable list inside
+<code>__init__</code>, so every instance gets its own list.</p>
+
+<pre><code class="language-python">class Cart:
+    def __init__(self):
+        self.items: list[str] = []
+
+cart_a = Cart()
+cart_b = Cart()
+
+cart_a.items.append("keyboard")
+print(cart_b.items)
+# []</code></pre>
+
+<h3 id="what-classmethod-is-actually-for">What <code>@classmethod</code> is actually for</h3>
+
+<p>A class method receives the class as <code>cls</code> instead of receiving
+one instance as <code>self</code>. It does not make class variables belong to
+an instance. It is most often used for alternate constructors, factories, and
+logic that should respect subclasses.</p>
+
+<pre><code class="language-python">class User:
+    default_active = True
+
+    def __init__(self, user_id: int, name: str, active: bool):
+        self.user_id = user_id
+        self.name = name
+        self.active = active
+
+    @classmethod
+    def from_dict(cls, data: dict) -&gt; "User":
+        active = data.get("active", cls.default_active)
+        if isinstance(active, str):
+            active = active.lower()
+            if active in {"true", "1", "yes"}:
+                active = True
+            elif active in {"false", "0", "no"}:
+                active = False
+            else:
+                raise ValueError("active must be true or false")
+
+        return cls(
+            user_id=int(data["user_id"]),
+            name=str(data["name"]),
+            active=active,
+        )
+
+user = User.from_dict({"user_id": "123", "name": "Alice"})
+print(user.active)
+# True</code></pre>
+
+<p>This example is already moving toward structured data modeling. We are manually doing
+conversion, defaults, and object construction inside <code>from_dict</code>.
+That works for tiny examples, but it becomes repetitive and error-prone when
+payloads are nested, fields are optional, constraints matter, error messages
+must be precise, and OpenAPI schema needs to be generated.</p>
+
+<h2 id="2-the-data-problem-before-pydantic">2) The Data Problem Before Pydantic</h2>
+
+<h3 id="json-has-fewer-types-than-python">JSON has fewer types than Python</h3>
+
+<p>JSON is the common language of HTTP APIs, browser clients, queues, config
+files, and many LLM tool calls. It has only a small set of data types:</p>
+
+<table>
+  <thead>
+    <tr><th>JSON type</th><th>Example</th><th>Python usually wants</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>string</td><td><code>"Alice"</code></td><td><code>str</code>, sometimes <code>datetime</code>, <code>EmailStr</code>, <code>UUID</code>, <code>Enum</code></td></tr>
+    <tr><td>number</td><td><code>30</code>, <code>19.99</code></td><td><code>int</code>, <code>float</code>, <code>Decimal</code></td></tr>
+    <tr><td>boolean</td><td><code>true</code>, <code>false</code></td><td><code>bool</code></td></tr>
+    <tr><td>null</td><td><code>null</code></td><td><code>None</code>, only if the field is nullable</td></tr>
+    <tr><td>array</td><td><code>["Python", "FastAPI"]</code></td><td><code>list[str]</code>, <code>tuple</code>, <code>set</code></td></tr>
+    <tr><td>object</td><td><code>{"city": "Sydney"}</code></td><td>nested model, typed dict, dictionary</td></tr>
+  </tbody>
+</table>
+
+<p>That mismatch explains why validation belongs at the API boundary. JSON does
+not know what a Python <code>datetime</code>, <code>UUID</code>, enum, or domain
+object is. Your code has to decide what to accept, what to convert, what to
+reject, and what error to return.</p>
+
+<h3 id="plain-python-classes-hold-data-but-do-not-validate-input">Plain Python classes hold data but do not validate input</h3>
+
+<pre><code class="language-python">class User:
+    def __init__(self, id: int, name: str, active: bool = True):
+        self.id = id
+        self.name = name
+        self.active = active
+
+user = User(id="123", name=42, active="yes")
+print(user.id, user.name, user.active)
+# "123" 42 "yes"   # type hints did not validate anything at runtime</code></pre>
+
+<p>Python type hints help editors, static type checkers, and humans. They do
+not automatically validate runtime values. Without extra code, the constructor
+accepts whatever the caller passes.</p>
+
+<h3 id="manual-validation-quickly-becomes-repetitive">Manual validation quickly becomes repetitive</h3>
+
+<p>You can write validation yourself inside <code>__init__</code> or a
+<code>@classmethod</code> factory, but every model then needs its own parsing,
+conversion, defaults, error messages, and nested-object handling.</p>
+
+<pre><code class="language-python">class User:
+    def __init__(self, id: int, name: str, active: bool = True):
+        if not isinstance(id, int):
+            raise TypeError("id must be an integer")
+        if not isinstance(name, str):
+            raise TypeError("name must be a string")
+        if not isinstance(active, bool):
+            raise TypeError("active must be a boolean")
+
+        self.id = id
+        self.name = name
+        self.active = active
+
+    @classmethod
+    def from_json_dict(cls, data: dict) -&gt; "User":
+        active = data.get("active", True)
+        if isinstance(active, str):
+            active = active.lower()
+            if active in {"true", "1", "yes"}:
+                active = True
+            elif active in {"false", "0", "no"}:
+                active = False
+            else:
+                raise ValueError("active must be true or false")
+
+        return cls(
+            id=int(data["id"]),
+            name=str(data["name"]),
+            active=active,
+        )</code></pre>
+
+<p>This is the bridge to Pydantic: the industry-standard version should keep
+the readable class shape, but make validation, conversion, error reporting,
+schema generation, and nested parsing consistent instead of hand-written in
+every constructor.</p>
+
+<h2 id="3-dataclasses-the-first-improvement">3) Dataclasses: The First Improvement</h2>
+
+<p>Python dataclasses are the natural next step after a hand-written
+<code>__init__</code>. They let you describe the data fields once, then Python
+generates the repetitive object methods for you.</p>
+
+<pre><code class="language-python">from dataclasses import dataclass, field
+
+@dataclass
+class User:
+    id: int
+    name: str
+    roles: list[str] = field(default_factory=list)
+
+user = User(id="123", name=42)
+print(user)
+# User(id='123', name=42, roles=[])</code></pre>
+
+<p>The annotation syntax looks similar to a Pydantic model, but at this stage
+it is still just Python dataclass machinery. The type hints define the fields
+used to generate methods; they do not automatically validate runtime values.</p>
+
+<table>
+  <thead>
+    <tr><th>Generated method</th><th>What the dataclass gives you</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>__init__</code></td><td>Creates an initializer with parameters for the declared fields.</td></tr>
+    <tr><td><code>__repr__</code></td><td>Returns a readable string representation such as <code>User(id=...)</code>.</td></tr>
+    <tr><td><code>__eq__</code></td><td>Compares two instances by field values.</td></tr>
+    <tr><td><code>__hash__</code></td><td>Generated only when the class is immutable/frozen enough to be hashable.</td></tr>
+    <tr><td><code>__post_init__</code></td><td>Optional hook that runs after <code>__init__</code> for extra setup or manual validation.</td></tr>
+  </tbody>
+</table>
+
+<h3 id="class-variables-in-dataclasses-use-classvar">Class variables in dataclasses: use <code>ClassVar</code></h3>
+
+<p>If a value belongs to the class and should not be treated as an instance
+field, annotate it with <code>ClassVar</code>. This is how you keep constants
+or shared metadata out of the generated <code>__init__</code>.</p>
+
+<pre><code class="language-python">from dataclasses import dataclass
+from typing import ClassVar
+
+@dataclass
+class User:
+    species: ClassVar[str] = "Homo sapiens"  # not part of __init__
+    name: str
+    age: int
+
+user = User(name="Alice", age=30)
+print(user.species)
+# Homo sapiens</code></pre>
+
+<h3 id="mutable-defaults-use-default-factory">Mutable defaults: use <code>default_factory</code></h3>
+
+<p>The same shared-mutable-value problem exists in dataclass-style modeling.
+If each instance should get its own list, dictionary, or set, create it with a
+factory.</p>
+
+<pre><code class="language-python">from dataclasses import dataclass, field
+
+@dataclass
+class Team:
+    members: list[str] = field(default_factory=list)
+
+team_a = Team()
+team_b = Team()
+
+team_a.members.append("Alice")
+print(team_a.members)  # ["Alice"]
+print(team_b.members)  # []</code></pre>
+
+<p>This is the same idea as avoiding mutable default arguments in functions:</p>
+
+<pre><code class="language-python">def add_name(name: str, names: list[str] = []):  # avoid this
+    names.append(name)
+    return names</code></pre>
+
+<p>The list is created once when the function is defined, not once per call.
+Dataclasses force you toward <code>default_factory</code> because per-instance
+state should be created per instance.</p>
+
+<h3 id="dataclasses-still-do-not-validate-input-types">Dataclasses still do not validate input types</h3>
+
+<p>Dataclasses solve boilerplate, representation, equality, and mutable default
+setup, but they still do not validate types by default. <code>id="123"</code>
+and <code>name=42</code> are accepted because dataclasses are data containers,
+not runtime validators.</p>
+
+<p>You can add manual checks in <code>__post_init__</code>, but then you are
+back to writing custom validation logic for every class.</p>
+
+<pre><code class="language-python">from dataclasses import dataclass
+
+@dataclass
+class User:
+    id: int
+    name: str
+
+    def __post_init__(self):
+        if not isinstance(self.id, int):
+            raise TypeError("id must be an integer")
+        if not isinstance(self.name, str):
+            raise TypeError("name must be a string")</code></pre>
+
+<div class="tr-warning">
+  <strong>Industry distinction:</strong> use a dataclass when data is already
+  trusted and you want a lightweight internal container. Use Pydantic when data
+  crosses a boundary: HTTP request, queue event, file, environment variable,
+  third-party API response, database document, or LLM output.
+</div>
+
+<h2 id="4-why-pydantic-exists">4) Why Pydantic Exists</h2>
+
+<p>Most backend bugs at API boundaries are not caused by complicated algorithms.
+They are caused by ordinary shape mismatches:</p>
+
+<ul>
+  <li>The client sends <code>"age": "30"</code> but Python code expects <code>age: int</code>.</li>
+  <li>The frontend uses <code>personalEmail</code> but Python code should use <code>personal_email</code>.</li>
+  <li>A required field is missing, but the function assumes it exists.</li>
+  <li>A nested payload has the correct outer shape but invalid inner objects.</li>
+  <li>An LLM returns text that looks like JSON but is not the contract your code promised to handle.</li>
+</ul>
+
+<p>Pydantic was introduced to solve this boundary problem using Python type
+annotations. It gives you a class that still feels like normal Python, but it
+adds runtime validation, conversion, error reporting, JSON schema generation,
+serialization, and integration hooks used by frameworks such as FastAPI.</p>
+
+<div class="tr-callout">
+  <strong>Core mental model:</strong> Pydantic turns unreliable outside data
+  into reliable inside objects. Your API should accept dictionaries/JSON at the
+  boundary, validate them once, then pass typed objects through the rest of the
+  system.
+</div>
+
+<div class="figure-card">
+  <h3 id="visual-boundary-validation">Visual: boundary validation</h3>
+  <svg class="viz" viewBox="0 0 980 250" role="img" aria-label="Pydantic boundary validation flow">
+    <defs>
+      <marker id="pydantic-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="#0969da" stroke="none"></path>
+      </marker>
+      <marker id="pydantic-arrow-purple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="#8250df" stroke="none"></path>
+      </marker>
+    </defs>
+    <rect x="40" y="54" width="210" height="120" rx="14" fill="#fff8e6" stroke="#bf8700" stroke-width="1.5"></rect>
+    <text x="145" y="88" text-anchor="middle" fill="#1f2328" style="font-weight:700">External data</text>
+    <text x="145" y="116" text-anchor="middle" fill="#59636e">JSON, form, env vars</text>
+    <text x="145" y="144" text-anchor="middle" fill="#59636e">LLM output, API response</text>
+
+    <rect x="360" y="42" width="260" height="144" rx="14" fill="#eaf3ff" stroke="#0969da" stroke-width="1.5"></rect>
+    <text x="490" y="80" text-anchor="middle" fill="#1f2328" style="font-weight:700">Pydantic model</text>
+    <text x="490" y="110" text-anchor="middle" fill="#334155">validate + convert</text>
+    <text x="490" y="138" text-anchor="middle" fill="#334155">report precise errors</text>
+    <text x="490" y="166" text-anchor="middle" fill="#59636e">generate schema/docs</text>
+
+    <rect x="730" y="54" width="210" height="120" rx="14" fill="#f3f8f1" stroke="#1a7f37" stroke-width="1.5"></rect>
+    <text x="835" y="88" text-anchor="middle" fill="#1f2328" style="font-weight:700">Python object</text>
+    <text x="835" y="116" text-anchor="middle" fill="#59636e">known fields</text>
+    <text x="835" y="144" text-anchor="middle" fill="#59636e">known types</text>
+
+    <line x1="250" y1="114" x2="360" y2="114" stroke="#0969da" stroke-width="2" fill="none" marker-end="url(#pydantic-arrow)"></line>
+    <line x1="620" y1="114" x2="730" y2="114" stroke="#0969da" stroke-width="2" fill="none" marker-end="url(#pydantic-arrow)"></line>
+    <path d="M 490 188 C 500 224 250 224 190 176" stroke="#8250df" stroke-width="2" fill="none" marker-end="url(#pydantic-arrow-purple)"></path>
+    <text x="360" y="238" text-anchor="middle" fill="#59636e">invalid input becomes a structured validation error</text>
+  </svg>
+</div>
+
+<h2 id="5-pydantic-models-dataclass-ergonomics-runtime-validation">5) Pydantic Models: Dataclass Ergonomics + Runtime Validation</h2>
+
+<p>A Pydantic model is a class that inherits from <code>BaseModel</code>. It
+uses annotations like a dataclass, generates a constructor like a dataclass,
+but also validates and converts data at runtime.</p>
+
+<p>In Pydantic language, the class is usually called a <strong>model</strong>.
+Inheritance is what gives the class its extra behavior: <code>BaseModel</code>
+reads the annotations, builds model fields, creates validation logic, and adds
+methods for deserialization, serialization, error reporting, and schema
+generation.</p>
+
+<pre><code class="language-python">from pydantic import BaseModel
+
+class User(BaseModel):
+    id: int
+    name: str
+    active: bool = True
+    roles: list[str] = []
+
+user = User(id="123", name="Alice", active="true")
+print(user)
+# id=123 name='Alice' active=True roles=[]</code></pre>
+
+<p>Several important things happened:</p>
+
+<ul>
+  <li><code>"123"</code> became <code>123</code> because the field is <code>int</code>.</li>
+  <li><code>"true"</code> became <code>True</code> because the field is <code>bool</code>.</li>
+  <li>The model has a clear set of fields: <code>id</code>, <code>name</code>, <code>active</code>, <code>roles</code>.</li>
+  <li>Pydantic handles mutable defaults safely by copying them per instance.</li>
+</ul>
+
+<p>That default conversion behavior is useful for APIs because JSON, query
+parameters, forms, environment variables, and CSV values often arrive as
+strings. If you want no conversion, use strict mode, covered below.</p>
+
+<h3 id="three-common-ways-to-create-or-deserialize-a-model">Three common ways to create or deserialize a model</h3>
+
+<p>The deck uses an important flow here: once the model exists, there are
+three practical ways data enters it.</p>
+
+<pre><code class="language-python">from pydantic import BaseModel
+
+class User(BaseModel):
+    name: str
+    age: int
+
+# 1) Constructor: common when values are already in Python code
+u1 = User(name="Alice Smith", age=30)
+
+# 2) model_validate: validate a Python dict/object, common after JSON parsing
+payload = {"name": "Bob Jones", "age": "25"}
+u2 = User.model_validate(payload)
+
+# 3) model_validate_json: validate raw JSON text directly
+json_str = '{"name": "Carol Lee", "age": 27}'
+u3 = User.model_validate_json(json_str)</code></pre>
+
+<p>All three paths produce a <code>User</code> instance. The difference is
+where the raw data starts: already-keyword arguments, a Python dictionary, or a
+JSON string.</p>
+
+<h3 id="why-pydantic-fields-are-written-in-the-class-body">Why Pydantic fields are written in the class body</h3>
+
+<p>This is the part that can feel strange if you just learned ordinary class
+variables. In a normal class, <code>roles = []</code> in the class body is a
+shared class variable. In a Pydantic <code>BaseModel</code>, annotated fields
+in the class body are treated as model-field declarations. Pydantic reads those
+annotations when the class is created and builds its own validation and
+construction logic.</p>
+
+<pre><code class="language-python">class User(BaseModel):
+    id: int                 # model field declaration
+    name: str               # model field declaration
+    roles: list[str] = []   # Pydantic copies this safely per instance
+
+alice = User(id=1, name="Alice")
+bob = User(id=2, name="Bob")
+
+alice.roles.append("admin")
+print(bob.roles)
+# []</code></pre>
+
+<p>So the syntax looks class-level, but the meaning is not the same as an
+ordinary mutable class variable. Pydantic uses the class definition as a schema
+for constructing validated instances. If you want the explicit style that also
+works in dataclasses, use <code>Field(default_factory=list)</code> for mutable
+defaults.</p>
+
+<h2 id="6-validation-errors-are-part-of-the-contract">6) Validation Errors Are Part of the Contract</h2>
+
+<p>Good validation is not just "reject bad data." It should tell the caller
+exactly what failed, where it failed, and why.</p>
+
+<pre><code class="language-python">from pydantic import BaseModel, ValidationError
+
+class User(BaseModel):
+    id: int
+    name: str
+
+try:
+    User(id="not-a-number", name=123)
+except ValidationError as exc:
+    print(exc.errors())</code></pre>
+
+<p>The error payload contains locations such as <code>("id",)</code>, an error
+message, an error type, and the bad input. FastAPI turns this into an HTTP 422
+response for request-body validation failures.</p>
+
+<pre><code class="language-json">[
+  {
+    "type": "int_parsing",
+    "loc": ["id"],
+    "msg": "Input should be a valid integer, unable to parse string as an integer",
+    "input": "not-a-number"
+  }
+]</code></pre>
+
+<h2 id="7-required-optional-nullable-and-defaults">7) Required, Optional, Nullable, and Defaults</h2>
+
+<p>This is one of the most important Pydantic topics because Python developers
+often mix up "optional" and "nullable."</p>
+
+<pre><code class="language-python">from pydantic import BaseModel
+
+class Customer(BaseModel):
+    id: int                    # required, cannot be missing
+    name: str                  # required, cannot be missing
+    age: int | None            # required, but may be null/None
+    nickname: str | None = None # optional and nullable
+    country: str = "AU"         # optional, default used if missing</code></pre>
+
+<table>
+  <thead>
+    <tr><th>Declaration</th><th>May be missing?</th><th>May be <code>None</code>?</th><th>Meaning</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>name: str</code></td><td>No</td><td>No</td><td>Required non-null string</td></tr>
+    <tr><td><code>age: int | None</code></td><td>No</td><td>Yes</td><td>Required key, value may be null</td></tr>
+    <tr><td><code>nickname: str | None = None</code></td><td>Yes</td><td>Yes</td><td>Optional key, null/default allowed</td></tr>
+    <tr><td><code>country: str = "AU"</code></td><td>Yes</td><td>No</td><td>Optional key with non-null default</td></tr>
+  </tbody>
+</table>
+
+<div class="tr-tip">
+  <strong>API design rule:</strong> do not write <code>age: int = None</code>.
+  If <code>None</code> is valid, say so in the type: <code>age: int | None = None</code>.
+  If <code>None</code> is not valid, use a real default or make the field required.
+</div>
+
+<h2 id="8-field-constraints-with-field">8) Field Constraints with <code>Field</code></h2>
+
+<p>Type annotations describe the broad shape. <code>Field</code> describes
+constraints, aliases, examples, and metadata for JSON schema/OpenAPI.</p>
+
+<pre><code class="language-python">from decimal import Decimal
+from pydantic import BaseModel, Field
+
+class Product(BaseModel):
+    sku: str = Field(min_length=3, max_length=32, pattern=r"^[A-Z0-9-]+$")
+    name: str = Field(min_length=1)
+    price: Decimal = Field(gt=0, max_digits=10, decimal_places=2)
+    tags: list[str] = Field(default_factory=list, max_length=10)
+
+product = Product(sku="SKU-100", name="Keyboard", price="129.95")
+print(product.price)
+# Decimal('129.95')</code></pre>
+
+<p>Use constraints for domain rules that can be stated locally on one field:
+minimum length, maximum length, numeric range, regex/pattern, decimal precision,
+default factories, examples, and descriptions.</p>
+
+<h2 id="9-coercion-mode-vs-strict-mode">9) Coercion Mode vs Strict Mode</h2>
+
+<p>Pydantic's default behavior is intentionally practical: it tries to convert
+compatible values. This is commonly called <strong>lax mode</strong> or
+coercive validation. That is the normal API
+mode because external data often arrives as strings.</p>
+
+<pre><code class="language-python">from pydantic import BaseModel
+
+class SearchParams(BaseModel):
+    top_k: int
+    include_archived: bool = False
+
+params = SearchParams(top_k="10", include_archived="false")
+print(params)
+# top_k=10 include_archived=False</code></pre>
+
+<p>A product payload shows the same idea across several JSON-compatible
+types:</p>
+
+<pre><code class="language-python">from pydantic import BaseModel
+
+class Product(BaseModel):
+    name: str
+    price: float
+    in_stock: bool
+
+product = Product.model_validate({
+    "name": "Keyboard",
+    "price": "19.99",   # str -&gt; float
+    "in_stock": "true", # str -&gt; bool
+})</code></pre>
+
+<p>Lax mode does not mean "anything becomes anything." Pydantic v2 is more
+careful than older examples: for example, an integer is not automatically
+accepted as a string field unless you explicitly configure that behavior.</p>
+
+<p>For money movement, security policy, compliance checks, or any place where
+conversion could hide a bug, use strict validation.</p>
+
+<pre><code class="language-python">from pydantic import BaseModel, ConfigDict, ValidationError
+
+class StrictSearchParams(BaseModel):
+    model_config = ConfigDict(strict=True)
+
+    top_k: int
+    include_archived: bool = False
+
+try:
+    StrictSearchParams(top_k="10")
+except ValidationError as exc:
+    print(exc.errors()[0]["msg"])
+    # Input should be a valid integer</code></pre>
+
+<p>You can also make selected fields strict instead of making the whole model
+strict.</p>
+
+<pre><code class="language-python">from pydantic import BaseModel, Field
+
+class Payment(BaseModel):
+    amount_cents: int = Field(strict=True, gt=0)
+    currency: str</code></pre>
+
+<h2 id="10-aliases-json-camelcase-and-python-snake-case">10) Aliases: JSON <code>camelCase</code> and Python <code>snake_case</code></h2>
+
+<p>External APIs often use <code>camelCase</code>. Python code should use
+<code>snake_case</code>. Pydantic aliases let you support both without leaking
+JSON naming conventions into internal code.</p>
+
+<pre><code class="language-python">from pydantic import BaseModel, ConfigDict, Field
+
+class UserProfile(BaseModel):
+    model_config = ConfigDict(validate_by_name=True, validate_by_alias=True)
+
+    user_id: str = Field(alias="userId")
+    personal_email: str = Field(alias="personalEmail")
+
+payload = {"userId": "u_123", "personalEmail": "alice@example.com"}
+profile = UserProfile.model_validate(payload)
+
+print(profile.personal_email)
+# alice@example.com
+
+print(profile.model_dump(by_alias=True))
+# {'userId': 'u_123', 'personalEmail': 'alice@example.com'}</code></pre>
+
+<p>In real systems, aliases are a contract boundary. Internal code should speak
+Python. External JSON should speak the API contract.</p>
+
+<h3 id="alias-generator-for-large-apis">Alias generator for large APIs</h3>
+
+<pre><code class="language-python">from pydantic import BaseModel, ConfigDict
+
+def to_camel(name: str) -&gt; str:
+    first, *rest = name.split("_")
+    return first + "".join(word.capitalize() for word in rest)
+
+class ApiModel(BaseModel):
+    model_config = ConfigDict(
+        alias_generator=to_camel,
+        validate_by_name=True,
+        validate_by_alias=True,
+    )
+
+class Account(ApiModel):
+    account_id: str
+    billing_email: str
+
+account = Account.model_validate({"accountId": "a_1", "billingEmail": "ops@example.com"})
+print(account.model_dump(by_alias=True))</code></pre>
+
+<p>Pydantic also provides common alias helpers. If your whole API uses
+camelCase, prefer a shared base model instead of repeating
+<code>Field(alias=...)</code> everywhere.</p>
+
+<pre><code class="language-python">from pydantic import BaseModel, ConfigDict
+from pydantic.alias_generators import to_camel
+
+class ApiModel(BaseModel):
+    model_config = ConfigDict(
+        alias_generator=to_camel,
+        validate_by_name=True,
+        validate_by_alias=True,
+    )
+
+class User(ApiModel):
+    first_name: str
+
+user = User.model_validate({"firstName": "Alice"})
+print(user.model_dump(by_alias=True))
+# {'firstName': 'Alice'}
+print(user.model_dump())
+# {'first_name': 'Alice'}</code></pre>
+
+<div class="tr-note">
+  <strong>Older examples:</strong> you may see <code>populate_by_name=True</code>
+  in Pydantic v2 material. For current v2 code, prefer the more explicit
+  pair <code>validate_by_name=True</code> and
+  <code>validate_by_alias=True</code>.
+</div>
+
+<h2 id="11-nested-models">11) Nested Models</h2>
+
+<p>Real JSON payloads are rarely flat. A model can contain other models, lists
+of models, dictionaries of models, enums, and constrained fields.</p>
+
+<pre><code class="language-python">from enum import Enum
+from pydantic import BaseModel, Field
+
+class Plan(str, Enum):
+    FREE = "free"
+    TEAM = "team"
+    ENTERPRISE = "enterprise"
+
+class Address(BaseModel):
+    line1: str
+    city: str
+    country: str = "AU"
+
+class Organisation(BaseModel):
+    org_id: str
+    plan: Plan
+    billing_address: Address
+    admins: list[str] = Field(default_factory=list)
+
+org = Organisation.model_validate({
+    "org_id": "org_123",
+    "plan": "enterprise",
+    "billing_address": {"line1": "1 Market St", "city": "Sydney"},
+    "admins": ["alice@example.com", "bob@example.com"],
+})
+
+print(org.billing_address.city)
+# Sydney</code></pre>
+
+<p>If a nested field fails, the error path points to the nested location, such
+as <code>billing_address.city</code> or <code>admins.1</code>. That makes
+validation errors actionable for both frontend engineers and API clients.</p>
+
+<h2 id="12-validators-field-level-and-model-level-rules">12) Validators: Field-Level and Model-Level Rules</h2>
+
+<p>Use built-in types and <code>Field</code> constraints first. Add validators
+when the rule is domain-specific or depends on multiple fields.</p>
+
+<h3 id="field-validators">Field validators</h3>
+
+<pre><code class="language-python">from pydantic import BaseModel, field_validator
+
+class Signup(BaseModel):
+    email: str
+    display_name: str
+
+    @field_validator("email")
+    @classmethod
+    def email_must_look_valid(cls, value: str) -&gt; str:
+        value = value.strip().lower()
+        if "@" not in value:
+            raise ValueError("email must contain @")
+        return value
+
+signup = Signup(email=" ALICE@EXAMPLE.COM ", display_name="Alice")
+print(signup.email)
+# alice@example.com</code></pre>
+
+<h3 id="model-validators">Model validators</h3>
+
+<p>Use a model validator when the rule needs more than one field.</p>
+
+<pre><code class="language-python">from pydantic import BaseModel, model_validator
+
+class DateRange(BaseModel):
+    start_day: int
+    end_day: int
+
+    @model_validator(mode="after")
+    def end_must_not_precede_start(self):
+        if self.end_day &lt; self.start_day:
+            raise ValueError("end_day must be greater than or equal to start_day")
+        return self</code></pre>
+
+<div class="tr-note">
+  <strong>Pydantic v1 to v2 naming:</strong> older notes and examples often use
+  <code>@validator</code>, <code>@root_validator</code>, <code>.dict()</code>,
+  <code>.json()</code>, and <code>parse_raw()</code>. In modern Pydantic v2,
+  prefer <code>@field_validator</code>, <code>@model_validator</code>,
+  <code>model_dump()</code>, <code>model_dump_json()</code>,
+  <code>model_validate()</code>, and <code>model_validate_json()</code>.
+</div>
+
+<div class="tr-update">
+  <strong>FastAPI compatibility:</strong> current FastAPI development is on
+  Pydantic v2. FastAPI 0.128.0 removed support for importing models through
+  <code>pydantic.v1</code>. Treat v1 syntax as migration material, not a pattern
+  for new endpoints, and test framework/Pydantic upgrades together because
+  request validation and generated OpenAPI are part of the API contract.
+</div>
+
+<h2 id="13-model-configuration-class-level-behavior-for-fields">13) Model Configuration: Class-Level Behavior for Fields</h2>
+
+<p>Configuration controls model-wide behavior. In Pydantic v2, use
+<code>model_config = ConfigDict(...)</code>. This is where you set behavior
+for the model as a whole. Use <code>Field(...)</code> when the rule belongs to
+one field; use <code>model_config</code> when the rule belongs to all fields or
+the model contract.</p>
+
+<pre><code class="language-python">from pydantic import BaseModel, ConfigDict, Field
+
+class SecurePayload(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        str_strip_whitespace=True,
+        validate_assignment=True,
+        frozen=False,
+    )
+
+    tenant_id: str = Field(min_length=1)
+    user_id: str = Field(min_length=1)
+
+payload = SecurePayload(tenant_id=" acme ", user_id=" u_123 ")
+print(payload.tenant_id)
+# acme</code></pre>
+
+<table>
+  <thead>
+    <tr><th>Config</th><th>Why it matters</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>extra="forbid"</code></td><td>Reject unknown fields instead of silently ignoring them. Good for security-sensitive APIs.</td></tr>
+    <tr><td><code>extra="ignore"</code></td><td>Ignore unknown fields. Useful when consuming third-party APIs that add fields over time.</td></tr>
+    <tr><td><code>extra="allow"</code></td><td>Keep unknown fields. Useful for flexible metadata, but avoid it for core contracts.</td></tr>
+    <tr><td><code>strict=True</code></td><td>Disable broad coercion. Good when conversion could hide defects.</td></tr>
+    <tr><td><code>validate_default=True</code></td><td>Validate default values too, instead of trusting them silently.</td></tr>
+    <tr><td><code>validate_assignment=True</code></td><td>Validate when fields are changed after model creation.</td></tr>
+    <tr><td><code>frozen=True</code></td><td>Make models immutable after creation. Useful for config and value objects.</td></tr>
+    <tr><td><code>str_strip_whitespace=True</code></td><td>Normalize incoming strings at the boundary.</td></tr>
+  </tbody>
+</table>
+
+<h3 id="extra-fields-the-default-is-usually-ignore-but-sensitive-apis-should-forbid">Extra fields: the default is usually ignore, but sensitive APIs should forbid</h3>
+
+<p>By default, Pydantic v2 ignores unknown fields. That is useful when consuming
+external APIs that may add fields over time. For your own security-sensitive
+request contracts, prefer <code>extra="forbid"</code> so a misspelled or
+unexpected field becomes a validation error.</p>
+
+<pre><code class="language-python">from pydantic import BaseModel, ConfigDict, ValidationError
+
+class Model(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    field1: int
+
+try:
+    Model(field1=10, field2=20)
+except ValidationError as exc:
+    print(exc.errors()[0]["type"])
+    # extra_forbidden</code></pre>
+
+<h3 id="validate-defaults-when-defaults-can-be-wrong">Validate defaults when defaults can be wrong</h3>
+
+<p>Defaults are usually trusted. If a default itself might violate the declared
+type or constraints, set <code>validate_default=True</code>.</p>
+
+<pre><code class="language-python">from pydantic import BaseModel, ConfigDict, ValidationError
+
+class Model(BaseModel):
+    model_config = ConfigDict(validate_default=True)
+    field1: int | None = None
+
+# Valid because the type explicitly allows None.
+Model()
+
+class BadDefault(BaseModel):
+    model_config = ConfigDict(validate_default=True)
+    field1: int = None
+
+try:
+    BadDefault()
+except ValidationError as exc:
+    print(exc.errors()[0]["msg"])
+    # Input should be a valid integer</code></pre>
+
+<h3 id="validate-assignment-when-objects-are-modified-after-creation">Validate assignment when objects are modified after creation</h3>
+
+<p>Without assignment validation, Pydantic validates during construction but
+does not automatically check every later attribute assignment. Enable
+<code>validate_assignment=True</code> when models remain mutable but must stay
+valid.</p>
+
+<pre><code class="language-python">from pydantic import BaseModel, ConfigDict, ValidationError
+
+class Model(BaseModel):
+    model_config = ConfigDict(validate_assignment=True)
+    field: int
+
+m = Model(field=1)
+
+try:
+    m.field = "hello"
+except ValidationError as exc:
+    print(exc.errors()[0]["msg"])</code></pre>
+
+<h3 id="use-frozen-models-when-mutation-should-be-blocked">Use frozen models when mutation should be blocked</h3>
+
+<p><code>frozen=True</code> makes the model immutable after construction.
+This is useful for configuration objects, value objects, and contracts where
+later mutation would make reasoning harder.</p>
+
+<pre><code class="language-python">from pydantic import BaseModel, ConfigDict, ValidationError
+
+class Model(BaseModel):
+    model_config = ConfigDict(frozen=True)
+    field: int
+
+m = Model(field=10)
+
+try:
+    m.field = 20
+except ValidationError as exc:
+    print(exc.errors()[0]["msg"])
+    # Instance is frozen</code></pre>
+
+<h2 id="14-deserialization-and-serialization">14) Deserialization and Serialization</h2>
+
+<p>Deserialization means turning external data into Python objects.
+Serialization means turning Python objects back into dictionaries or JSON.</p>
+
+<h3 id="validate-a-python-dictionary">Validate a Python dictionary</h3>
+
+<pre><code class="language-python">from pydantic import BaseModel
+
+class User(BaseModel):
+    id: int
+    name: str
+
+data = {"id": "123", "name": "Alice"}
+user = User.model_validate(data)</code></pre>
+
+<h3 id="validate-json-text">Validate JSON text</h3>
+
+<pre><code class="language-python">json_data = '{"id": "123", "name": "Alice"}'
+user = User.model_validate_json(json_data)</code></pre>
+
+<h3 id="serialize-to-a-python-dictionary-or-json-string">Serialize to a Python dictionary or JSON string</h3>
+
+<pre><code class="language-python">print(user.model_dump())
+# {'id': 123, 'name': 'Alice'}
+
+print(user.model_dump_json())
+# {"id":123,"name":"Alice"}</code></pre>
+
+<p><code>model_dump(mode="python")</code> may include Python-native objects such
+as <code>datetime</code> and <code>Decimal</code>. Use
+<code>mode="json"</code> or <code>model_dump_json()</code> when preparing data
+for JSON responses, logs, queues, or cache entries.</p>
+
+<h2 id="15-json-schema-and-openapi">15) JSON Schema and OpenAPI</h2>
+
+<p>Pydantic can produce JSON Schema from your model. FastAPI uses that schema
+to generate OpenAPI documentation and request/response examples.</p>
+
+<pre><code class="language-python">from pydantic import BaseModel, Field
+
+class CreateTicket(BaseModel):
+    title: str = Field(min_length=3, examples=["Reset my VPN access"])
+    priority: int = Field(ge=1, le=5, description="1 is highest priority")
+
+print(CreateTicket.model_json_schema())</code></pre>
+
+<p>This is why FastAPI can show a form-like documentation page for your request
+body: the Pydantic model is both runtime validation and machine-readable API
+contract.</p>
+
+<h2 id="16-typeadapter-validate-a-type-without-creating-a-model">16) TypeAdapter: Validate a Type Without Creating a Model</h2>
+
+<p>Sometimes you do not need a named model. You just need to validate
+<code>list[int]</code>, <code>dict[str, Decimal]</code>, or
+<code>list[SomeModel]</code>. Use <code>TypeAdapter</code>.</p>
+
+<pre><code class="language-python">from pydantic import BaseModel, TypeAdapter
+
+class Item(BaseModel):
+    id: int
+    name: str
+
+adapter = TypeAdapter(list[Item])
+
+items = adapter.validate_python([
+    {"id": "1", "name": "Keyboard"},
+    {"id": 2, "name": "Mouse"},
+])
+
+print(items)
+# [Item(id=1, name='Keyboard'), Item(id=2, name='Mouse')]</code></pre>
+
+<p><code>TypeAdapter</code> is useful for validating lists from files, queue
+batches, third-party responses, and LLM output arrays without inventing a
+wrapper model.</p>
+
+<h2 id="17-settings-management-with-pydantic-settings">17) Settings Management with <code>pydantic-settings</code></h2>
+
+<p>In Pydantic v2, settings moved to the separate
+<code>pydantic-settings</code> package. Use it to read environment variables,
+<code>.env</code> files, and secrets into a typed object.</p>
+
+<pre><code class="language-bash">pip install pydantic-settings</code></pre>
+
+<pre><code class="language-python">from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_prefix="APP_",
+        extra="ignore",
+    )
+
+    app_name: str = "tutorial-api"
+    debug: bool = False
+    database_url: str
+    jwt_audience: str = Field(default="tutorial-api")
+
+settings = Settings()
+print(settings.database_url)</code></pre>
+
+<p>With <code>env_prefix="APP_"</code>, Pydantic reads variables such as
+<code>APP_DATABASE_URL</code>, <code>APP_DEBUG</code>, and
+<code>APP_JWT_AUDIENCE</code>. This follows twelve-factor application practice:
+configuration belongs in the environment, not hard-coded in source files.</p>
+
+<div class="tr-warning">
+  <strong>Do not log settings objects blindly.</strong> If a settings model
+  contains secrets, mark them as <code>SecretStr</code> or keep logging focused
+  on non-sensitive fields.
+</div>
+
+<h2 id="18-fastapi-integration-request-and-response-contracts">18) FastAPI Integration: Request and Response Contracts</h2>
+
+<p>FastAPI uses Pydantic models in two directions:</p>
+
+<ul>
+  <li><strong>Request models</strong> validate data coming into your endpoint.</li>
+  <li><strong>Response models</strong> define and filter data leaving your endpoint.</li>
+</ul>
+
+<pre><code class="language-python">from decimal import Decimal
+from fastapi import FastAPI
+from pydantic import BaseModel, ConfigDict, Field
+
+app = FastAPI()
+
+class CreateProductRequest(BaseModel):
+    sku: str = Field(min_length=3)
+    name: str
+    price: Decimal = Field(gt=0)
+
+class ProductResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    sku: str
+    name: str
+    price: Decimal
+
+@app.post("/products", response_model=ProductResponse)
+def create_product(req: CreateProductRequest):
+    # req is already validated here.
+    product = save_product(req)
+    # response_model controls what leaves the API.
+    return product</code></pre>
+
+<p><code>response_model</code> is not just documentation. It prevents accidental
+data leaks by shaping the returned object. If your internal object has
+<code>cost_price</code>, <code>supplier_token</code>, or other private fields,
+they are not included unless the response model declares them.</p>
+
+<h2 id="19-external-api-and-queue-message-validation">19) External API and Queue Message Validation</h2>
+
+<p>Pydantic is not only for incoming HTTP requests. Use it whenever your system
+receives data it did not create.</p>
+
+<pre><code class="language-python">from datetime import datetime
+from pydantic import BaseModel, ConfigDict, Field
+
+class PaymentEvent(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    event_id: str
+    tenant_id: str
+    amount_cents: int = Field(gt=0)
+    occurred_at: datetime
+
+def handle_message(raw_json: str) -&gt; None:
+    event = PaymentEvent.model_validate_json(raw_json)
+    process_payment_event(event)</code></pre>
+
+<p>This pattern is useful for Pub/Sub messages, Kafka events, webhook payloads,
+cron job inputs, uploaded JSON files, and service-to-service responses.</p>
+
+<h2 id="20-llm-output-validation">20) LLM Output Validation</h2>
+
+<p>Pydantic gained renewed importance with LLM systems because model outputs
+are probabilistic. Even when you ask for JSON, you still need to validate the
+shape before using it in application code.</p>
+
+<pre><code class="language-python">from pydantic import BaseModel, Field, ValidationError
+
+class SupportTriage(BaseModel):
+    category: str
+    confidence: float = Field(ge=0, le=1)
+    summary: str = Field(min_length=1)
+    next_action: str
+
+raw_llm_json = '''
+{
+  "category": "account_access",
+  "confidence": 0.87,
+  "summary": "User cannot access VPN after password reset.",
+  "next_action": "route_to_identity_team"
+}
+'''
+
+try:
+    triage = SupportTriage.model_validate_json(raw_llm_json)
+except ValidationError as exc:
+    # Retry, ask the model to repair, or send to human review.
+    raise
+
+print(triage.next_action)</code></pre>
+
+<p>In production LLM workflows, Pydantic is a guardrail, not a guarantee. It
+checks structure and local constraints. You still need business-rule validation,
+authorization checks, rate limits, audit logs, and human review for high-risk
+actions.</p>
+
+<h2 id="21-pydantic-dataclasses">21) Pydantic Dataclasses</h2>
+
+<p>Pydantic can also validate dataclasses. This is useful when you prefer
+dataclass style but want Pydantic validation on construction.</p>
+
+<pre><code class="language-python">from pydantic import ConfigDict, ValidationError
+from pydantic.dataclasses import dataclass
+
+@dataclass(config=ConfigDict(validate_assignment=True))
+class Job:
+    job_id: int
+    queue: str
+
+job = Job(job_id="42", queue="email")
+print(job.job_id)
+# 42
+
+try:
+    job.job_id = "not-an-int"
+except ValidationError as exc:
+    print(exc.errors()[0]["msg"])</code></pre>
+
+<p>Use this when integrating with dataclass-heavy code. For API contracts,
+settings, and OpenAPI integration, <code>BaseModel</code> is still the usual
+choice.</p>
+
+<h2 id="22-practical-design-patterns">22) Practical Design Patterns</h2>
+
+<h3 id="separate-input-domain-and-output-models">Separate input, domain, and output models</h3>
+
+<p>Do not use one giant model for every layer. API inputs, internal domain
+objects, database records, and API responses have different responsibilities.</p>
+
+<pre><code class="language-python">from pydantic import BaseModel, Field
+
+class CreateUserRequest(BaseModel):
+    email: str
+    display_name: str = Field(min_length=1)
+
+class UserRecord(BaseModel):
+    user_id: str
+    tenant_id: str
+    email: str
+    display_name: str
+    password_hash: str
+
+class UserResponse(BaseModel):
+    user_id: str
+    email: str
+    display_name: str</code></pre>
+
+<p>This avoids two common mistakes: accepting fields the client should not
+control, and returning fields the client should never see.</p>
+
+<h3 id="validate-at-boundaries-not-everywhere">Validate at boundaries, not everywhere</h3>
+
+<p>Validate when data enters the system. Inside the system, pass typed objects.
+Repeated validation in every function makes code noisy and hides the real
+trust boundary.</p>
+
+<h3 id="prefer-explicit-models-over-unstructured-dictionaries">Prefer explicit models over unstructured dictionaries</h3>
+
+<pre><code class="language-python"># Weak boundary
+def create_ticket(payload: dict) -&gt; dict:
+    return {"title": payload["title"], "priority": int(payload["priority"])}
+
+# Strong boundary
+class CreateTicket(BaseModel):
+    title: str
+    priority: int = Field(ge=1, le=5)
+
+def create_ticket(payload: CreateTicket) -&gt; dict:
+    return {"title": payload.title, "priority": payload.priority}</code></pre>
+
+<h2 id="23-common-pitfalls">23) Common Pitfalls</h2>
+
+<table>
+  <thead>
+    <tr><th>Pitfall</th><th>Better approach</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Using <code>dict</code> for every payload</td><td>Create named models for important contracts.</td></tr>
+    <tr><td>Confusing optional with nullable</td><td>Use <code>T | None</code> only when <code>None</code> is valid.</td></tr>
+    <tr><td>Letting extra fields pass through sensitive APIs</td><td>Use <code>extra="forbid"</code> for strict input contracts.</td></tr>
+    <tr><td>Using one model for create/update/response/database</td><td>Split models by responsibility.</td></tr>
+    <tr><td>Trusting LLM JSON without validation</td><td>Validate with a model or <code>TypeAdapter</code>, then apply business checks.</td></tr>
+    <tr><td>Teaching v1 decorators in new code</td><td>Use v2 methods: <code>field_validator</code>, <code>model_validator</code>, <code>model_dump</code>.</td></tr>
+    <tr><td>Logging secrets from settings</td><td>Use secret types and controlled logging.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="24-end-to-end-example-api-payload-alias-validation-and-response">24) End-to-End Example: API Payload, Alias, Validation, and Response</h2>
+
+<p>This example combines the pieces: JSON aliases, strict API shape, field
+constraints, model-level validation, and response shaping.</p>
+
+<pre><code class="language-python">from decimal import Decimal
+from fastapi import FastAPI
+from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+app = FastAPI()
+
+class PurchaseRequest(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        validate_by_name=True,
+        validate_by_alias=True,
+    )
+
+    tenant_id: str = Field(alias="tenantId", min_length=1)
+    user_id: str = Field(alias="userId", min_length=1)
+    sku: str = Field(min_length=3)
+    quantity: int = Field(alias="qty", gt=0, le=100)
+    unit_price: Decimal = Field(alias="unitPrice", gt=0)
+
+    @model_validator(mode="after")
+    def total_must_be_reasonable(self):
+        total = self.quantity * self.unit_price
+        if total &gt; Decimal("50000"):
+            raise ValueError("purchase requires manual approval")
+        return self
+
+class PurchaseResponse(BaseModel):
+    purchase_id: str = Field(alias="purchaseId")
+    status: str
+    total: Decimal
+
+@app.post("/purchase", response_model=PurchaseResponse)
+def create_purchase(req: PurchaseRequest):
+    total = req.quantity * req.unit_price
+    return {
+        "purchaseId": "po_123",
+        "status": "accepted",
+        "total": total,
+    }</code></pre>
+
+<p>The endpoint can now rely on <code>req.tenant_id</code>,
+<code>req.user_id</code>, <code>req.quantity</code>, and
+<code>req.unit_price</code> having already passed the declared contract. The
+external JSON can still use <code>tenantId</code>, <code>userId</code>,
+<code>qty</code>, and <code>unitPrice</code>.</p>
+
+<h2 id="25-decision-guide">25) Decision Guide</h2>
+
+<table>
+  <thead>
+    <tr><th>Need</th><th>Use</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Internal trusted data container</td><td><code>dataclass</code></td></tr>
+    <tr><td>HTTP request/response contract</td><td><code>BaseModel</code></td></tr>
+    <tr><td>Environment configuration</td><td><code>pydantic-settings</code> <code>BaseSettings</code></td></tr>
+    <tr><td>Validate a list/dict/primitive type directly</td><td><code>TypeAdapter</code></td></tr>
+    <tr><td>Use dataclass syntax but add validation</td><td><code>pydantic.dataclasses.dataclass</code></td></tr>
+    <tr><td>Strict financial/security data</td><td><code>ConfigDict(strict=True)</code> or strict fields</td></tr>
+    <tr><td>Frontend camelCase with Python snake_case</td><td><code>Field(alias=...)</code> or <code>alias_generator</code></td></tr>
+    <tr><td>LLM structured output</td><td><code>BaseModel</code> or <code>TypeAdapter</code> plus business-rule checks</td></tr>
+  </tbody>
+</table>
+
+<h2 id="26-what-to-remember">26) What to Remember</h2>
+
+<ul>
+  <li>Plain classes and dataclasses organize data but do not validate runtime input by default.</li>
+  <li>Pydantic models are boundary contracts: validate, convert, serialize, and document data.</li>
+  <li>Default Pydantic mode is practical and coercive; use strict mode where conversion is risky.</li>
+  <li>Optional means "may be missing" only when there is a default. Nullable means the type includes <code>None</code>.</li>
+  <li>Aliases let external JSON use <code>camelCase</code> while Python remains <code>snake_case</code>.</li>
+  <li>Use v2 APIs in new code: <code>model_validate</code>, <code>model_dump</code>, <code>field_validator</code>, <code>model_validator</code>, and <code>ConfigDict</code>.</li>
+  <li>Pydantic is also useful beyond FastAPI: settings, webhooks, queues, external APIs, files, and LLM output validation.</li>
+</ul>
+
+<h2 id="official-references">Official references</h2>
+<ul>
+  <li><a href="https://docs.pydantic.dev/latest/">Pydantic documentation</a></li>
+  <li><a href="https://docs.pydantic.dev/latest/migration/">Pydantic v2 migration guide</a></li>
+  <li><a href="https://fastapi.tiangolo.com/how-to/migrate-from-pydantic-v1-to-pydantic-v2/">FastAPI: migrate from Pydantic v1 to v2</a></li>
+  <li><a href="https://fastapi.tiangolo.com/tutorial/body/">FastAPI request body models</a></li>
+</ul></div></article></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col noPrint_WFHX"></div><div class="col lastUpdated_JAkA"><span class="theme-last-updated">Last updated<!-- --> on <b><time datetime="2026-07-30T01:42:42.000Z" itemprop="dateModified">Jul 30, 2026</time></b></span></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/tutorials/part2-backend-platform-security/03-fastapi-request-mapping"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">3. FastAPI request mapping</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/tutorials/part2-backend-platform-security/04-concurrency-user-isolation"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">5. Concurrency and user isolation</div></a></nav></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer"><div class="container container-fluid"><div class="row footer__links"><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Study</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/tutorials/">Book home</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/content-map">Reading guide</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/labs/rnn">Interactive RNN lab</a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Core tracks</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/tutorials/part2-backend-platform-security/overview">Backend and security</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/part3-agent-protocols/overview">Agent protocols</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/part5-deep-learning-and-llms/overview">Deep learning and LLMs</a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright">Enterprise AI, Agents & Applied ML - 2026</div></div></div></footer></div>
+</body>
+</html>

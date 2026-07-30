@@ -1,0 +1,667 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-part5-deep-learning-and-llms/cnn-architecture" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.10.2">
+<title data-rh="true">CNNs — Part 2: Feature Maps, Pooling, and Architecture | Enterprise AI, Agents &amp; Applied ML</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://dineshg.github.io/tutorials/part5-deep-learning-and-llms/05-cnn-architecture"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="keywords" content="enterprise AI, machine learning, deep learning, LLM, FastAPI, Pydantic, MCP, authentication"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="CNNs — Part 2: Feature Maps, Pooling, and Architecture | Enterprise AI, Agents &amp; Applied ML"><meta data-rh="true" name="description" content="This tutorial continues convolution in the way it’s actually used inside CNNs: multi-channel inputs, multiple filters → feature maps, bias + activation, pooling / strided conv, and the two-stage CNN (conv feature extr..."><meta data-rh="true" property="og:description" content="This tutorial continues convolution in the way it’s actually used inside CNNs: multi-channel inputs, multiple filters → feature maps, bias + activation, pooling / strided conv, and the two-stage CNN (conv feature extr..."><link data-rh="true" rel="icon" href="/tutorials/img/favicon.svg"><link data-rh="true" rel="canonical" href="https://dineshg.github.io/tutorials/part5-deep-learning-and-llms/05-cnn-architecture"><link data-rh="true" rel="alternate" href="https://dineshg.github.io/tutorials/part5-deep-learning-and-llms/05-cnn-architecture" hreflang="en"><link data-rh="true" rel="alternate" href="https://dineshg.github.io/tutorials/part5-deep-learning-and-llms/05-cnn-architecture" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Part V - Deep Learning & LLMs","item":"https://dineshg.github.io/tutorials/part5-deep-learning-and-llms/overview"},{"@type":"ListItem","position":2,"name":"5. CNN architecture","item":"https://dineshg.github.io/tutorials/part5-deep-learning-and-llms/05-cnn-architecture"}]}</script><script>window.MathJax={startup:{typeset:!1},tex:{inlineMath:[["\\(","\\)"],["$","$"]],displayMath:[["\\[","\\]"],["$$","$$"]],processEscapes:!0},options:{skipHtmlTags:["script","noscript","style","textarea","pre","code"]}}</script>
+<link rel="stylesheet" href="/tutorials/css/book.css">
+<link rel="stylesheet" href="/tutorials/vendor/highlight.js/11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.18.1/dist/katex.min.css" integrity="sha384-5TcZemv2l/9On385z///+d7MSYlvIEw9FuZTIdZ14vJLqWphw7e7ZPuOiCHJcFCP" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-mml-chtml.js" defer="defer"></script><link rel="stylesheet" href="/tutorials/assets/css/styles.003aa738.css">
+<script src="/tutorials/assets/js/runtime~main.98c31d90.js" defer="defer"></script>
+<script src="/tutorials/assets/js/main.bd80017b.js" defer="defer"></script>
+</head>
+<body>
+<svg style="display: none;"><defs>
+<symbol id="theme-svg-external-link" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")),document.documentElement.setAttribute("data-theme-choice",t||"system")}(),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top"><div class="navbar__inner"><div class="theme-layout-navbar-left navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/tutorials/"><b class="navbar__title text--truncate">Enterprise AI Book</b></a><a class="navbar__item navbar__link" href="/tutorials/">Read</a><a class="navbar__item navbar__link" href="/tutorials/content-map">Concept map</a><a class="navbar__item navbar__link" href="/tutorials/part5-deep-learning-and-llms/10-recurrent-neural-networks">Deep learning</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><div class="navbar__item book-search-navbar-item"><button type="button" class="book-search-trigger" aria-label="Search the book">Search <kbd>Ctrl K</kbd></button></div><a href="https://github.com/dineshg/tutorials" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type="button" disabled="" title="system mode" aria-label="Switch between dark and light mode (currently system mode)"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill="currentColor" d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill="currentColor" d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill="currentColor" d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"></path></svg></button></div><div class="navbarSearchContainer_Bca1"></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class="docsWrapper_hBAB"><button aria-label="Scroll back to top" class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type="button"></button><div class="docRoot_UBD9"><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class="sidebarViewport_aRkj"><div class="sidebar_njMd"><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/tutorials/"><span class="linkLabel_WmDU">Book home</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/tutorials/content-map"><span class="linkLabel_WmDU">Reading guide and concept map</span></a></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-blue"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part1-enterprise-ai-delivery/overview"><span class="categoryLinkLabel_W154">Part I - Enterprise AI Delivery</span></a><button aria-label="Expand sidebar category &#x27;Part I - Enterprise AI Delivery&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-teal"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part2-backend-platform-security/overview"><span class="categoryLinkLabel_W154">Part II - Backend, Platform &amp; Security</span></a><button aria-label="Expand sidebar category &#x27;Part II - Backend, Platform &amp; Security&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-violet"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part3-agent-protocols/overview"><span class="categoryLinkLabel_W154">Part III - Agent Protocols</span></a><button aria-label="Expand sidebar category &#x27;Part III - Agent Protocols&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-amber"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part4-ml-foundations/overview"><span class="categoryLinkLabel_W154">Part IV - ML Foundations</span></a><button aria-label="Expand sidebar category &#x27;Part IV - ML Foundations&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item sidebar-category sidebar-category-coral"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--active" href="/tutorials/part5-deep-learning-and-llms/overview"><span class="categoryLinkLabel_W154">Part V - Deep Learning &amp; LLMs</span></a><button aria-label="Collapse sidebar category &#x27;Part V - Deep Learning &amp; LLMs&#x27;" aria-expanded="true" type="button" class="clean-btn menu__caret"></button></div><ul class="menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/01-ffn-concepts"><span class="linkLabel_WmDU">1. Feed-forward network concepts</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/02-ffn-training-debugging"><span class="linkLabel_WmDU">2. FFN training and debugging</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/03-ffn-canonical-merged"><span class="linkLabel_WmDU">3. FFN single-chapter reference</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/04-cnn-convolution"><span class="linkLabel_WmDU">4. CNN convolution</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link menu__link--active" aria-current="page" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/05-cnn-architecture"><span class="linkLabel_WmDU">5. CNN architecture</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/06-cnn-pytorch-implementation"><span class="linkLabel_WmDU">6. CNN PyTorch implementation</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/07-cnn-dropout-train-eval"><span class="linkLabel_WmDU">7. CNN dropout and train/eval</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/08-forecasting-sequence-data"><span class="linkLabel_WmDU">8. Forecasting and sequence data</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/09-autoregressive-linear-model"><span class="linkLabel_WmDU">9. Autoregressive linear model</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/10-recurrent-neural-networks"><span class="linkLabel_WmDU">10. Recurrent neural networks</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item sidebar-lab-link"><a class="menu__link" tabindex="0" href="/tutorials/labs/rnn"><span class="linkLabel_WmDU">Interactive lab: animated RNN</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/11-transformers-and-attention"><span class="linkLabel_WmDU">11. Transformers and attention</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/12-llm-fine-tuning"><span class="linkLabel_WmDU">12. LLM fine-tuning</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part5-deep-learning-and-llms/13-modern-llm-alignment-orpo-grpo"><span class="linkLabel_WmDU">13. Modern LLM post-training</span></a></li></ul></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-slate"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part6-appendices/overview"><span class="categoryLinkLabel_W154">Part VI - Appendices</span></a><button aria-label="Expand sidebar category &#x27;Part VI - Appendices&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li></ul></nav><button type="button" title="Collapse sidebar" aria-label="Collapse sidebar" class="button button--secondary button--outline collapseSidebarButton_PEFL"><svg width="20" height="20" aria-hidden="true" class="collapseSidebarButtonIcon_kv0_"><g fill="#7a7a7a"><path d="M9.992 10.023c0 .2-.062.399-.172.547l-4.996 7.492a.982.982 0 01-.828.454H1c-.55 0-1-.453-1-1 0-.2.059-.403.168-.551l4.629-6.942L.168 3.078A.939.939 0 010 2.528c0-.548.45-.997 1-.997h2.996c.352 0 .649.18.828.45L9.82 9.472c.11.148.172.347.172.55zm0 0"></path><path d="M19.98 10.023c0 .2-.058.399-.168.547l-4.996 7.492a.987.987 0 01-.828.454h-3c-.547 0-.996-.453-.996-1 0-.2.059-.403.168-.551l4.625-6.942-4.625-6.945a.939.939 0 01-.168-.55 1 1 0 01.996-.997h3c.348 0 .649.18.828.45l4.996 7.492c.11.148.168.347.168.55zm0 0"></path></g></svg></button></div></div></aside><main class="docMainContainer_TBSr"><div class="container padding-top--md padding-bottom--lg"><div class="row"><div class="col"><div class="docItemContainer_Djhp"><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label="Breadcrumbs"><ul class="breadcrumbs"><li class="breadcrumbs__item"><a aria-label="Home page" class="breadcrumbs__link" href="/tutorials/"><svg viewBox="0 0 24 24" class="breadcrumbHomeIcon_YNFT"><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill="currentColor"></path></svg></a></li><li class="breadcrumbs__item"><a class="breadcrumbs__link" href="/tutorials/part5-deep-learning-and-llms/overview"><span>Part V - Deep Learning &amp; LLMs</span></a></li><li class="breadcrumbs__item breadcrumbs__item--active"><span class="breadcrumbs__link">5. CNN architecture</span></li></ul></nav><div class="theme-doc-markdown markdown"><article class="book-article tr-content" data-book-part="part5" data-book-accent="coral"><header class="articleHeader_jX4Y"><span class="partLabel_DqKR">Part V - Deep Learning &amp; Large Language Models</span><h1>CNNs — Part 2: From Color Images to Feature Maps, Pooling, and Full CNN Architecture</h1><div class="articleMeta_jfH_"><span>9<!-- --> min read</span><span aria-hidden="true">·</span><span>13<!-- --> sections</span></div></header><details class="chapterToc_aQjS"><summary>On this page</summary><nav aria-label="On this page"><a href="#1-convolution-with-color-images-add-the-channel-dimension">1) Convolution with color images: add the channel dimension</a><a href="#2-multiple-filters-solve-the-uniformity-problem">2) Multiple filters solve the uniformity problem</a><a href="#3-full-convolution-in-cnn-form-shapes-equation">3) Full convolution in CNN form: shapes + equation</a><a href="#4-a-convolution-layer-convolution-bias-activation">4) A convolution layer = convolution + bias + activation</a><a href="#5-why-cnns-are-efficient-parameter-sharing-vs-dense-explosion">5) Why CNNs are efficient: parameter sharing vs dense explosion</a><a href="#6-a-typical-cnn-has-two-stages">6) A typical CNN has two stages</a><a href="#7-pooling-downsampling-by-summarizing-local-neighborhoods">7) Pooling: downsampling by summarizing local neighborhoods</a><a href="#8-why-pooling-helps-translation-invariance">8) Why pooling helps: translation invariance</a><a href="#9-conv-pooling-creates-hierarchical-feature-learning">9) Conv + pooling creates hierarchical feature learning</a><a href="#10-strided-convolution-as-an-alternative-to-pooling">10) Strided convolution as an alternative to pooling</a><a href="#11-flatten-vs-global-max-pooling-handling-variable-image-sizes">11) Flatten vs global max pooling (handling variable image sizes)</a><a href="#12-a-modern-cnn-blueprint-as-summarized-in-the-transcript">12) A modern CNN blueprint (as summarized in the transcript)</a><a href="#local-visuals-and-source-credits">Local visuals and source credits</a></nav></details><div class="articleBody_b2wt"><div class="wrap">
+    <header>
+      
+      <p>
+        This tutorial continues convolution in the way it’s actually used inside CNNs:
+        <span class="pill">multi-channel</span> inputs,
+        <span class="pill">multiple filters → feature maps</span>,
+        <span class="pill">bias + activation</span>,
+        <span class="pill">pooling / strided conv</span>,
+        and the <span class="pill">two-stage CNN</span> (conv feature extractor → dense predictor).
+      </p>
+
+      <div class="chips">
+        <span class="chip">Input: H×W×C</span>
+        <span class="chip">Weights: C_in×K×K×C_out</span>
+        <span class="chip">Output: H×W×C_out</span>
+        <span class="chip">Feature maps (channels)</span>
+        <span class="chip">Pooling + translation invariance</span>
+        <span class="chip">Strided convolution</span>
+        <span class="chip">Global max pooling</span>
+      </div>
+
+      <nav>
+        <a href="#color">Color images &amp; 3D kernels</a>
+        <a href="#featuremaps">Multiple filters → feature maps</a>
+        <a href="#fullconv">Full conv formula + shapes</a>
+        <a href="#layer">Conv layer = conv + bias + activation</a>
+        <a href="#params">Parameter savings vs dense</a>
+        <a href="#cnnarch">Two-stage CNN architecture</a>
+        <a href="#pool">Pooling (max/avg) mechanics</a>
+        <a href="#invariance">Why pooling works: translation invariance</a>
+        <a href="#hierarchy">Conv+pool → hierarchical features</a>
+        <a href="#stride">Strided conv as pooling alternative</a>
+        <a href="#global">Flatten vs global max pooling</a>
+        <a href="#end">Putting it all together</a>
+        <a href="#credits">Local visuals and credits</a>
+      </nav>
+    </header>
+
+    <section id="color">
+      <h2 id="1-convolution-with-color-images-add-the-channel-dimension">1) Convolution with color images: add the channel dimension</h2>
+
+      <p>
+        Real CNNs usually take <b>color images</b>. A color image is a 3D object:
+        \[
+          X \in \mathbb{R}^{H \times W \times C_{\text{in}}}
+        \]
+        where \(C_{\text{in}}=3\) for RGB.
+      </p>
+
+      <p>
+        To convolve a color image, you use a <b>3D kernel</b> (a “small box”) that spans all input channels:
+        \[
+          W \in \mathbb{R}^{K \times K \times C_{\text{in}}}
+        \]
+      </p>
+
+      <p>
+        Mechanically, it’s the same “multiply + add” you already know—just with an extra sum over channels:
+        you sum over <b>height</b>, <b>width</b>, and <b>channels</b>.
+      </p>
+
+      <div class="callout">
+        <p style="margin:0;">
+          <b>Color pattern-finder intuition:</b> a 3D filter can match “red circles” differently from “blue circles”
+          because it has separate weights for each channel.
+        </p>
+      </div>
+
+      <figure>
+        <img alt="RGB channels split (conceptual)" src="/tutorials/images/external/Rgb_channels_separate-66f58fb11f-fallback.svg">
+        <figcaption>
+          Local book diagram of separated RGB channels. Technical reference:
+          <a href="https://docs.opencv.org/4.x/de/d25/imgproc_color_conversions.html" target="_blank" rel="noopener">OpenCV color conversions</a>.
+        </figcaption>
+      </figure>
+
+      <p class="muted">
+        If you convolve a 3D image with a single 3D kernel and sum across channels, the output is 2D
+        (the channel dimension “dots out”). That’s fine for one filter—but it breaks the “stack layers” uniformity.
+      </p>
+    </section>
+
+    <section id="featuremaps">
+      <h2 id="2-multiple-filters-solve-the-uniformity-problem">2) Multiple filters solve the uniformity problem</h2>
+
+      <p>
+        A single filter finds a single feature. But images contain many features—edges, corners, textures, eyes, noses, etc.
+        So CNNs use <b>many filters</b>.
+      </p>
+
+      <p>
+        If you apply two different filters \(W^{(1)}\) and \(W^{(2)}\) to the same input \(X\), you get two 2D outputs:
+        \[
+          B^{(1)} = X \star W^{(1)}, \quad B^{(2)} = X \star W^{(2)}
+        \]
+        Stack them and you get a 3D output again:
+        \[
+          B = \text{stack}\left(B^{(1)}, B^{(2)}, \ldots\right) \in \mathbb{R}^{H \times W \times C_{\text{out}}}
+        \]
+      </p>
+
+      <div class="callout">
+        <p style="margin:0;">
+          <b>Terminology shift:</b> after the first layer, the last dimension is no longer “color”.
+          It’s the number of <b>channels</b> or <b>feature maps</b> (one map per learned feature).
+        </p>
+      </div>
+
+      <figure>
+        <img alt="Feature map visualization from a CNN layer (conceptual)" src="/tutorials/images/external/Typical_cnn-46df08c8b8-fallback.svg">
+        <figcaption>
+          Local book diagram showing stacks of CNN feature maps. Historical reference:
+          <a href="https://doi.org/10.1109/5.726791" target="_blank" rel="noopener">LeCun et al., 1998</a>.
+        </figcaption>
+      </figure>
+    </section>
+
+    <section id="fullconv">
+      <h2 id="3-full-convolution-in-cnn-form-shapes-equation">3) Full convolution in CNN form: shapes + equation</h2>
+
+      <h3 id="shapes-used-in-this-lecture">Shapes used in this lecture</h3>
+      <ul>
+        <li>Input: \(X \in \mathbb{R}^{H \times W \times C_1}\)</li>
+        <li>Weights: \(W \in \mathbb{R}^{C_1 \times K \times K \times C_2}\)</li>
+        <li>Output (same mode): \(Y \in \mathbb{R}^{H \times W \times C_2}\)</li>
+      </ul>
+
+      <p class="muted">
+        Many frameworks store weights as \((C_2, C_1, K, K)\). The transcript’s shape is equivalent—just a different axis order.
+      </p>
+
+      <h3 id="index-form-same-mode-stride-1-deep-learning-style-correlation">Index form (same-mode, stride 1; “deep learning style” correlation)</h3>
+      <p>
+        Let \(Y_{i,j,c}\) be the output at spatial position \((i,j)\) and output channel \(c\) (a feature map).
+        Then:
+      </p>
+
+      <p>
+        \[
+          Y_{i,j,c} = \sum_{c'=1}^{C_1}\sum_{u=0}^{K-1}\sum_{v=0}^{K-1}
+          X_{i+u-\Delta,\;j+v-\Delta,\;c'} \; W_{c',u,v,c}
+        \]
+      </p>
+
+      <p class="muted">
+        Here \(\Delta=\lfloor K/2 \rfloor\) corresponds to “same” padding for odd \(K\) (conceptually: zeros around the image).
+      </p>
+
+      <div class="callout">
+        <p style="margin:0;">
+          <b>Concept:</b> each output channel \(c\) corresponds to one filter (one learned feature).
+          The output tensor is a stack of feature maps.
+        </p>
+      </div>
+
+      <figure>
+        <img alt="Convolution arithmetic illustration showing shapes" src="/tutorials/images/external/Convolution_arithmetic_padding_strides-939a950445-fallback.svg">
+        <figcaption>
+          Local book diagram of convolution arithmetic. Technical reference:
+          <a href="https://arxiv.org/abs/1603.07285" target="_blank" rel="noopener">Dumoulin and Visin</a>.
+        </figcaption>
+      </figure>
+    </section>
+
+    <section id="layer">
+      <h2 id="4-a-convolution-layer-convolution-bias-activation">4) A convolution layer = convolution + bias + activation</h2>
+
+      <p>
+        A CNN layer mirrors a dense layer idea:
+      </p>
+      <p>
+        \[
+          \text{Dense: } z = Wx + b,\quad a = \sigma(z)
+        \]
+      </p>
+      <p>
+        For convolution:
+      </p>
+      <p>
+        \[
+          Z = X \star W + b,\quad A = \sigma(Z)
+        \]
+      </p>
+
+      <h3 id="bias-shape-and-broadcasting">Bias shape and broadcasting</h3>
+      <p>
+        The convolution output has shape \(H \times W \times C_2\).
+        The bias term is a <b>vector</b> \(b \in \mathbb{R}^{C_2}\): one scalar per feature map.
+        In code, broadcasting adds \(b_c\) to every spatial location \((i,j)\) in that feature map.
+      </p>
+
+      <div class="callout">
+        <p style="margin:0;">
+          <b>Broadcasting intuition:</b> bias is “per-channel”, not “per-pixel”.
+          It’s the same idea as dense layers (one bias per output unit), just expanded across the grid.
+        </p>
+      </div>
+
+      <div class="codewrap">
+        <div class="codebar">
+          <span class="label">python • conv layer with bias + activation (PyTorch)</span>
+          
+        </div>
+<pre class="language-python"><code>import torch
+import torch.nn as nn
+
+# Example: Cin=3 (RGB), Cout=16 feature maps, 3x3 kernels
+layer = nn.Sequential(
+    nn.Conv2d(in_channels=3, out_channels=16, kernel_size=3, padding=1, bias=True),  # "same" for 3x3
+    nn.ReLU()
+)
+
+x = torch.randn(8, 3, 32, 32)   # NCHW: batch=8, channels=3, H=W=32
+y = layer(x)
+print(y.shape)  # (8, 16, 32, 32)</code></pre>
+      </div>
+
+      <p class="muted">
+        Notice PyTorch uses NCHW ordering: \((N, C, H, W)\).
+        The “channels” here are feature maps after the first layer.
+      </p>
+    </section>
+
+    <section id="params">
+      <h2 id="5-why-cnns-are-efficient-parameter-sharing-vs-dense-explosion">5) Why CNNs are efficient: parameter sharing vs dense explosion</h2>
+
+      <p>
+        Parameter sharing means one small kernel is reused across the entire image.
+        That dramatically reduces parameter count compared to flattening and using a dense layer.
+      </p>
+
+      <h3 id="worked-parameter-comparison-from-the-transcript">Worked parameter comparison (from the transcript)</h3>
+      <p>
+        Input image: \(32 \times 32 \times 3\). Kernel: \(3 \times 5 \times 5 \times 64\) (64 output feature maps).
+        Using valid convolution, output spatial size is \((32-5+1)\times(32-5+1)=28\times 28\).
+        So output is \(28\times 28\times 64\).
+      </p>
+
+      <div class="grid two">
+        <div class="callout">
+          <p style="margin:0;">
+            <b>Convolution parameters</b><br>
+            \(3 \cdot 5 \cdot 5 \cdot 64 = 4800\)
+          </p>
+        </div>
+        <div class="callout">
+          <p style="margin:0;">
+            <b>Dense parameters (flattened)</b><br>
+            input: \(32\cdot 32\cdot 3 = 3072\)<br>
+            output: \(28\cdot 28\cdot 64 = 50176\)<br>
+            weights: \(3072 \times 50176 \approx 154\) million
+          </p>
+        </div>
+      </div>
+
+      <p class="muted">
+        Dense would have ~32,000× more parameters in this example. This increases memory and compute and can hurt generalization,
+        because dense must learn separate weights for the “same pattern” at every location.
+      </p>
+
+      <figure>
+        <img alt="Illustration of local receptive fields and weight sharing in CNNs" src="/tutorials/images/external/Conv_layer-42782a549f-fallback.svg">
+        <figcaption>
+          Local receptive fields / convolution layer concept (Wikimedia Commons):
+          <a href="https://commons.wikimedia.org/wiki/File:Conv_layer.png" target="_blank" rel="noopener">Conv_layer.png</a>
+        </figcaption>
+      </figure>
+    </section>
+
+    <section id="cnnarch">
+      <h2 id="6-a-typical-cnn-has-two-stages">6) A typical CNN has two stages</h2>
+
+      <p>
+        CNNs are commonly organized as:
+      </p>
+      <ol>
+        <li>
+          <b>Convolutional stage</b>: repeated blocks that extract image features
+          (often <code>Conv → (Pooling or Stride)</code>).
+        </li>
+        <li>
+          <b>Dense stage</b>: a standard feed-forward network that performs classification/regression on extracted features.
+        </li>
+      </ol>
+
+      <figure>
+        <img alt="LeNet-5 architecture diagram (classic CNN archetype)" src="/tutorials/images/external/LeNet5-46fbf8dc74-fallback.svg">
+        <figcaption>
+          Local book diagram of the LeNet-5 pattern. Primary reference:
+          <a href="https://doi.org/10.1109/5.726791" target="_blank" rel="noopener">LeCun et al., 1998</a>.
+        </figcaption>
+      </figure>
+
+      <div class="callout">
+        <p style="margin:0;">
+          <b>Mental model:</b> the conv stage is a feature transformer designed for images.
+          Once features are extracted, the dense stage handles non-linear prediction (classification/regression).
+        </p>
+      </div>
+    </section>
+
+    <section id="pool">
+      <h2 id="7-pooling-downsampling-by-summarizing-local-neighborhoods">7) Pooling: downsampling by summarizing local neighborhoods</h2>
+
+      <p>
+        Pooling reduces spatial size (e.g., 100×100 → 50×50 with 2×2 pooling, stride 2).
+        Two common types:
+      </p>
+      <ul>
+        <li><b>Max pooling</b>: take the maximum value in each pooling window</li>
+        <li><b>Average pooling</b>: take the average in each pooling window</li>
+      </ul>
+
+      <h3 id="mechanics-with-the-transcript-s-4-4-example-pool-2-stride-2">Mechanics with the transcript’s 4×4 example (pool=2, stride=2)</h3>
+
+      <div class="grid two">
+        <div>
+          <p><b>Input</b></p>
+          <table aria-label="Pooling input 4x4">
+            <tbody><tr><td>1</td><td>2</td><td>3</td><td>4</td></tr>
+            <tr><td>5</td><td>6</td><td>7</td><td>8</td></tr>
+            <tr><td>16</td><td>15</td><td>14</td><td>13</td></tr>
+            <tr><td>12</td><td>11</td><td>10</td><td>9</td></tr>
+          </tbody></table>
+        </div>
+        <div>
+          <p><b>MaxPool2d(2)</b> output</p>
+          <table aria-label="Max pooling output 2x2">
+            <tbody><tr><td>6</td><td>8</td></tr>
+            <tr><td>16</td><td>14</td></tr>
+          </tbody></table>
+
+          <p><b>AvgPool2d(2)</b> output</p>
+          <table aria-label="Average pooling output 2x2">
+            <tbody><tr><td>3.5</td><td>5.5</td></tr>
+            <tr><td>13.5</td><td>11.5</td></tr>
+          </tbody></table>
+        </div>
+      </div>
+
+      <div class="codewrap">
+        <div class="codebar">
+          <span class="label">python • max pooling and average pooling (PyTorch)</span>
+          
+        </div>
+<pre class="language-python"><code>import torch
+import torch.nn as nn
+
+x = torch.tensor([[[[ 1.,  2.,  3.,  4.],
+                    [ 5.,  6.,  7.,  8.],
+                    [16., 15., 14., 13.],
+                    [12., 11., 10.,  9.]]]])  # shape (N=1, C=1, H=4, W=4)
+
+maxpool = nn.MaxPool2d(kernel_size=2, stride=2)
+avgpool = nn.AvgPool2d(kernel_size=2, stride=2)
+
+print("max:\n", maxpool(x)[0,0])
+print("avg:\n", avgpool(x)[0,0])</code></pre>
+      </div>
+
+      <figure>
+        <img alt="Max pooling visualization" src="/tutorials/images/external/Max_pooling-422a90d58b.png">
+        <figcaption>
+          Max pooling visualization (Wikimedia Commons):
+          <a href="https://commons.wikimedia.org/wiki/File:Max_pooling.png" target="_blank" rel="noopener">Max_pooling.png</a>
+        </figcaption>
+      </figure>
+    </section>
+
+    <section id="invariance">
+      <h2 id="8-why-pooling-helps-translation-invariance">8) Why pooling helps: translation invariance</h2>
+
+      <p>
+        Pooling supports the idea of <b>translation invariance</b>:
+        we often care that a feature exists somewhere, not exactly where it is.
+      </p>
+
+      <p>
+        In a small 2×2 region, a feature detector output might look like “high, low, low, low”.
+        Max pooling returns the high value, preserving “feature found” while discarding precise location.
+      </p>
+
+      <div class="callout">
+        <p style="margin:0;">
+          <b>Max pooling intuition:</b> “if the pattern appears anywhere in this window, keep it.”
+          This often matches what you want for recognition tasks.
+        </p>
+      </div>
+
+      <p class="muted">
+        Pooling layers also have hyperparameters:
+        pool size (e.g., 2×2) and stride (often 2).
+        Overlapping pooling (stride 1) exists but is less common in typical modern setups.
+      </p>
+    </section>
+
+    <section id="hierarchy">
+      <h2 id="9-conv-pooling-creates-hierarchical-feature-learning">9) Conv + pooling creates hierarchical feature learning</h2>
+
+      <p>
+        CNNs often repeat the pattern: <b>convolution → pooling → convolution → pooling</b>.
+        Spatial size decreases, while filters remain small (commonly 3×3, 5×5, 7×7).
+      </p>
+
+      <h3 id="why-small-filters-start-as-tiny-pattern-detectors">Why small filters start as “tiny pattern” detectors</h3>
+      <p>
+        A 3×3 filter covers a tiny fraction of a 32×32 image.
+        After downsampling to 16×16, the same 3×3 covers a larger fraction of the image;
+        later it can cover a very large portion (e.g., on 4×4).
+      </p>
+
+      <p>
+        This is one reason CNNs learn features hierarchically:
+        early layers tend to pick up small patterns (edges/strokes),
+        later layers pick up larger patterns (parts, then whole objects).
+      </p>
+
+      <div class="callout">
+        <p style="margin:0;">
+          <b>Two linked effects:</b><br>
+          1) spatial dimensions shrink<br>
+          2) fixed-size filters “see” relatively larger areas → bigger patterns
+        </p>
+      </div>
+
+      <p class="muted">
+        Yes, shrinking loses spatial detail (“where”). But CNNs often compensate by increasing
+        the number of feature maps (“what”) as depth increases.
+      </p>
+    </section>
+
+    <section id="stride">
+      <h2 id="10-strided-convolution-as-an-alternative-to-pooling">10) Strided convolution as an alternative to pooling</h2>
+
+      <p>
+        Pooling isn’t the only downsampling option. Convolution itself can downsample using a <b>stride</b>:
+        stride tells you how far the sliding window jumps each step.
+      </p>
+
+      <p>
+        With stride 2, output spatial dimensions are roughly halved—similar to pooling with 2×2, stride 2.
+      </p>
+
+      <div class="callout">
+        <p style="margin:0;">
+          <b>Why skipping pixels can be okay:</b> nearby pixels are often highly correlated in natural images.
+          Skipping every other pixel still preserves much of the structure while reducing computation.
+        </p>
+      </div>
+
+      <figure>
+        <img alt="Convolution with stride illustration" src="/tutorials/images/external/Conv_arithmetic_strides-4314c5336a-fallback.svg">
+        <figcaption>
+          Local book diagram of strided convolution. Technical reference:
+          <a href="https://arxiv.org/abs/1603.07285" target="_blank" rel="noopener">Dumoulin and Visin</a>.
+        </figcaption>
+      </figure>
+
+      <div class="codewrap">
+        <div class="codebar">
+          <span class="label">python • strided conv vs conv+pool (shape comparison)</span>
+          
+        </div>
+<pre class="language-python"><code>import torch
+import torch.nn as nn
+
+x = torch.randn(1, 3, 32, 32)
+
+# Option A: conv then pool
+conv = nn.Conv2d(3, 16, kernel_size=3, padding=1)     # keep 32x32
+pool = nn.MaxPool2d(2, stride=2)                      # downsample to 16x16
+y_a = pool(torch.relu(conv(x)))
+
+# Option B: strided conv (downsample directly)
+conv_s2 = nn.Conv2d(3, 16, kernel_size=3, padding=1, stride=2)
+y_b = torch.relu(conv_s2(x))
+
+print("conv+pool:", y_a.shape)  # (1, 16, 16, 16)
+print("stride=2:", y_b.shape)   # (1, 16, 16, 16)</code></pre>
+      </div>
+
+      <p class="muted">
+        Both produce the same spatial size here; the difference is where downsampling happens and how parameters are used.
+      </p>
+    </section>
+
+    <section id="global">
+      <h2 id="11-flatten-vs-global-max-pooling-handling-variable-image-sizes">11) Flatten vs global max pooling (handling variable image sizes)</h2>
+
+      <p>
+        The dense stage expects a 1D feature vector. A convolutional output is 3D:
+        \[
+          X \in \mathbb{R}^{H \times W \times C}
+        \]
+        so a common step is to <b>flatten</b> to a vector of size \(H\cdot W\cdot C\).
+      </p>
+
+      <h3 id="why-flattening-fails-for-variable-image-sizes">Why flattening fails for variable image sizes</h3>
+      <p>
+        If the network outputs 2×2×100 for a 32×32 input, flatten gives 400 features.
+        For a larger 64×64 input that becomes 4×4×100, flatten gives 1600 features.
+        A fixed dense layer can’t accept both sizes.
+      </p>
+
+      <h3 id="global-max-pooling-size-independent-output">Global max pooling: size-independent output</h3>
+      <p>
+        Global max pooling collapses the entire spatial grid:
+        \[
+          \text{GMP}(X)_c = \max_{i,j} X_{i,j,c}
+        \]
+        producing a vector of size \(C\), regardless of \(H\) and \(W\).
+      </p>
+
+      <div class="callout">
+        <p style="margin:0;">
+          <b>Interpretation:</b> “I don’t care where the feature appears in the image—if it appears anywhere, keep the strongest evidence.”
+        </p>
+      </div>
+
+      <figure>
+        <img alt="Global average pooling diagram (conceptual; same idea applies to global max pooling)" src="/tutorials/images/external/GlobalAveragePooling-ea08b562e2-fallback.svg">
+        <figcaption>
+          Local book diagram of global pooling. Primary reference for global average pooling:
+          <a href="https://arxiv.org/abs/1312.4400" target="_blank" rel="noopener">Lin, Chen, and Yan, <em>Network in Network</em></a>.
+        </figcaption>
+      </figure>
+
+      <div class="codewrap">
+        <div class="codebar">
+          <span class="label">python • global max pooling in PyTorch (works for any H×W)</span>
+          
+        </div>
+<pre class="language-python"><code>import torch
+import torch.nn as nn
+
+gmp = nn.AdaptiveMaxPool2d((1, 1))  # global max pooling to 1x1
+
+x1 = torch.randn(8, 100, 2, 2)     # e.g., from 32x32 after downsampling
+x2 = torch.randn(8, 100, 4, 4)     # e.g., from 64x64 after downsampling
+
+y1 = gmp(x1).squeeze(-1).squeeze(-1)  # shape: (8, 100)
+y2 = gmp(x2).squeeze(-1).squeeze(-1)  # shape: (8, 100)
+
+print(y1.shape, y2.shape)</code></pre>
+      </div>
+
+      <p class="muted">
+        <b>Note:</b> images can’t be downsampled indefinitely. If the spatial size becomes too small (e.g., 2×2),
+        additional stride-2 operations will fail.
+      </p>
+    </section>
+
+    <section id="end">
+      <h2 id="12-a-modern-cnn-blueprint-as-summarized-in-the-transcript">12) A modern CNN blueprint (as summarized in the transcript)</h2>
+
+      <p>
+        A practical CNN often follows:
+      </p>
+
+      <ol>
+        <li>
+          <b>Convolutional stage</b>:
+          repeated blocks that downsample while increasing channels
+          <ul>
+            <li>Option A: <code>Conv → Pool</code> (repeat)</li>
+            <li>Option B: <code>Strided Conv</code> (repeat)</li>
+            <li>Keep filter sizes small (commonly 3×3, 5×5, 7×7)</li>
+            <li>Increase feature maps with depth (e.g., 32 → 64 → 128 → ...)</li>
+          </ul>
+        </li>
+        <li>
+          <b>Bridge</b>:
+          convert 3D feature maps to 1D features
+          <ul>
+            <li>Flatten (<code>view</code>) for fixed-size inputs</li>
+            <li>or Global pooling for variable-size inputs</li>
+          </ul>
+        </li>
+        <li>
+          <b>Dense stage</b>:
+          standard feed-forward layers ending with task-appropriate output
+          <ul>
+            <li>Regression: 1 output, identity (no activation)</li>
+            <li>Binary classification: 1 output, sigmoid</li>
+            <li>Multi-class (K≥2): K outputs, softmax (often combined with cross-entropy loss)</li>
+          </ul>
+        </li>
+      </ol>
+
+      <div class="codewrap">
+        <div class="codebar">
+          <span class="label">python • reference CNN skeleton (conv stage → global max pool → dense)</span>
+          
+        </div>
+<pre class="language-python"><code>import torch.nn as nn
+
+class SimpleCNN(nn.Module):
+    def __init__(self, num_classes=10):
+        super().__init__()
+        self.features = nn.Sequential(
+            nn.Conv2d(3, 32, 3, padding=1), nn.ReLU(),
+            nn.Conv2d(32, 64, 3, padding=1, stride=2), nn.ReLU(),   # stride downsample
+            nn.Conv2d(64, 128, 3, padding=1, stride=2), nn.ReLU(),
+        )
+        self.gmp = nn.AdaptiveMaxPool2d((1, 1))  # global max pool
+        self.classifier = nn.Sequential(
+            nn.Linear(128, 128), nn.ReLU(),
+            nn.Linear(128, num_classes)
+        )
+
+    def forward(self, x):
+        x = self.features(x)               # (N, 128, H', W')
+        x = self.gmp(x).squeeze(-1).squeeze(-1)  # (N, 128)
+        return self.classifier(x)          # logits
+
+# Use with nn.CrossEntropyLoss() for multi-class classification</code></pre>
+      </div>
+
+      <div class="callout">
+        <p style="margin:0;">
+          <b>Big picture:</b> convolution learns feature transformers automatically during training (weights + biases),
+          just like dense layers—only the tensor shapes and parameter sharing differ.
+        </p>
+      </div>
+    </section>
+
+    <section id="credits">
+      <h2 id="local-visuals-and-source-credits">Local visuals and source credits</h2>
+      <ul class="small">
+        <li>RGB channels diagram: local book asset; concept reference: <a href="https://docs.opencv.org/4.x/de/d25/imgproc_color_conversions.html" target="_blank" rel="noopener">OpenCV color conversions</a></li>
+        <li>CNN feature-map stack: local book asset; historical reference: <a href="https://doi.org/10.1109/5.726791" target="_blank" rel="noopener">LeCun et al., 1998</a></li>
+        <li>Convolution arithmetic (padding/stride): local book asset; concept reference: <a href="https://arxiv.org/abs/1603.07285" target="_blank" rel="noopener">Dumoulin and Visin</a></li>
+        <li>Local receptive fields / conv layer concept: <a href="https://commons.wikimedia.org/wiki/File:Conv_layer.png" target="_blank" rel="noopener">Wikimedia Commons</a></li>
+        <li>LeNet-5 pattern: local book asset; primary reference: <a href="https://doi.org/10.1109/5.726791" target="_blank" rel="noopener">LeCun et al., 1998</a></li>
+        <li>Max pooling visualization: <a href="https://commons.wikimedia.org/wiki/File:Max_pooling.png" target="_blank" rel="noopener">Wikimedia Commons</a></li>
+        <li>Stride arithmetic: local book asset; concept reference: <a href="https://arxiv.org/abs/1603.07285" target="_blank" rel="noopener">Dumoulin and Visin</a></li>
+        <li>Global pooling: local book asset; primary reference: <a href="https://arxiv.org/abs/1312.4400" target="_blank" rel="noopener">Network in Network</a></li>
+      </ul>
+
+      <div class="hr"></div>
+      <p class="muted small">
+        This HTML is self-contained in structure: equations render via MathJax CDN, code blocks are readable with copy buttons,
+        and all displayed visuals are local assets, with source attribution or primary concept references retained where applicable.
+      </p>
+    </section>
+
+  </div></div></article></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col noPrint_WFHX"></div><div class="col lastUpdated_JAkA"><span class="theme-last-updated">Last updated<!-- --> on <b><time datetime="2026-07-30T01:42:42.000Z" itemprop="dateModified">Jul 30, 2026</time></b></span></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/tutorials/part5-deep-learning-and-llms/04-cnn-convolution"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">4. CNN convolution</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/tutorials/part5-deep-learning-and-llms/06-cnn-pytorch-implementation"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">6. CNN PyTorch implementation</div></a></nav></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer"><div class="container container-fluid"><div class="row footer__links"><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Study</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/tutorials/">Book home</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/content-map">Reading guide</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/labs/rnn">Interactive RNN lab</a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Core tracks</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/tutorials/part2-backend-platform-security/overview">Backend and security</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/part3-agent-protocols/overview">Agent protocols</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/part5-deep-learning-and-llms/overview">Deep learning and LLMs</a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright">Enterprise AI, Agents & Applied ML - 2026</div></div></div></footer></div>
+</body>
+</html>

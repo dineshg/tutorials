@@ -1,0 +1,739 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-part3-agent-protocols/langchain-langgraph-flowise" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.10.2">
+<title data-rh="true">LangChain to LangGraph to Flowise: Dictionaries, Nodes, and State | Enterprise AI, Agents &amp; Applied ML</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://dineshg.github.io/tutorials/part3-agent-protocols/07-langchain-langgraph-flowise"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="keywords" content="enterprise AI, machine learning, deep learning, LLM, FastAPI, Pydantic, MCP, authentication"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="LangChain to LangGraph to Flowise: Dictionaries, Nodes, and State | Enterprise AI, Agents &amp; Applied ML"><meta data-rh="true" name="description" content="How to think in “passing dictionaries”, building nodes, composing runnables, managing state, and then turning it into a UI flow."><meta data-rh="true" property="og:description" content="How to think in “passing dictionaries”, building nodes, composing runnables, managing state, and then turning it into a UI flow."><link data-rh="true" rel="icon" href="/tutorials/img/favicon.svg"><link data-rh="true" rel="canonical" href="https://dineshg.github.io/tutorials/part3-agent-protocols/07-langchain-langgraph-flowise"><link data-rh="true" rel="alternate" href="https://dineshg.github.io/tutorials/part3-agent-protocols/07-langchain-langgraph-flowise" hreflang="en"><link data-rh="true" rel="alternate" href="https://dineshg.github.io/tutorials/part3-agent-protocols/07-langchain-langgraph-flowise" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Part III - Agent Protocols","item":"https://dineshg.github.io/tutorials/part3-agent-protocols/overview"},{"@type":"ListItem","position":2,"name":"7. LangChain, LangGraph, and Flowise","item":"https://dineshg.github.io/tutorials/part3-agent-protocols/07-langchain-langgraph-flowise"}]}</script><script>window.MathJax={startup:{typeset:!1},tex:{inlineMath:[["\\(","\\)"],["$","$"]],displayMath:[["\\[","\\]"],["$$","$$"]],processEscapes:!0},options:{skipHtmlTags:["script","noscript","style","textarea","pre","code"]}}</script>
+<link rel="stylesheet" href="/tutorials/css/book.css">
+<link rel="stylesheet" href="/tutorials/vendor/highlight.js/11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.18.1/dist/katex.min.css" integrity="sha384-5TcZemv2l/9On385z///+d7MSYlvIEw9FuZTIdZ14vJLqWphw7e7ZPuOiCHJcFCP" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-mml-chtml.js" defer="defer"></script><link rel="stylesheet" href="/tutorials/assets/css/styles.003aa738.css">
+<script src="/tutorials/assets/js/runtime~main.98c31d90.js" defer="defer"></script>
+<script src="/tutorials/assets/js/main.bd80017b.js" defer="defer"></script>
+</head>
+<body>
+<svg style="display: none;"><defs>
+<symbol id="theme-svg-external-link" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")),document.documentElement.setAttribute("data-theme-choice",t||"system")}(),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top"><div class="navbar__inner"><div class="theme-layout-navbar-left navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/tutorials/"><b class="navbar__title text--truncate">Enterprise AI Book</b></a><a class="navbar__item navbar__link" href="/tutorials/">Read</a><a class="navbar__item navbar__link" href="/tutorials/content-map">Concept map</a><a class="navbar__item navbar__link" href="/tutorials/part5-deep-learning-and-llms/10-recurrent-neural-networks">Deep learning</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><div class="navbar__item book-search-navbar-item"><button type="button" class="book-search-trigger" aria-label="Search the book">Search <kbd>Ctrl K</kbd></button></div><a href="https://github.com/dineshg/tutorials" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type="button" disabled="" title="system mode" aria-label="Switch between dark and light mode (currently system mode)"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill="currentColor" d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill="currentColor" d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill="currentColor" d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"></path></svg></button></div><div class="navbarSearchContainer_Bca1"></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class="docsWrapper_hBAB"><button aria-label="Scroll back to top" class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type="button"></button><div class="docRoot_UBD9"><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class="sidebarViewport_aRkj"><div class="sidebar_njMd"><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/tutorials/"><span class="linkLabel_WmDU">Book home</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/tutorials/content-map"><span class="linkLabel_WmDU">Reading guide and concept map</span></a></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-blue"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part1-enterprise-ai-delivery/overview"><span class="categoryLinkLabel_W154">Part I - Enterprise AI Delivery</span></a><button aria-label="Expand sidebar category &#x27;Part I - Enterprise AI Delivery&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-teal"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part2-backend-platform-security/overview"><span class="categoryLinkLabel_W154">Part II - Backend, Platform &amp; Security</span></a><button aria-label="Expand sidebar category &#x27;Part II - Backend, Platform &amp; Security&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item sidebar-category sidebar-category-violet"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--active" href="/tutorials/part3-agent-protocols/overview"><span class="categoryLinkLabel_W154">Part III - Agent Protocols</span></a><button aria-label="Collapse sidebar category &#x27;Part III - Agent Protocols&#x27;" aria-expanded="true" type="button" class="clean-btn menu__caret"></button></div><ul class="menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part3-agent-protocols/01-mcp-fundamentals"><span class="linkLabel_WmDU">1. MCP fundamentals</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part3-agent-protocols/02-mcp-discovery-remote-auth"><span class="linkLabel_WmDU">2. MCP discovery, remote transport, and auth</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part3-agent-protocols/03-mcp-enterprise-pattern"><span class="linkLabel_WmDU">3. MCP enterprise pattern</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part3-agent-protocols/04-mcp-2025-update"><span class="linkLabel_WmDU">4. MCP protocol evolution</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part3-agent-protocols/05-a2a-protocol"><span class="linkLabel_WmDU">5. A2A protocol 1.0</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part3-agent-protocols/06-javascript-typescript-primer"><span class="linkLabel_WmDU">6. JavaScript and TypeScript primer</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link menu__link--active" aria-current="page" tabindex="0" href="/tutorials/part3-agent-protocols/07-langchain-langgraph-flowise"><span class="linkLabel_WmDU">7. LangChain, LangGraph, and Flowise</span></a></li></ul></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-amber"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part4-ml-foundations/overview"><span class="categoryLinkLabel_W154">Part IV - ML Foundations</span></a><button aria-label="Expand sidebar category &#x27;Part IV - ML Foundations&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-coral"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part5-deep-learning-and-llms/overview"><span class="categoryLinkLabel_W154">Part V - Deep Learning &amp; LLMs</span></a><button aria-label="Expand sidebar category &#x27;Part V - Deep Learning &amp; LLMs&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-slate"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part6-appendices/overview"><span class="categoryLinkLabel_W154">Part VI - Appendices</span></a><button aria-label="Expand sidebar category &#x27;Part VI - Appendices&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li></ul></nav><button type="button" title="Collapse sidebar" aria-label="Collapse sidebar" class="button button--secondary button--outline collapseSidebarButton_PEFL"><svg width="20" height="20" aria-hidden="true" class="collapseSidebarButtonIcon_kv0_"><g fill="#7a7a7a"><path d="M9.992 10.023c0 .2-.062.399-.172.547l-4.996 7.492a.982.982 0 01-.828.454H1c-.55 0-1-.453-1-1 0-.2.059-.403.168-.551l4.629-6.942L.168 3.078A.939.939 0 010 2.528c0-.548.45-.997 1-.997h2.996c.352 0 .649.18.828.45L9.82 9.472c.11.148.172.347.172.55zm0 0"></path><path d="M19.98 10.023c0 .2-.058.399-.168.547l-4.996 7.492a.987.987 0 01-.828.454h-3c-.547 0-.996-.453-.996-1 0-.2.059-.403.168-.551l4.625-6.942-4.625-6.945a.939.939 0 01-.168-.55 1 1 0 01.996-.997h3c.348 0 .649.18.828.45l4.996 7.492c.11.148.168.347.168.55zm0 0"></path></g></svg></button></div></div></aside><main class="docMainContainer_TBSr"><div class="container padding-top--md padding-bottom--lg"><div class="row"><div class="col"><div class="docItemContainer_Djhp"><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label="Breadcrumbs"><ul class="breadcrumbs"><li class="breadcrumbs__item"><a aria-label="Home page" class="breadcrumbs__link" href="/tutorials/"><svg viewBox="0 0 24 24" class="breadcrumbHomeIcon_YNFT"><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill="currentColor"></path></svg></a></li><li class="breadcrumbs__item"><a class="breadcrumbs__link" href="/tutorials/part3-agent-protocols/overview"><span>Part III - Agent Protocols</span></a></li><li class="breadcrumbs__item breadcrumbs__item--active"><span class="breadcrumbs__link">7. LangChain, LangGraph, and Flowise</span></li></ul></nav><div class="theme-doc-markdown markdown"><article class="book-article tr-content" data-book-part="part3" data-book-accent="violet"><header class="articleHeader_jX4Y"><span class="partLabel_DqKR">Part III - Agent Protocols &amp; Integration</span><h1>LangChain → LangGraph → Flowise</h1><div class="articleMeta_jfH_"><span>9<!-- --> min read</span><span aria-hidden="true">·</span><span>5<!-- --> sections</span></div></header><details class="chapterToc_aQjS"><summary>On this page</summary><nav aria-label="On this page"><a href="#bridge-from-http-dict-pipelines">Bridge from HTTP → “dict pipelines”</a><a href="#langchain-everything-is-a-runnable-that-transforms-inputs-outputs">LangChain: everything is a runnable that transforms inputs → outputs</a><a href="#langgraph-stateful-graphs-state-partial-state">LangGraph: stateful graphs (State → partial State)</a><a href="#flowise-visual-applications-and-agentflow-v2">Flowise: visual applications and Agentflow V2</a><a href="#extension-path">Extension path</a></nav></details><div class="articleBody_b2wt"><header>
+  <div class="wrap">
+    
+    <p class="muted">How to think in “passing dictionaries”, building nodes, composing runnables, managing state, and then turning it into a UI flow.</p>
+
+    <div class="toc">
+      <strong>Table of contents</strong>
+      <ul>
+        <li><a href="#bridge">Bridge from HTTP → “dict pipelines”</a></li>
+        <li><a href="#langchain">LangChain: everything is a runnable that transforms inputs → outputs</a>
+          <ul>
+            <li><a href="#dicts">The “passing dictionaries” mental model</a></li>
+            <li><a href="#runnables">Runnables: invoke/batch/stream + composition</a></li>
+            <li><a href="#passthrough">RunnablePassthrough + assign</a></li>
+            <li><a href="#custom-node">Custom node creation (custom runnable)</a></li>
+            <li><a href="#mini-chain">Mini end-to-end chain example</a></li>
+          </ul>
+        </li>
+        <li><a href="#langgraph">LangGraph: stateful graphs (State → partial State)</a>
+          <ul>
+            <li><a href="#state">State passing and reducers</a></li>
+            <li><a href="#graph-example">Example: “purchase request” graph (inventory + approval)</a></li>
+          </ul>
+        </li>
+        <li><a href="#flowise">Flowise: visual applications and Agentflow V2</a></li>
+      </ul>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <div class="tr-update">
+    <strong>Framework status</strong>
+    The runnable and <code>StateGraph</code> examples in this chapter remain
+    current. In LangChain v1, <code>langchain.agents.create_agent</code> is the
+    standard prebuilt agent API and replaces
+    <code>langgraph.prebuilt.create_react_agent</code>. Use raw
+    <code>StateGraph</code> when you need an explicit custom workflow. Flowise
+    Agentflow V2 is a native orchestration system with standalone nodes and
+    Flow State; it is not merely a visual skin over LangChain.
+  </div>
+
+  <section id="bridge">
+    <h2 id="bridge-from-http-dict-pipelines">Bridge from HTTP → “dict pipelines”</h2>
+    <p>
+      You already learned HTTP methods (GET/POST/PUT/PATCH/DELETE). When you build LLM apps, you’ll usually expose them as HTTP endpoints too.
+      The key connection:
+    </p>
+
+    <div class="callout">
+      <strong>HTTP request body is typically JSON → in Python it becomes a <code class="inline">dict</code>.</strong><br>
+      LangChain/LangGraph pipelines are easiest to understand as “functions that transform dictionaries”.
+    </div>
+
+    <div class="card">
+      <div class="diagram">
+        Client JSON<br>
+        └─&gt; Python dict<br>
+            └─&gt; LangChain runnable pipeline (dict -&gt; dict/string)<br>
+                └─&gt; HTTP JSON response
+      </div>
+    </div>
+
+    <div class="card">
+      <strong>Visual: request → dict → runnable pipeline</strong>
+      <svg class="viz" viewBox="0 0 980 220" role="img" aria-label="HTTP request to dict to runnable pipeline to response">
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" class="accentFill" fill="#0969da" stroke="none"></path>
+          </marker>
+        </defs>
+
+        <rect x="18" y="48" width="200" height="120" rx="14" class="box" fill="#eaf3ff" stroke="#0969da" stroke-width="1.5"></rect>
+        <text x="118" y="86" text-anchor="middle" class="title" fill="#1f2328">Client</text>
+        <text x="118" y="112" text-anchor="middle" class="label" fill="#334155">JSON body</text>
+        <text x="118" y="136" text-anchor="middle" class="muted" fill="#59636e">{...}</text>
+
+        <rect x="260" y="48" width="200" height="120" rx="14" class="box2" fill="#f3f8f1" stroke="#1a7f37" stroke-width="1.5"></rect>
+        <text x="360" y="86" text-anchor="middle" class="title" fill="#1f2328">Python</text>
+        <text x="360" y="112" text-anchor="middle" class="label" fill="#334155">dict</text>
+        <text x="360" y="136" text-anchor="middle" class="muted" fill="#59636e">{"question": ...}</text>
+
+        <rect x="502" y="48" width="260" height="120" rx="14" class="box" fill="#eaf3ff" stroke="#0969da" stroke-width="1.5"></rect>
+        <text x="632" y="78" text-anchor="middle" class="title" fill="#1f2328">LangChain</text>
+        <text x="632" y="105" text-anchor="middle" class="label" fill="#334155">Runnable pipeline</text>
+        <text x="632" y="132" text-anchor="middle" class="muted" fill="#59636e">prompt | llm | parser</text>
+
+        <rect x="804" y="48" width="160" height="120" rx="14" class="box2" fill="#f3f8f1" stroke="#1a7f37" stroke-width="1.5"></rect>
+        <text x="884" y="86" text-anchor="middle" class="title" fill="#1f2328">Response</text>
+        <text x="884" y="112" text-anchor="middle" class="label" fill="#334155">JSON / text</text>
+        <text x="884" y="136" text-anchor="middle" class="muted" fill="#59636e">"..."</text>
+
+        <line x1="218" y1="108" x2="260" y2="108" class="accent" stroke-width="2" marker-end="url(#arrow)" stroke="#0969da" fill="none"></line>
+        <line x1="460" y1="108" x2="502" y2="108" class="accent" stroke-width="2" marker-end="url(#arrow)" stroke="#0969da" fill="none"></line>
+        <line x1="762" y1="108" x2="804" y2="108" class="accent" stroke-width="2" marker-end="url(#arrow)" stroke="#0969da" fill="none"></line>
+
+        <text x="240" y="95" text-anchor="middle" class="muted" fill="#59636e">parse</text>
+        <text x="481" y="95" text-anchor="middle" class="muted" fill="#59636e">invoke</text>
+        <text x="783" y="95" text-anchor="middle" class="muted" fill="#59636e">return</text>
+      </svg>
+      <p class="muted">This is the “dict pipeline” mental model: you’re always passing one structured object through transforms.</p>
+    </div>
+  </section>
+
+  <section id="langchain">
+    <h2 id="langchain-everything-is-a-runnable-that-transforms-inputs-outputs">LangChain: everything is a runnable that transforms inputs → outputs</h2>
+
+    <section id="dicts">
+      <h3 id="1-the-passing-dictionaries-mental-model">1) The “passing dictionaries” mental model</h3>
+      <p>
+        Think of a chain as a pipeline that receives a dictionary, adds/changes keys, and eventually returns a final output.
+      </p>
+
+      <div class="grid">
+        <div class="card">
+          <strong>Input dict</strong>
+          <pre><code class="language-json">{
+  "user_id": "u_123",
+  "question": "What is my total spend last month?"
+}</code></pre>
+        </div>
+        <div class="card">
+          <strong>Output</strong>
+          <pre><code class="language-json">"Your total spend last month was $1,245.40"</code></pre>
+        </div>
+      </div>
+
+      <p class="muted">
+        Internally, intermediate steps might create keys like <code class="inline">sql</code>, <code class="inline">rows</code>, <code class="inline">summary</code>.
+      </p>
+    </section>
+
+    <section id="runnables">
+      <h3 id="2-runnables-one-interface-composition">2) Runnables: one interface + composition</h3>
+      <p>
+        A <span class="badge">Runnable</span> is “anything” you can call in a consistent way:
+        one input → one output.
+      </p>
+
+      <table>
+        <thead>
+          <tr><th>Concept</th><th>What it means</th><th>Why you care</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code class="inline">invoke(input)</code></td>
+            <td>Run once, return output</td>
+            <td>Simple request/response</td>
+          </tr>
+          <tr>
+            <td><code class="inline">batch([inputs])</code></td>
+            <td>Run many inputs efficiently</td>
+            <td>Lower cost + faster throughput</td>
+          </tr>
+          <tr>
+            <td><code class="inline">stream(input)</code></td>
+            <td>Yield partial outputs as they’re produced</td>
+            <td>Great UX for chat/long responses</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="card">
+        <strong>Composition rule (LCEL):</strong> pipe output of one runnable into the next
+        <div class="diagram" style="margin-top:10px;">
+          prompt_template | llm | output_parser
+        </div>
+        <p class="muted">
+          Mentally: <code class="inline">output = parser(llm(prompt(input)))</code>
+        </p>
+      </div>
+
+      <div class="callout good">
+        <strong>Why this “uniform runnable” idea is powerful:</strong><br>
+        Once everything speaks the same interface, you can mix-and-match prompts, models, retrievers, parsers, and custom logic like LEGO.
+      </div>
+
+      <div class="card">
+        <strong>Visual: one interface, different runtimes</strong>
+        <svg class="viz" viewBox="0 0 980 220" role="img" aria-label="Runnable invoke batch stream visual">
+          <defs>
+            <marker id="arrow2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" class="accent2Fill" fill="#8250df" stroke="none"></path>
+            </marker>
+          </defs>
+
+          <rect x="30" y="64" width="240" height="120" rx="14" class="box2" fill="#f3f8f1" stroke="#1a7f37" stroke-width="1.5"></rect>
+          <text x="150" y="98" text-anchor="middle" class="title" fill="#1f2328">Runnable</text>
+          <text x="150" y="126" text-anchor="middle" class="label" fill="#334155">one input → one output</text>
+          <text x="150" y="154" text-anchor="middle" class="muted" fill="#59636e">uniform interface</text>
+
+          <rect x="320" y="30" width="200" height="60" rx="12" class="box" fill="#eaf3ff" stroke="#0969da" stroke-width="1.5"></rect>
+          <text x="420" y="66" text-anchor="middle" class="title" fill="#1f2328">invoke</text>
+
+          <rect x="320" y="98" width="200" height="60" rx="12" class="box" fill="#eaf3ff" stroke="#0969da" stroke-width="1.5"></rect>
+          <text x="420" y="134" text-anchor="middle" class="title" fill="#1f2328">batch</text>
+
+          <rect x="320" y="166" width="200" height="60" rx="12" class="box" fill="#eaf3ff" stroke="#0969da" stroke-width="1.5"></rect>
+          <text x="420" y="202" text-anchor="middle" class="title" fill="#1f2328">stream</text>
+
+          <rect x="580" y="30" width="370" height="196" rx="14" class="box2" fill="#f3f8f1" stroke="#1a7f37" stroke-width="1.5"></rect>
+          <text x="765" y="66" text-anchor="middle" class="title" fill="#1f2328">Composition</text>
+          <text x="765" y="102" text-anchor="middle" class="label" fill="#334155">prompt | llm | parser</text>
+          <text x="765" y="134" text-anchor="middle" class="muted" fill="#59636e">mix-and-match components</text>
+          <text x="765" y="170" text-anchor="middle" class="muted" fill="#59636e">same call shape everywhere</text>
+
+          <line x1="270" y1="124" x2="320" y2="60" class="accent2" stroke-width="2" marker-end="url(#arrow2)" stroke="#8250df" fill="none"></line>
+          <line x1="270" y1="124" x2="320" y2="128" class="accent2" stroke-width="2" marker-end="url(#arrow2)" stroke="#8250df" fill="none"></line>
+          <line x1="270" y1="124" x2="320" y2="196" class="accent2" stroke-width="2" marker-end="url(#arrow2)" stroke="#8250df" fill="none"></line>
+          <line x1="520" y1="128" x2="580" y2="128" class="accent2" stroke-width="2" marker-end="url(#arrow2)" stroke="#8250df" fill="none"></line>
+        </svg>
+      </div>
+    </section>
+
+    <section id="passthrough">
+      <h3 id="3-runnablepassthrough-and-keeping-keys-alive">3) RunnablePassthrough (and “keeping keys alive”)</h3>
+      <p>
+        In real pipelines you often need to compute something new <em>without losing the original input</em>.
+        That’s where “passthrough” patterns help.
+      </p>
+
+      <div class="card">
+        <strong>Typical RAG shape (conceptual)</strong>
+        <pre><code class="language-json">{
+  "question": "...",
+  "context": "&lt;retrieved docs text&gt;"
+}  --&gt; prompt --&gt; llm --&gt; answer</code></pre>
+      </div>
+
+      <p>
+        <code class="inline">RunnablePassthrough</code> behaves like identity, and can also be used with an “assign” pattern to add keys.
+      </p>
+
+      <pre><code class="language-python"># Conceptual example (LangChain LCEL style)
+from operator import itemgetter
+from langchain_core.runnables import RunnablePassthrough
+
+# Suppose you already have: retriever, format_docs, prompt, llm, parser
+setup = RunnablePassthrough.assign(
+    context=itemgetter("question") | retriever | format_docs
+)
+
+chain = setup | prompt | llm | parser
+
+result = chain.invoke({"question": "What are the top 3 products by revenue?"})
+print(result)</code></pre>
+
+      <div class="callout">
+        <strong>Key mental model:</strong> Passthrough keeps your dict intact, while letting you attach extra computed fields.
+      </div>
+    </section>
+
+    <section id="custom-node">
+      <h3 id="4-custom-node-creation-in-langchain-custom-runnable">4) Custom node creation in LangChain (custom runnable)</h3>
+      <p>
+        “Node” isn’t an official LangChain term the way it is in graph frameworks, but developers often call each pipeline step a “node”.
+        The simplest way to create a custom node is to wrap a Python function as a runnable.
+      </p>
+
+      <pre><code class="language-python">from langchain_core.runnables import RunnableLambda
+
+def normalize_question(inputs: dict) -&gt; dict:
+    q = inputs["question"].strip()
+    return {**inputs, "question": q}
+
+normalize_node = RunnableLambda(normalize_question)
+
+# Now it composes like any other runnable:
+# normalize_node | prompt | llm | parser</code></pre>
+
+      <div class="card">
+        <strong>Rule of thumb</strong>
+        <ul>
+          <li>Input and output can be strings, lists, or dicts… but dicts give you the most flexibility.</li>
+          <li>Prefer “pure transforms” (no side effects) for easy debugging.</li>
+          <li>If you need side effects (DB writes, HTTP calls), isolate them in a clearly-named node.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="mini-chain">
+      <h3 id="5-mini-end-to-end-langchain-example-sql-helper-dict-first">5) Mini end-to-end LangChain example (SQL helper, dict-first)</h3>
+      <p>
+        Here’s a tiny pipeline that:
+        1) builds SQL from a question, 2) executes it, 3) summarizes rows.
+        This is intentionally small so you can “see the dictionaries move”.
+      </p>
+
+      <pre><code class="language-python">from langchain_core.runnables import RunnableLambda, RunnablePassthrough
+from operator import itemgetter
+
+# --- pretend implementations ---
+def llm_write_sql(inputs: dict) -&gt; dict:
+    # In practice: prompt | llm | parser
+    q = inputs["question"]
+    sql = "SELECT SUM(amount) AS total FROM orders WHERE order_month = :month"
+    params = {"month": "last"}
+    return {**inputs, "sql": sql, "params": params, "question_echo": q}
+
+def run_sql(inputs: dict) -&gt; dict:
+    # In practice: call your DB driver here with bound parameters, not string interpolation.
+    rows = [{"total": 1245.40}]
+    return {**inputs, "rows": rows}
+
+def summarize(inputs: dict) -&gt; str:
+    total = inputs["rows"][0]["total"]
+    return f"Your total spend last month was ${total:,.2f}"
+
+# --- wrap as nodes ---
+write_sql = RunnableLambda(llm_write_sql)
+execute = RunnableLambda(run_sql)
+summarize_node = RunnableLambda(summarize)
+
+# --- keep dict, add keys, finish with a string ---
+chain = (
+    RunnablePassthrough()   # starts as identity (keeps original dict)
+    | write_sql             # adds sql
+    | execute               # adds rows
+    | summarize_node        # returns final string
+)
+
+print(chain.invoke({"user_id": "u_123", "question": "What is my total spend last month?"}))</code></pre>
+
+      <div class="callout good">
+        <strong>What you should notice:</strong><br>
+        Each step either (a) returns a new dict with extra keys, or (b) returns the final answer.
+        That’s the “passing dictionaries” idea in one page.
+      </div>
+    </section>
+  </section>
+
+  <div class="hr"></div>
+
+  <section id="langgraph">
+    <h2 id="langgraph-stateful-graphs-state-partial-state">LangGraph: stateful graphs (State → partial State)</h2>
+
+    <section id="state">
+      <h3 id="1-state-passing">1) State passing</h3>
+      <p>
+        LangGraph is what you use when a simple linear chain becomes a workflow:
+        branching, loops, retries, tool-calling cycles, or multi-step “agent” behavior.
+      </p>
+
+      <div class="card">
+        <strong>Core rule:</strong>
+        <div class="diagram" style="margin-top:10px;">
+          Each node reads State and returns a partial update to State
+        </div>
+      </div>
+
+      <div class="card">
+        <strong>Visual: State → partial State updates</strong>
+        <svg class="viz" viewBox="0 0 980 240" role="img" aria-label="State passing visual">
+          <defs>
+            <marker id="arrow3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" class="accentFill" fill="#0969da" stroke="none"></path>
+            </marker>
+          </defs>
+
+          <rect x="30" y="60" width="260" height="140" rx="14" class="box2" fill="#f3f8f1" stroke="#1a7f37" stroke-width="1.5"></rect>
+          <text x="160" y="96" text-anchor="middle" class="title" fill="#1f2328">State (shared)</text>
+          <text x="160" y="128" text-anchor="middle" class="muted" fill="#59636e">{"sku", "qty", "amount", ...}</text>
+          <text x="160" y="156" text-anchor="middle" class="muted" fill="#59636e">+ intermediate keys</text>
+
+          <rect x="360" y="24" width="260" height="76" rx="14" class="box" fill="#eaf3ff" stroke="#0969da" stroke-width="1.5"></rect>
+          <text x="490" y="58" text-anchor="middle" class="title" fill="#1f2328">node A</text>
+          <text x="490" y="84" text-anchor="middle" class="muted" fill="#59636e">returns {"in_stock": true}</text>
+
+          <rect x="360" y="126" width="260" height="76" rx="14" class="box" fill="#eaf3ff" stroke="#0969da" stroke-width="1.5"></rect>
+          <text x="490" y="160" text-anchor="middle" class="title" fill="#1f2328">node B</text>
+          <text x="490" y="186" text-anchor="middle" class="muted" fill="#59636e">returns {"approval": "approved"}</text>
+
+          <rect x="690" y="60" width="260" height="140" rx="14" class="box2" fill="#f3f8f1" stroke="#1a7f37" stroke-width="1.5"></rect>
+          <text x="820" y="96" text-anchor="middle" class="title" fill="#1f2328">Merged State</text>
+          <text x="820" y="128" text-anchor="middle" class="muted" fill="#59636e">State + updates</text>
+          <text x="820" y="156" text-anchor="middle" class="muted" fill="#59636e">(reducers define merging)</text>
+
+          <line x1="290" y1="130" x2="360" y2="62" class="accent" stroke-width="2" marker-end="url(#arrow3)" stroke="#0969da" fill="none"></line>
+          <line x1="290" y1="130" x2="360" y2="164" class="accent" stroke-width="2" marker-end="url(#arrow3)" stroke="#0969da" fill="none"></line>
+          <line x1="620" y1="62" x2="690" y2="130" class="accent" stroke-width="2" marker-end="url(#arrow3)" stroke="#0969da" fill="none"></line>
+          <line x1="620" y1="164" x2="690" y2="130" class="accent" stroke-width="2" marker-end="url(#arrow3)" stroke="#0969da" fill="none"></line>
+        </svg>
+      </div>
+
+      <p>
+        You usually define a typed state (e.g., <code class="inline">TypedDict</code>) and each node returns only the keys it changed.
+      </p>
+
+      <div class="callout">
+        <strong>Reducers (why they exist):</strong><br>
+        If multiple nodes update the same key (e.g., message history), reducers define how those updates are merged (append, overwrite, etc.).
+      </div>
+    </section>
+
+    <section id="graph-example">
+      <h3 id="2-example-purchase-request-graph-inventory-approval">2) Example: “purchase request” graph (inventory + approval)</h3>
+      <p>
+        This mirrors the A2A story you built earlier (concierge → inventory + approval),
+        but inside a single LangGraph workflow with shared state.
+      </p>
+
+      <div class="card">
+        <strong>Graph shape</strong>
+        <div class="diagram">
+          START
+            |
+         parse_request
+            |
+        check_inventory ----(out_of_stock)----&gt; finalize
+            |
+        request_approval ----(rejected)-------&gt; finalize
+            |
+          finalize
+            |
+           END
+        </div>
+      </div>
+
+      <div class="card">
+        <strong>Visual: branching workflow</strong>
+        <svg class="viz" viewBox="0 0 980 292" role="img" aria-label="Purchase request graph visual">
+          <defs>
+            <marker id="arrow4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" class="accent2Fill" fill="#8250df" stroke="none"></path>
+            </marker>
+          </defs>
+
+          <rect x="410" y="20" width="160" height="44" rx="12" class="box2" fill="#f3f8f1" stroke="#1a7f37" stroke-width="1.5"></rect>
+          <text x="490" y="48" text-anchor="middle" class="title" fill="#1f2328">START</text>
+
+          <rect x="370" y="84" width="240" height="50" rx="12" class="box" fill="#eaf3ff" stroke="#0969da" stroke-width="1.5"></rect>
+          <text x="490" y="114" text-anchor="middle" class="title" fill="#1f2328">parse_request</text>
+
+          <rect x="350" y="154" width="280" height="52" rx="12" class="box" fill="#eaf3ff" stroke="#0969da" stroke-width="1.5"></rect>
+          <text x="490" y="186" text-anchor="middle" class="title" fill="#1f2328">check_inventory</text>
+
+          <rect x="100" y="214" width="260" height="46" rx="12" class="box2" fill="#f3f8f1" stroke="#1a7f37" stroke-width="1.5"></rect>
+          <text x="230" y="242" text-anchor="middle" class="title" fill="#1f2328">finalize</text>
+          <text x="230" y="262" text-anchor="middle" class="muted" fill="#59636e">(out_of_stock)</text>
+
+          <rect x="620" y="214" width="260" height="46" rx="12" class="box" fill="#eaf3ff" stroke="#0969da" stroke-width="1.5"></rect>
+          <text x="750" y="242" text-anchor="middle" class="title" fill="#1f2328">request_approval</text>
+
+          <rect x="410" y="214" width="160" height="46" rx="12" class="box2" fill="#f3f8f1" stroke="#1a7f37" stroke-width="1.5"></rect>
+          <text x="490" y="242" text-anchor="middle" class="title" fill="#1f2328">finalize</text>
+          <text x="490" y="262" text-anchor="middle" class="muted" fill="#59636e">(then END)</text>
+
+          <line x1="490" y1="64" x2="490" y2="84" class="accent2" stroke-width="2" marker-end="url(#arrow4)" stroke="#8250df" fill="none"></line>
+          <line x1="490" y1="134" x2="490" y2="154" class="accent2" stroke-width="2" marker-end="url(#arrow4)" stroke="#8250df" fill="none"></line>
+
+          <line x1="390" y1="206" x2="280" y2="214" class="accent2" stroke-width="2" marker-end="url(#arrow4)" stroke="#8250df" fill="none"></line>
+          <text x="335" y="216" text-anchor="middle" class="muted" fill="#59636e">no stock</text>
+
+          <line x1="590" y1="206" x2="700" y2="214" class="accent2" stroke-width="2" marker-end="url(#arrow4)" stroke="#8250df" fill="none"></line>
+          <text x="645" y="216" text-anchor="middle" class="muted" fill="#59636e">in stock</text>
+
+          <line x1="750" y1="260" x2="570" y2="260" class="accent2" stroke-width="2" marker-end="url(#arrow4)" stroke="#8250df" fill="none"></line>
+          <text x="655" y="252" text-anchor="middle" class="muted" fill="#59636e">approved/rejected → finalize</text>
+        </svg>
+      </div>
+
+      <pre><code class="language-python">from typing import TypedDict, Literal, Optional
+from langgraph.graph import StateGraph, END
+
+class PurchaseState(TypedDict, total=False):
+    # input
+    sku: str
+    qty: int
+    amount: float
+    po_id: str
+
+    # derived/intermediate
+    in_stock: bool
+    reserved: bool
+    approval: Literal["approved", "rejected", "skipped"]
+    reason: Optional[str]
+
+    # final
+    result: str
+
+# --- nodes ---
+def parse_request(state: PurchaseState) -&gt; PurchaseState:
+    # In real life, parse from user text. Here we assume state already has fields.
+    return {}
+
+def check_inventory(state: PurchaseState) -&gt; PurchaseState:
+    # pretend inventory lookup
+    stock_map = {"SKU-APPLE": 12, "SKU-CHAIR": 0}
+    available = stock_map.get(state["sku"], 0)
+    if available &lt; state["qty"]:
+        return {"in_stock": False, "reserved": False, "reason": f"Only {available} left"}
+    return {"in_stock": True, "reserved": True}
+
+def request_approval(state: PurchaseState) -&gt; PurchaseState:
+    # pretend policy: auto-approve up to 1000
+    if state["amount"] &lt;= 1000:
+        return {"approval": "approved"}
+    return {"approval": "rejected", "reason": "Over auto-approval limit"}
+
+def finalize(state: PurchaseState) -&gt; PurchaseState:
+    if not state.get("in_stock", True):
+        return {"result": f"FAILED: out of stock ({state.get('reason')})"}
+    if state.get("approval") == "rejected":
+        return {"result": f"FAILED: approval rejected ({state.get('reason')})"}
+    return {"result": "SUCCESS: reserved and approved"}
+
+# --- build graph ---
+g = StateGraph(PurchaseState)
+g.add_node("parse_request", parse_request)
+g.add_node("check_inventory", check_inventory)
+g.add_node("request_approval", request_approval)
+g.add_node("finalize", finalize)
+
+g.set_entry_point("parse_request")
+g.add_edge("parse_request", "check_inventory")
+
+# conditional branching after inventory
+def inventory_router(state: PurchaseState):
+    return "finalize" if not state.get("in_stock", True) else "request_approval"
+
+g.add_conditional_edges("check_inventory", inventory_router, {
+    "finalize": "finalize",
+    "request_approval": "request_approval",
+})
+
+# conditional branching after approval
+def approval_router(state: PurchaseState):
+    return "finalize"
+
+g.add_conditional_edges("request_approval", approval_router, {
+    "finalize": "finalize",
+})
+
+g.add_edge("finalize", END)
+
+app = g.compile()
+
+print(app.invoke({"sku": "SKU-APPLE", "qty": 2, "amount": 4.50, "po_id": "PO-1001"})["result"])
+print(app.invoke({"sku": "SKU-CHAIR", "qty": 1, "amount": 150.0, "po_id": "PO-2002"})["result"])
+print(app.invoke({"sku": "SKU-APPLE", "qty": 1, "amount": 2500.0, "po_id": "PO-3003"})["result"])</code></pre>
+
+      <div class="callout good">
+        <strong>Key difference vs LangChain chain:</strong><br>
+        LangChain pipelines are typically linear transforms; LangGraph makes the “workflow control” (branching/loops) explicit and stateful.
+      </div>
+
+      <div class="tr-note">
+        <strong>Where the current prebuilt agent fits</strong>
+        If your workflow is the standard model → tool calls → model loop, use
+        <code>langchain.agents.create_agent</code>. It is implemented on
+        LangGraph and can add middleware for guardrails, dynamic prompts,
+        human approval, and state. Use the raw graph above when the business
+        process itself has named states, deterministic branches, or custom
+        persistence semantics.
+      </div>
+
+      <pre><code class="language-python">import os
+from langchain.agents import create_agent
+
+# inventory_check is an ordinary LangChain tool defined elsewhere.
+agent = create_agent(
+    model=os.environ["LANGCHAIN_MODEL"],
+    tools=[inventory_check],
+    system_prompt="Check inventory before promising availability.",
+)
+
+result = agent.invoke({
+    "messages": [
+        {"role": "user", "content": "Can we supply two SKU-APPLE units?"}
+    ]
+})</code></pre>
+    </section>
+  </section>
+
+  <div class="hr"></div>
+
+  <section id="flowise">
+    <h2 id="flowise-visual-applications-and-agentflow-v2">Flowise: visual applications and Agentflow V2</h2>
+
+    <p>
+      Flowise is an open-source visual platform for assistants, LLM
+      applications, and agent workflows. Its three main builder levels are
+      <strong>Assistant</strong> for the simplest configured agent,
+      <strong>Chatflow</strong> for single-agent/chatbot and RAG flows, and
+      <strong>Agentflow</strong> for single- or multi-agent orchestration. A
+      simple Chatflow can resemble the runnable pipeline above, but that
+      mapping is only the starting point.
+    </p>
+
+    <div class="grid">
+      <div class="card">
+        <strong>In code (LangChain)</strong>
+        <div class="diagram" style="margin-top:10px;">
+          input dict<br>
+          └─&gt; prompt | llm | parser<br>
+          └─&gt; output
+        </div>
+      </div>
+      <div class="card">
+        <strong>In UI (Flowise)</strong>
+        <div class="diagram" style="margin-top:10px;">
+          [Prompt Node] → [LLM Node] → [Output Parser Node]<br>
+          (+ optional Retriever/Memory/Tools nodes)
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <strong>Visual: code pipeline ↔ UI nodes</strong>
+      <svg class="viz" viewBox="0 0 980 240" role="img" aria-label="Flowise mapping visual">
+        <defs>
+          <marker id="arrow5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" class="accentFill" fill="#0969da" stroke="none"></path>
+          </marker>
+        </defs>
+
+        <text x="240" y="34" text-anchor="middle" class="title" fill="#1f2328">LangChain (code)</text>
+        <text x="740" y="34" text-anchor="middle" class="title" fill="#1f2328">Flowise (UI)</text>
+
+        <rect x="70" y="70" width="340" height="140" rx="14" class="box2" fill="#f3f8f1" stroke="#1a7f37" stroke-width="1.5"></rect>
+        <rect x="520" y="70" width="390" height="140" rx="14" class="box2" fill="#f3f8f1" stroke="#1a7f37" stroke-width="1.5"></rect>
+
+        <rect x="95" y="104" width="110" height="44" rx="12" class="box" fill="#eaf3ff" stroke="#0969da" stroke-width="1.5"></rect>
+        <text x="150" y="132" text-anchor="middle" class="title" fill="#1f2328">prompt</text>
+        <rect x="220" y="104" width="90" height="44" rx="12" class="box" fill="#eaf3ff" stroke="#0969da" stroke-width="1.5"></rect>
+        <text x="265" y="132" text-anchor="middle" class="title" fill="#1f2328">llm</text>
+        <rect x="320" y="104" width="90" height="44" rx="12" class="box" fill="#eaf3ff" stroke="#0969da" stroke-width="1.5"></rect>
+        <text x="365" y="132" text-anchor="middle" class="title" fill="#1f2328">parser</text>
+
+        <line x1="205" y1="126" x2="220" y2="126" class="accent" stroke-width="2" marker-end="url(#arrow5)" stroke="#0969da" fill="none"></line>
+        <line x1="310" y1="126" x2="320" y2="126" class="accent" stroke-width="2" marker-end="url(#arrow5)" stroke="#0969da" fill="none"></line>
+
+        <rect x="555" y="94" width="140" height="46" rx="12" class="box" fill="#eaf3ff" stroke="#0969da" stroke-width="1.5"></rect>
+        <text x="625" y="123" text-anchor="middle" class="title" fill="#1f2328">Prompt Node</text>
+        <rect x="705" y="94" width="120" height="46" rx="12" class="box" fill="#eaf3ff" stroke="#0969da" stroke-width="1.5"></rect>
+        <text x="765" y="123" text-anchor="middle" class="title" fill="#1f2328">LLM Node</text>
+        <rect x="835" y="94" width="150" height="46" rx="12" class="box" fill="#eaf3ff" stroke="#0969da" stroke-width="1.5"></rect>
+        <text x="910" y="123" text-anchor="middle" class="title" fill="#1f2328">Parser Node</text>
+
+        <line x1="695" y1="117" x2="705" y2="117" class="accent" stroke-width="2" marker-end="url(#arrow5)" stroke="#0969da" fill="none"></line>
+        <line x1="825" y1="117" x2="835" y2="117" class="accent" stroke-width="2" marker-end="url(#arrow5)" stroke="#0969da" fill="none"></line>
+
+        <text x="240" y="188" text-anchor="middle" class="muted" fill="#59636e">source controlled</text>
+        <text x="740" y="188" text-anchor="middle" class="muted" fill="#59636e">fast prototyping</text>
+      </svg>
+      <p class="muted">A simple Chatflow can map closely to a code pipeline; Agentflow V2 adds its own explicit orchestration model.</p>
+    </div>
+
+    <h3 id="how-a-simple-flowise-flow-maps-to-passing-dictionaries">How a simple Flowise flow maps to “passing dictionaries”</h3>
+    <ul>
+      <li>Each node performs a configured operation such as prompting a model, retrieving documents, calling a tool, transforming data, or replying.</li>
+      <li>Edges are “data flow”: output of one node becomes input to the next.</li>
+      <li>Node settings in the UI become the parameters you’d pass in code (model name, temperature, prompt template, etc.).</li>
+    </ul>
+
+    <h3 id="what-agentflow-v2-adds">What Agentflow V2 adds</h3>
+    <ul>
+      <li><strong>Native standalone nodes:</strong> the execution graph is defined explicitly rather than delegated entirely to an external agent framework.</li>
+      <li><strong>Flow State:</strong> declare shared keys in the Start node, then let later nodes read or update those keys without threading every value through adjacent edges.</li>
+      <li><strong>Control flow:</strong> conditions, loops, routing, deterministic Tool nodes, LLM-driven Agent nodes, and reusable subflows.</li>
+      <li><strong>Human-in-the-loop:</strong> pause for approval or feedback, save a checkpoint, and resume the workflow instead of blocking a process in memory.</li>
+      <li><strong>Operations:</strong> streaming execution updates, tracing, API deployment, and workspace/security controls are part of the platform surface.</li>
+    </ul>
+
+    <div class="callout">
+      <strong>Practical workflow:</strong><br>
+      Decide where the maintained source of truth lives. A team may keep a
+      Flowise Agentflow in versioned exported configuration, or implement the
+      workflow directly in LangGraph code. Rebuilding the same flow twice
+      creates drift. Whichever path you choose, add evaluation fixtures,
+      approval tests, secret management, access control, tracing, and a
+      promotion process before production.
+    </div>
+
+    <h3 id="where-langgraph-shows-up-in-ui-tools">Where LangGraph shows up in UI tools</h3>
+    <p>
+      LangGraph and Agentflow V2 solve overlapping orchestration problems at
+      different abstraction and governance boundaries. LangGraph keeps the
+      workflow in Python code with explicit state, reducers, checkpointers, and
+      tests. Agentflow V2 exposes branches, loops, agent/tool nodes, human
+      input, checkpoints, and Flow State in a visual platform. Choose based on
+      ownership, deployment controls, extensibility, and testability rather
+      than assuming one is only a prototype for the other.
+    </p>
+
+    <div class="card">
+      <strong>Rule of thumb</strong>
+      <ul>
+        <li><strong>LangChain runnables:</strong> compose deterministic transforms and model calls.</li>
+        <li><strong>LangChain <code>create_agent</code>:</strong> use the supported prebuilt model/tool agent loop.</li>
+        <li><strong>LangGraph:</strong> use code-first graphs for custom workflow logic, persistence, and shared state.</li>
+        <li><strong>Flowise:</strong> use Assistant, Chatflow, or Agentflow V2 when a governed visual platform is the intended runtime and authoring surface.</li>
+      </ul>
+    </div>
+
+    <h3 id="official-references">Official references</h3>
+    <ul>
+      <li><a href="https://docs.langchain.com/oss/python/releases/langchain-v1">LangChain v1 changes and <code>create_agent</code></a></li>
+      <li><a href="https://docs.langchain.com/oss/python/migrate/langgraph-v1">LangGraph v1 migration guide</a></li>
+      <li><a href="https://docs.langchain.com/oss/python/langgraph/graph-api">LangGraph Graph API</a></li>
+      <li><a href="https://docs.flowiseai.com/">Flowise official documentation</a></li>
+      <li><a href="https://docs.flowiseai.com/using-flowise/agentflowv2">Flowise Agentflow V2</a></li>
+    </ul>
+  </section>
+
+  <div class="hr"></div>
+  <section>
+    <h2 id="extension-path">Extension path</h2>
+    <div class="card">
+      <ol>
+        <li>Turn the LangChain mini SQL chain into a real HTTP endpoint (POST /ask) that accepts JSON dict input.</li>
+        <li>Replace the fake DB function with a real SQL driver call.</li>
+        <li>Add auth: JWT / API key / OAuth, just like we discussed earlier.</li>
+        <li>Promote to LangGraph when you need branching (e.g., approval required only over $1000).</li>
+      </ol>
+    </div>
+  </section>
+
+</main></div></article></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col noPrint_WFHX"></div><div class="col lastUpdated_JAkA"><span class="theme-last-updated">Last updated<!-- --> on <b><time datetime="2026-07-30T01:42:42.000Z" itemprop="dateModified">Jul 30, 2026</time></b></span></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/tutorials/part3-agent-protocols/06-javascript-typescript-primer"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">6. JavaScript and TypeScript primer</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/tutorials/part4-ml-foundations/overview"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Part overview</div></a></nav></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer"><div class="container container-fluid"><div class="row footer__links"><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Study</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/tutorials/">Book home</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/content-map">Reading guide</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/labs/rnn">Interactive RNN lab</a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Core tracks</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/tutorials/part2-backend-platform-security/overview">Backend and security</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/part3-agent-protocols/overview">Agent protocols</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/part5-deep-learning-and-llms/overview">Deep learning and LLMs</a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright">Enterprise AI, Agents & Applied ML - 2026</div></div></div></footer></div>
+</body>
+</html>

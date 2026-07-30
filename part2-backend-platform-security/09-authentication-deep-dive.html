@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-part2-backend-platform-security/authentication-deep-dive" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.10.2">
+<title data-rh="true">Authentication: API Keys, Bearer Tokens, OAuth/OIDC, JWTs, and Opaque Tokens | Enterprise AI, Agents &amp; Applied ML</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://dineshg.github.io/tutorials/part2-backend-platform-security/09-authentication-deep-dive"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="keywords" content="enterprise AI, machine learning, deep learning, LLM, FastAPI, Pydantic, MCP, authentication"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Authentication: API Keys, Bearer Tokens, OAuth/OIDC, JWTs, and Opaque Tokens | Enterprise AI, Agents &amp; Applied ML"><meta data-rh="true" name="description" content="A practical, end-to-end guide to: API keys, Bearer tokens, OAuth/OIDC (PKCE), JWT vs opaque tokens (introspection), Google (Gmail) login verification with JWKS, and how this ties into MCP servers and SQL Server access."><meta data-rh="true" property="og:description" content="A practical, end-to-end guide to: API keys, Bearer tokens, OAuth/OIDC (PKCE), JWT vs opaque tokens (introspection), Google (Gmail) login verification with JWKS, and how this ties into MCP servers and SQL Server access."><link data-rh="true" rel="icon" href="/tutorials/img/favicon.svg"><link data-rh="true" rel="canonical" href="https://dineshg.github.io/tutorials/part2-backend-platform-security/09-authentication-deep-dive"><link data-rh="true" rel="alternate" href="https://dineshg.github.io/tutorials/part2-backend-platform-security/09-authentication-deep-dive" hreflang="en"><link data-rh="true" rel="alternate" href="https://dineshg.github.io/tutorials/part2-backend-platform-security/09-authentication-deep-dive" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Part II - Backend, Platform & Security","item":"https://dineshg.github.io/tutorials/part2-backend-platform-security/overview"},{"@type":"ListItem","position":2,"name":"10. Authentication deep dive","item":"https://dineshg.github.io/tutorials/part2-backend-platform-security/09-authentication-deep-dive"}]}</script><script>window.MathJax={startup:{typeset:!1},tex:{inlineMath:[["\\(","\\)"],["$","$"]],displayMath:[["\\[","\\]"],["$$","$$"]],processEscapes:!0},options:{skipHtmlTags:["script","noscript","style","textarea","pre","code"]}}</script>
+<link rel="stylesheet" href="/tutorials/css/book.css">
+<link rel="stylesheet" href="/tutorials/vendor/highlight.js/11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.18.1/dist/katex.min.css" integrity="sha384-5TcZemv2l/9On385z///+d7MSYlvIEw9FuZTIdZ14vJLqWphw7e7ZPuOiCHJcFCP" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-mml-chtml.js" defer="defer"></script><link rel="stylesheet" href="/tutorials/assets/css/styles.003aa738.css">
+<script src="/tutorials/assets/js/runtime~main.98c31d90.js" defer="defer"></script>
+<script src="/tutorials/assets/js/main.bd80017b.js" defer="defer"></script>
+</head>
+<body>
+<svg style="display: none;"><defs>
+<symbol id="theme-svg-external-link" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")),document.documentElement.setAttribute("data-theme-choice",t||"system")}(),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top"><div class="navbar__inner"><div class="theme-layout-navbar-left navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/tutorials/"><b class="navbar__title text--truncate">Enterprise AI Book</b></a><a class="navbar__item navbar__link" href="/tutorials/">Read</a><a class="navbar__item navbar__link" href="/tutorials/content-map">Concept map</a><a class="navbar__item navbar__link" href="/tutorials/part5-deep-learning-and-llms/10-recurrent-neural-networks">Deep learning</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><div class="navbar__item book-search-navbar-item"><button type="button" class="book-search-trigger" aria-label="Search the book">Search <kbd>Ctrl K</kbd></button></div><a href="https://github.com/dineshg/tutorials" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type="button" disabled="" title="system mode" aria-label="Switch between dark and light mode (currently system mode)"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill="currentColor" d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill="currentColor" d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill="currentColor" d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"></path></svg></button></div><div class="navbarSearchContainer_Bca1"></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class="docsWrapper_hBAB"><button aria-label="Scroll back to top" class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type="button"></button><div class="docRoot_UBD9"><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class="sidebarViewport_aRkj"><div class="sidebar_njMd"><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/tutorials/"><span class="linkLabel_WmDU">Book home</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/tutorials/content-map"><span class="linkLabel_WmDU">Reading guide and concept map</span></a></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-blue"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part1-enterprise-ai-delivery/overview"><span class="categoryLinkLabel_W154">Part I - Enterprise AI Delivery</span></a><button aria-label="Expand sidebar category &#x27;Part I - Enterprise AI Delivery&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item sidebar-category sidebar-category-teal"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--active" href="/tutorials/part2-backend-platform-security/overview"><span class="categoryLinkLabel_W154">Part II - Backend, Platform &amp; Security</span></a><button aria-label="Collapse sidebar category &#x27;Part II - Backend, Platform &amp; Security&#x27;" aria-expanded="true" type="button" class="clean-btn menu__caret"></button></div><ul class="menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/01-fastapi-uvicorn-basics"><span class="linkLabel_WmDU">1. FastAPI and Uvicorn basics</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/02-http-methods"><span class="linkLabel_WmDU">2. HTTP methods</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/03-fastapi-request-mapping"><span class="linkLabel_WmDU">3. FastAPI request mapping</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/04-pydantic-data-models"><span class="linkLabel_WmDU">4. Pydantic data models</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/04-concurrency-user-isolation"><span class="linkLabel_WmDU">5. Concurrency and user isolation</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/05-background-tasks-and-retries"><span class="linkLabel_WmDU">6. Background tasks and retries</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/06-sso-oauth2-oidc-primer"><span class="linkLabel_WmDU">7. SSO, OAuth 2.0, and OIDC primer</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/07-oidc-oauth2-pkce-fastapi"><span class="linkLabel_WmDU">8. OIDC, OAuth 2.0, and PKCE in FastAPI</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/08-registering-new-users"><span class="linkLabel_WmDU">9. First login and user provisioning</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link menu__link--active" aria-current="page" tabindex="0" href="/tutorials/part2-backend-platform-security/09-authentication-deep-dive"><span class="linkLabel_WmDU">10. Authentication deep dive</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/15-modern-auth-additions"><span class="linkLabel_WmDU">11. Passkeys, DPoP, mTLS, and token exchange</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/10-enduser-vs-workload-identity"><span class="linkLabel_WmDU">12. End-user vs workload identity</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/12-tenant-iam-ad-groups"><span class="linkLabel_WmDU">13. Tenant isolation, IAM, and groups</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/11-gcp-workload-identity"><span class="linkLabel_WmDU">14. GCP workload identity</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/13-external-service-integration"><span class="linkLabel_WmDU">15. Cross-cloud service integration</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part2-backend-platform-security/14-github-governance"><span class="linkLabel_WmDU">16. GitHub governance and CI</span></a></li></ul></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-violet"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part3-agent-protocols/overview"><span class="categoryLinkLabel_W154">Part III - Agent Protocols</span></a><button aria-label="Expand sidebar category &#x27;Part III - Agent Protocols&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-amber"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part4-ml-foundations/overview"><span class="categoryLinkLabel_W154">Part IV - ML Foundations</span></a><button aria-label="Expand sidebar category &#x27;Part IV - ML Foundations&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-coral"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part5-deep-learning-and-llms/overview"><span class="categoryLinkLabel_W154">Part V - Deep Learning &amp; LLMs</span></a><button aria-label="Expand sidebar category &#x27;Part V - Deep Learning &amp; LLMs&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-slate"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part6-appendices/overview"><span class="categoryLinkLabel_W154">Part VI - Appendices</span></a><button aria-label="Expand sidebar category &#x27;Part VI - Appendices&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li></ul></nav><button type="button" title="Collapse sidebar" aria-label="Collapse sidebar" class="button button--secondary button--outline collapseSidebarButton_PEFL"><svg width="20" height="20" aria-hidden="true" class="collapseSidebarButtonIcon_kv0_"><g fill="#7a7a7a"><path d="M9.992 10.023c0 .2-.062.399-.172.547l-4.996 7.492a.982.982 0 01-.828.454H1c-.55 0-1-.453-1-1 0-.2.059-.403.168-.551l4.629-6.942L.168 3.078A.939.939 0 010 2.528c0-.548.45-.997 1-.997h2.996c.352 0 .649.18.828.45L9.82 9.472c.11.148.172.347.172.55zm0 0"></path><path d="M19.98 10.023c0 .2-.058.399-.168.547l-4.996 7.492a.987.987 0 01-.828.454h-3c-.547 0-.996-.453-.996-1 0-.2.059-.403.168-.551l4.625-6.942-4.625-6.945a.939.939 0 01-.168-.55 1 1 0 01.996-.997h3c.348 0 .649.18.828.45l4.996 7.492c.11.148.168.347.168.55zm0 0"></path></g></svg></button></div></div></aside><main class="docMainContainer_TBSr"><div class="container padding-top--md padding-bottom--lg"><div class="row"><div class="col"><div class="docItemContainer_Djhp"><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label="Breadcrumbs"><ul class="breadcrumbs"><li class="breadcrumbs__item"><a aria-label="Home page" class="breadcrumbs__link" href="/tutorials/"><svg viewBox="0 0 24 24" class="breadcrumbHomeIcon_YNFT"><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill="currentColor"></path></svg></a></li><li class="breadcrumbs__item"><a class="breadcrumbs__link" href="/tutorials/part2-backend-platform-security/overview"><span>Part II - Backend, Platform &amp; Security</span></a></li><li class="breadcrumbs__item breadcrumbs__item--active"><span class="breadcrumbs__link">10. Authentication deep dive</span></li></ul></nav><div class="theme-doc-markdown markdown"><article class="book-article tr-content" data-book-part="part2" data-book-accent="teal"><header class="articleHeader_jX4Y"><span class="partLabel_DqKR">Part II - Backend, Platform &amp; Security</span><h1>Authentication: Tokens, OAuth, and API Security</h1><div class="articleMeta_jfH_"><span>8<!-- --> min read</span><span aria-hidden="true">·</span><span>13<!-- --> sections</span></div></header><details class="chapterToc_aQjS"><summary>On this page</summary><nav aria-label="On this page"><a href="#1-big-picture-who-talks-to-whom">1) Big picture: who talks to whom?</a><a href="#2-bearer-tokens-authorization-bearer">2) Bearer tokens (Authorization: Bearer ...)</a><a href="#3-api-keys-when-they-fit-and-when-they-don-t">3) API keys: when they fit (and when they don’t)</a><a href="#4-opaque-vs-jwt-access-tokens">4) Opaque vs JWT access tokens</a><a href="#5-opaque-tokens-introspection-flow-client-server-both-talk-to-auth-server">5) Opaque tokens: introspection flow (client + server both talk to auth server)</a><a href="#6-jwt-tokens-jwks-public-key-caching-server-keeps-the-public-key">6) JWT tokens: JWKS + public key caching (server “keeps the public key”)</a><a href="#7-gmail-authenticator-google-oidc-login-client-still-talks-to-google">7) “Gmail authenticator”: Google OIDC login (client still talks to Google)</a><a href="#8-pkce-why-it-exists-and-when-you-use-it">8) PKCE: why it exists and when you use it</a><a href="#9-why-an-authorize-endpoint-might-be-post">9) Why an /authorize endpoint might be POST</a><a href="#10-mcp-authenticating-mcp-servers-and-forwarding-headers">10) MCP: authenticating MCP servers and forwarding headers</a><a href="#11-sql-server-auth-username-password-vs-windows-sso">11) SQL Server auth: username/password vs Windows/SSO</a><a href="#12-practical-security-checklist">12) Practical security checklist</a><a href="#putting-it-all-together-one-page-mental-model">Putting it all together (one-page mental model)</a></nav></details><div class="articleBody_b2wt"><header>
+  <div class="wrap">
+    
+    <p class="muted">
+      A practical, end-to-end guide to: API keys, Bearer tokens, OAuth/OIDC (PKCE), JWT vs opaque tokens (introspection),
+      Google (Gmail) login verification with JWKS, and how this ties into MCP servers and SQL Server access.
+    </p>
+
+    <div class="toc">
+      <strong>Contents</strong>
+      <ul>
+        <li><a href="#big-picture">1) Big picture: who talks to whom?</a></li>
+        <li><a href="#bearer">2) Bearer tokens (Authorization: Bearer ...)</a></li>
+        <li><a href="#api-keys">3) API keys: when they fit (and when they don’t)</a></li>
+        <li><a href="#opaque-vs-jwt">4) Opaque vs JWT access tokens</a></li>
+        <li><a href="#introspection">5) Opaque tokens: introspection flow</a></li>
+        <li><a href="#jwks">6) JWT tokens: JWKS + public key caching</a></li>
+        <li><a href="#google-oidc">7) “Gmail authenticator”: Google OIDC login</a></li>
+        <li><a href="#pkce">8) PKCE: why it exists and when you use it</a></li>
+        <li><a href="#authorize-post">9) Why an /authorize endpoint might be POST</a></li>
+        <li><a href="#mcp">10) MCP: authenticating MCP servers and forwarding headers</a></li>
+        <li><a href="#sql-auth">11) SQL Server auth: username/password vs Windows/SSO</a></li>
+        <li><a href="#security">12) Practical security checklist</a></li>
+      </ul>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section id="big-picture">
+    <h2 id="1-big-picture-who-talks-to-whom">1) Big picture: who talks to whom?</h2>
+    <p>
+      Almost every authentication setup can be described with three roles:
+    </p>
+    <ul>
+      <li><strong>Client</strong>: your app, script, frontend, or service making requests</li>
+      <li><strong>Resource Server</strong>: the API you want to call (your MCP server, your web API, etc.)</li>
+      <li><strong>Authorization Server / Identity Provider</strong>: issues tokens (your auth server, Google, Entra ID, etc.)</li>
+    </ul>
+
+    <div class="card">
+      <div class="diagram">
+        (A) Client authenticates with Auth Server  →  gets token<br>
+        (B) Client calls Resource Server           →  sends token in headers<br>
+        (C) Resource Server validates token        →  grants/denies access
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <strong>Critical idea:</strong> A <em>bearer</em> token is like a “keycard”. Whoever holds it can use it.
+      So you must protect it in transit and at rest (HTTPS, secure storage). (RFC 6750) 
+      <span class="ref">Reference: RFC 6750 Bearer Token Usage.</span>
+    </div>
+    <div class="ref">
+      Sources: <a href="https://datatracker.ietf.org/doc/html/rfc6750" target="_blank" rel="noopener">RFC 6750 Bearer Token Usage</a>
+      and general OAuth usage.
+    </div>
+  </section>
+
+  <section id="bearer">
+    <h2 id="2-bearer-tokens-authorization-bearer">2) Bearer tokens (Authorization: Bearer ...)</h2>
+
+    <p>
+      A bearer token is sent on every request to a protected API using an HTTP header:
+      <code class="inline">Authorization: Bearer &lt;token&gt;</code>.
+    </p>
+    <div class="ref">
+      Source: <a href="https://datatracker.ietf.org/doc/html/rfc6750" target="_blank" rel="noopener">RFC 6750 bearer token scheme</a>.
+    </div>
+
+    <div class="card">
+      <strong>What the server does with a bearer token</strong>
+      <ol>
+        <li>Extract token from the <code class="inline">Authorization</code> header</li>
+        <li>Validate it (either by introspection call or signature verification)</li>
+        <li>Check claims/scopes/roles (authorization)</li>
+        <li>Allow or deny the request</li>
+      </ol>
+    </div>
+
+    <div class="callout ok">
+      <strong>Why this is common:</strong> it works the same for browsers, mobile, services, and “agent” calls.
+    </div>
+  </section>
+
+  <section id="api-keys">
+    <h2 id="3-api-keys-when-they-fit-and-when-they-don-t">3) API keys: when they fit (and when they don’t)</h2>
+
+    <p>
+      An “auth key” often means an <strong>API key</strong>: a static secret like <code class="inline">X-API-Key: ...</code>.
+      It’s simple, but it’s usually a <em>service identity</em>, not a <em>user identity</em>.
+    </p>
+
+    <table>
+      <thead>
+        <tr><th>Approach</th><th>Good for</th><th>Weakness</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>API key (static)</strong></td>
+          <td>Internal service-to-service, quick prototypes</td>
+          <td>Often long-lived; hard per-user auth; higher blast radius if leaked</td>
+        </tr>
+        <tr>
+          <td><strong>Token (short-lived)</strong></td>
+          <td>User-level identity, scopes, auditability, safer rotation</td>
+          <td>More moving parts (issuer + validation)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout">
+      <strong>Common hybrid pattern:</strong> use an API key to authenticate to an auth server, then exchange it for a short-lived bearer token.
+    </div>
+  </section>
+
+  <section id="opaque-vs-jwt">
+    <h2 id="4-opaque-vs-jwt-access-tokens">4) Opaque vs JWT access tokens</h2>
+
+    <p>
+      Bearer tokens can be:
+      <strong>opaque strings</strong> (random-looking) or <strong>structured JWTs</strong>.
+      The difference is how the resource server validates them.
+    </p>
+
+    <table>
+      <thead>
+        <tr><th>Token type</th><th>What it looks like</th><th>How server validates</th><th>Tradeoff</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Opaque token</strong></td>
+          <td>Random string</td>
+          <td>Call auth server (introspection)</td>
+          <td>Easy revocation, but adds network hop</td>
+        </tr>
+        <tr>
+          <td><strong>JWT</strong></td>
+          <td><code class="inline">header.payload.signature</code></td>
+          <td>Verify signature locally using public key</td>
+          <td>No hop per request, but revocation is harder (use short expiry/rotation)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="ref">
+      Sources: bearer tokens can be opaque or structured; introspection is defined by
+      <a href="https://datatracker.ietf.org/doc/html/rfc7662" target="_blank" rel="noopener">RFC 7662</a>.
+    </div>
+  </section>
+
+  <section id="introspection">
+    <h2 id="5-opaque-tokens-introspection-flow-client-server-both-talk-to-auth-server">5) Opaque tokens: introspection flow (client + server both talk to auth server)</h2>
+
+    <p>
+      This is the “both client and server access auth server” pattern you asked about:
+    </p>
+
+    <div class="card">
+      <div class="diagram">
+        1) Client → Auth Server: POST /token (login / credentials) → gets opaque access_token<br>
+        2) Client → Resource Server: Authorization: Bearer access_token<br>
+        3) Resource Server → Auth Server: POST /introspect (is token active? scopes?)<br>
+        4) Resource Server → Client: allow/deny
+      </div>
+    </div>
+
+    <div class="ref">
+      Token introspection spec: resource server queries auth server about token state
+      (<a href="https://datatracker.ietf.org/doc/html/rfc7662" target="_blank" rel="noopener">RFC 7662</a>).
+    </div>
+
+    <h3 id="example-endpoints-like-our-demo">Example endpoints (like our demo)</h3>
+    <pre><code># Auth server:
+POST /token        -&gt; returns {"access_token": "...", "expires_in": 3600}
+POST /introspect   -&gt; returns {"active": true, "sub": "demo", "scope": "sql:read"}</code></pre>
+
+    <div class="callout ok">
+      <strong>Why people choose this:</strong> easy centralized revocation and policy checks (auth server is source of truth).
+    </div>
+
+    <div class="callout warn">
+      <strong>Production tip:</strong> add caching at the resource server (cache introspection results briefly) to reduce auth server load.
+    </div>
+  </section>
+
+  <section id="jwks">
+    <h2 id="6-jwt-tokens-jwks-public-key-caching-server-keeps-the-public-key">6) JWT tokens: JWKS + public key caching (server “keeps the public key”)</h2>
+
+    <p>
+      When the access token is a JWT, the server can validate it locally using a public key.
+      But the key might rotate, so the server usually downloads keys from a JWKS endpoint.
+    </p>
+
+    <div class="card">
+      <div class="diagram">
+        Startup (or periodic):<br>
+        1) GET /.well-known/openid-configuration  → find jwks_uri<br>
+        2) GET jwks_uri                          → cache public keys keyed by "kid"<br><br>
+        Per request:<br>
+        3) Read JWT header.kid → pick matching public key<br>
+        4) Verify signature + validate claims (iss, aud, exp)
+      </div>
+    </div>
+
+    <div class="ref">
+      OIDC Discovery defines the well-known configuration and includes <code class="inline">jwks_uri</code>; verification relies on keys.
+      See the <a href="https://openid.net/specs/openid-connect-discovery-1_0.html">OpenID Connect Discovery specification</a>.
+    </div>
+
+    <h3 id="why-this-is-faster-than-introspection">Why this is faster than introspection</h3>
+    <ul>
+      <li>No network call to auth server per request (after keys are cached)</li>
+      <li>Works even if auth server is temporarily down (until keys expire/rotate)</li>
+    </ul>
+
+    <div class="callout warn">
+      <strong>Tradeoff:</strong> immediate revocation is harder. Typical mitigations: short token lifetimes + key rotation + occasional back-channel checks.
+    </div>
+  </section>
+
+  <section id="google-oidc">
+    <h2 id="7-gmail-authenticator-google-oidc-login-client-still-talks-to-google">7) “Gmail authenticator”: Google OIDC login (client still talks to Google)</h2>
+
+    <p>
+      If “auth server is Gmail” means “users sign in with their Google account”, you’re using
+      <strong>OpenID Connect (OIDC) on top of OAuth 2.0</strong>. Google issues an <strong>ID token</strong> (a signed JWT) and optionally access tokens.
+    </p>
+
+    <div class="ref">Google documents its OpenID Connect implementation and server-side token verification in the <a href="https://developers.google.com/identity/openid-connect/openid-connect">Google Identity OIDC guide</a>.</div>
+
+    <div class="callout">
+      <strong>Key point you asked:</strong> even if your server caches Google’s public keys, the <em>client still must talk to Google</em> to obtain the token (login/consent).
+      Caching keys only removes server→Google calls on each request.
+    </div>
+
+    <h3 id="what-your-resource-server-validates-minimum">What your resource server validates (minimum)</h3>
+    <ul>
+      <li><code class="inline">iss</code> (issuer) is Google</li>
+      <li><code class="inline">aud</code> (audience) matches your Google OAuth client ID</li>
+      <li><code class="inline">exp</code> not expired</li>
+      <li>signature matches a Google public key from JWKS</li>
+    </ul>
+
+    <div class="ref">OIDC Core defines claims such as <code class="inline">iss</code>, <code class="inline">aud</code>, and <code class="inline">exp</code>; see the <a href="https://openid.net/specs/openid-connect-core-1_0.html">OpenID Connect Core specification</a>.</div>
+  </section>
+
+  <section id="pkce">
+    <h2 id="8-pkce-why-it-exists-and-when-you-use-it">8) PKCE: why it exists and when you use it</h2>
+
+    <p>
+      <strong>PKCE</strong> (Proof Key for Code Exchange) protects the OAuth authorization code flow against code interception attacks
+      for <em>public clients</em> (mobile apps, SPAs, desktop apps). (RFC 7636)
+    </p>
+    <div class="ref">PKCE is defined in <a href="https://datatracker.ietf.org/doc/html/rfc7636">RFC 7636</a>.</div>
+
+    <div class="card">
+      <div class="diagram">
+        1) Client generates code_verifier (secret) and code_challenge (hash)<br>
+        2) Client → /authorize includes code_challenge<br>
+        3) Client receives authorization code<br>
+        4) Client → /token sends authorization code + code_verifier<br>
+        5) Auth server checks verifier matches challenge, then issues tokens
+      </div>
+    </div>
+
+    <div class="callout ok">
+      <strong>Modern direction:</strong> The active OAuth 2.1 Internet-Draft
+      requires PKCE for authorization-code clients. It is a draft, not a
+      published RFC; use RFC 9700 as the finalized OAuth 2.0 security
+      best-current-practice baseline.
+    </div>
+    <div class="ref">See the <a href="https://datatracker.ietf.org/doc/draft-ietf-oauth-v2-1/">active OAuth 2.1 Internet-Draft</a> and <a href="https://datatracker.ietf.org/doc/html/rfc9700">RFC 9700: OAuth 2.0 Security Best Current Practice</a>.</div>
+  </section>
+
+  <section id="authorize-post">
+    <h2 id="9-why-an-authorize-endpoint-might-be-post">9) Why an <code class="inline">/authorize</code> endpoint might be POST</h2>
+
+    <p>
+      In the classic OAuth/OIDC web flow, <code class="inline">/authorize</code> is often reached via a browser navigation
+      (commonly a GET with query parameters). But you may see POST in practice because:
+    </p>
+
+    <ul>
+      <li><strong>Form submissions</strong>: login pages submit credentials and consent forms via POST, and then the server continues the authorization flow.</li>
+      <li><strong>Reducing sensitive data in URLs</strong>: some systems avoid putting large or sensitive request data in query strings.</li>
+      <li><strong>OIDC response mode “form_post”</strong>: the authorization response can be returned to the client via an HTTP form POST.</li>
+    </ul>
+
+    <div class="ref">OIDC Core defines the overall authorization behavior; response modes such as <code class="inline">form_post</code> are specified separately by OpenID.</div>
+
+    <div class="callout warn">
+      <strong>Important:</strong> Whether your <code class="inline">/authorize</code> is GET or POST is a design choice / framework detail.
+      The security requirements (PKCE, redirect URI validation, HTTPS, etc.) matter much more than the verb itself.
+    </div>
+  </section>
+
+  <section id="mcp">
+    <h2 id="10-mcp-authenticating-mcp-servers-and-forwarding-headers">10) MCP: authenticating MCP servers and forwarding headers</h2>
+
+    <p>
+      For MCP, the same authentication patterns apply: protect your MCP server and require a token (or API key) on its HTTP endpoint.
+      When an LLM (via OpenAI’s tool integration) calls your remote MCP server, you typically pass credentials in HTTP headers.
+    </p>
+
+    <div class="card">
+      <strong>What you do in practice</strong>
+      <ol>
+        <li>Your client obtains a token (from your auth server, Google OIDC, etc.)</li>
+        <li>Your client configures the MCP tool with <strong>headers</strong> containing that token</li>
+        <li>The MCP server middleware checks <code class="inline">Authorization: Bearer ...</code> on every request</li>
+      </ol>
+    </div>
+
+    <div class="ref">
+      OpenAI docs cover MCP integration, tool filtering with <code class="inline">allowed_tools</code>, and MCP tool usage via the Responses API.
+    </div>
+
+    <h3 id="example-bearer-token-on-mcp-calls">Example: bearer token on MCP calls</h3>
+    <pre><code># Client sets headers when connecting:
+headers = {"Authorization": f"Bearer {token}"}
+
+# MCP server checks Authorization header for every /mcp request
+# (then validates via introspection or JWT verification)</code></pre>
+
+    <div class="callout ok">
+      <strong>Safety practice you discussed:</strong> avoid passing secrets as tool arguments; prefer headers or OAuth.
+      Also restrict which tools the model can use (e.g., read-only) with <code class="inline">allowed_tools</code>.
+    </div>
+    <div class="ref">OpenAI MCP tool guidance covers filtering tools with <code class="inline">allowed_tools</code>.</div>
+  </section>
+
+  <section id="sql-auth">
+    <h2 id="11-sql-server-auth-username-password-vs-windows-sso">11) SQL Server auth: username/password vs Windows/SSO</h2>
+
+    <p>
+      This is separate from your API/MCP authentication. This is how your software authenticates to the database itself.
+      SQL Server commonly supports:
+    </p>
+
+    <ul>
+      <li><strong>Windows Authentication</strong> (Integrated / Active Directory): the OS/AD vouches for the identity; SQL Server doesn’t handle passwords directly.</li>
+      <li><strong>SQL Server Authentication</strong>: database-level username/password (“SQL login”).</li>
+    </ul>
+
+    <div class="ref">Microsoft Learn explains SQL Server authentication modes and when to choose Windows authentication or SQL Server authentication.</div>
+
+    <h3 id="how-it-looks-in-connection-configuration">How it looks in connection configuration</h3>
+    <pre><code># SQL authentication (username/password in connection string)
+DRIVER={ODBC Driver 18 for SQL Server};
+SERVER=host,1433;
+DATABASE=MyDb;
+UID=${DB_USER};
+PWD=${DB_PASSWORD_FROM_SECRET_MANAGER};
+Encrypt=yes;
+TrustServerCertificate=no;
+
+# Windows integrated authentication (varies by environment)
+# Often includes Integrated Security / Trusted_Connection
+# DRIVER=...;SERVER=...;DATABASE=...;Trusted_Connection=yes;</code></pre>
+
+    <div class="callout ok">
+      <strong>Industry standard:</strong> prefer managed identity / Active Directory authentication where possible.
+      If you must use SQL username/password, store the password in a secret manager, rotate it, require encrypted transport,
+      and validate the server certificate instead of using <code class="inline">TrustServerCertificate=yes</code>.
+    </div>
+
+    <div class="callout warn">
+      <strong>Don’t confuse the layers:</strong><br>
+      Your API/MCP auth controls “who can call the server”. DB auth controls “what the server process is allowed to do in the database”.
+      In production, you usually use a service identity with least privilege for DB access.
+    </div>
+  </section>
+
+  <section id="security">
+    <h2 id="12-practical-security-checklist">12) Practical security checklist</h2>
+
+    <div class="card">
+      <strong>Transport &amp; storage</strong>
+      <ul>
+        <li>Always use HTTPS/TLS for bearer tokens (possession = access). (RFC 6750)</li>
+        <li>Don’t log tokens; avoid putting them in URLs; store securely.</li>
+      </ul>
+      <div class="ref">Bearer token security considerations are covered in <a href="https://datatracker.ietf.org/doc/html/rfc6750">RFC 6750</a>.</div>
+    </div>
+
+    <div class="card">
+      <strong>Token validation</strong>
+      <ul>
+        <li>Opaque tokens: implement introspection (RFC 7662) and consider caching.</li>
+        <li>JWT tokens: verify signature + claims; fetch JWKS via OIDC discovery; refresh on unknown <code class="inline">kid</code>.</li>
+        <li>Always validate <code class="inline">aud</code> and <code class="inline">iss</code> for OIDC tokens.</li>
+      </ul>
+      <div class="ref">Token introspection is defined in <a href="https://datatracker.ietf.org/doc/html/rfc7662">RFC 7662</a>; JWT validation commonly combines OIDC Discovery and OIDC Core.</div>
+    </div>
+
+    <div class="card">
+      <strong>OAuth/OIDC hygiene</strong>
+      <ul>
+        <li>Use PKCE for authorization-code clients. (RFC 7636; RFC 9700)</li>
+        <li>Use exact redirect URI matching and avoid the implicit grant. (RFC 9700)</li>
+        <li>Do not use the resource-owner password credentials grant; prefer browser-based authorization or workload credentials appropriate to the caller.</li>
+      </ul>
+      <div class="ref">See <a href="https://datatracker.ietf.org/doc/html/rfc7636">RFC 7636</a> for PKCE, <a href="https://datatracker.ietf.org/doc/html/rfc9700">RFC 9700</a> for the finalized security BCP, and the OAuth 2.1 draft for consolidation work still in progress.</div>
+    </div>
+
+    <div class="card">
+      <strong>MCP-specific hygiene</strong>
+      <ul>
+        <li>Use least-privilege tool exposure (e.g., read-only tools) via <code class="inline">allowed_tools</code>.</li>
+        <li>Prefer headers/OAuth rather than passing secrets in tool arguments.</li>
+      </ul>
+      <div class="ref">OpenAI’s MCP tool guidance covers tool filtering and MCP tool usage.</div>
+    </div>
+  </section>
+
+  <div class="hr"></div>
+  <section>
+    <h2 id="putting-it-all-together-one-page-mental-model">Putting it all together (one-page mental model)</h2>
+
+    <div class="card">
+      <div class="diagram">
+        Your user logs in (or your service authenticates) → gets a token (Bearer)<br>
+        Your app calls your protected API/MCP server with Authorization: Bearer ...<br>
+        Your API validates token either via RFC 7662 introspection (opaque) or JWT verification (JWKS)<br>
+        Your API uses DB credentials (separate layer) to query SQL Server<br>
+        Your API returns response
+      </div>
+    </div>
+
+    <div class="tr-note">
+      <strong>Implementation decision</strong>
+      Choose the validation path from both token format and caller type:
+      opaque tokens require introspection; JWT access tokens use issuer
+      metadata and JWKS; Google OIDC identifies the user but the API must still
+      receive an access token intended for its audience. Browser and mobile
+      public clients use Authorization Code with PKCE, while backend services
+      use an approved workload flow or token exchange.
+    </div>
+  </section>
+
+</main></div></article></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col noPrint_WFHX"></div><div class="col lastUpdated_JAkA"><span class="theme-last-updated">Last updated<!-- --> on <b><time datetime="2026-07-30T01:42:42.000Z" itemprop="dateModified">Jul 30, 2026</time></b></span></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/tutorials/part2-backend-platform-security/08-registering-new-users"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">9. First login and user provisioning</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/tutorials/part2-backend-platform-security/15-modern-auth-additions"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">11. Passkeys, DPoP, mTLS, and token exchange</div></a></nav></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer"><div class="container container-fluid"><div class="row footer__links"><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Study</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/tutorials/">Book home</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/content-map">Reading guide</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/labs/rnn">Interactive RNN lab</a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Core tracks</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/tutorials/part2-backend-platform-security/overview">Backend and security</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/part3-agent-protocols/overview">Agent protocols</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/part5-deep-learning-and-llms/overview">Deep learning and LLMs</a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright">Enterprise AI, Agents & Applied ML - 2026</div></div></div></footer></div>
+</body>
+</html>

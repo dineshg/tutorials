@@ -1,0 +1,552 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-part1-enterprise-ai-delivery/hld-service-selection" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.10.2">
+<title data-rh="true">HLD Service Selection (GCP): Exec Document Q&amp;A Pilot — Choices, Alternatives, Enterprise Delays | Enterprise AI, Agents &amp; Applied ML</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://dineshg.github.io/tutorials/part1-enterprise-ai-delivery/07-hld-service-selection"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="keywords" content="enterprise AI, machine learning, deep learning, LLM, FastAPI, Pydantic, MCP, authentication"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="HLD Service Selection (GCP): Exec Document Q&amp;A Pilot — Choices, Alternatives, Enterprise Delays | Enterprise AI, Agents &amp; Applied ML"><meta data-rh="true" name="description" content="This tutorial converts our service-selection discussion into a High-Level Design section you can drop into an Architecture Review Pack. It uses concrete GCP services, includes alternatives considered, and highlights e..."><meta data-rh="true" property="og:description" content="This tutorial converts our service-selection discussion into a High-Level Design section you can drop into an Architecture Review Pack. It uses concrete GCP services, includes alternatives considered, and highlights e..."><link data-rh="true" rel="icon" href="/tutorials/img/favicon.svg"><link data-rh="true" rel="canonical" href="https://dineshg.github.io/tutorials/part1-enterprise-ai-delivery/07-hld-service-selection"><link data-rh="true" rel="alternate" href="https://dineshg.github.io/tutorials/part1-enterprise-ai-delivery/07-hld-service-selection" hreflang="en"><link data-rh="true" rel="alternate" href="https://dineshg.github.io/tutorials/part1-enterprise-ai-delivery/07-hld-service-selection" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Part I - Enterprise AI Delivery","item":"https://dineshg.github.io/tutorials/part1-enterprise-ai-delivery/overview"},{"@type":"ListItem","position":2,"name":"7. HLD and service selection","item":"https://dineshg.github.io/tutorials/part1-enterprise-ai-delivery/07-hld-service-selection"}]}</script><script>window.MathJax={startup:{typeset:!1},tex:{inlineMath:[["\\(","\\)"],["$","$"]],displayMath:[["\\[","\\]"],["$$","$$"]],processEscapes:!0},options:{skipHtmlTags:["script","noscript","style","textarea","pre","code"]}}</script>
+<link rel="stylesheet" href="/tutorials/css/book.css">
+<link rel="stylesheet" href="/tutorials/vendor/highlight.js/11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.18.1/dist/katex.min.css" integrity="sha384-5TcZemv2l/9On385z///+d7MSYlvIEw9FuZTIdZ14vJLqWphw7e7ZPuOiCHJcFCP" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-mml-chtml.js" defer="defer"></script><link rel="stylesheet" href="/tutorials/assets/css/styles.003aa738.css">
+<script src="/tutorials/assets/js/runtime~main.98c31d90.js" defer="defer"></script>
+<script src="/tutorials/assets/js/main.bd80017b.js" defer="defer"></script>
+</head>
+<body>
+<svg style="display: none;"><defs>
+<symbol id="theme-svg-external-link" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")),document.documentElement.setAttribute("data-theme-choice",t||"system")}(),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top"><div class="navbar__inner"><div class="theme-layout-navbar-left navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/tutorials/"><b class="navbar__title text--truncate">Enterprise AI Book</b></a><a class="navbar__item navbar__link" href="/tutorials/">Read</a><a class="navbar__item navbar__link" href="/tutorials/content-map">Concept map</a><a class="navbar__item navbar__link" href="/tutorials/part5-deep-learning-and-llms/10-recurrent-neural-networks">Deep learning</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><div class="navbar__item book-search-navbar-item"><button type="button" class="book-search-trigger" aria-label="Search the book">Search <kbd>Ctrl K</kbd></button></div><a href="https://github.com/dineshg/tutorials" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type="button" disabled="" title="system mode" aria-label="Switch between dark and light mode (currently system mode)"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill="currentColor" d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill="currentColor" d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill="currentColor" d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"></path></svg></button></div><div class="navbarSearchContainer_Bca1"></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class="docsWrapper_hBAB"><button aria-label="Scroll back to top" class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type="button"></button><div class="docRoot_UBD9"><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class="sidebarViewport_aRkj"><div class="sidebar_njMd"><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/tutorials/"><span class="linkLabel_WmDU">Book home</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/tutorials/content-map"><span class="linkLabel_WmDU">Reading guide and concept map</span></a></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item sidebar-category sidebar-category-blue"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--active" href="/tutorials/part1-enterprise-ai-delivery/overview"><span class="categoryLinkLabel_W154">Part I - Enterprise AI Delivery</span></a><button aria-label="Collapse sidebar category &#x27;Part I - Enterprise AI Delivery&#x27;" aria-expanded="true" type="button" class="clean-btn menu__caret"></button></div><ul class="menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part1-enterprise-ai-delivery/01-business-pain-to-ai-lead"><span class="linkLabel_WmDU">1. From business pain to AI lead</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part1-enterprise-ai-delivery/02-intake-package"><span class="linkLabel_WmDU">2. The intake package</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part1-enterprise-ai-delivery/03-ai-lead-response"><span class="linkLabel_WmDU">3. AI lead response document</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part1-enterprise-ai-delivery/04-kickoff-meeting"><span class="linkLabel_WmDU">4. Pilot kickoff meeting</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part1-enterprise-ai-delivery/05-seven-days-after-kickoff"><span class="linkLabel_WmDU">5. Seven days after kickoff</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part1-enterprise-ai-delivery/06-architecture-reference-design"><span class="linkLabel_WmDU">6. Architecture reference design</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link menu__link--active" aria-current="page" tabindex="0" href="/tutorials/part1-enterprise-ai-delivery/07-hld-service-selection"><span class="linkLabel_WmDU">7. HLD and service selection</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part1-enterprise-ai-delivery/08-after-hld-next-steps"><span class="linkLabel_WmDU">8. After HLD: next steps</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part1-enterprise-ai-delivery/09-architecture-review"><span class="linkLabel_WmDU">9. Architecture review</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part1-enterprise-ai-delivery/10-hld-to-lld-sprint-plan"><span class="linkLabel_WmDU">10. HLD to LLD and sprint plan</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/tutorials/part1-enterprise-ai-delivery/11-provisioning-services-scale"><span class="linkLabel_WmDU">11. Provisioning, services, scale</span></a></li></ul></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-teal"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part2-backend-platform-security/overview"><span class="categoryLinkLabel_W154">Part II - Backend, Platform &amp; Security</span></a><button aria-label="Expand sidebar category &#x27;Part II - Backend, Platform &amp; Security&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-violet"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part3-agent-protocols/overview"><span class="categoryLinkLabel_W154">Part III - Agent Protocols</span></a><button aria-label="Expand sidebar category &#x27;Part III - Agent Protocols&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-amber"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part4-ml-foundations/overview"><span class="categoryLinkLabel_W154">Part IV - ML Foundations</span></a><button aria-label="Expand sidebar category &#x27;Part IV - ML Foundations&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-coral"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part5-deep-learning-and-llms/overview"><span class="categoryLinkLabel_W154">Part V - Deep Learning &amp; LLMs</span></a><button aria-label="Expand sidebar category &#x27;Part V - Deep Learning &amp; LLMs&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed sidebar-category sidebar-category-slate"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist" href="/tutorials/part6-appendices/overview"><span class="categoryLinkLabel_W154">Part VI - Appendices</span></a><button aria-label="Expand sidebar category &#x27;Part VI - Appendices&#x27;" aria-expanded="false" type="button" class="clean-btn menu__caret"></button></div></li></ul></nav><button type="button" title="Collapse sidebar" aria-label="Collapse sidebar" class="button button--secondary button--outline collapseSidebarButton_PEFL"><svg width="20" height="20" aria-hidden="true" class="collapseSidebarButtonIcon_kv0_"><g fill="#7a7a7a"><path d="M9.992 10.023c0 .2-.062.399-.172.547l-4.996 7.492a.982.982 0 01-.828.454H1c-.55 0-1-.453-1-1 0-.2.059-.403.168-.551l4.629-6.942L.168 3.078A.939.939 0 010 2.528c0-.548.45-.997 1-.997h2.996c.352 0 .649.18.828.45L9.82 9.472c.11.148.172.347.172.55zm0 0"></path><path d="M19.98 10.023c0 .2-.058.399-.168.547l-4.996 7.492a.987.987 0 01-.828.454h-3c-.547 0-.996-.453-.996-1 0-.2.059-.403.168-.551l4.625-6.942-4.625-6.945a.939.939 0 01-.168-.55 1 1 0 01.996-.997h3c.348 0 .649.18.828.45l4.996 7.492c.11.148.168.347.168.55zm0 0"></path></g></svg></button></div></div></aside><main class="docMainContainer_TBSr"><div class="container padding-top--md padding-bottom--lg"><div class="row"><div class="col"><div class="docItemContainer_Djhp"><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label="Breadcrumbs"><ul class="breadcrumbs"><li class="breadcrumbs__item"><a aria-label="Home page" class="breadcrumbs__link" href="/tutorials/"><svg viewBox="0 0 24 24" class="breadcrumbHomeIcon_YNFT"><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill="currentColor"></path></svg></a></li><li class="breadcrumbs__item"><a class="breadcrumbs__link" href="/tutorials/part1-enterprise-ai-delivery/overview"><span>Part I - Enterprise AI Delivery</span></a></li><li class="breadcrumbs__item breadcrumbs__item--active"><span class="breadcrumbs__link">7. HLD and service selection</span></li></ul></nav><div class="theme-doc-markdown markdown"><article class="book-article tr-content" data-book-part="part1" data-book-accent="blue"><header class="articleHeader_jX4Y"><span class="partLabel_DqKR">Part I - Enterprise AI Delivery Lifecycle</span><h1>HLD Service Selection (GCP): Exec Document Q&amp;A Pilot</h1><div class="articleMeta_jfH_"><span>8<!-- --> min read</span><span aria-hidden="true">·</span><span>5<!-- --> sections</span></div></header><details class="chapterToc_aQjS"><summary>On this page</summary><nav aria-label="On this page"><a href="#principles">1) HLD decision principles (what we decide now vs later)</a><a href="#architecture">2) Reference architecture (GCP-aligned)</a><a href="#services">3) GCP service choices (what we pick, why, alternatives, and constraints)</a><a href="#delays">4) Enterprise delays &amp; critical path (what usually takes longest)</a><a href="#howtopresent">5) How to present this in an architecture review</a></nav></details><div class="articleBody_b2wt"><div class="container">
+    
+    <p class="lead">
+      This tutorial converts our service-selection discussion into a <strong>High-Level Design</strong> section you can drop into
+      an Architecture Review Pack. It uses concrete <strong>GCP services</strong>, includes <strong>alternatives considered</strong>,
+      and highlights <strong>enterprise/internal delays</strong> (approvals, patterns, gates) that often dominate timelines.
+    </p>
+
+    <ul class="toc">
+      <li><a href="#principles">HLD decision principles</a></li>
+      <li><a href="#architecture">Reference architecture</a></li>
+      <li><a href="#services">Service choices (with alternatives)</a></li>
+      <li><a href="#delays">Enterprise delays &amp; critical path</a></li>
+      <li><a href="#howtopresent">How to present in review</a></li>
+    </ul>
+
+    <h2 id="principles">1) HLD decision principles (what we decide now vs later)</h2>
+    <div class="card">
+      <div class="grid2">
+        <div class="box">
+          <div class="k">Decide at HLD</div>
+          <ul>
+            <li>Major components and trust boundaries</li>
+            <li>Security posture (identity, access enforcement, secrets)</li>
+            <li>Data boundary: what can go to the LLM</li>
+            <li>Core services that create long lead-time dependencies</li>
+            <li>Audit/observability requirements</li>
+          </ul>
+        </div>
+        <div class="box">
+          <div class="k">Defer to LLD</div>
+          <ul>
+            <li>Exact schemas, chunk sizing, prompt templates</li>
+            <li>Fine-grained retry/backoff parameters</li>
+            <li>Exact IAM role bindings per resource (unless forced)</li>
+            <li>Exact SLOs (propose targets at HLD, finalize later)</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="ok">
+        <strong>Rule of thumb:</strong> if it affects security/privacy, cost materially, operability, or requires another team’s provisioning,
+        it must be decided (or at least bounded) at HLD.
+      </div>
+    </div>
+
+    <h2 id="architecture">2) Reference architecture (GCP-aligned)</h2>
+    <div class="card">
+      <h3 id="request-path-query-time">Request path (query time)</h3>
+      <ol>
+        <li>User signs in via Google Workspace (OIDC) → SPA gets <code>access_token</code>.</li>
+        <li>SPA calls backend API with <code>Authorization: Bearer ...</code>.</li>
+        <li>Backend validates JWT, maps to <code>user_id</code>/<code>tenant_id</code>, enforces group/corpus gates.</li>
+        <li>Backend retrieves chunks (strict filters) → packs context → calls LLM → returns answer with citations.</li>
+        <li>Backend writes audit logs (user, tenant, docs cited, timings).</li>
+      </ol>
+
+      <h3 id="ingestion-path-offline">Ingestion path (offline)</h3>
+      <ol>
+        <li>Document discovered/uploaded → event published.</li>
+        <li>Worker extracts text + metadata → stores canonical record.</li>
+        <li>Embeddings/index written to retrieval system with tenant/corpus metadata.</li>
+      </ol>
+
+      <div class="callout">
+        <strong>Core HLD principle:</strong> access control is enforced in the backend and data layers, not in the browser.
+      </div>
+    </div>
+
+    <h2 id="services">3) GCP service choices (what we pick, why, alternatives, and constraints)</h2>
+
+    <div class="card">
+      <h3 id="3-1-end-user-identity-google-workspace-sso">3.1 End-user Identity (Google Workspace SSO)</h3>
+      <!--
+  UPDATED snippet: Org allowlist explanation + where it happens
+  (Insert this inside section 3.1, right after:
+    <h3>3.1 End-user Identity (Google Workspace SSO)</h3>
+   and before the table.)
+-->
+
+<div class="card" id="org-allowlist-explainer">
+  <h3 id="quick-concept-what-is-an-org-allowlist">Quick concept: What is an “Org allowlist”?</h3>
+
+  <p>
+    An <strong>Org allowlist</strong> is a “front door” rule that answers:
+    <strong>“Is this person allowed to use our application at all?”</strong>
+    This is separate from tenant isolation (“what data can you access once inside?”).
+  </p>
+
+  <div class="ok">
+    <strong>Authentication</strong> (Google login) proves <em>who you are</em>.<br>
+    <strong>Org allowlist</strong> decides <em>whether you’re allowed to enter</em>.<br>
+    <strong>Tenant isolation</strong> decides <em>what you can see after you enter</em>.
+  </div>
+
+  <h3 id="where-it-happens-two-common-places">Where it happens (two common places)</h3>
+  <p>
+    In enterprises, you usually implement the allowlist in one of these places:
+  </p>
+
+  <div class="grid2">
+    <div class="box">
+      <div class="k">Option A — At the IdP (preferred when available)</div>
+      <p>
+        You configure access rules at the <strong>Identity Provider</strong> (Google Workspace / your IdP) so only approved users
+        can complete login for this application.
+      </p>
+      <ul>
+        <li><strong>How:</strong> use Google/IdP app access controls or group-based assignment (only members can use the app).</li>
+        <li><strong>Effect:</strong> users outside the group often cannot complete sign-in for this app (blocked earlier).</li>
+        <li><strong>Benefit:</strong> “blocked at the door” before tokens are issued for your app.</li>
+      </ul>
+    </div>
+
+    <div class="box">
+      <div class="k">Option B — In your application server (common and reliable)</div>
+      <p>
+        Your backend (FastAPI) enforces the allowlist on <strong>every request</strong> by checking group membership (or a local allowlist)
+        after validating the JWT.
+      </p>
+      <ul>
+        <li><strong>How:</strong> verify token → read identity → check “is user in approved org group?”</li>
+        <li><strong>Effect:</strong> user can log in, but your API returns <code>403 Forbidden</code> if not allowed.</li>
+        <li><strong>Benefit:</strong> uniform enforcement even if IdP-side restrictions are incomplete.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout">
+    <strong>Enterprise best practice:</strong> use <em>both</em> when possible.
+    <br>
+    <span style="color: var(--muted);">
+      IdP-side gating reduces exposure and noise; app-side gating guarantees enforcement and supports richer rules (e.g., per-tenant mapping).
+    </span>
+  </div>
+
+  <h3 id="how-it-looks-in-our-project-google-workspace-group">How it looks in our project (Google Workspace group)</h3>
+  <p>
+    We define a Google Group like <code>docqa-users@company.com</code>.
+    Only members are allowed to use the product.
+  </p>
+
+  <pre>Policy (conceptual):
+1) Verify JWT (signature, issuer, audience, expiry)
+2) Extract stable identity (issuer + sub, and email if present)
+3) Check org allowlist:
+   - if NOT in docqa-users@company.com → 403 "not allowed"
+   - if IN group → continue
+4) Map user → tenant_id (domain or DB lookup)
+5) Enforce tenant/corpus filters on retrieval + data access
+  </pre>
+
+  <h3 id="why-it-exists-common-reasons">Why it exists (common reasons)</h3>
+  <ul>
+    <li><strong>Security &amp; governance:</strong> limit exposure to approved users only.</li>
+    <li><strong>Privacy:</strong> reduce risk by restricting who can query sensitive corpora.</li>
+    <li><strong>Pilot control:</strong> roll out to a small cohort first (execs + EAs), then expand.</li>
+    <li><strong>Cost control:</strong> LLM usage is expensive—control who can generate traffic.</li>
+  </ul>
+
+  <h3 id="don-t-confuse-this-with-gcp-iam">Don’t confuse this with GCP IAM</h3>
+  <div class="warn">
+    End users typically do <em>not</em> need GCP IAM permissions. They access documents through the application.
+    The backend uses its own <strong>service identity</strong> (service account / workload identity) to access GCS, DB, secrets, etc.
+    <br><br>
+    <strong>Org allowlist</strong> = “Can this user use the app?”
+    <br>
+    <strong>Cloud IAM</strong> = “Can this principal access GCP resources (buckets, secrets, projects)?”
+  </div>
+</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Capability</th>
+            <th>Chosen (HLD)</th>
+            <th>Why</th>
+            <th>Alternatives considered</th>
+            <th>Enterprise constraints / delays</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Login + tokens</td>
+            <td>Google Workspace OIDC (Auth Code + PKCE in SPA)</td>
+            <td>Standard enterprise SSO; stateless API validation</td>
+            <td>Identity Platform; custom IdP; IAP in front of app</td>
+            <td>Token audience/issuer alignment; group claim policy; approval for group gating approach</td>
+          </tr>
+          <tr>
+            <td>Org allowlist</td>
+            <td>Google Groups gating (e.g., <code>docqa-users@company.com</code>)</td>
+            <td>Simple “allowed to use product” control</td>
+            <td>App-local allowlist; IAP access policy</td>
+            <td>Group ownership, membership governance, and audit rules</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="warn">
+        <strong>HLD note:</strong> group gating answers “who can use the app”; tenant isolation answers “what data can they access.”
+        They are related but not the same.
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 id="3-2-frontend-hosting-react">3.2 Frontend hosting (React)</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Chosen (HLD)</th>
+            <th>Why</th>
+            <th>Alternatives</th>
+            <th>Delays / internal patterns</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Cloud Run (frontend service)</td>
+            <td>Easy rollout; supports rewrites/headers and enterprise networking patterns if needed</td>
+            <td>Cloud Storage + Cloud CDN (static); Firebase Hosting</td>
+            <td>DNS/cert/WAF approvals can be longer than development</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3 id="3-3-backend-compute-fastapi">3.3 Backend compute (FastAPI)</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Chosen (HLD)</th>
+            <th>Why</th>
+            <th>Alternatives</th>
+            <th>Delays / internal patterns</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>GKE (Kubernetes)</td>
+            <td>Enterprise standard for regulated workloads; consistent policy enforcement; supports internal services</td>
+            <td>Cloud Run (faster to ship); MIG on GCE</td>
+            <td>Landing zone onboarding, hardened node pools, image scanning gates, network policies, mesh requirements</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout">
+        <strong>HLD articulation:</strong> “GKE is chosen not because it’s trendy, but because it matches enterprise platform patterns and controls.”
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 id="3-4-canonical-store-metadata-system-of-record">3.4 Canonical store (metadata + system of record)</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Chosen (HLD)</th>
+            <th>Why</th>
+            <th>Alternatives</th>
+            <th>Delays / internal patterns</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Cloud SQL (PostgreSQL)</td>
+            <td>Clear system-of-record; relational metadata; supports backstop controls (e.g., RLS) if needed</td>
+            <td>AlloyDB (scale/perf); Firestore (not ideal for relational workloads)</td>
+            <td>Private IP setup; KMS key approvals; DBA access model; backups/retention policies</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3 id="3-5-object-storage-raw-docs-extracted-artifacts">3.5 Object storage (raw docs + extracted artifacts)</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Chosen (HLD)</th>
+            <th>Why</th>
+            <th>Alternatives</th>
+            <th>Delays / internal patterns</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Cloud Storage (GCS)</td>
+            <td>Durable, cheap, standard; fits ingestion pipeline and artifact storage</td>
+            <td>Filestore (rare); third-party storage (vendor risk)</td>
+            <td>Uniform bucket-level access, retention policies, VPC-SC restrictions, data residency constraints</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3 id="3-6-retrieval-semantic-search-vector-strict-metadata-filters">3.6 Retrieval / Semantic Search (vector + strict metadata filters)</h3>
+      <p>
+        At HLD, you choose one path for the pilot and document the fallback/phase-2 alternative.
+        The key requirement is <strong>strict filtering</strong> (tenant/corpus) to avoid leakage.
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Option</th>
+            <th>When we choose it</th>
+            <th>Why</th>
+            <th>Tradeoffs</th>
+            <th>Delays / internal patterns</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Option A: Vertex AI Search / Agent Builder</strong></td>
+            <td>Pilot needs speed and managed operations</td>
+            <td>Managed retrieval; fast path; less ops burden</td>
+            <td>Less low-level control; feature fit must be validated</td>
+            <td>Service enablement approvals; data classification rules; integration reviews</td>
+          </tr>
+          <tr>
+            <td><strong>Option B: OpenSearch/Elasticsearch on GKE</strong></td>
+            <td>Need maximum control or org already runs search platform</td>
+            <td>Full control: hybrid search, filters, scoring, tuning</td>
+            <td>Higher ops cost; patching/backups/sizing required</td>
+            <td>Platform onboarding queue; cluster hardening; storage class decisions; backup standards</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="ok">
+        <strong>HLD best practice:</strong> choose the simplest option that satisfies strict filtering and governance.
+        “Perfect retrieval” is not required for pilot, but “safe retrieval” is.
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 id="3-7-async-ingestion-orchestration-durable-retries">3.7 Async ingestion orchestration (durable retries)</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Chosen (HLD)</th>
+            <th>Why</th>
+            <th>Alternatives</th>
+            <th>Delays / internal patterns</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Pub/Sub + Cloud Tasks (or Workflows if needed)</td>
+            <td>Durable eventing + retries; survives restarts; rate limiting</td>
+            <td>GKE-native queues; scheduler jobs; best-effort background tasks</td>
+            <td>IAM approvals for topics/subscriptions; DLQ standards; audit logging for processing events</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="warn">
+        <strong>HLD note:</strong> FastAPI background tasks are fine for light best-effort work, but ingestion needs persistence and retries.
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 id="3-8-secrets-and-keys">3.8 Secrets and keys</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Chosen (HLD)</th>
+            <th>Why</th>
+            <th>Alternatives</th>
+            <th>Delays / internal patterns</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Secret Manager + Cloud KMS (policy-driven)</td>
+            <td>Rotation, audit, separation of duties; enterprise standard</td>
+            <td>Kubernetes secrets (often restricted); third-party vault</td>
+            <td>Access approval queue; rotation policy alignment; KMS key provisioning in approved region/project</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3 id="3-9-llm-boundary-external-provider-calls">3.9 LLM boundary (external provider calls)</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Chosen (HLD)</th>
+            <th>Why</th>
+            <th>Alternatives</th>
+            <th>Delays / internal patterns</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Backend on GKE calls external LLM via HTTPS (data minimised)</td>
+            <td>Supports chosen model; keeps enforcement central; can redact/pack context</td>
+            <td>Vertex AI (Gemini) to keep boundary within GCP; multi-provider routing</td>
+            <td>Egress allowlisting/proxy; legal/compliance review of provider; data residency policy checks</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="ok">
+        <strong>HLD statement to include:</strong> “Only retrieved snippets are sent to the model. No raw document dumps. Logs never include full snippets.”
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 id="3-10-observability-and-audit">3.10 Observability and audit</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Chosen (HLD)</th>
+            <th>Why</th>
+            <th>Alternatives</th>
+            <th>Delays / internal patterns</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Cloud Logging + Cloud Monitoring + Cloud Trace (optional: BigQuery for long-term audit analytics)</td>
+            <td>Required for enterprise support and governance; standard GCP tooling</td>
+            <td>Splunk/Datadog (if org standard); custom ELK</td>
+            <td>Retention policy approvals; sensitive logging rules; SIEM integration lead time</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout">
+        <strong>Audit minimum (per request):</strong> who asked, which tenant, what sources were cited, timings, and outcome (answer/refusal).
+      </div>
+    </div>
+
+    <h2 id="delays">4) Enterprise delays &amp; critical path (what usually takes longest)</h2>
+    <div class="card">
+      <p>
+        In banks/airlines, “time to pilot” is often gated by approvals and provisioning, not coding.
+        HLD should explicitly call out the critical path so stakeholders understand sequencing.
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Workstream</th>
+            <th>What causes delay</th>
+            <th>How the AI lead reduces risk</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Landing zone / projects</td>
+            <td>Dev/stage/prod project creation, org policies, shared VPC attachment</td>
+            <td>Request early; align with platform team templates; keep pilot in one approved project if allowed</td>
+          </tr>
+          <tr>
+            <td>Networking</td>
+            <td>Private egress, DNS, firewall rules, proxy requirements</td>
+            <td>Document endpoints early; ask for a standard pattern; avoid custom exceptions</td>
+          </tr>
+          <tr>
+            <td>IAM / service identities</td>
+            <td>Least-privilege reviews, approvals, periodic reviews</td>
+            <td>Provide role matrix; use standard roles; limit resources touched in pilot</td>
+          </tr>
+          <tr>
+            <td>Data owner approval</td>
+            <td>Corpus sign-off, classification review, explicit exclusions</td>
+            <td>Propose a bounded corpus; provide an exclusion list; show audit controls</td>
+          </tr>
+          <tr>
+            <td>Security/privacy review</td>
+            <td>Threat model, logging policy, model boundary policy</td>
+            <td>Bring a short threat model + mitigations; demonstrate “cite or refuse”; propose redaction policy</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="warn">
+        <strong>HLD maturity signal:</strong> You’re not surprised by these delays — you plan around them and assign owners.
+      </div>
+    </div>
+
+    <h2 id="howtopresent">5) How to present this in an architecture review</h2>
+    <div class="card">
+      <h3 id="recommended-presentation-structure">Recommended presentation structure</h3>
+      <ol>
+        <li><strong>Start with trust boundaries</strong> (what data leaves the boundary to the model)</li>
+        <li><strong>Show identity and access enforcement</strong> (group gate + tenant/corpus gates)</li>
+        <li><strong>Declare the chosen services</strong> with 1–2 sentences of why</li>
+        <li><strong>List alternatives considered</strong> and why not now</li>
+        <li><strong>End with risks + mitigations</strong> and the approval asks</li>
+      </ol>
+
+      <div class="ok">
+        <strong>Reviewer-friendly line:</strong> “We are optimising for a safe pilot. Where a managed service reduces operational risk, we choose it.
+        Where strict filtering and control are essential, we use a search platform that enforces metadata filters.”
+      </div>
+
+      <h3 id="example-decision-statement-format-copy-paste">Example “Decision statement” format (copy/paste)</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Decision</th>
+            <th>Chosen</th>
+            <th>Why</th>
+            <th>Alternatives</th>
+            <th>Phase-2 note</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Retrieval layer</td>
+            <td>Vertex AI Search (pilot)</td>
+            <td>Fast to ship; managed ops; meets strict filtering needs (to be validated)</td>
+            <td>OpenSearch on GKE</td>
+            <td>Move to OpenSearch if advanced tuning is required</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="tr-note">
+      <strong>HLD deliverable</strong>
+      Turn the decisions in this chapter into an
+      <strong>Architecture Review Pack</strong> containing the HLD sections,
+      system and trust-boundary diagrams, decision tables, risks, assumptions,
+      and phase-two alternatives.
+    </div>
+  </div></div></article></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col noPrint_WFHX"></div><div class="col lastUpdated_JAkA"><span class="theme-last-updated">Last updated<!-- --> on <b><time datetime="2026-07-30T01:42:42.000Z" itemprop="dateModified">Jul 30, 2026</time></b></span></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/tutorials/part1-enterprise-ai-delivery/06-architecture-reference-design"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">6. Architecture reference design</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/tutorials/part1-enterprise-ai-delivery/08-after-hld-next-steps"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">8. After HLD: next steps</div></a></nav></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer"><div class="container container-fluid"><div class="row footer__links"><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Study</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/tutorials/">Book home</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/content-map">Reading guide</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/labs/rnn">Interactive RNN lab</a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Core tracks</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/tutorials/part2-backend-platform-security/overview">Backend and security</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/part3-agent-protocols/overview">Agent protocols</a></li><li class="footer__item"><a class="footer__link-item" href="/tutorials/part5-deep-learning-and-llms/overview">Deep learning and LLMs</a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright">Enterprise AI, Agents & Applied ML - 2026</div></div></div></footer></div>
+</body>
+</html>
