@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>OIDC + OAuth2 + PKCE → Bearer Token → FastAPI Identity</title>
-<link rel="stylesheet" href="../assets/css/book.css?v=20260517-figures-code2">
+<link rel="stylesheet" href="../assets/css/book.css?v=20260730-currency-final">
 </head>
 
 <body>
@@ -265,6 +265,28 @@ Content-Type: application/json
 
     </div>
 
+    <h2 id="onboarding">From a Verified Identity to Application Access</h2>
+    <p>
+      A valid token proves that the configured issuer authenticated a subject;
+      it does not automatically grant that subject access to your application.
+      The API still needs a local onboarding and authorization decision.
+    </p>
+
+    <ol>
+      <li>Validate the token completely before reading identity claims.</li>
+      <li>Build the stable external key from <code>(iss, sub)</code>, not email or the token string.</li>
+      <li>Look up or idempotently create the local user in one database transaction.</li>
+      <li>Require an invitation, approved domain policy, or administrator action before creating tenant membership.</li>
+      <li>Load current roles and permissions from your application policy store.</li>
+    </ol>
+
+    <div class="warn">
+      <strong>Do not equate email domain with authorization.</strong>
+      A verified domain can be one onboarding signal, but a user can change
+      address, leave an organization, or belong to several tenants. Persist an
+      explicit membership and check its current status on protected requests.
+    </div>
+
     <h2 id="final-mapping">How the Backend Maps a Dynamic Token to a Stable User ID</h2>
     <p>The backend does not identify a user by the literal Bearer token string (because tokens change over time). Instead, it uses a 3-step mapping for every single request:</p>
 
@@ -300,47 +322,33 @@ Content-Type: application/json
       <strong>Anti-pattern:</strong> don’t store “current user” in a global variable and don’t treat the token value as a permanent user identifier.
       Tokens are short-lived and will naturally differ across time and devices.
     </div>
-  </div><script>
-    // ...existing code...
 
-    (function () {
-      const KW = /\b(async|await|def|class|return|from|import|as|if|elif|else|try|except|raise|for|in|while|with|True|False|None)\b/g;
-      const FN = /\bdef\s+([a-zA-Z_]\w*)\b/g;
-      const TYP = /\bclass\s+([A-Z][A-Za-z0-9_]*)\b/g;
-      const NUM = /\b\d+(\.\d+)?\b/g;
+    <h2 id="scale">Why the Pattern Scales</h2>
+    <p>
+      Each API instance can validate a JWT locally with cached public keys, so
+      token verification does not require a network round trip to the IdP for
+      every request. Because identity is reconstructed from the request, any
+      healthy FastAPI worker can handle the next call; no sticky session or
+      process-global “current user” is required.
+    </p>
 
-      function escapeHtml(s) {
-        return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-      }
+    <table>
+      <thead><tr><th>Layer</th><th>Scale mechanism</th><th>Correctness requirement</th></tr></thead>
+      <tbody>
+        <tr><td>JWT verification</td><td>Per-process JWKS cache</td><td>Issuer, audience, time, signature, and algorithm checks on every request</td></tr>
+        <tr><td>User mapping</td><td>Indexed lookup on <code>(iss, sub)</code></td><td>Unique constraint and idempotent provisioning</td></tr>
+        <tr><td>Tenant authorization</td><td>Short-lived policy cache where justified</td><td>Tenant membership remains explicit and revocable</td></tr>
+        <tr><td>API compute</td><td>Stateless horizontal replicas</td><td>Request-scoped identity and no mutable global user state</td></tr>
+      </tbody>
+    </table>
 
-      function highlightPython(text) {
-        // escape first
-        let s = escapeHtml(text);
-
-        // strings (simple, not perfect)
-        s = s.replace(/("([^"\\]|\\.)*")/g, '<span class="tok-str">$1</span>');
-        s = s.replace(/('([^'\\]|\\.)*')/g, '<span class="tok-str">$1</span>');
-
-        // comments
-        s = s.replace(/(^|\n)(\s*#.*)$/g, '$1<span class="tok-com">$2</span>');
-
-        // class + def names
-        s = s.replace(TYP, 'class <span class="tok-typ">$1</span>');
-        s = s.replace(FN, 'def <span class="tok-fn">$1</span>');
-
-        // keywords + numbers
-        s = s.replace(KW, '<span class="tok-kw">$1</span>');
-        s = s.replace(NUM, '<span class="tok-num">$&</span>');
-
-        return s;
-      }
-
-      document.querySelectorAll('pre[data-lang="python"] code').forEach((code) => {
-        const raw = code.textContent || "";
-        code.innerHTML = highlightPython(raw);
-      });
-    })();
-  </script>
-  <script src="../assets/js/nav.js?v=20260522-book-cleanup"></script>
+    <p>
+      Local JWT validation trades immediate token revocation for low-latency
+      verification. Keep access tokens short-lived, revoke sessions or refresh
+      tokens at the authorization server, and re-check high-risk application
+      permissions at the point of action.
+    </p>
+  </div>
+  <script src="../assets/js/nav.js?v=20260730-currency-final"></script>
 </body>
 </html>

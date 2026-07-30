@@ -3,21 +3,22 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-  <title>Modern LLM Alignment — Beyond DPO (ORPO, GRPO, KTO, RLAIF)</title>
-  <link rel="stylesheet" href="../assets/css/book.css?v=20260517-figures-code2" />
+  <title>Modern LLM Post-Training — DPO, ORPO, KTO, GRPO, RLAIF, and PPO</title>
+  <link rel="stylesheet" href="../assets/css/book.css?v=20260730-currency-final" />
 </head>
 <body>
 <div class="ch">
 
-<h1>Modern LLM Alignment — Beyond DPO (ORPO, GRPO, KTO, RLAIF)</h1>
+<h1>Modern LLM Post-Training — DPO, ORPO, KTO, GRPO, RLAIF, and PPO</h1>
 
 <div class="tr-note">
   <strong>Where this fits</strong>
   Chapter 12 covered SFT (supervised fine‑tuning) and PEFT (LoRA / QLoRA) —
   how to make a base LLM follow your instructions and your domain. This
-  chapter is about the next step: <em>preference alignment</em> — how to make
-  the model prefer good outputs over bad outputs at scale, without the
-  fragility of full PPO‑style RLHF.
+  chapter is about the next step: <em>preference and reward-based
+  post-training</em> — how to improve choices after SFT, and how to decide
+  whether an offline preference objective or an online RL loop matches the
+  evidence you actually have.
 </div>
 
 <div class="tr-note">
@@ -28,17 +29,68 @@
   RLAIF, and PPO-style RLHF can be compared in one coherent decision section.
 </div>
 
-<h2>1) The lineage in one paragraph</h2>
+<div class="tr-warn">
+  <strong>Current tooling boundary (verified July 2026)</strong>
+  The algorithms below come from their primary papers. Library APIs move more
+  quickly: current TRL documentation presents DPO, KTO, and GRPO on its main
+  trainer API, while ORPO and PPO are experimental. Pin the TRL release and
+  model revision used by a real experiment; do not copy a trainer signature
+  from an undated tutorial.
+</div>
 
-<p><strong>RLHF</strong> (Christiano 2017, InstructGPT 2022) trains a reward model
-from human preference pairs, then uses PPO to optimize the LLM against that
-reward while a KL term tethers it to the SFT model. It works, but it
-requires three models in memory (policy, reference, reward) and PPO
-hyper‑parameter tuning. <strong>DPO</strong> (Rafailov 2023) showed you can skip
-the explicit reward model and PPO and instead minimize a closed‑form
-classification loss directly on preference pairs. The 2024–2025 wave —
-<strong>KTO, ORPO, GRPO, RLAIF</strong> — refines this further along three axes:
-data shape, memory cost, and signal source.</p>
+<h2>1) Build the map before comparing acronyms</h2>
+
+<p>Post-training discussions become confusing when three different decisions
+are collapsed into one:</p>
+
+<table>
+  <tr><th>Decision</th><th>Question</th><th>Examples</th></tr>
+  <tr>
+    <td><strong>Signal source</strong></td>
+    <td>Who or what says an output is good?</td>
+    <td>Human comparison, thumbs-up/down, AI judge, unit test, schema validator.</td>
+  </tr>
+  <tr>
+    <td><strong>Data shape</strong></td>
+    <td>What evidence reaches the trainer?</td>
+    <td>Demonstration, chosen/rejected pair, binary label, prompt plus numeric reward.</td>
+  </tr>
+  <tr>
+    <td><strong>Optimization method</strong></td>
+    <td>How are model parameters changed?</td>
+    <td>SFT, DPO, ORPO, KTO, GRPO, PPO.</td>
+  </tr>
+</table>
+
+<p><strong>RLAIF</strong>, for example, describes feedback produced by an AI
+system. That feedback can train a reward model for PPO, create pairs for DPO
+or ORPO, or create binary labels for KTO. RLAIF is therefore a signal source
+and data-generation process, not a competing optimizer.</p>
+
+<h3>1.1 The classic RLHF lineage</h3>
+
+<p><strong>RLHF</strong> (Christiano et al., 2017; InstructGPT, 2022) commonly
+collects human preference pairs, fits a reward model, and then uses PPO to
+optimize an SFT policy against that learned reward. A KL term or related
+constraint limits destructive drift from a reference policy.</p>
+
+<p>At the algorithm level, PPO-style RLHF has four distinct roles:
+<strong>policy</strong>, <strong>reference or old-policy distribution</strong>,
+<strong>reward model or grader</strong>, and <strong>value/critic estimate</strong>.
+That does not mean four complete models must always be resident in VRAM.
+Backbones can be shared, adapters can separate roles, reference scores can be
+precomputed, and components can be sharded or offloaded. The roles explain the
+algorithm; a profiler explains the memory bill.</p>
+
+<h3>1.2 Why direct preference methods appeared</h3>
+
+<p><strong>DPO</strong> (Rafailov et al., 2023) showed that, under its preference
+model assumptions, a policy can be optimized directly from chosen/rejected
+pairs without fitting an explicit reward model and without an online PPO
+rollout loop. KTO and ORPO change the required data or reference-policy role;
+GRPO returns to online sampling but removes the learned critic. These methods
+therefore trade different forms of complexity rather than forming a single
+strict ladder from old to new.</p>
 
 <h2>2) DPO recap (the baseline)</h2>
 
@@ -54,9 +106,24 @@ $\mathcal{L}_{\mathrm{DPO}}
 \right)$
 </div>
 
-<p>Two models in memory (policy + frozen reference), $\beta$ controls how far
-the policy can drift from the reference. Pros: simple, stable. Cons: needs a
-strong SFT model to start from, and needs paired preference data.</p>
+<p>The objective compares the trainable policy with a fixed reference policy.
+The scale $\beta$ controls the strength of that reference-relative
+regularization; in the common interpretation, larger values penalize departure
+more strongly. A strong SFT checkpoint is the usual practical starting point,
+and the method requires paired preferences whose chosen and rejected responses
+answer the same prompt.</p>
+
+<p><strong>Operationally:</strong> DPO needs reference log-probabilities, but not
+necessarily a second fully resident model throughout training. Current
+implementations can keep a frozen reference model, precompute its
+log-probabilities, or derive policy and reference behavior from different
+adapters over one base checkpoint.</p>
+
+<ul>
+  <li><strong>Advantage:</strong> no learned reward model and no on-policy rollout loop.</li>
+  <li><strong>Risk:</strong> contradictory, position-biased, or trivially easy pairs teach the wrong preference boundary.</li>
+  <li><strong>Use when:</strong> paired preferences are trustworthy and offline training is sufficient.</li>
+</ul>
 
 <h2>3) ORPO — Odds‑Ratio Preference Optimization (Hong et al., 2024)</h2>
 
@@ -83,15 +150,23 @@ code works in log space for numerical stability.</p>
 
 <p><strong>Why people like it:</strong></p>
 <ul>
-  <li>One model in memory — no frozen reference policy. ~50 % less VRAM than DPO.</li>
+  <li>No frozen reference policy is required, so one major source of memory and
+      compute overhead is removed. The actual saving depends on adapters,
+      precomputation, sharding, optimizer state, and sequence length; there is
+      no universal “50 percent” guarantee.</li>
   <li>You can go from a base model directly to an aligned model in a single
-      training run; no separate SFT phase needed.</li>
-  <li>Empirically competitive with DPO on Llama / Mistral 7B benchmarks.</li>
+      ORPO training objective rather than running separate SFT and preference
+      phases. Starting-model and data quality still matter.</li>
+  <li>The ORPO paper reported competitive results across Phi-2, Llama-2, and
+      Mistral experiments up to 7B parameters; that is evidence from those
+      settings, not a guarantee for every domain.</li>
 </ul>
 
 <p><strong>Use when:</strong> you have paired preference data and want the simplest,
-cheapest pipeline. The TRL library exposes <code>ORPOTrainer</code> with the
-same interface as <code>DPOTrainer</code>.</p>
+reference-free candidate to benchmark. In current TRL,
+<code>ORPOTrainer</code> is experimental and has its own configuration and
+constructor contract; do not assume it is a drop-in alias for
+<code>DPOTrainer</code>.</p>
 
 <h2>4) KTO — Kahneman–Tversky Optimization (Ethayarajh et al., 2024)</h2>
 
@@ -102,17 +177,50 @@ collect at scale from thumbs‑up / thumbs‑down telemetry.</p>
 
 <p>The loss is shaped after Kahneman–Tversky prospect theory: gains on
 desirable samples and losses on undesirable samples are weighted
-asymmetrically (loss aversion). Practically, KTO works well in real product
-settings where almost no one writes paired comparisons but everyone clicks
-👍 / 👎.</p>
+asymmetrically (loss aversion). This makes KTO a natural candidate for product
+telemetry where users rarely write paired comparisons but can still provide a
+positive or negative signal. It does not make raw clicks automatically valid
+labels: selection bias, accidental clicks, exposure bias, and class imbalance
+still need explicit treatment.</p>
 
 <p><strong>Use when:</strong> your feedback is binary, unpaired, and noisy
-(production telemetry, customer ratings).</p>
+(production telemetry, customer ratings). Like DPO, the standard KTO
+formulation uses a reference-policy baseline; current TRL can precompute those
+reference log-probabilities.</p>
 
-<h2>5) GRPO — Group Relative Policy Optimization (DeepSeek, 2024–2025)</h2>
+<h2>5) The crucial split: offline preference learning vs online RL</h2>
 
-<p>GRPO is the algorithm behind DeepSeek‑R1's reasoning training. It is closer
-to PPO than to DPO in spirit but cuts the value/critic network entirely.</p>
+<p>DPO, ORPO, and KTO are normally <strong>offline</strong>: the training set
+already contains responses and preference information. PPO and GRPO are
+<strong>online policy optimization</strong>: the current policy generates new
+responses during training, a reward function scores them, and those fresh
+samples drive the update.</p>
+
+<table>
+  <tr><th>Mode</th><th>Main benefit</th><th>Main risk</th></tr>
+  <tr>
+    <td>Offline preference optimization</td>
+    <td>Reproducible data, simpler infrastructure, no rollout serving loop.</td>
+    <td>The fixed dataset may not cover behavior produced by the changing policy.</td>
+  </tr>
+  <tr>
+    <td>Online RL</td>
+    <td>Training explores the policy's current outputs and can optimize a direct grader.</td>
+    <td>Rollouts are expensive, and a flawed reward can be exploited in new ways.</td>
+  </tr>
+</table>
+
+<p>This distinction is more useful than saying that one acronym is universally
+“more modern.” Choose the loop that matches your feedback and evaluation
+system.</p>
+
+<h2>6) GRPO — Group Relative Policy Optimization (DeepSeekMath and DeepSeek‑R1)</h2>
+
+<p>GRPO was introduced in the DeepSeekMath work and later used as an important
+RL component in the DeepSeek‑R1 program. It is closer to PPO than to DPO in
+spirit: the current policy samples responses and learns from rewards. Its key
+simplification is that it removes the learned value/critic network and uses
+relative rewards within a group of responses instead.</p>
 
 <p>For each prompt $x$ you sample a <strong>group</strong> of $G$ responses
 $\{y_1, \dots, y_G\}$ from the current policy. Each is scored by a reward
@@ -121,90 +229,150 @@ often a <em>verifiable</em> signal: unit‑test pass/fail, math answer match,
 format check). Compute the advantage as the in‑group standardization:</p>
 
 <div class="eq">
-$A_i = \dfrac{r_i - \mathrm{mean}(r_1,\dots,r_G)}{\mathrm{std}(r_1,\dots,r_G)}$
+$A_i = \dfrac{r_i - \mathrm{mean}(r_1,\dots,r_G)}
+{\mathrm{std}(r_1,\dots,r_G) + \varepsilon}$
 </div>
 
-<p>Then optimize a PPO‑style clipped objective with a KL penalty against the
-reference policy, using $A_i$ as the per‑sample advantage. No critic
-network, so memory and stability are much better than PPO.</p>
+<p>The small $\varepsilon$ in this teaching form prevents division by zero.
+If every response in a group receives the same reward, the group provides no
+relative learning signal and should be logged rather than silently treated as
+informative.</p>
+
+<p>The original family of objectives applies a policy-gradient or clipped
+update using the group-relative advantage and can include a KL penalty against
+a reference policy. Removing the critic reduces one substantial model role and
+its training burden. It does <em>not</em> guarantee lower total memory or better
+stability in every system: sampling $G$ completions per prompt is expensive,
+and sequence length, rollout concurrency, inference acceleration, and optional
+reference-policy use can dominate the footprint.</p>
 
 <p><strong>Why it matters:</strong></p>
 <ul>
   <li>Uses <em>verifiable rewards</em> (RLVR). For math and code you don't need
       a reward model at all — graders are deterministic.</li>
-  <li>The “group baseline” replaces the value network with cheap Monte‑Carlo
-      variance reduction.</li>
-  <li>Published DeepSeek‑R1 reports describe this style of RLVR training as a
-      major ingredient in its reasoning gains, especially when graders can
-      verify answers automatically.</li>
+  <li>The group mean acts as a Monte-Carlo baseline, replacing the learned
+      value network with comparisons among sibling responses.</li>
+  <li>The DeepSeek‑R1 report describes GRPO-style RL with verifiable and
+      model-based rewards as one major ingredient in its reasoning gains.</li>
 </ul>
 
 <p><strong>Use when:</strong> your task has a programmatic grader (math, code,
 JSON‑schema compliance, tool‑use success) — i.e. RLVR settings.</p>
 
-<h2>6) RLAIF and Constitutional AI</h2>
+<div class="tr-note">
+  <strong>Do not reduce DeepSeek‑R1 to one optimizer</strong>
+  DeepSeek‑R1 was a multi-stage training pipeline: cold-start supervised data,
+  reasoning-oriented RL, rejection sampling and additional SFT, followed by
+  further alignment RL. DeepSeek‑R1‑Zero was the experiment that began with
+  large-scale RL without preliminary SFT. “GRPO trained R1” is therefore true
+  only as a partial description.
+</div>
 
-<p><strong>RLAIF</strong> (RL from AI Feedback) replaces the human labelers with a
-strong LLM judge. You generate response pairs, ask a judge model
-(GPT‑4‑class, Claude, etc.) to pick the better one against a written
-rubric (the “constitution”), and then run DPO/ORPO/PPO on those AI
-preferences.</p>
+<h3>6.1 Current implementation caveats</h3>
 
-<p>This is now a common way to scale preference-data creation beyond what
-human labelers can review directly. Combine it with active learning (only ask the judge when the policy is
-uncertain) and you have a tight, cheap loop.</p>
+<p>GRPO implementations have continued to evolve. Current TRL documentation
+defaults to no KL reference model when <code>beta=0</code> and exposes several
+loss-normalization choices because the original sequence-level formulation can
+introduce response-length bias. Group standard-deviation scaling can also
+create question-difficulty bias. Treat reward scaling, zero-variance groups,
+completion truncation, and length normalization as first-class evaluation
+variables, not harmless defaults.</p>
 
-<h2>7) Choosing between them</h2>
+<h2>7) RLAIF and Constitutional AI are related, not synonyms</h2>
+
+<p><strong>RLAIF</strong> (reinforcement learning from AI feedback) uses an AI
+system to produce some or all of the preference signal that human annotators
+would otherwise provide. A capable judge can compare response pairs against a
+rubric, assign scalar scores, or label desirable and undesirable outputs.
+Those labels may then feed a reward model, DPO, ORPO, KTO, PPO, or another
+optimizer.</p>
+
+<p><strong>Constitutional AI</strong> is a more specific procedure. In the
+original work, a written constitution guides self-critique and revision during
+a supervised phase, then AI-generated preference labels support an RL phase.
+A normal RLAIF judge does not automatically become Constitutional AI merely
+because its prompt contains a rubric.</p>
+
+<p>AI feedback can scale beyond what human labelers can review directly, but
+the judge introduces its own position bias, verbosity bias, self-preference,
+rubric ambiguity, and correlated blind spots. Calibrate it against a
+human-reviewed holdout set, randomize answer order, allow ties or abstention,
+and keep judge and policy versions in the experiment record. Active learning
+can reserve expensive judgments for uncertain or high-impact cases, but the
+uncertainty rule itself must be evaluated.</p>
+
+<h2>8) Choosing between them</h2>
 
 <table>
   <tr>
-    <th>Method</th><th>Data shape</th><th>Models in VRAM</th>
-    <th>Reward signal</th><th>Pick when…</th>
+    <th>Method</th><th>Data shape / mode</th><th>Main training roles</th>
+    <th>Current TRL status</th><th>Pick when…</th>
   </tr>
   <tr>
-    <td>SFT (Ch. 12)</td><td>(x, y) demonstrations</td><td>1</td>
-    <td>—</td><td>You only have demonstrations.</td>
+    <td>SFT (Ch. 12)</td><td>$(x, y)$ demonstrations; offline</td>
+    <td>Policy model</td><td>Main API</td><td>You have trusted target responses.</td>
   </tr>
   <tr>
-    <td>DPO</td><td>(x, y_w, y_l)</td><td>2 (policy + ref)</td>
-    <td>Implicit (BT model)</td><td>Strong baseline, paired prefs available.</td>
+    <td>DPO</td><td>$(x, y_w, y_l)$; offline</td>
+    <td>Policy + reference log-probabilities</td><td>Main API</td>
+    <td>Strong baseline; paired preferences are available.</td>
   </tr>
   <tr>
-    <td>ORPO</td><td>(x, y_w, y_l)</td><td>1</td>
-    <td>Implicit (odds ratio)</td><td>You want SFT + alignment in one run.</td>
+    <td>ORPO</td><td>$(x, y_w, y_l)$; offline</td>
+    <td>Policy model; reference-free objective</td><td>Experimental</td>
+    <td>You want to benchmark joint SFT + preference alignment.</td>
   </tr>
   <tr>
-    <td>KTO</td><td>(x, y, 👍/👎)</td><td>2</td>
-    <td>Binary utility</td><td>Production telemetry; no paired data.</td>
+    <td>KTO</td><td>$(x, y,\text{label})$; offline</td>
+    <td>Policy + reference log-probabilities</td><td>Main API</td>
+    <td>You have useful binary feedback but no pairs.</td>
   </tr>
   <tr>
-    <td>GRPO</td><td>(x) + grader</td><td>2</td>
-    <td>Verifiable / RM</td><td>Programmatic grader (math, code, RLVR).</td>
+    <td>GRPO</td><td>Prompt + online rollouts + reward</td>
+    <td>Policy + grader; optional reference; no critic</td><td>Main API</td>
+    <td>A reliable grader can score several completions per prompt.</td>
   </tr>
   <tr>
-    <td>RLAIF + DPO/ORPO</td><td>(x) + judge LLM</td><td>2</td>
-    <td>AI judge + rubric</td><td>You can afford a strong judge model.</td>
+    <td>RLAIF</td><td>AI-generated feedback</td>
+    <td>Judge plus whichever optimizer you choose</td><td>Not an optimizer</td>
+    <td>You can calibrate an AI judge against human decisions.</td>
   </tr>
   <tr>
-    <td>PPO‑RLHF</td><td>(x, y_w, y_l) + RM</td><td>3 (policy + ref + critic)</td>
-    <td>Learned RM</td><td>You need full RLHF and have the budget.</td>
+    <td>PPO‑RLHF</td><td>Prompt + online rollouts + reward</td>
+    <td>Policy, old/reference policy, reward, value/critic roles</td><td>Experimental</td>
+    <td>You need online control and can operate the full RL stack.</td>
   </tr>
 </table>
 
-<h2>8) A practical recipe for an enterprise project</h2>
+<p>“Main roles” is deliberately not “models in VRAM.” Measure resident weights,
+optimizer state, activations, KV caches, rollout concurrency, communication,
+and precomputed artifacts in the implementation you actually run.</p>
+
+<h2>9) A practical enterprise decision sequence</h2>
 
 <ol>
-  <li><strong>SFT</strong> on your domain demonstrations (LoRA / QLoRA — Ch. 12).</li>
-  <li>Collect production thumbs‑up / thumbs‑down from your pilot
-      (Part I, Ch. 11) — this becomes your KTO training set.</li>
-  <li>For tasks with verifiable graders (data extraction, JSON output, code,
-      SQL correctness), spin up a small <strong>GRPO</strong> loop. The grader is
-      typically &lt; 100 lines of Python.</li>
-  <li>For everything else, run <strong>RLAIF → ORPO</strong> with a written rubric
-      reviewed by your domain experts. ORPO over DPO purely for the VRAM
-      and pipeline simplicity.</li>
-  <li>Re‑measure on the eval suite from your AI lead response document
-      (Part I, Ch. 3). Ship only if the metric you committed to moves.</li>
+  <li>Define the held-out evaluation suite, safety constraints, and acceptable
+      regressions before changing the model.</li>
+  <li>Establish a strong <strong>SFT</strong> baseline on domain demonstrations
+      (LoRA / QLoRA where appropriate — Chapter 12).</li>
+  <li>Collect provenance-rich feedback. Thumbs-up/down can seed KTO, while
+      reviewed chosen/rejected pairs can seed DPO or ORPO. Do not convert
+      ambiguous telemetry into labels without a sampling and audit policy.</li>
+  <li>Benchmark at least one simple offline baseline. DPO is a strong default;
+      KTO fits unpaired labels; ORPO remains a useful reference-free candidate.
+      Choose from evaluation evidence, not an assumed VRAM percentage.</li>
+  <li>For extraction, JSON, code, SQL, math, or tool-use tasks with reliable
+      graders, compare rejection-sampling/SFT baselines with a small
+      <strong>GRPO</strong> or other online-RL experiment. A narrow grader may
+      be fewer than 100 lines of Python, but adversarial tests, sandboxing,
+      observability, and governance are usually the larger job.</li>
+  <li>Use <strong>RLAIF</strong> when a written rubric and calibrated judge can
+      expand coverage. DPO, KTO, ORPO, reward-model training, and PPO remain
+      alternative consumers of that feedback; “RLAIF → ORPO” is one candidate,
+      not a universal recipe.</li>
+  <li>Re-measure the committed product metrics and the full regression suite.
+      Ship through a canary only when the intended gain survives human review
+      and safety evaluation.</li>
 </ol>
 
 <div class="tr-warn">
@@ -215,16 +383,37 @@ uncertain) and you have a tight, cheap loop.</p>
   every iteration.
 </div>
 
-<h2>9) Reading list</h2>
+<h2>10) Failure modes to test explicitly</h2>
+
 <ul>
-  <li>Rafailov et al., 2023 — <em>Direct Preference Optimization</em> (DPO).</li>
-  <li>Hong et al., 2024 — <em>ORPO: Monolithic Preference Optimization without Reference Model</em>.</li>
-  <li>Ethayarajh et al., 2024 — <em>KTO: Model Alignment as Prospect Theoretic Optimization</em>.</li>
-  <li>DeepSeek‑AI, 2024 / 2025 — <em>DeepSeekMath</em> and <em>DeepSeek‑R1</em> (GRPO &amp; RLVR).</li>
-  <li>Bai et al., 2022 — <em>Constitutional AI</em> (RLAIF).</li>
+  <li><strong>Reward hacking:</strong> the policy satisfies the grader while
+      violating the real intent.</li>
+  <li><strong>Preference inconsistency:</strong> annotators or judges apply
+      different criteria to similar pairs.</li>
+  <li><strong>Judge bias:</strong> order, length, style, or model-family cues
+      determine the AI judge's choice.</li>
+  <li><strong>Distribution shift:</strong> offline pairs do not resemble outputs
+      from the updated policy or production traffic.</li>
+  <li><strong>Zero-variance groups:</strong> every GRPO completion gets the same
+      reward, so the prompt contributes no relative signal.</li>
+  <li><strong>Length and truncation bias:</strong> objective normalization or a
+      maximum completion length changes what behavior is rewarded.</li>
+  <li><strong>Capability regression:</strong> target metrics improve while
+      general instruction following, calibration, or safety deteriorates.</li>
+</ul>
+
+<h2>11) Primary papers and current official documentation</h2>
+<ul>
+  <li><a href="https://arxiv.org/abs/2203.02155" target="_blank" rel="noreferrer">Ouyang et al., 2022 — Training language models to follow instructions with human feedback</a>.</li>
+  <li><a href="https://arxiv.org/abs/2305.18290" target="_blank" rel="noreferrer">Rafailov et al., 2023 — Direct Preference Optimization</a>.</li>
+  <li><a href="https://arxiv.org/abs/2403.07691" target="_blank" rel="noreferrer">Hong et al., 2024 — ORPO: Monolithic Preference Optimization without Reference Model</a>.</li>
+  <li><a href="https://arxiv.org/abs/2402.01306" target="_blank" rel="noreferrer">Ethayarajh et al., 2024 — KTO: Model Alignment as Prospect Theoretic Optimization</a>.</li>
+  <li><a href="https://arxiv.org/abs/2402.03300" target="_blank" rel="noreferrer">DeepSeek‑AI, 2024 — DeepSeekMath</a> and <a href="https://arxiv.org/abs/2501.12948" target="_blank" rel="noreferrer">DeepSeek‑AI, 2025 — DeepSeek‑R1</a>.</li>
+  <li><a href="https://arxiv.org/abs/2212.08073" target="_blank" rel="noreferrer">Bai et al., 2022 — Constitutional AI</a> and <a href="https://arxiv.org/abs/2309.00267" target="_blank" rel="noreferrer">Lee et al., 2023 — RLAIF</a>.</li>
+  <li><a href="https://huggingface.co/docs/trl/" target="_blank" rel="noreferrer">Hugging Face TRL — current trainer index</a>, <a href="https://huggingface.co/docs/trl/dpo_trainer" target="_blank" rel="noreferrer">DPO</a>, <a href="https://huggingface.co/docs/trl/kto_trainer" target="_blank" rel="noreferrer">KTO</a>, <a href="https://huggingface.co/docs/trl/grpo_trainer" target="_blank" rel="noreferrer">GRPO</a>, <a href="https://huggingface.co/docs/trl/orpo_trainer" target="_blank" rel="noreferrer">ORPO</a>, and <a href="https://huggingface.co/docs/trl/ppo_trainer" target="_blank" rel="noreferrer">PPO</a> documentation.</li>
 </ul>
 
 </div>
-<script src="../assets/js/nav.js?v=20260522-book-cleanup"></script>
+<script src="../assets/js/nav.js?v=20260730-currency-final"></script>
 </body>
 </html>

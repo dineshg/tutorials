@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tenant Identity vs IAM vs Workload Identity (GCP) — The No-Confusion Guide</title>
 
-<link rel="stylesheet" href="../assets/css/book.css?v=20260517-figures-code2">
+<link rel="stylesheet" href="../assets/css/book.css?v=20260730-currency-final">
 </head>
 
 <body>
@@ -293,12 +293,16 @@ def write_tenant_object(bucket: str, tenant_id: str, object_name: str, data: byt
       </div>
     </div>
 
-    <p class="footer-note">
-      If you want, paste your existing HTML “identity” tutorial and I’ll refactor it further into this structure (same theme), keeping your wording but making it clearer and shorter.
-    </p>
+    <div class="tr-note">
+      <strong>Identity rule to carry forward</strong>
+      Preserve both actors in every sensitive audit event: the end user who
+      requested the action and the workload identity that executed it.
+      Authorization uses the user's application permissions; cloud API access
+      uses the workload's IAM permissions.
+    </div>
   </div>
 
-  <script>
+  <script type="text/plain" data-retired-local-highlighter>
     // Tiny Python-ish highlighter (VS Code Dark+ style)
     (function () {
       const KW = /\b(async|await|def|class|return|from|import|as|if|elif|else|try|except|raise|for|in|while|with|True|False|None|and|or|not)\b/g;
@@ -337,6 +341,6 @@ def write_tenant_object(bucket: str, tenant_id: str, object_name: str, data: byt
       });
     })();
   </script>
-  <script src="../assets/js/nav.js?v=20260522-book-cleanup"></script>
+  <script src="../assets/js/nav.js?v=20260730-currency-final"></script>
 </body>
 </html>

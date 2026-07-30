@@ -3,14 +3,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Forecasting Tutorial: Modeling Sequence Data (Time Series)</title>
+  <title>Forecasting and Sequence Data (Time Series)</title>
 
   <!-- MathJax for equations -->
   <script>
     window.MathJax = { tex: { inlineMath: [['\\(','\\)'], ['$', '$']] } };
   </script>
-  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
-  <link rel="stylesheet" href="../assets/css/book.css?v=20260517-figures-code2">
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-chtml.js"></script>
+  <link rel="stylesheet" href="../assets/css/book.css?v=20260730-currency-final">
 </head>
 
 <body>
@@ -118,7 +118,7 @@
         <text x="330" y="78" class="label" text-anchor="middle">seasonality</text>
 
         <circle cx="665" cy="124" r="12" fill="#cf222e"></circle>
-        <path d="M665 136 L665 184" stroke="#cf222e" stroke-width="3" marker-end="url(#ts-components-arrow)"></path>
+        <path fill="none" d="M665 136 L665 184" stroke="#cf222e" stroke-width="3" marker-end="url(#ts-components-arrow)"></path>
         <text x="665" y="214" class="label" text-anchor="middle">event / shock</text>
 
         <g transform="translate(755,96)">
@@ -207,8 +207,8 @@
         <text x="475" y="84" class="label" text-anchor="middle">forecast origin</text>
         <text x="269" y="102" class="label" text-anchor="middle">lookback window T</text>
         <text x="647" y="102" class="label" text-anchor="middle">horizon H</text>
-        <path d="M110 192 L428 192" stroke="#0969da" stroke-width="2.4" marker-end="url(#timeline-arrow)"></path>
-        <path d="M530 192 L764 192" stroke="#1a7f37" stroke-width="2.4" marker-end="url(#timeline-arrow)"></path>
+        <path fill="none" d="M110 192 L428 192" stroke="#0969da" stroke-width="2.4" marker-end="url(#timeline-arrow)"></path>
+        <path fill="none" d="M530 192 L764 192" stroke="#1a7f37" stroke-width="2.4" marker-end="url(#timeline-arrow)"></path>
         <text x="143" y="154" class="label" text-anchor="middle">x[t-3]</text>
         <text x="227" y="154" class="label" text-anchor="middle">x[t-2]</text>
         <text x="311" y="154" class="label" text-anchor="middle">x[t-1]</text>
@@ -395,7 +395,7 @@ print(X.shape, y.shape)  # (7, 3) (7,)</code></pre>
         <rect x="722" y="126" width="96" height="58" rx="13" fill="#f3f8f1" stroke="#1a7f37"></rect>
         <text x="770" y="160" class="label" text-anchor="middle">xhat[t+2]</text>
 
-        <path d="M280 148 L340 148 M460 155 L548 155 M644 155 L722 155" stroke="#0969da" stroke-width="2.4" marker-end="url(#recursive-arrow)"></path>
+        <path fill="none" d="M280 148 L340 148 M460 155 L548 155 M644 155 L722 155" stroke="#0969da" stroke-width="2.4" marker-end="url(#recursive-arrow)"></path>
         <path d="M596 184 C548 245 208 245 160 170" stroke="#1a7f37" stroke-width="2.3" fill="none" marker-end="url(#recursive-arrow)"></path>
         <text x="350" y="270" class="muted" text-anchor="middle">slide the window: drop oldest, append prediction, repeat until horizon H</text>
       </svg>
@@ -533,8 +533,13 @@ print("First 5 predictions:", preds[:5])</code></pre>
       </ul>
     </div>
 
-    <p class="sub">End of tutorial.</p>
+    <div class="tr-note">
+      <strong>Chapter transition</strong>
+      With the forecasting contract, baselines, and leakage-safe evaluation in
+      place, the next chapter implements the autoregressive linear baseline in
+      PyTorch before recurrent state is introduced.
+    </div>
   </main>
-  <script src="../assets/js/nav.js?v=20260522-book-cleanup"></script>
+  <script src="../assets/js/nav.js?v=20260730-currency-final"></script>
 </body>
 </html>

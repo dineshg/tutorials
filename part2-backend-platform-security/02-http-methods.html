@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HTTP Methods (Beginner-Friendly) — FastAPI</title>
-<link rel="stylesheet" href="../assets/css/book.css?v=20260517-figures-code2">
+<link rel="stylesheet" href="../assets/css/book.css?v=20260730-currency-final">
 </head>
 
 <body>
@@ -20,6 +20,7 @@
 
                 <ul class="toc">
                     <li><a href="#core">Core ideas</a></li>
+                    <li><a href="#contract-flow">Method to Python contract</a></li>
                     <li><a href="#methods-table">Quick table</a></li>
                     <li><a href="#widely-used">Widely used (⭐)</a></li>
                     <li><a href="#less-used">Less used but important</a></li>
@@ -81,6 +82,64 @@
             Then think about safety, idempotency, caching, and security.
             <span class="pill">Method + URL = contract</span>
         </div>
+
+        <h2 id="contract-flow">How this connects to Pydantic: method, URL, and body are separate jobs</h2>
+        <p>
+            A clean backend design separates three questions. First, the HTTP method says the intent:
+            are we reading, creating, replacing, patching, or deleting? Second, the URL says which resource
+            or collection the intent applies to. Third, if the request has a JSON body, a Pydantic model says
+            the exact shape of that body.
+        </p>
+
+        <div class="concept-box">
+            <strong>Flow to remember:</strong>
+            <code>METHOD + URL</code> chooses the endpoint.
+            <code>path/query/header</code> values become function parameters.
+            <code>JSON body</code> becomes a Pydantic model instance when you declare one.
+        </div>
+
+        <table aria-label="HTTP method and Pydantic contract relationship">
+            <thead>
+                <tr>
+                    <th>Request part</th>
+                    <th>Example</th>
+                    <th>Who handles it in FastAPI?</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Method + path</td>
+                    <td><code>POST /orders</code></td>
+                    <td>The route decorator: <code>@app.post("/orders")</code></td>
+                </tr>
+                <tr>
+                    <td>Path parameter</td>
+                    <td><code>/users/42</code></td>
+                    <td>A typed argument: <code>user_id: int</code></td>
+                </tr>
+                <tr>
+                    <td>Query parameter</td>
+                    <td><code>?limit=20</code></td>
+                    <td>A typed argument with a default: <code>limit: int = 20</code></td>
+                </tr>
+                <tr>
+                    <td>Header</td>
+                    <td><code>Authorization: Bearer ...</code></td>
+                    <td><code>Header(...)</code> or a security dependency</td>
+                </tr>
+                <tr>
+                    <td>JSON body</td>
+                    <td><code>{"items": [...]}</code></td>
+                    <td>A Pydantic model such as <code>CreateOrderRequest</code></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <p>
+            This means Pydantic is not a replacement for HTTP methods. It is the next layer down.
+            The method tells the server what the client is trying to do; Pydantic validates the structured
+            data the client sends while doing it.
+        </p>
 
         <h2 id="methods-table">Quick table (print-this-in-your-brain)</h2>
         <p class="subtitle">⭐ = widely used. Most APIs are mostly these 5.</p>
@@ -159,7 +218,7 @@
         <h2 id="widely-used">Widely used methods (you’ll use these 99% of the time)</h2>
 
         <div class="svgwrap" aria-label="Inline diagram: method intent">
-            <svg viewBox="0 0 900 170" width="100%" height="auto" role="img" aria-label="Method intent diagram">
+            <svg viewBox="0 0 900 170" width="100%" role="img" aria-label="Method intent diagram">
                 <defs>
                     <linearGradient id="g1" x1="0" y1="0" x2="1" y2="0">
                         <stop offset="0" stop-color="rgba(97,175,254,.35)" />
@@ -173,7 +232,7 @@
                 <text x="392" y="88" fill="rgba(230,234,242,.88)" font-size="18" font-family="ui-sans-serif, system-ui">PUT = replace</text>
                 <text x="535" y="88" fill="rgba(230,234,242,.88)" font-size="18" font-family="ui-sans-serif, system-ui">PATCH = partial</text>
                 <text x="700" y="88" fill="rgba(230,234,242,.88)" font-size="18" font-family="ui-sans-serif, system-ui">DELETE = remove</text>
-                <path d="M32 110 H868" stroke="rgba(255,255,255,.22)" stroke-width="2" />
+                <path fill="none" d="M32 110 H868" stroke="rgba(255,255,255,.22)" stroke-width="2" />
                 <circle cx="120" cy="110" r="7" fill="#61affe" />
                 <circle cx="292" cy="110" r="7" fill="#49cc90" />
                 <circle cx="468" cy="110" r="7" fill="#fca130" />
@@ -241,12 +300,22 @@ Accept: application/json
             <h4>FastAPI</h4>
 <pre>from pydantic import BaseModel
 
-class CreateOrder(BaseModel):
-    items: list[dict]
+class OrderItem(BaseModel):
+    sku: str
+    qty: int
+
+class CreateOrderRequest(BaseModel):
+    items: list[OrderItem]
 
 @app.post("/orders")
-def create_order(payload: CreateOrder):
+def create_order(payload: CreateOrderRequest):
     return {"created": True, "order_id": 123, "items": payload.items}</pre>
+
+            <p>
+                The method <code>POST</code> says this is a create/action request.
+                The Pydantic model <code>CreateOrderRequest</code> says what the JSON body must contain.
+                Those are two different parts of the same API contract.
+            </p>
         </div>
 
         <!-- ⭐ PUT -->
@@ -451,10 +520,12 @@ Content-Type: application/json
         <p style="color: #c0392b; font-style: italic;">If types don’t match, FastAPI returns a 422 validation error automatically.</p>
 
         <p class="footer-note">
-            Next step (if you want): a tiny FastAPI example showing all 5 ⭐ methods on <code>/items</code>
-            with status codes and idempotency behavior.
+            Next step: read <a href="03-fastapi-request-mapping.html">the FastAPI request mapping chapter</a>
+            to see one HTTP message become Python function arguments, then
+            <a href="04-pydantic-data-models.html">the Pydantic chapter</a> to understand how JSON bodies
+            become validated Python objects.
         </p>
     </div>
-  <script src="../assets/js/nav.js?v=20260522-book-cleanup"></script>
+  <script src="../assets/js/nav.js?v=20260730-currency-final"></script>
 </body>
 </html>

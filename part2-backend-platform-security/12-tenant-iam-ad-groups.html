@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tutorial: Stop confusing Tenant Isolation vs IAM vs AD Groups</title><link rel="stylesheet" href="../assets/css/book.css?v=20260517-figures-code2">
+    <title>Tenant Isolation, Cloud IAM, and Organization Group Gating</title><link rel="stylesheet" href="../assets/css/book.css?v=20260730-currency-final">
 </head>
 <body>
 
 <div class="container">
 
-    <h1>Tutorial: Stop confusing Tenant Isolation vs IAM vs AD Groups</h1>
+    <h1>Tenant Isolation, Cloud IAM, and Organization Group Gating</h1>
 
     <p>You’re dealing with three different “who are you / what can you access” systems that often get mixed up:</p>
     <ol>
@@ -39,6 +39,47 @@
             <li><strong>AD/Group gating</strong> controls who can even use the app (coarse allowlist), before tenancy even matters.</li>
         </ul>
     </div>
+
+    <figure class="figure-card">
+      <svg viewBox="0 0 1040 420" role="img" aria-labelledby="identity-lanes-title identity-lanes-desc">
+        <title id="identity-lanes-title">Three distinct identity and authorization lanes</title>
+        <desc id="identity-lanes-desc">User authentication enters an application gate, tenant authorization scopes data, and workload identity accesses cloud services.</desc>
+        <defs>
+          <marker id="lane-arrow-blue" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+            <path d="M0,0 L10,5 L0,10 Z" fill="#1769e0"></path>
+          </marker>
+          <marker id="lane-arrow-purple" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+            <path d="M0,0 L10,5 L0,10 Z" fill="#7548d8"></path>
+          </marker>
+          <marker id="lane-arrow-green" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+            <path d="M0,0 L10,5 L0,10 Z" fill="#14875a"></path>
+          </marker>
+        </defs>
+
+        <rect x="30" y="45" width="980" height="90" rx="14" fill="#e8f2ff" stroke="#1769e0" stroke-width="2"></rect>
+        <text x="65" y="80" font-size="17" font-weight="700" fill="#162033">Lane A: end-user identity</text>
+        <text x="65" y="109" font-size="15" fill="#4f6078">OIDC login -> access token -> verified (issuer, subject)</text>
+        <line x1="420" y1="92" x2="930" y2="92" stroke="#1769e0" stroke-width="3" marker-end="url(#lane-arrow-blue)"></line>
+        <text x="690" y="78" text-anchor="middle" font-size="14" fill="#1769e0">Who initiated this request?</text>
+
+        <rect x="30" y="165" width="980" height="90" rx="14" fill="#f1ecff" stroke="#7548d8" stroke-width="2"></rect>
+        <text x="65" y="200" font-size="17" font-weight="700" fill="#162033">Lane B: application authorization</text>
+        <text x="65" y="229" font-size="15" fill="#4f6078">group gate -> tenant membership -> role -> row/search/object filter</text>
+        <line x1="500" y1="212" x2="930" y2="212" stroke="#7548d8" stroke-width="3" marker-end="url(#lane-arrow-purple)"></line>
+        <text x="720" y="198" text-anchor="middle" font-size="14" fill="#7548d8">Which application data is allowed?</text>
+
+        <rect x="30" y="285" width="980" height="90" rx="14" fill="#e9fbf2" stroke="#14875a" stroke-width="2"></rect>
+        <text x="65" y="320" font-size="17" font-weight="700" fill="#162033">Lane C: workload identity</text>
+        <text x="65" y="349" font-size="15" fill="#4f6078">service account -> IAM role -> Cloud SQL, Storage, Secret Manager, queues</text>
+        <line x1="555" y1="332" x2="930" y2="332" stroke="#14875a" stroke-width="3" marker-end="url(#lane-arrow-green)"></line>
+        <text x="750" y="318" text-anchor="middle" font-size="14" fill="#14875a">Which infrastructure calls may execute?</text>
+      </svg>
+      <figcaption>
+        A request may involve all three lanes, but no lane substitutes for
+        another. Preserve both the requesting user and executing workload in
+        the audit record.
+      </figcaption>
+    </figure>
 
     <hr>
 
@@ -85,7 +126,7 @@
 
     <h3>What this means</h3>
     <ul class="status-check">
-        <li><span class="success">✅</span> Tenant isolation is enforced inside your app + DB/search rules.</li>
+        <li>Tenant isolation is enforced inside your app + DB/search rules.</li>
         <li><span class="error">🚫</span> End users do not need GCP Console access or IAM permissions.</li>
     </ul>
 
@@ -114,7 +155,7 @@
 
     <h3>What this means</h3>
     <ul class="status-check">
-        <li><span class="success">✅</span> Console visibility = Cloud IAM (users/groups/roles on org/folder/project/bucket).</li>
+        <li>Console visibility = Cloud IAM (users/groups/roles on org/folder/project/bucket).</li>
         <li><span class="error">🚫</span> This is unrelated to your app’s <code>tenant_id</code>.</li>
     </ul>
     <p>The GCP Console is the cloud control plane, not your SaaS tenancy system.</p>
@@ -162,8 +203,8 @@
 
     <h3>What this means</h3>
     <ul class="status-check">
-        <li><span class="success">✅</span> Group gating answers: “Can you use the app at all?”</li>
-        <li><span class="success">✅</span> Tenancy answers: “Which tenant’s data can you access?”</li>
+        <li>Group gating answers: “Can you use the app at all?”</li>
+        <li>Tenancy answers: “Which tenant’s data can you access?”</li>
         <li><span class="error">🚫</span> Group gating is not tenancy.</li>
         <li><span class="error">🚫</span> Group gating is not IAM.</li>
     </ul>
@@ -270,17 +311,104 @@
         <li>Return <code>{user_id, tenant_id, is_new_user}</code></li>
     </ol>
 
-    <p>If you want, I can add a minimal FastAPI <code>/auth/bootstrap</code> example that shows:</p>
-    <ul>
-        <li>token validation hook (mock or real)</li>
-        <li>group gate (stubbed)</li>
-        <li>tenant mapping</li>
-        <li>DB provisioning shape</li>
-    </ul>
-    <p>…but this tutorial should already give you the “no confusion” framework.</p>
+    <h3>Typed FastAPI bootstrap boundary</h3>
+    <p>
+      Keep verification, group lookup, tenant mapping, and persistence behind
+      separate interfaces. This makes each policy independently testable and
+      prevents the route from trusting unverified claims.
+    </p>
 
-</div><script></script>
+    <pre><code class="language-python">from typing import Annotated
 
-  <script src="../assets/js/nav.js?v=20260522-book-cleanup"></script>
+from fastapi import Depends, FastAPI, Header, HTTPException, status
+from pydantic import BaseModel
+
+app = FastAPI()
+
+
+class VerifiedIdentity(BaseModel):
+    issuer: str
+    subject: str
+    email: str
+    email_verified: bool
+
+
+class BootstrapResponse(BaseModel):
+    user_id: str
+    tenant_id: str
+    is_new_user: bool
+
+
+async def require_identity(
+    authorization: Annotated[str | None, Header()] = None,
+) -> VerifiedIdentity:
+    token = extract_bearer_token(authorization)
+    claims = await token_verifier.verify(
+        token,
+        expected_issuer=settings.issuer,
+        expected_audience=settings.api_audience,
+    )
+    return VerifiedIdentity(
+        issuer=claims["iss"],
+        subject=claims["sub"],
+        email=claims["email"],
+        email_verified=claims.get("email_verified", False),
+    )
+
+
+@app.post("/auth/bootstrap", response_model=BootstrapResponse)
+async def bootstrap(
+    identity: Annotated[VerifiedIdentity, Depends(require_identity)],
+) -> BootstrapResponse:
+    if not identity.email_verified:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="A verified organization email is required",
+        )
+
+    allowed = await directory.is_group_member(
+        email=identity.email,
+        group="docqa-users@company.com",
+    )
+    if not allowed:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User is not in the application access group",
+        )
+
+    tenant_id = await tenant_directory.resolve_membership(
+        issuer=identity.issuer,
+        subject=identity.subject,
+        email=identity.email,
+    )
+    if tenant_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No active tenant membership",
+        )
+
+    user, created = await users.upsert_external_identity(
+        issuer=identity.issuer,
+        subject=identity.subject,
+        verified_email=identity.email,
+        tenant_id=tenant_id,
+    )
+    return BootstrapResponse(
+        user_id=user.id,
+        tenant_id=tenant_id,
+        is_new_user=created,
+    )</code></pre>
+
+    <div class="tr-warn">
+      <strong>Concurrency requirement</strong>
+      Enforce a database uniqueness constraint on
+      <code>(issuer, subject)</code> and perform the lookup/upsert in one
+      transaction. Two first requests can arrive concurrently; an in-process
+      “check then insert” is not sufficient across workers or replicas.
+    </div>
+
+</div>
+
+  <script src="../assets/js/nav.js?v=20260730-currency-final"></script>
 </body>
 </html>

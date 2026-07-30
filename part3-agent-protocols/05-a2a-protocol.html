@@ -3,19 +3,20 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>A2A (Agent2Agent) Protocol — Comprehensive Tutorial (Single Page)</title>
-<link rel="stylesheet" href="../assets/css/book.css?v=20260517-figures-code2">
+  <title>A2A 1.0: Agent Discovery, Delegation, and Long-Running Tasks</title>
+  <link rel="stylesheet" href="../assets/css/book.css?v=20260730-currency-final">
 </head>
 
 <body>
-<header>
-  <div class="wrap">
-    <h1>A2A (Agent2Agent) Protocol — Comprehensive Tutorial</h1>
-    <p class="muted">
-      This single-page tutorial is only about <strong>A2A</strong>: what it is, why it exists, the key objects
-      (AgentCard, Skills, Tasks, Messages, Artifacts, Parts), discovery and routing, interaction styles
-      (sync, streaming, async), security/auth patterns, and a concrete “concierge + specialist agents” example
-      with practical JSON and Python reference implementations.
+<div class="ch">
+    <h1>A2A 1.0: Agent Discovery, Delegation, and Long-Running Tasks</h1>
+    <p>
+      The previous chapters used MCP to expose tools and context to an AI host.
+      A2A addresses the next boundary: one autonomous agent delegates work to
+      another autonomous agent without depending on the other agent's internal
+      framework, memory, model, or tools. We will build the idea from a simple
+      message into discovery, task state, multi-turn input, artifacts,
+      streaming, security, and a purchasing-concierge implementation.
     </p>
 
     <div class="toc">
@@ -37,16 +38,13 @@
         <li><a href="#operational">14) Operational checklist (retries, idempotency, observability)</a></li>
       </ul>
     </div>
-  </div>
-</header>
-
-<main class="wrap">
 
   <section id="intro">
     <h2>1) What A2A is (the mental model)</h2>
 
     <p>
-      A2A is a standard way for <strong>agents</strong> (not just tools) to communicate with each other over a network.
+      A2A is a standard way for <strong>agents</strong>, rather than only tools,
+      to communicate with each other over a network.
       The important word is “agents”: each participant is allowed to be autonomous, stateful, long-running,
       and potentially opaque internally. A2A does not require agents to share their chain-of-thought, private memory,
       or internal tools. Instead, they collaborate via a shared external protocol.
@@ -60,9 +58,65 @@
     </div>
 
     <div class="callout ok">
-      <strong>One-liner:</strong> A2A is “HTTP + structured messages + task lifecycle”
-      for agent-to-agent collaboration across vendors, frameworks, and deployments.
+      <strong>One-line mental model:</strong> A2A is structured messages,
+      discoverable capabilities, and a durable task lifecycle for collaboration
+      across vendors, frameworks, and deployments.
     </div>
+
+    <div class="tr-note">
+      <strong>Version used in this chapter</strong>
+      The normative examples target stable A2A <code>1.0</code>. The protocol
+      defines one canonical data model and three standard bindings:
+      <code>JSONRPC</code>, <code>GRPC</code>, and
+      <code>HTTP+JSON</code>. The HTTP+JSON examples send
+      <code>A2A-Version: 1.0</code> and use
+      <code>application/a2a+json</code>.
+    </div>
+
+    <figure class="figure-card">
+      <svg viewBox="0 0 1040 390" role="img" aria-labelledby="a2a-model-title a2a-model-desc">
+        <title id="a2a-model-title">A2A delegation model</title>
+        <desc id="a2a-model-desc">A concierge discovers two specialist agents, delegates tasks, receives status updates, and combines artifacts.</desc>
+        <defs>
+          <marker id="a2a-blue-arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+            <path d="M0,0 L10,5 L0,10 Z" fill="#1769e0"></path>
+          </marker>
+          <marker id="a2a-green-arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+            <path d="M0,0 L10,5 L0,10 Z" fill="#14875a"></path>
+          </marker>
+        </defs>
+
+        <rect x="40" y="135" width="180" height="110" rx="16" fill="#e8f2ff" stroke="#1769e0" stroke-width="2"></rect>
+        <text x="130" y="177" text-anchor="middle" font-size="18" font-weight="700" fill="#162033">Concierge</text>
+        <text x="130" y="207" text-anchor="middle" font-size="14" fill="#4f6078">owns user journey</text>
+
+        <rect x="430" y="55" width="220" height="110" rx="16" fill="#f1ecff" stroke="#7548d8" stroke-width="2"></rect>
+        <text x="540" y="97" text-anchor="middle" font-size="18" font-weight="700" fill="#162033">Inventory agent</text>
+        <text x="540" y="127" text-anchor="middle" font-size="14" fill="#4f6078">stock + quote artifact</text>
+
+        <rect x="430" y="230" width="220" height="110" rx="16" fill="#fff4e5" stroke="#d78b00" stroke-width="2"></rect>
+        <text x="540" y="272" text-anchor="middle" font-size="18" font-weight="700" fill="#162033">Approval agent</text>
+        <text x="540" y="302" text-anchor="middle" font-size="14" fill="#4f6078">input + decision artifact</text>
+
+        <rect x="820" y="135" width="180" height="110" rx="16" fill="#e9fbf2" stroke="#14875a" stroke-width="2"></rect>
+        <text x="910" y="177" text-anchor="middle" font-size="18" font-weight="700" fill="#162033">Final plan</text>
+        <text x="910" y="207" text-anchor="middle" font-size="14" fill="#4f6078">composed artifacts</text>
+
+        <path d="M220,166 C300,166 330,110 430,110" fill="none" stroke="#1769e0" stroke-width="3" marker-end="url(#a2a-blue-arrow)"></path>
+        <path d="M220,214 C300,214 330,285 430,285" fill="none" stroke="#1769e0" stroke-width="3" marker-end="url(#a2a-blue-arrow)"></path>
+        <path d="M650,110 C735,110 745,166 820,166" fill="none" stroke="#14875a" stroke-width="3" marker-end="url(#a2a-green-arrow)"></path>
+        <path d="M650,285 C735,285 745,214 820,214" fill="none" stroke="#14875a" stroke-width="3" marker-end="url(#a2a-green-arrow)"></path>
+
+        <text x="322" y="89" text-anchor="middle" font-size="14" font-weight="700" fill="#1769e0">message + task</text>
+        <text x="322" y="313" text-anchor="middle" font-size="14" font-weight="700" fill="#1769e0">message + task</text>
+        <text x="732" y="89" text-anchor="middle" font-size="14" font-weight="700" fill="#14875a">status + artifact</text>
+        <text x="732" y="313" text-anchor="middle" font-size="14" font-weight="700" fill="#14875a">status + artifact</text>
+      </svg>
+      <figcaption>
+        The delegating agent does not need the specialists' private reasoning;
+        it needs trustworthy discovery metadata and explicit task outputs.
+      </figcaption>
+    </figure>
   </section>
 
   <section id="why">
@@ -128,7 +182,7 @@
         </tr>
         <tr>
           <td><strong>AgentCard</strong></td>
-          <td>A machine-readable “business card” that describes an agent’s endpoint, skills, modalities, and auth.</td>
+          <td>A machine-readable “business card” that describes an agent's interfaces, skills, modalities, capabilities, and security requirements.</td>
           <td>Enables discovery and safe routing.</td>
         </tr>
         <tr>
@@ -138,7 +192,7 @@
         </tr>
         <tr>
           <td><strong>Task</strong></td>
-          <td>The core unit of delegated work with an id, status, history, and outputs.</td>
+          <td>The core unit of delegated work with an <code>id</code>, <code>contextId</code>, status, optional history, and artifacts.</td>
           <td>Supports long-running work and human-in-the-loop.</td>
         </tr>
         <tr>
@@ -148,7 +202,7 @@
         </tr>
         <tr>
           <td><strong>Part</strong></td>
-          <td>A piece of message content (text, file reference, structured data, etc.).</td>
+          <td>A piece of message or artifact content containing exactly one of text, raw bytes, a URL, or structured data.</td>
           <td>Enables multi-modality and structured payloads.</td>
         </tr>
         <tr>
@@ -160,8 +214,10 @@
     </table>
 
     <div class="callout ok">
-      <strong>Think “project management”:</strong> a Task has a status, messages are the discussion,
-      artifacts are the deliverables.
+      <strong>Think “project management”:</strong> a Task has a status, Messages
+      are the discussion, and Artifacts are the deliverables. A
+      <code>contextId</code> can group multiple related tasks into one
+      continuing interaction.
     </div>
   </section>
 
@@ -169,15 +225,17 @@
     <h2>4) Agent discovery via AgentCard</h2>
 
     <p>
-      Discovery starts with the AgentCard: a JSON document published by an A2A server at a well-known path.
+      Discovery starts with the Agent Card: a JSON document published by an
+      A2A server at a well-known path such as
+      <code>/.well-known/agent-card.json</code>.
       The purpose is to make it possible for other agents (or an orchestrator) to learn:
     </p>
     <ul>
       <li>Who this agent is (name/version/vendor)</li>
-      <li>Where to send requests (service endpoint)</li>
+      <li>Where to send requests and which bindings/versions each endpoint supports</li>
       <li>What the agent can do (skills)</li>
       <li>How to authenticate (schemes, requirements)</li>
-      <li>What interaction styles it supports (sync, streaming, async)</li>
+      <li>What interaction styles it supports (streaming, push notifications, extended card)</li>
     </ul>
 
     <div class="card">
@@ -196,6 +254,34 @@
       <strong>Security note:</strong> even though the AgentCard is a discovery document,
       you should treat it as a potentially sensitive surface and protect it appropriately (don’t embed secrets).
     </div>
+
+    <h3>4.1 Interface selection is ordered, not guessed</h3>
+    <p>
+      A 1.0 Agent Card can list several <code>supportedInterfaces</code> in
+      preference order. A client chooses the first binding it supports and
+      uses that interface's URL and protocol version. If the interface
+      declares an opaque <code>tenant</code> routing value, the client copies
+      it into every request for that interface.
+    </p>
+
+    <table>
+      <thead>
+        <tr><th>Binding</th><th>Best fit</th><th>Streaming</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>HTTP+JSON</code></td><td>REST-oriented services and browser-friendly infrastructure</td><td>Server-Sent Events</td></tr>
+        <tr><td><code>JSONRPC</code></td><td>RPC-oriented clients over HTTP</td><td>Server-Sent Events</td></tr>
+        <tr><td><code>GRPC</code></td><td>Strongly typed internal platforms and generated clients</td><td>gRPC server streaming</td></tr>
+      </tbody>
+    </table>
+
+    <p>
+      Public cards must not contain credentials. When
+      <code>capabilities.extendedAgentCard</code> is enabled, an authenticated
+      client can fetch a richer card after obtaining credentials out of band.
+      Cards may also be signed with JWS after JSON Canonicalization Scheme
+      normalization when provenance and tamper detection are required.
+    </p>
   </section>
 
   <section id="skills">
@@ -211,8 +297,8 @@
       <strong>A skill typically answers:</strong>
       <ul>
         <li><strong>What</strong> the agent can do (“approve_purchase”, “inventory_availability”)</li>
-        <li><strong>Inputs</strong> expected (fields, formats, constraints)</li>
-        <li><strong>Outputs</strong> returned (artifacts, structured payload)</li>
+        <li><strong>Input modes and examples</strong> that help a router understand when the skill applies</li>
+        <li><strong>Output modes</strong> returned through artifacts</li>
         <li><strong>Constraints</strong> (needs human approval, requires certain auth scope)</li>
       </ul>
     </div>
@@ -232,20 +318,31 @@
     </p>
 
     <div class="card">
-      <strong>Typical task status states (conceptual):</strong>
-      <ul>
-        <li><strong>created / accepted</strong>: task was received and scheduled</li>
-        <li><strong>running</strong>: work is in progress</li>
-        <li><strong>needs_input</strong>: agent is asking for clarification / missing fields</li>
-        <li><strong>blocked</strong>: waiting for external system or human approval</li>
-        <li><strong>succeeded</strong>: completed with artifacts</li>
-        <li><strong>failed</strong>: unrecoverable error; may include error artifact</li>
-      </ul>
-      <p class="muted">
-        Exact enums can vary by version, but the principle is consistent:
-        tasks have lifecycle, tasks can be polled or streamed, and tasks can produce artifacts.
-      </p>
+      <strong>A2A 1.0 task states:</strong>
+      <table>
+        <thead><tr><th>State</th><th>Meaning</th><th>Terminal?</th></tr></thead>
+        <tbody>
+          <tr><td><code>TASK_STATE_UNSPECIFIED</code></td><td>Unknown or indeterminate state; avoid creating tasks in this state.</td><td>No</td></tr>
+          <tr><td><code>TASK_STATE_SUBMITTED</code></td><td>Accepted and acknowledged.</td><td>No</td></tr>
+          <tr><td><code>TASK_STATE_WORKING</code></td><td>Actively being processed.</td><td>No</td></tr>
+          <tr><td><code>TASK_STATE_INPUT_REQUIRED</code></td><td>More user input is required.</td><td>Interrupted</td></tr>
+          <tr><td><code>TASK_STATE_AUTH_REQUIRED</code></td><td>Authorization must be fulfilled through an agreed mechanism.</td><td>Interrupted</td></tr>
+          <tr><td><code>TASK_STATE_COMPLETED</code></td><td>Finished successfully; inspect artifacts for deliverables.</td><td>Yes</td></tr>
+          <tr><td><code>TASK_STATE_FAILED</code></td><td>Finished with an error.</td><td>Yes</td></tr>
+          <tr><td><code>TASK_STATE_CANCELED</code></td><td>Canceled before completion.</td><td>Yes</td></tr>
+          <tr><td><code>TASK_STATE_REJECTED</code></td><td>The agent decided not to perform the task.</td><td>Yes</td></tr>
+        </tbody>
+      </table>
     </div>
+
+    <p>
+      Earlier diagrams often called these states <em>created</em>,
+      <em>running</em>, <em>needs input</em>, <em>blocked</em>, and
+      <em>succeeded</em>. Those remain useful plain-English descriptions, but
+      they are not the 1.0 wire values. External-system waiting is normally
+      represented as <code>TASK_STATE_WORKING</code> plus a status message;
+      user clarification and authorization have their own explicit states.
+    </p>
 
     <div class="callout ok">
       <strong>Why tasks exist:</strong> If agents only did one-shot request/response, they’d fail on most real workflows.
@@ -258,25 +355,43 @@
 
     <h3>7.1 Messages</h3>
     <p>
-      A Message is “what we said” within a task: requests, clarifications, updates, and final responses.
-      Messages typically contain one or more “Parts.”
+      A Message is “what we said” within an interaction: a request,
+      clarification, follow-up, or status explanation. Every Message has a
+      creator-assigned <code>messageId</code>, a role, and at least one Part.
+      The two wire roles are <code>ROLE_USER</code> for client-to-agent
+      messages and <code>ROLE_AGENT</code> for agent-to-client messages.
+      <code>contextId</code> and <code>taskId</code> associate later turns
+      with ongoing work.
     </p>
 
     <h3>7.2 Parts</h3>
     <p>
-      A Part is “what kind of content this is.” A2A is modality-agnostic:
-      it can carry plain text, references to files, or structured data parts.
+      A Part is “what kind of content this is.” A2A is modality-agnostic.
+      A Part contains exactly one of <code>text</code>, base64-encoded
+      <code>raw</code> bytes, a file <code>url</code>, or JSON-compatible
+      <code>data</code>. File metadata such as filename and media type sits
+      beside the chosen content field.
     </p>
 
     <h3>7.3 Artifacts</h3>
     <p>
       Artifacts are the outputs: a report, a decision, a JSON payload, an attached file reference, a filled form.
-      The key design win is: artifacts represent deliverables; messages represent conversation.
+      Every artifact has an <code>artifactId</code> unique within its task and
+      one or more Parts. The key design win is: artifacts represent
+      deliverables; messages represent conversation.
     </p>
 
     <div class="callout warn">
       If you mix “final deliverables” and “chatty conversation” into one blob of text,
       you make downstream automation fragile. Artifacts fix that by making outputs explicit.
+    </div>
+
+    <div class="tr-note">
+      <strong>Reliability boundary</strong>
+      A task history is not guaranteed to retain every transient Message, and
+      a disconnected stream may miss informational updates. Put durable
+      results in Artifacts and recover current state with task operations;
+      do not use chat messages as a guaranteed event log.
     </div>
   </section>
 
@@ -284,7 +399,7 @@
     <h2>8) Interaction models: sync vs streaming vs async</h2>
 
     <p>
-      A2A supports multiple interaction modes so agents can choose what’s appropriate:
+      A2A supports multiple interaction modes so agents can choose what is appropriate:
     </p>
 
     <table>
@@ -299,17 +414,17 @@
         <tr>
           <td><strong>Synchronous</strong></td>
           <td>Fast tasks that can complete quickly.</td>
-          <td>Request → immediate response message/artifact.</td>
+          <td><code>SendMessage</code> returns a direct Message or a completed Task.</td>
         </tr>
         <tr>
           <td><strong>Streaming</strong></td>
           <td>You want progress updates or partial results.</td>
-          <td>Server-sent events / incremental updates to task state.</td>
+          <td><code>SendStreamingMessage</code> emits the initial Task or Message, then status/artifact update events.</td>
         </tr>
         <tr>
           <td><strong>Asynchronous</strong></td>
           <td>Long-running tasks, human-in-loop approvals, external dependencies.</td>
-          <td>Request → “task accepted” → later poll/notify for completion.</td>
+          <td>Receive a submitted/working Task, then poll, subscribe, or configure authenticated push notifications.</td>
         </tr>
       </tbody>
     </table>
@@ -317,6 +432,14 @@
     <div class="callout ok">
       A2A is built to treat “waiting” as normal. That’s why the task object and its status/history are central.
     </div>
+
+    <p>
+      The binding changes the transport shape, not the meaning. For example,
+      HTTP+JSON uses <code>POST /message:send</code>, JSON-RPC invokes
+      <code>SendMessage</code>, and gRPC calls the generated
+      <code>SendMessage</code> method. All three carry the same canonical
+      request and produce functionally equivalent objects.
+    </p>
   </section>
 
   <section id="orchestration">
@@ -411,118 +534,256 @@
         <li><strong>Delegate inventory task:</strong> Concierge creates a Task on Inventory agent: “Check 20 keyboards.”</li>
         <li><strong>Inventory responds:</strong> Inventory produces an Artifact: availability + cost breakdown.</li>
         <li><strong>Delegate approval task:</strong> Concierge creates a Task on Approval agent with the cost breakdown.</li>
-        <li><strong>Approval blocks:</strong> Approval agent returns status “blocked/needs_human,” providing a form-like Part.</li>
+        <li><strong>Approval pauses:</strong> Approval agent returns <code>TASK_STATE_INPUT_REQUIRED</code> with a Message explaining which manager decision is needed.</li>
         <li><strong>Human approves:</strong> Concierge (or UI) submits approval decision back to Approval agent.</li>
-        <li><strong>Approval completes:</strong> Approval agent emits an approval Artifact (decision + approver + timestamp).</li>
+        <li><strong>Approval completes:</strong> Approval agent transitions to <code>TASK_STATE_COMPLETED</code> and emits an approval Artifact (decision + approver + timestamp).</li>
         <li><strong>Concierge finalizes:</strong> Concierge returns a final plan to the user.</li>
       </ol>
     </div>
 
     <div class="callout ok">
       This is what A2A “gives you”: the structured way to discover agents, start tasks, wait safely, and collect artifacts.
-      Without A2A, you end up hardcoding endpoints, inventing your own payload formats, and hacking long-running state.
+      Without a shared protocol, each integration must invent discovery,
+      payloads, status semantics, versioning, and long-running state.
     </div>
   </section>
 
   <section id="json">
-    <h2>11) Practical JSON examples (AgentCard + task lifecycle)</h2>
+    <h2>11) A2A 1.0 wire examples: Agent Card and task lifecycle</h2>
 
-    <h3>11.1 AgentCard (Inventory Agent) — example shape</h3>
-    <p class="muted">
-      This is an illustrative example to show what discovery documents tend to look like:
-      identity + endpoint + skills + auth requirements. Your real card will include the fields your chosen A2A binding expects.
+    <h3>11.1 Agent Card for the Inventory Agent</h3>
+    <p>
+      This card advertises the HTTP+JSON binding first, so it is the preferred
+      interface. The skill is intentionally descriptive: A2A routing uses
+      names, descriptions, tags, examples, and media modes rather than a
+      protocol-level function-argument schema.
     </p>
 
-    <pre class="code"><code><span class="com">// GET https://inventory.example/.well-known/agent-card.json</span>
+    <pre><code class="language-json">// GET https://inventory.example/.well-known/agent-card.json
 {
-  <span class="str">"name"</span>: <span class="str">"inventory-agent"</span>,
-  <span class="str">"version"</span>: <span class="str">"1.0.0"</span>,
-  <span class="str">"description"</span>: <span class="str">"Checks stock, price, lead time for purchase requests."</span>,
-  <span class="str">"endpoint"</span>: <span class="str">"https://inventory.example/a2a"</span>,
-  <span class="str">"auth"</span>: {
-    <span class="str">"type"</span>: <span class="str">"oauth2"</span>,
-    <span class="str">"audience"</span>: <span class="str">"inventory-api"</span>,
-    <span class="str">"requiredScopes"</span>: [<span class="str">"inventory:read"</span>]
-  },
-  <span class="str">"skills"</span>: [
+  "name": "Inventory Agent",
+  "description": "Checks stock, price, and lead time for purchase requests.",
+  "supportedInterfaces": [
     {
-      <span class="str">"id"</span>: <span class="str">"inventory.check"</span>,
-      <span class="str">"title"</span>: <span class="str">"Inventory Check"</span>,
-      <span class="str">"inputSchema"</span>: {
-        <span class="str">"type"</span>: <span class="str">"object"</span>,
-        <span class="str">"properties"</span>: {
-          <span class="str">"item"</span>: {<span class="str">"type"</span>: <span class="str">"string"</span>},
-          <span class="str">"quantity"</span>: {<span class="str">"type"</span>: <span class="str">"integer"</span>, <span class="str">"minimum"</span>: <span class="num">1</span>}
-        },
-        <span class="str">"required"</span>: [<span class="str">"item"</span>, <span class="str">"quantity"</span>]
+      "url": "https://inventory.example/a2a/v1",
+      "protocolBinding": "HTTP+JSON",
+      "protocolVersion": "1.0"
+    },
+    {
+      "url": "inventory.example:443",
+      "protocolBinding": "GRPC",
+      "protocolVersion": "1.0"
+    }
+  ],
+  "provider": {
+    "organization": "Example Procurement Platform",
+    "url": "https://inventory.example"
+  },
+  "version": "1.0.0",
+  "capabilities": {
+    "streaming": true,
+    "pushNotifications": true,
+    "extendedAgentCard": false
+  },
+  "securitySchemes": {
+    "workloadBearer": {
+      "httpAuthSecurityScheme": {
+        "scheme": "Bearer",
+        "bearerFormat": "JWT"
       }
+    }
+  },
+  "securityRequirements": [
+    {"schemes": {"workloadBearer": {"list": []}}}
+  ],
+  "defaultInputModes": ["text/plain", "application/json"],
+  "defaultOutputModes": ["application/json", "text/plain"],
+  "skills": [
+    {
+      "id": "inventory.check",
+      "name": "Inventory Check",
+      "description": "Returns stock, unit price, back-order lead time, and estimated total for a requested item and quantity.",
+      "tags": ["inventory", "stock", "pricing", "procurement"],
+      "examples": [
+        "Check availability and price for 20 keyboards.",
+        "{\"item\":\"keyboard\",\"quantity\":20}"
+      ],
+      "inputModes": ["text/plain", "application/json"],
+      "outputModes": ["application/json"]
     }
   ]
 }</code></pre>
 
-    <h3>11.2 Create a task (Concierge → Inventory Agent)</h3>
-    <pre class="code"><code><span class="com">// POST https://inventory.example/a2a/tasks</span>
+    <h3>11.2 Send a message (Concierge to Inventory Agent)</h3>
+    <p>
+      A client sends a Message; it does not directly invent a Task. The agent
+      may return a direct response Message for trivial work or create and
+      return a Task when lifecycle tracking is useful.
+    </p>
+
+    <pre><code class="language-http">POST /a2a/v1/message:send HTTP/1.1
+Host: inventory.example
+Authorization: Bearer eyJ...
+Content-Type: application/a2a+json
+A2A-Version: 1.0
+
 {
-  <span class="str">"skillId"</span>: <span class="str">"inventory.check"</span>,
-  <span class="str">"message"</span>: {
-    <span class="str">"role"</span>: <span class="str">"requester"</span>,
-    <span class="str">"parts"</span>: [
-      { <span class="str">"type"</span>: <span class="str">"text"</span>, <span class="str">"text"</span>: <span class="str">"Check availability and price for 20 keyboards."</span> },
-      { <span class="str">"type"</span>: <span class="str">"data"</span>, <span class="str">"data"</span>: { <span class="str">"item"</span>: <span class="str">"keyboard"</span>, <span class="str">"quantity"</span>: <span class="num">20</span> } }
+  "message": {
+    "messageId": "msg-7f83",
+    "role": "ROLE_USER",
+    "parts": [
+      {"text": "Check availability and price for 20 keyboards."},
+      {"data": {"item": "keyboard", "quantity": 20}}
+    ]
+  },
+  "configuration": {
+    "acceptedOutputModes": ["application/json"]
+  }
+}</code></pre>
+
+    <h3>11.3 Inventory returns a completed Task and Artifact</h3>
+    <pre><code class="language-json">{
+  "task": {
+    "id": "task_123",
+    "contextId": "purchase_8b1",
+    "status": {
+      "state": "TASK_STATE_COMPLETED",
+      "timestamp": "2026-07-30T10:20:00Z"
+    },
+    "artifacts": [
+      {
+        "artifactId": "artifact_quote_1",
+        "name": "Inventory quote",
+        "parts": [
+          {
+            "data": {
+              "item": "keyboard",
+              "quantity": 20,
+              "available": 18,
+              "backorderEtaDays": 7,
+              "unitPrice": 35.0,
+              "currency": "USD",
+              "estimatedTotal": 700.0
+            }
+          }
+        ]
+      }
     ]
   }
 }</code></pre>
 
-    <h3>11.3 Inventory responds with status + artifact</h3>
-    <pre class="code"><code><span class="com">// 200 OK (or 202 Accepted then later poll/stream)</span>
-{
-  <span class="str">"taskId"</span>: <span class="str">"task_123"</span>,
-  <span class="str">"status"</span>: { <span class="str">"state"</span>: <span class="str">"succeeded"</span> },
-  <span class="str">"artifacts"</span>: [
+    <p>
+      If the work takes longer, the first response can instead carry
+      <code>TASK_STATE_SUBMITTED</code> or <code>TASK_STATE_WORKING</code>.
+      The concierge can then get the task, subscribe to its stream, or receive
+      authenticated push updates if the Agent Card advertises that capability.
+    </p>
+
+    <h3>11.4 Approval requires another turn</h3>
+    <pre><code class="language-json">{
+  "task": {
+    "id": "task_456",
+    "contextId": "purchase_8b1",
+    "status": {
+      "state": "TASK_STATE_INPUT_REQUIRED",
+      "message": {
+        "messageId": "msg-approval-1",
+        "role": "ROLE_AGENT",
+        "parts": [
+          {"text": "Manager approval is required because the total exceeds $500."},
+          {
+            "data": {
+              "approvalForm": {
+                "approver": "",
+                "decision": "approve | reject"
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}</code></pre>
+
+    <p>
+      The follow-up Message includes the same <code>taskId</code> so the
+      approval agent can continue the existing Task:
+    </p>
+
+    <pre><code class="language-json">{
+  "message": {
+    "messageId": "msg-approval-2",
+    "taskId": "task_456",
+    "contextId": "purchase_8b1",
+    "role": "ROLE_USER",
+    "parts": [
+      {
+        "data": {
+          "approver": "manager-42",
+          "decision": "approve"
+        }
+      }
+    ]
+  }
+}</code></pre>
+
+    <details>
+      <summary>Earlier illustrative payload shape and its 1.0 mapping</summary>
+      <p>
+        Early teaching examples often modeled task creation as a custom
+        <code>POST /a2a/tasks</code> request with a top-level
+        <code>skillId</code>, used the role <code>requester</code>, represented
+        success as <code>succeeded</code>, and put
+        <code>type</code>/<code>data</code> directly on an artifact:
+      </p>
+      <pre><code class="language-json">{
+  "skillId": "inventory.check",
+  "message": {
+    "role": "requester",
+    "parts": [
+      {"type": "data", "data": {"item": "keyboard", "quantity": 20}}
+    ]
+  }
+}</code></pre>
+      <pre><code class="language-json">{
+  "taskId": "task_123",
+  "status": {"state": "succeeded"},
+  "artifacts": [
     {
-      <span class="str">"type"</span>: <span class="str">"data"</span>,
-      <span class="str">"name"</span>: <span class="str">"inventory_quote"</span>,
-      <span class="str">"data"</span>: {
-        <span class="str">"item"</span>: <span class="str">"keyboard"</span>,
-        <span class="str">"quantity"</span>: <span class="num">20</span>,
-        <span class="str">"available"</span>: <span class="num">18</span>,
-        <span class="str">"backorderEtaDays"</span>: <span class="num">7</span>,
-        <span class="str">"unitPrice"</span>: <span class="num">35.0</span>,
-        <span class="str">"currency"</span>: <span class="str">"USD"</span>,
-        <span class="str">"estimatedTotal"</span>: <span class="num">700.0</span>
+      "type": "data",
+      "name": "inventory_quote",
+      "data": {
+        "item": "keyboard",
+        "quantity": 20,
+        "available": 18,
+        "backorderEtaDays": 7,
+        "unitPrice": 35.0,
+        "currency": "USD",
+        "estimatedTotal": 700.0
       }
     }
   ]
 }</code></pre>
-
-    <h3>11.4 Approval becomes blocked (human-in-the-loop)</h3>
-    <pre class="code"><code>{
-  <span class="str">"taskId"</span>: <span class="str">"task_456"</span>,
-  <span class="str">"status"</span>: {
-    <span class="str">"state"</span>: <span class="str">"blocked"</span>,
-    <span class="str">"message"</span>: <span class="str">"Needs manager approval: total exceeds $500."</span>
-  },
-  <span class="str">"messages"</span>: [
-    {
-      <span class="str">"role"</span>: <span class="str">"agent"</span>,
-      <span class="str">"parts"</span>: [
-        { <span class="str">"type"</span>: <span class="str">"text"</span>, <span class="str">"text"</span>: <span class="str">"Please confirm manager approval to proceed."</span> },
-        { <span class="str">"type"</span>: <span class="str">"data"</span>, <span class="str">"data"</span>: { <span class="str">"approvalForm"</span>: { <span class="str">"approver"</span>: <span class="str">""</span>, <span class="str">"decision"</span>: <span class="str">"approve|reject"</span> } } }
-      ]
-    }
-  ]
-}</code></pre>
+      <p>
+        Those names are useful for a private REST API but are not the A2A 1.0
+        contract. The current mapping is: send a
+        <code>ROLE_USER</code> Message, use
+        <code>TASK_STATE_COMPLETED</code> for success, and place data inside
+        an Artifact's <code>parts</code> array.
+      </p>
+    </details>
 
     <div class="callout ok">
-      Notice the “shape” advantages: the approval agent can request structured inputs (a form-like data part),
-      and the output can be an explicit approval artifact that downstream systems can trust.
+      Notice the separation: a status Message explains what the interaction
+      needs next, while the final approval decision belongs in an explicit
+      Artifact that downstream systems can validate and audit.
     </div>
   </section>
 
   <div class="hr"></div>
 
   <section id="security">
-    <h2>12) Security and authentication (what you must implement)</h2>
+    <h2>12) Security and authorization boundaries</h2>
 
     <p>
       A2A intentionally relies on standard web security practices. That means:
@@ -533,20 +794,20 @@
         <strong>Transport security</strong>
         <ul>
           <li>Use HTTPS for integrity and authenticity</li>
-          <li>Consider mTLS in enterprise/internal networks</li>
+          <li>Verify the server certificate; consider mTLS between workloads</li>
         </ul>
       </div>
       <div class="card">
         <strong>Authentication</strong>
         <ul>
-          <li>Bearer tokens (OAuth2/OIDC) are common</li>
+          <li>Bearer tokens obtained through OAuth/OIDC are common</li>
           <li>Service-to-service credentials for private deployments</li>
         </ul>
       </div>
       <div class="card">
         <strong>Authorization</strong>
         <ul>
-          <li>Scopes/roles per skill (e.g., approval:write)</li>
+          <li>Scopes/roles per skill (for example, <code>approval:write</code>)</li>
           <li>Don’t let “any agent” call “any skill”</li>
         </ul>
       </div>
@@ -564,18 +825,57 @@
       Use allow-lists for which agents your concierge is permitted to hire,
       and limit which skills can be invoked based on policy.
     </div>
+
+    <h3>12.1 Discovery describes security; it does not issue credentials</h3>
+    <p>
+      <code>securitySchemes</code> describes supported mechanisms and
+      <code>securityRequirements</code> states which are required. The client
+      obtains credentials through the appropriate out-of-band OAuth, workload,
+      API-key, or certificate flow and transmits them through binding-specific
+      headers or metadata on every request. The agent authenticates and
+      authorizes each request; an Agent Card entry is not an access grant.
+    </p>
+
+    <h3>12.2 Authentication during a task is a state, not a credential envelope</h3>
+    <p>
+      If later work needs additional authorization, the agent may transition
+      the Task to <code>TASK_STATE_AUTH_REQUIRED</code> and explain the
+      requirement in its status Message. Credentials remain out of ordinary
+      Messages and Artifacts unless a separately negotiated extension defines
+      a protected in-band mechanism.
+    </p>
+
+    <h3>12.3 Push callbacks form a second trust boundary</h3>
+    <p>
+      A push notification endpoint is an inbound API. Use a high-entropy
+      callback URL or authenticated webhook token, validate the expected Task
+      ID, reject unknown senders, apply replay/idempotency controls, and return
+      a 2xx response only after durable acceptance. Delivery may be duplicated,
+      so handlers must be idempotent.
+    </p>
   </section>
 
   <section id="python">
-    <h2>13) Minimal Python implementation (server + concierge client)</h2>
+    <h2>13) Mechanics-first Python simulator (server + concierge client)</h2>
 
-    <p class="muted">
-      Below is a minimal educational implementation that captures the A2A ideas:
-      publish an AgentCard, accept task creation, track status, and return artifacts.
-      This is not a complete spec implementation, but it’s the fastest way to internalize how A2A “feels.”
+    <p>
+      Below is the original minimal educational implementation, retained
+      because writing the storage and routing mechanics by hand makes the
+      lifecycle concrete. It publishes a card, accepts delegated work, tracks
+      status, and returns an artifact.
     </p>
 
-    <h3>13.1 A2A-ish Specialist Agent Server (FastAPI)</h3>
+    <div class="tr-warn">
+      <strong>Boundary of the example</strong>
+      This FastAPI service is an <em>A2A-shaped simulator</em>, not a compliant
+      A2A 1.0 server: it uses the private endpoint
+      <code>POST /a2a/tasks</code> and omits binding-level version negotiation,
+      streaming events, formal error mappings, and several required fields.
+      Use an official or maintained A2A SDK for interoperability. The simulator
+      exists to expose the moving parts before the SDK hides them.
+    </div>
+
+    <h3>13.1 Specialist agent lifecycle simulator (FastAPI)</h3>
     <pre class="code"><code><span class="com"># inventory_agent.py</span>
 <span class="kw">from</span> <span class="typ">fastapi</span> <span class="kw">import</span> <span class="typ">FastAPI</span>, <span class="typ">HTTPException</span>
 <span class="kw">from</span> <span class="typ">pydantic</span> <span class="kw">import</span> <span class="typ">BaseModel</span>
@@ -588,23 +888,27 @@ TASKS <span class="op">=</span> {}
 
 <span class="kw">def</span> <span class="fn">agent_card</span>():
     <span class="kw">return</span> {
-        <span class="str">"name"</span>: <span class="str">"inventory-agent"</span>,
+        <span class="str">"name"</span>: <span class="str">"Inventory Agent"</span>,
+        <span class="str">"description"</span>: <span class="str">"Checks stock, price, and ETA for purchase requests."</span>,
+        <span class="str">"supportedInterfaces"</span>: [{
+            <span class="str">"url"</span>: <span class="str">"http://127.0.0.1:9101/a2a"</span>,
+            <span class="str">"protocolBinding"</span>: <span class="str">"HTTP+JSON"</span>,
+            <span class="str">"protocolVersion"</span>: <span class="str">"1.0"</span>,
+        }],
         <span class="str">"version"</span>: <span class="str">"1.0.0"</span>,
-        <span class="str">"description"</span>: <span class="str">"Checks stock/price/ETA for purchase requests."</span>,
-        <span class="str">"endpoint"</span>: <span class="str">"http://127.0.0.1:9101/a2a"</span>,
-        <span class="str">"auth"</span>: {<span class="str">"type"</span>: <span class="str">"none"</span>},
+        <span class="str">"capabilities"</span>: {
+            <span class="str">"streaming"</span>: <span class="kw">False</span>,
+            <span class="str">"pushNotifications"</span>: <span class="kw">False</span>,
+        },
+        <span class="str">"defaultInputModes"</span>: [<span class="str">"text/plain"</span>, <span class="str">"application/json"</span>],
+        <span class="str">"defaultOutputModes"</span>: [<span class="str">"application/json"</span>],
         <span class="str">"skills"</span>: [
             {
                 <span class="str">"id"</span>: <span class="str">"inventory.check"</span>,
-                <span class="str">"title"</span>: <span class="str">"Inventory Check"</span>,
-                <span class="str">"inputSchema"</span>: {
-                    <span class="str">"type"</span>: <span class="str">"object"</span>,
-                    <span class="str">"properties"</span>: {
-                        <span class="str">"item"</span>: {<span class="str">"type"</span>: <span class="str">"string"</span>},
-                        <span class="str">"quantity"</span>: {<span class="str">"type"</span>: <span class="str">"integer"</span>, <span class="str">"minimum"</span>: <span class="num">1</span>}
-                    },
-                    <span class="str">"required"</span>: [<span class="str">"item"</span>, <span class="str">"quantity"</span>]
-                }
+                <span class="str">"name"</span>: <span class="str">"Inventory Check"</span>,
+                <span class="str">"description"</span>: <span class="str">"Returns stock, price, ETA, and estimated total."</span>,
+                <span class="str">"tags"</span>: [<span class="str">"inventory"</span>, <span class="str">"pricing"</span>, <span class="str">"procurement"</span>],
+                <span class="str">"examples"</span>: [<span class="str">"Check availability for 20 keyboards."</span>],
             }
         ]
     }
@@ -629,7 +933,7 @@ TASKS <span class="op">=</span> {}
     item <span class="op">=</span> <span class="str">"unknown"</span>
     qty <span class="op">=</span> <span class="num">1</span>
     <span class="kw">for</span> part <span class="kw">in</span> body.message.<span class="fn">get</span>(<span class="str">"parts"</span>, []):
-        <span class="kw">if</span> part.<span class="fn">get</span>(<span class="str">"type"</span>) <span class="op">==</span> <span class="str">"data"</span>:
+        <span class="kw">if</span> <span class="str">"data"</span> <span class="kw">in</span> part:
             data <span class="op">=</span> part.<span class="fn">get</span>(<span class="str">"data"</span>, {})
             item <span class="op">=</span> data.<span class="fn">get</span>(<span class="str">"item"</span>, item)
             qty <span class="op">=</span> data.<span class="fn">get</span>(<span class="str">"quantity"</span>, qty)
@@ -641,21 +945,24 @@ TASKS <span class="op">=</span> {}
     total <span class="op">=</span> <span class="kw">float</span>(qty) <span class="op">*</span> unit_price
 
     TASKS[task_id] <span class="op">=</span> {
-        <span class="str">"taskId"</span>: task_id,
+        <span class="str">"id"</span>: task_id,
+        <span class="str">"contextId"</span>: <span class="str">"demo-purchase"</span>,
         <span class="str">"createdAt"</span>: time.<span class="fn">time</span>(),
-        <span class="str">"status"</span>: {<span class="str">"state"</span>: <span class="str">"succeeded"</span>},
+        <span class="str">"status"</span>: {<span class="str">"state"</span>: <span class="str">"TASK_STATE_COMPLETED"</span>},
         <span class="str">"artifacts"</span>: [{
-            <span class="str">"type"</span>: <span class="str">"data"</span>,
-            <span class="str">"name"</span>: <span class="str">"inventory_quote"</span>,
-            <span class="str">"data"</span>: {
-                <span class="str">"item"</span>: item,
-                <span class="str">"quantity"</span>: qty,
-                <span class="str">"available"</span>: available,
-                <span class="str">"backorderEtaDays"</span>: eta_days,
-                <span class="str">"unitPrice"</span>: unit_price,
-                <span class="str">"currency"</span>: <span class="str">"USD"</span>,
-                <span class="str">"estimatedTotal"</span>: total
-            }
+            <span class="str">"artifactId"</span>: <span class="str">f"artifact_{uuid.uuid4().hex[:8]}"</span>,
+            <span class="str">"name"</span>: <span class="str">"Inventory quote"</span>,
+            <span class="str">"parts"</span>: [{
+                <span class="str">"data"</span>: {
+                    <span class="str">"item"</span>: item,
+                    <span class="str">"quantity"</span>: qty,
+                    <span class="str">"available"</span>: available,
+                    <span class="str">"backorderEtaDays"</span>: eta_days,
+                    <span class="str">"unitPrice"</span>: unit_price,
+                    <span class="str">"currency"</span>: <span class="str">"USD"</span>,
+                    <span class="str">"estimatedTotal"</span>: total,
+                }
+            }]
         }]
     }
 
@@ -674,6 +981,7 @@ TASKS <span class="op">=</span> {}
 
     <h3>13.2 Concierge client: discover skills, create a task, read artifact</h3>
     <pre class="code"><code><span class="com"># concierge.py</span>
+<span class="kw">import</span> <span class="typ">uuid</span>
 <span class="kw">import</span> <span class="typ">requests</span>
 
 INVENTORY_BASE <span class="op">=</span> <span class="str">"http://127.0.0.1:9101"</span>
@@ -687,10 +995,11 @@ INVENTORY_BASE <span class="op">=</span> <span class="str">"http://127.0.0.1:910
     payload <span class="op">=</span> {
       <span class="str">"skillId"</span>: <span class="str">"inventory.check"</span>,
       <span class="str">"message"</span>: {
-        <span class="str">"role"</span>: <span class="str">"requester"</span>,
+        <span class="str">"role"</span>: <span class="str">"ROLE_USER"</span>,
+        <span class="str">"messageId"</span>: <span class="str">f"msg_{uuid.uuid4().hex[:8]}"</span>,
         <span class="str">"parts"</span>: [
-          {<span class="str">"type"</span>: <span class="str">"text"</span>, <span class="str">"text"</span>: <span class="str">f"Check availability and pricing for {qty} {item}s."</span>},
-          {<span class="str">"type"</span>: <span class="str">"data"</span>, <span class="str">"data"</span>: {<span class="str">"item"</span>: item, <span class="str">"quantity"</span>: qty}}
+          {<span class="str">"text"</span>: <span class="str">f"Check availability and pricing for {qty} {item}s."</span>},
+          {<span class="str">"data"</span>: {<span class="str">"item"</span>: item, <span class="str">"quantity"</span>: qty}}
         ]
       }
     }
@@ -704,13 +1013,14 @@ INVENTORY_BASE <span class="op">=</span> <span class="str">"http://127.0.0.1:910
 
     task <span class="op">=</span> create_inventory_task(INVENTORY_BASE, <span class="str">"keyboard"</span>, <span class="num">20</span>)
     <span class="kw">print</span>(<span class="str">"Task status:"</span>, task[<span class="str">"status"</span>][<span class="str">"state"</span>])
-    artifact <span class="op">=</span> task[<span class="str">"artifacts"</span>][<span class="num">0</span>][<span class="str">"data"</span>]
+    artifact <span class="op">=</span> task[<span class="str">"artifacts"</span>][<span class="num">0</span>][<span class="str">"parts"</span>][<span class="num">0</span>][<span class="str">"data"</span>]
     <span class="kw">print</span>(<span class="str">"Quote artifact:"</span>, artifact)</code></pre>
 
     <div class="callout ok">
       Even in this simplified demo, you can see the A2A “shape”:
       discover an agent (AgentCard), pick a skill, create a task, receive an artifact.
-      Expanding this to Approval + blocked/needs_input is a straightforward extension.
+      The next implementation increment is to add the approval agent and model
+      <code>TASK_STATE_INPUT_REQUIRED</code> before completion.
     </div>
   </section>
 
@@ -723,6 +1033,7 @@ INVENTORY_BASE <span class="op">=</span> <span class="str">"http://127.0.0.1:910
         <ul>
           <li>Task creation should be safe to retry (idempotency keys)</li>
           <li>Artifact writes should be append-only or versioned</li>
+          <li>Use unique Message IDs and deduplicate webhook deliveries</li>
         </ul>
       </div>
       <div class="card">
@@ -730,6 +1041,7 @@ INVENTORY_BASE <span class="op">=</span> <span class="str">"http://127.0.0.1:910
         <ul>
           <li>Use bounded retries with jitter</li>
           <li>Different timeouts for: card fetch, create task, poll task</li>
+          <li>Do not retry a non-idempotent operation without a stable key</li>
         </ul>
       </div>
       <div class="card">
@@ -737,6 +1049,7 @@ INVENTORY_BASE <span class="op">=</span> <span class="str">"http://127.0.0.1:910
         <ul>
           <li>Trace IDs per task and propagate them across agents</li>
           <li>Log skill invoked, caller identity, status transitions</li>
+          <li>Correlate <code>contextId</code>, <code>taskId</code>, and <code>messageId</code></li>
         </ul>
       </div>
       <div class="card">
@@ -745,6 +1058,7 @@ INVENTORY_BASE <span class="op">=</span> <span class="str">"http://127.0.0.1:910
           <li>Validate file references and URLs (SSRF defense)</li>
           <li>Keep AgentCards free of secrets</li>
           <li>Use allow-lists for which agents can be contacted</li>
+          <li>Honor <code>A2A-Version</code>; reject unsupported versions explicitly</li>
         </ul>
       </div>
     </div>
@@ -753,12 +1067,30 @@ INVENTORY_BASE <span class="op">=</span> <span class="str">"http://127.0.0.1:910
       The easiest multi-agent failures are “silent failure” and “infinite waiting.”
       Always implement: (1) clear status transitions, (2) timeouts, (3) explicit failure artifacts.
     </div>
+
+    <h3>14.1 Concurrency and terminal-state rules</h3>
+    <p>
+      Treat the Task store as a concurrent state machine. Use compare-and-set
+      or a transactional version column so two workers cannot both advance the
+      same Task from <code>WORKING</code> to conflicting outcomes. A terminal
+      Task must not return to a non-terminal state. Cancellation is a request
+      to stop: workers still need cooperative checks and resource cleanup.
+    </p>
+
+    <h3>14.2 Cache discovery, not authorization decisions</h3>
+    <p>
+      Agent Cards change relatively slowly and should use normal HTTP caching
+      with <code>Cache-Control</code>, <code>ETag</code>, and conditional
+      requests. Cache the card, but authenticate and authorize each task
+      operation independently. A cached declaration that a skill exists does
+      not prove the current caller may invoke it.
+    </p>
   </section>
 
   <div class="hr"></div>
 
   <section>
-    <h2>Summary (the 30-second version)</h2>
+    <h2>Summary: the complete mental model</h2>
     <div class="card">
       <ul>
         <li><strong>AgentCard</strong> enables discovery: who the agent is, what it can do, how to call it.</li>
@@ -766,11 +1098,21 @@ INVENTORY_BASE <span class="op">=</span> <span class="str">"http://127.0.0.1:910
         <li><strong>Tasks</strong> enable long-running collaboration: statuses, multi-turn messages, and deliverable artifacts.</li>
         <li><strong>Messages/Parts</strong> enable structured, multi-modality communication.</li>
         <li><strong>Artifacts</strong> are explicit outputs that downstream automation can reliably consume.</li>
+        <li><strong>Bindings</strong> change transport syntax, while the canonical Task/Message/Artifact model stays equivalent.</li>
+        <li><strong>Version and security</strong> are explicit on the boundary; agent autonomy does not bypass enterprise controls.</li>
       </ul>
     </div>
   </section>
 
-</main>
-  <script src="../assets/js/nav.js?v=20260522-book-cleanup"></script>
+  <h2>Official reference</h2>
+  <p>
+    Field names and lifecycle values in the normative examples follow the
+    <a href="https://a2a-protocol.org/latest/specification/">A2A 1.0 specification</a>.
+    Use the schema or an SDK for generated models rather than maintaining
+    duplicate hand-written protocol classes in production.
+  </p>
+
+</div>
+  <script src="../assets/js/nav.js?v=20260730-currency-final"></script>
 </body>
 </html>

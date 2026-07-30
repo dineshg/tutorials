@@ -1,22 +1,50 @@
 # Enterprise AI, Agents & Applied ML
 
-This is a practical tutorial book for enterprise AI delivery, backend platform
-engineering, agent protocols, applied machine learning, deep learning, LLM
-fine‑tuning, and alignment. The chapters are organized as a progressive path:
-start with the mental model, move through small examples, then scale toward
-production patterns.
+This repository contains a Docusaurus-based technical book covering enterprise
+AI delivery, backend platform engineering, agent protocols, applied machine
+learning, deep learning, LLM fine-tuning, and alignment. Chapters build from
+mental models and small examples toward production designs.
 
 📖 **Read it online:** <https://dineshg.github.io/tutorials/>
 
-> **Or open `index.html` in a browser** to read it locally. Every chapter
-> shares a fixed header, a left sidebar, breadcrumbs, and prev/next pagers.
+## Local development
 
-## Hosting (GitHub Pages)
+Node.js 20 or later is required.
 
-This repository is published as a static book using **GitHub Pages**. The
-workflow at `.github/workflows/pages.yml` deploys the entire repo (the
-HTML book) to Pages on every push to `main`. A `.nojekyll` file is
-included so Pages serves all asset paths verbatim (no Jekyll processing).
+```bash
+npm install
+npm start
+```
+
+The development site is served at
+<http://localhost:3000/tutorials/>. Create a production build with:
+
+```bash
+npm run build
+npm run serve
+```
+
+The generated static site is written to `build/`.
+
+## Content model
+
+The original semantic HTML chapters remain the canonical source. Running
+`npm run generate:book` converts them into Docusaurus MDX wrappers, builds the
+local search index, copies chapter media, and creates redirects for legacy
+URLs. This generation step also runs automatically before development and
+production builds.
+
+- Edit chapter content in the existing `part*/` HTML files.
+- Edit navigation metadata in `book-structure.mjs`.
+- Edit the global theme in `src/css/custom.css`.
+- Edit the chapter renderer in `src/components/BookArticle/`.
+- Do not edit generated files under `docs/` or `src/generated/` by hand.
+
+## GitHub Pages
+
+The workflow at `.github/workflows/pages.yml` installs dependencies with
+`npm ci`, builds the Docusaurus site, and publishes `build/` to GitHub Pages
+after every push to `main`.
 
 ## Structure
 
@@ -29,11 +57,10 @@ included so Pages serves all asset paths verbatim (no Jekyll processing).
 | V  | `part5-deep-learning-and-llms/`        | FFN, CNN, RNN, Transformers, fine‑tuning, alignment |
 | VI | `part6-appendices/`                    | Interview talk track, LaTeX print edition |
 
-## How a new learner should read this book
+## Recommended reading paths
 
 The parts are presented in the order an enterprise team usually meets them
-(delivery first), but a new learner should read them in a different order.
-The home page (`index.html`) lists explicit reading paths for:
+(delivery first), while the home page provides role-specific paths:
 
 - New ML learners (Part IV → V → III → II → I)
 - Backend / platform engineers learning AI (Part II → III → select V → I)
@@ -71,19 +98,6 @@ The home page (`index.html`) lists explicit reading paths for:
   reference material.
 - **Each Part landing page** includes a **Prerequisites** callout so a new
   reader knows what they should already know before starting.
-
-## Local viewing
-
-```bash
-cd /Users/dineshgamage/Developer/tutorial_refined
-python3 -m http.server 8080
-# then open http://localhost:8080/
-```
-
-The sidebar navigation (`assets/js/nav.js`) is injected at runtime, so
-opening `index.html` directly via `file://` also works in modern browsers.
-The Appendix A wrapper uses `fetch()` to load its markdown source, which
-requires HTTP — use the local server above if `file://` blocks the fetch.
 
 ## License / authorship
 

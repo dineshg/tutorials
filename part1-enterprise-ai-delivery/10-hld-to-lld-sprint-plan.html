@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>LLD + Sprint Planning Tutorial (AI Lead): Turn HLD into Buildable Work for a 5-Engineer Team</title>
-<link rel="stylesheet" href="../assets/css/book.css?v=20260517-figures-code2">
+  <title>LLD and Sprint Planning: Turn HLD into Buildable Work</title>
+<link rel="stylesheet" href="../assets/css/book.css?v=20260730-currency-final">
 </head>
 
 <body>
   <div class="container">
-    <h1>Step 3 Tutorial: Convert HLD into LLD Tasks + a Sprint-Ready Plan</h1>
+    <h1>Step 3: Convert HLD into LLD Tasks and a Sprint-Ready Plan</h1>
     <p class="lead">
       You have an approved (or conditionally approved) HLD for the <strong>Exec Document Q&amp;A (cited RAG)</strong> pilot.
       Now your job as AI Lead is to translate “boxes and arrows” into <strong>implementable stories</strong> with clear owners,
@@ -316,11 +316,11 @@
         Define DoD once and apply to every story. This prevents “works on my machine” delivery.
       </p>
       <ul>
-        <li>✅ Code merged with tests (unit + at least one integration test)</li>
-        <li>✅ Observability: logs/metrics/traces updated for the feature</li>
-        <li>✅ Security: tenant/corpus enforcement verified (test case included)</li>
-        <li>✅ Documentation: README snippet or runbook note updated</li>
-        <li>✅ Demoable: a curl/script or Postman request exists</li>
+        <li>Code merged with tests (unit + at least one integration test)</li>
+        <li>Observability: logs/metrics/traces updated for the feature</li>
+        <li>Security: tenant/corpus enforcement verified (test case included)</li>
+        <li>Documentation: README snippet or runbook note updated</li>
+        <li>Demoable: a curl/script or Postman request exists</li>
       </ul>
 
       <div class="ok">
@@ -328,11 +328,14 @@
       </div>
     </div>
 
-    <p class="footer-note">
-      If you want, I can produce a concrete backlog list (20–40 stories) with owners and acceptance criteria for Sprint 1 and Sprint 2
-      based on your exact GCP service choices (GKE, Cloud SQL, GCS, Pub/Sub/Tasks, Vertex AI Search or OpenSearch).
-    </p>
+    <div class="tr-note">
+      <strong>Backlog scale</strong>
+      A realistic first-two-sprint backlog contains roughly 20–40 stories with
+      owners and acceptance criteria spanning GKE, Cloud SQL, GCS,
+      Pub/Sub or Cloud Tasks, and the selected retrieval service
+      (Vertex AI Search or OpenSearch).
+    </div>
   </div>
-  <script src="../assets/js/nav.js?v=20260522-book-cleanup"></script>
+  <script src="../assets/js/nav.js?v=20260730-currency-final"></script>
 </body>
 </html>

@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Animated RNN Companion Lab: Words, Memory, Prediction, and Training</title>
+  <link rel="stylesheet" href="/tutorials/css/book.css?v=20260730-currency-final">
+  <link rel="stylesheet" href="/tutorials/css/rnn-animated-tutorial.css">
+  <script defer src="/tutorials/vendor/babylon/7.54.2/babylon.js"></script>
+  <script defer src="/tutorials/js/rnn-animated-tutorial.js"></script>
+</head>
+<body class="rnn-lesson-body">
+  <main class="rnn-lesson-shell">
+    <section class="rnn-stage" aria-label="Animated RNN lesson">
+      <canvas id="rnn-canvas" aria-label="3D animated recurrent neural network tutorial"></canvas>
+
+      <aside class="rnn-narration" aria-live="polite">
+        <div class="rnn-kicker">Interactive animation · Babylon.js</div>
+        <h1>Understanding the Recurrent Neural Network</h1>
+        <p class="rnn-subtitle">From words to memory to next-word prediction</p>
+
+        <div class="rnn-voice-card">
+          <div class="rnn-avatar" aria-hidden="true">M</div>
+          <div>
+            <strong>Maya, human-style narrator</strong>
+            <p>
+              Warm, patient, native-English classroom delivery. Recorded MP3 narration is used when generated files are available.
+            </p>
+            <p id="audio-status" class="rnn-audio-status">Recorded narration files are not loaded yet.</p>
+          </div>
+        </div>
+
+        <div class="rnn-progress">
+          <span id="scene-count">Scene 1 / 28</span>
+          <span id="scene-time">0:00</span>
+        </div>
+        <div class="rnn-progress-bar" aria-hidden="true"><span id="scene-progress"></span></div>
+
+        <h2 id="scene-title">Opening: what are we trying to do?</h2>
+        <p id="scene-caption">
+          We show a sequence one word at a time and ask the network to predict what comes next.
+        </p>
+        <p id="scene-narration" class="rnn-script">
+          Let’s build one of the simplest language models ever created: the Recurrent Neural Network, or RNN.
+        </p>
+
+        <div id="scene-equation" class="rnn-equation" hidden></div>
+
+        <div class="rnn-controls">
+          <button id="prev-scene" type="button" aria-label="Previous scene">Previous</button>
+          <button id="play-pause" type="button" aria-label="Play or pause animation">Play</button>
+          <button id="next-scene" type="button" aria-label="Next scene">Next</button>
+          <button id="voice-toggle" type="button" aria-label="Toggle recorded narration">Narration Off</button>
+        </div>
+
+        <label class="rnn-slider-label" for="scene-slider">
+          Scene timeline
+          <input id="scene-slider" type="range" min="0" max="27" value="0">
+        </label>
+
+        <div class="rnn-legend" aria-label="Animation color legend">
+          <span><i class="blue"></i> input / embeddings</span>
+          <span><i class="green"></i> hidden memory</span>
+          <span><i class="purple"></i> output prediction</span>
+          <span><i class="red"></i> loss / learning</span>
+        </div>
+      </aside>
+    </section>
+
+    <section class="rnn-notes wrap">
+      <p>
+        This interactive chapter is a companion to
+        <a href="/tutorials/part5-deep-learning-and-llms/10-recurrent-neural-networks">Chapter 10 — Recurrent Neural Networks</a>.
+        It uses a live 3D scene to make the RNN data flow physical: words become token IDs, IDs become embeddings,
+        embeddings enter a recurrent cell, hidden state carries memory, logits become probabilities, and loss flows backward
+        through time during training.
+      </p>
+      <p>
+        Use the scene slider for manual review. Generate MP3 narration with
+        <code>scripts/generate-rnn-narration-elevenlabs.mjs</code>, then turn narration on to sync the animation to recorded audio.
+        Captions remain available when audio files are not present.
+      </p>
+    </section>
+  </main>
+</body>
+</html>

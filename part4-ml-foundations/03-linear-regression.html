@@ -8,12 +8,12 @@
         <!-- KaTeX (equation rendering) -->
         <link
             rel="stylesheet"
-            href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"
+            href="https://cdn.jsdelivr.net/npm/katex@0.18.1/dist/katex.min.css"
         />
-        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.18.1/dist/katex.min.js"></script>
         <script
             defer
-            src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+            src="https://cdn.jsdelivr.net/npm/katex@0.18.1/dist/contrib/auto-render.min.js"
         ></script><script>
             document.addEventListener("DOMContentLoaded", () => {
                 if (typeof renderMathInElement !== "function") return;
@@ -122,7 +122,7 @@
             });
         </script>
 
-<link rel="stylesheet" href="../assets/css/book.css?v=20260517-figures-code2">
+<link rel="stylesheet" href="../assets/css/book.css?v=20260730-currency-final">
 </head>
 
     <body>
@@ -131,7 +131,7 @@
                 <div class="card__topbar" aria-hidden="true"></div>
 
                 <header>
-                    <div class="kicker">Chapter 2 • Linear Regression</div>
+                    <div class="kicker">Chapter 3 • Linear Regression</div>
                     <h1>Linear Regression and Training in PyTorch</h1>
                     <p class="subtitle">
                         We’ll connect the math of linear regression to a working PyTorch training loop, keeping
@@ -354,25 +354,25 @@ optimizer = optim.SGD(model.parameters(), lr=learning_rate)</code></pre>
                         <p>A typical training loop for simple linear regression looks like this:</p>
                         <pre><code class="language-python">num_epochs = 1000
 
-            for epoch in range(num_epochs):
-                    # 1. Zero out previous gradients
-                    optimizer.zero_grad()
+for epoch in range(num_epochs):
+    # 1. Zero out previous gradients
+    optimizer.zero_grad()
 
-                    # 2. Forward pass: compute predictions
-                    y_pred = model(x)
+    # 2. Forward pass: compute predictions
+    y_pred = model(x)
 
-                    # 3. Compute the loss
-                    loss = criterion(y_pred, y)
+    # 3. Compute the loss
+    loss = criterion(y_pred, y)
 
-                    # 4. Backward pass: compute gradients dL/dm and dL/db
-                    loss.backward()
+    # 4. Backward pass: compute gradients dL/dm and dL/db
+    loss.backward()
 
-                    # 5. Update parameters using the optimizer
-                    optimizer.step()
+    # 5. Update parameters using the optimizer
+    optimizer.step()
 
-                    # (Optional) monitor progress
-                    if (epoch + 1) % 100 == 0:
-                            print(f"Epoch {epoch + 1}, Loss = {loss.item():.4f}")</code></pre>
+    # (Optional) monitor progress
+    if (epoch + 1) % 100 == 0:
+        print(f"Epoch {epoch + 1}, Loss = {loss.item():.4f}")</code></pre>
 
                         <p>The mapping to the math is direct:</p>
                         <ul>
@@ -444,6 +444,6 @@ y_pred_np = y_pred.detach().numpy()</code></pre>
                 <div class="footer">Deep Learning with PyTorch • Linear Regression</div>
             </article>
         </div>
-      <script src="../assets/js/nav.js?v=20260522-book-cleanup"></script>
+      <script src="../assets/js/nav.js?v=20260730-currency-final"></script>
 </body>
 </html>

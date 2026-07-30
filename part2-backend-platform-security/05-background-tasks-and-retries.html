@@ -1,179 +1,441 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Background Tasks & Retries in FastAPI</title>
-<link rel="stylesheet" href="../assets/css/book.css?v=20260517-figures-code2">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Background Jobs, Idempotency, and Retries in FastAPI</title>
+  <link rel="stylesheet" href="../assets/css/book.css?v=20260730-currency-final" />
 </head>
 <body>
 
-    <h1>Background Tasks & Retries in FastAPI</h1>
-    
-    <div class="note">
-        Next step tutorial: Background tasks + retries in FastAPI (with your multi-tenant "ingest" example)
-    </div>
+<h1>Background Jobs, Idempotency, and Retries in FastAPI</h1>
 
-    <h2>What You're Trying to Achieve</h2>
-    
-    <p>In your app, some operations (like document ingestion) take time. You don't want the user to wait for extraction/embedding/indexing inside the HTTP request. So you:</p>
-    
-    <ol>
-        <li>Accept a request quickly (<code>POST /ingest</code>)</li>
-        <li>Return immediately with a <code>job_id</code></li>
-        <li>Run the heavy work in a background task</li>
-        <li>Make it safe if the client retries (using <code>Idempotency-Key</code>)</li>
-        <li>Add server-side retries for flaky dependencies inside the job</li>
-    </ol>
+<p class="lead">The concurrency chapter kept independent HTTP requests from
+blocking one another. This chapter handles a different problem: work that
+should outlive the request itself. We will move document ingestion into a job,
+make job creation safe to retry, retry only transient downstream failures, and
+preserve tenant identity from submission through completion.</p>
 
-    <hr>
+<div class="tr-note">
+  <strong>The target interaction</strong>
+  <code>POST /ingest</code> accepts work quickly and returns
+  <code>202 Accepted</code> with a <code>job_id</code>. A worker performs the
+  expensive extraction, embedding, and indexing. The client polls
+  <code>GET /jobs/{job_id}</code> or receives a notification later.
+</div>
 
-    <div class="part-header">Part A — Background tasks: do work after the response</div>
+<h2>1) Why slow work should not run inside the request</h2>
 
-    <h3>1) The endpoint returns immediately</h3>
+<p>A normal HTTP request has a limited time budget. A reverse proxy, load
+balancer, browser, or mobile client may time out even though the server is
+still extracting a document. If the client retries, the server may start the
+same expensive operation twice.</p>
 
-    <pre><code><span style="color: #0000ff;">from</span> fastapi <span style="color: #0000ff;">import</span> FastAPI, BackgroundTasks, Depends, Header, HTTPException
-<span style="color: #0000ff;">from</span> pydantic <span style="color: #0000ff;">import</span> BaseModel
-<span style="color: #0000ff;">import</span> uuid
-<span style="color: #0000ff;">import</span> time
+<p>Document ingestion is a good running example because it usually contains
+several independently fallible steps:</p>
+
+<ol>
+  <li>Persist the upload or object reference.</li>
+  <li>Extract and normalize text.</li>
+  <li>Split text into chunks.</li>
+  <li>Call an embedding service.</li>
+  <li>Write vectors and metadata to an index.</li>
+  <li>Mark the document ready for retrieval.</li>
+</ol>
+
+<p>The request should record the intent to perform those steps, not remain open
+until every step finishes.</p>
+
+<div class="figure-card">
+  <h3>Visual: request lifecycle and job lifecycle are different</h3>
+  <svg class="viz" viewBox="0 0 980 290" role="img" aria-label="HTTP request creates a durable job processed by a worker">
+    <defs>
+      <marker id="job-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+        <path d="M0 0 L10 5 L0 10 z" class="accentFill" />
+      </marker>
+      <marker id="job-arrow-purple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+        <path d="M0 0 L10 5 L0 10 z" class="accent2Fill" />
+      </marker>
+    </defs>
+
+    <rect x="22" y="74" width="150" height="94" rx="14" class="box2" />
+    <text x="97" y="110" text-anchor="middle" class="title">Client</text>
+    <text x="97" y="138" text-anchor="middle" class="muted">POST /ingest</text>
+
+    <rect x="232" y="74" width="180" height="94" rx="14" class="box" />
+    <text x="322" y="110" text-anchor="middle" class="title">FastAPI</text>
+    <text x="322" y="138" text-anchor="middle" class="muted">validate + enqueue</text>
+
+    <rect x="472" y="32" width="190" height="94" rx="14" class="box2" />
+    <text x="567" y="68" text-anchor="middle" class="title">Job store / queue</text>
+    <text x="567" y="96" text-anchor="middle" class="muted">queued, attempt 0</text>
+
+    <rect x="722" y="32" width="230" height="94" rx="14" class="box" />
+    <text x="837" y="68" text-anchor="middle" class="title">Worker</text>
+    <text x="837" y="96" text-anchor="middle" class="muted">extract → embed → index</text>
+
+    <rect x="472" y="184" width="190" height="76" rx="14" class="box2" />
+    <text x="567" y="216" text-anchor="middle" class="title">Job status</text>
+    <text x="567" y="242" text-anchor="middle" class="muted">succeeded / failed</text>
+
+    <line x1="172" y1="121" x2="232" y2="121" class="accent" stroke-width="2" marker-end="url(#job-arrow)" />
+    <line x1="412" y1="102" x2="472" y2="82" class="accent" stroke-width="2" marker-end="url(#job-arrow)" />
+    <line x1="662" y1="79" x2="722" y2="79" class="accent2" stroke-width="2" marker-end="url(#job-arrow-purple)" />
+    <path d="M837 126 C820 190 720 222 662 222" class="accent2" stroke-width="2" marker-end="url(#job-arrow-purple)" />
+    <path d="M232 142 C188 206 132 212 96 168" class="accent" stroke-width="2" marker-end="url(#job-arrow)" />
+
+    <text x="322" y="58" text-anchor="middle" class="muted">persist atomically</text>
+    <text x="164" y="230" text-anchor="middle" class="muted">202 + job_id immediately</text>
+  </svg>
+</div>
+
+<h2>2) Separate best-effort background callbacks from durable jobs</h2>
+
+<p>FastAPI's <code>BackgroundTasks</code> schedules a callable after the
+response is sent. It is useful for short, non-critical work such as a small
+audit write or cache cleanup when losing that work is acceptable.</p>
+
+<p>It is not a durable queue. The callback runs in the application process. A
+restart, deployment, crash, autoscaling event, or process termination can lose
+the task. Long callbacks also consume the same application's resources.</p>
+
+<table>
+  <thead>
+    <tr><th>Work type</th><th>Appropriate mechanism</th><th>Reason</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Short, best-effort action after a response</td><td>FastAPI <code>BackgroundTasks</code></td><td>Simple and local; loss is acceptable.</td></tr>
+    <tr><td>Document ingestion, email delivery, webhook, media processing</td><td>Durable queue plus worker</td><td>Survives restarts and supports retries, visibility, and dead-letter handling.</td></tr>
+    <tr><td>Multi-step workflow with waits or compensation</td><td>Workflow engine or orchestrator</td><td>Persists step state and long-running control flow.</td></tr>
+    <tr><td>Periodic work</td><td>Scheduler that enqueues a durable job</td><td>Separates schedule ownership from execution.</td></tr>
+  </tbody>
+</table>
+
+<p>Cloud Tasks, Pub/Sub with a subscriber, Celery or RQ with a durable broker,
+and managed workflow services are common choices. The exact product matters
+less than the guarantees you require: persistence, delivery semantics, retry
+policy, visibility timeout or lease, concurrency control, and a dead-letter
+path.</p>
+
+<h2>3) First implementation: see the complete interaction with <code>BackgroundTasks</code></h2>
+
+<p>The following in-memory version is deliberately small. It demonstrates the
+HTTP contract, idempotency key, identity propagation, and state transitions.
+The production section immediately afterward replaces its unsafe storage
+assumptions.</p>
+
+<pre><code class="language-python">from threading import Lock
+from typing import Annotated, Literal
+from uuid import uuid4
+import time
+
+from fastapi import BackgroundTasks, Depends, FastAPI, Header, HTTPException, status
+from pydantic import BaseModel, Field
 
 app = FastAPI()
 
-    <span style="color: #008000;"># --- teaching identity (production: verified JWT/Bearer dependency) ---</span>
-<span style="color: #0000ff;">class</span> <span style="color: #2b91af;">Identity</span>(BaseModel):
+class Identity(BaseModel):
     tenant_id: str
     user_id: str
 
-<span style="color: #0000ff;">def</span> <span style="color: #795e26;">get_identity</span>() -&gt; Identity:
-    <span style="color: #008000;"># production: verify Bearer token and derive tenant/user from claims</span>
-    <span style="color: #0000ff;">return</span> Identity(tenant_id=<span style="color: #a31515;">"tenant-acme"</span>, user_id=<span style="color: #a31515;">"user-123"</span>)
+def get_identity() -> Identity:
+    # Teaching stand-in. Production verifies a bearer token and maps claims.
+    return Identity(tenant_id="tenant-acme", user_id="user-123")
 
-    <span style="color: #008000;"># --- teaching in-memory stores (production: database + durable queue) ---</span>
-JOBS: dict[str, dict] = {}               <span style="color: #008000;"># job_id -> {tenant_id,user_id,status}</span>
-IDEMPOTENCY: dict[str, dict] = {}        <span style="color: #008000;"># (tenant_id, idem_key) -> response</span>
+class IngestRequest(BaseModel):
+    document_uri: str
 
-<span style="color: #0000ff;">class</span> <span style="color: #2b91af;">IngestResponse</span>(BaseModel):
+class IngestResponse(BaseModel):
     job_id: str
-    status: str
+    status: Literal["queued"]
 
-<span style="color: #0000ff;">def</span> <span style="color: #795e26;">ingest_job</span>(job_id: str):
-    <span style="color: #008000;"># runs after response</span>
-    JOBS[job_id][<span style="color: #a31515;">"status"</span>] = <span style="color: #a31515;">"running"</span>
-    time.sleep(<span style="color: #098658;">2</span>)  <span style="color: #008000;"># pretend long work</span>
-    JOBS[job_id][<span style="color: #a31515;">"status"</span>] = <span style="color: #a31515;">"done"</span>
+class JobView(BaseModel):
+    job_id: str
+    document_uri: str
+    status: Literal["queued", "running", "succeeded", "failed"]
+    error: str | None = None
 
-@app.post(<span style="color: #a31515;">"/ingest"</span>, response_model=IngestResponse)
-<span style="color: #0000ff;">def</span> <span style="color: #795e26;">ingest</span>(
+# Teaching-only process memory. Production uses a database + durable queue.
+JOBS: dict[str, dict] = {}
+IDEMPOTENCY: dict[tuple[str, str], IngestResponse] = {}
+STORE_LOCK = Lock()
+
+def ingest_job(job_id: str) -> None:
+    try:
+        JOBS[job_id]["status"] = "running"
+        time.sleep(2)  # stand-in for extract -> embed -> index
+        JOBS[job_id]["status"] = "succeeded"
+    except Exception as exc:
+        JOBS[job_id]["status"] = "failed"
+        JOBS[job_id]["error"] = str(exc)
+
+@app.post(
+    "/ingest",
+    response_model=IngestResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+def ingest(
+    payload: IngestRequest,
     background: BackgroundTasks,
-    ident: Identity = Depends(get_identity),
-    idempotency_key: str | <span style="color: #0000ff;">None</span> = Header(<span style="color: #0000ff;">None</span>, alias=<span style="color: #a31515;">"Idempotency-Key"</span>),
-):
-    <span style="color: #0000ff;">if</span> <span style="color: #0000ff;">not</span> idempotency_key:
-        <span style="color: #0000ff;">raise</span> HTTPException(status_code=<span style="color: #098658;">400</span>, detail=<span style="color: #a31515;">"Missing Idempotency-Key"</span>)
+    identity: Annotated[Identity, Depends(get_identity)],
+    idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
+) -> IngestResponse:
+    store_key = (identity.tenant_id, idempotency_key)
 
-    idem_store_key = <span style="color: #a31515;">f"<span style="color: #000;">{ident.tenant_id}</span>:<span style="color: #000;">{idempotency_key}</span>"</span>
+    # The lock makes the teaching store's check-and-create atomic in one process.
+    with STORE_LOCK:
+        if previous := IDEMPOTENCY.get(store_key):
+            return previous
 
-    <span style="color: #008000;"># if client retries, return the original response</span>
-    <span style="color: #0000ff;">if</span> idem_store_key <span style="color: #0000ff;">in</span> IDEMPOTENCY:
-        <span style="color: #0000ff;">return</span> IDEMPOTENCY[idem_store_key]
+        job_id = str(uuid4())
+        response = IngestResponse(job_id=job_id, status="queued")
 
-    job_id = str(uuid.uuid4())
-    JOBS[job_id] = {<span style="color: #a31515;">"tenant_id"</span>: ident.tenant_id, <span style="color: #a31515;">"user_id"</span>: ident.user_id, <span style="color: #a31515;">"status"</span>: <span style="color: #a31515;">"queued"</span>}
+        JOBS[job_id] = {
+            "job_id": job_id,
+            "tenant_id": identity.tenant_id,
+            "user_id": identity.user_id,
+            "document_uri": payload.document_uri,
+            "status": "queued",
+            "error": None,
+        }
+        IDEMPOTENCY[store_key] = response
 
-    response = {<span style="color: #a31515;">"job_id"</span>: job_id, <span style="color: #a31515;">"status"</span>: <span style="color: #a31515;">"queued"</span>}
-    IDEMPOTENCY[idem_store_key] = response
-
-    <span style="color: #008000;"># schedule work after response</span>
     background.add_task(ingest_job, job_id)
+    return response</code></pre>
 
-	    <span style="color: #0000ff;">return</span> response</code></pre>
+<p>The client supplies the same idempotency key every time it retries the same
+logical submission:</p>
 
-    <p class="highlight-box"><strong>Industry standard:</strong> FastAPI <code>BackgroundTasks</code> is fine for short best-effort work inside the same process. For ingestion, emails, document processing, retries, or anything that must survive a restart, put the job in a durable queue such as Cloud Tasks, Pub/Sub, Celery/RQ backed by Redis, or a managed workflow service, and persist job state in the database.</p>
-
-    <h3>How the client calls it (retry-safe)</h3>
-
-    <pre><code>POST /ingest HTTP/1.1
-Authorization: Bearer &lt;token&gt;
+<pre><code class="language-http">POST /ingest HTTP/1.1
+Host: api.example.com
+Authorization: Bearer &lt;access-token&gt;
 Idempotency-Key: 9c2f9f2f-9bd8-4d1e-8b45-4a338f89f9a0
 Content-Type: application/json
 
-{}</code></pre>
+{"document_uri": "gs://tenant-acme/inbox/report.pdf"}</code></pre>
 
-    <div class="highlight-box">
-        <strong>Key point:</strong> If the request times out and the client retries with the same <code>Idempotency-Key</code>, it gets the same <code>job_id</code>, not a duplicate job.
-    </div>
+<pre><code class="language-http">HTTP/1.1 202 Accepted
+Content-Type: application/json
+Location: /jobs/b6d0b2e4-3fbd-4ab7-87fb-02f911c4c21e
 
-    <hr>
+{"job_id": "b6d0b2e4-3fbd-4ab7-87fb-02f911c4c21e", "status": "queued"}</code></pre>
 
-    <div class="part-header">Part B — Retries: handle flaky downstream calls</div>
+<div class="tr-warn">
+  <strong>Concurrency detail:</strong> “look up the key, then insert” must be one
+  atomic operation. A Python dictionary and lock only protect one teaching
+  process. In production, enforce a database unique constraint on a key such as
+  <code>(tenant_id, operation, idempotency_key)</code> and commit the
+  idempotency record with the job record in one transaction.
+</div>
 
-    <p>In ingestion you'll call services that may transiently fail (network hiccups, 429, 503). You add retries inside the background job, not by rerunning the whole HTTP request.</p>
+<h2>4) Return job state without crossing tenant boundaries</h2>
 
-    <h3>2) Add a small retry helper (with backoff)</h3>
+<p>A <code>job_id</code> is an identifier, not authorization. Every status read,
+cancel operation, artifact download, and retry must check the tenant from the
+verified request identity against the tenant stored on the job.</p>
 
-    <pre><code><span style="color: #0000ff;">import</span> time
-<span style="color: #0000ff;">import</span> random
+<pre><code class="language-python">@app.get("/jobs/{job_id}", response_model=JobView)
+def get_job(
+    job_id: str,
+    identity: Annotated[Identity, Depends(get_identity)],
+) -> JobView:
+    job = JOBS.get(job_id)
 
-<span style="color: #0000ff;">class</span> <span style="color: #2b91af;">TransientError</span>(Exception):
-    <span style="color: #0000ff;">pass</span>
+    # Returning 404 for both cases avoids revealing another tenant's job IDs.
+    if job is None or job["tenant_id"] != identity.tenant_id:
+        raise HTTPException(status_code=404, detail="Job not found")
 
-<span style="color: #0000ff;">def</span> <span style="color: #795e26;">retry</span>(fn, attempts: int = <span style="color: #098658;">3</span>, base_delay: float = <span style="color: #098658;">0.25</span>):
-    last = <span style="color: #0000ff;">None</span>
-    <span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span> range(attempts):
-        <span style="color: #0000ff;">try</span>:
-            <span style="color: #0000ff;">return</span> fn()
-        <span style="color: #0000ff;">except</span> TransientError <span style="color: #0000ff;">as</span> e:
-            last = e
-            time.sleep(base_delay * (<span style="color: #098658;">2</span> ** i))  <span style="color: #008000;"># 0.25, 0.5, 1.0...</span>
-    <span style="color: #0000ff;">raise</span> last</code></pre>
+    return JobView.model_validate(job)</code></pre>
 
-    <h3>3) Use retries in the background ingestion job</h3>
+<p>For user-owned jobs, add a <code>user_id</code> check too. For shared
+tenant jobs, authorize by role or permission. The worker must also scope every
+database read, object-store path, vector-index namespace, and emitted event
+using the job's persisted tenant context.</p>
 
-    <pre><code><span style="color: #0000ff;">def</span> <span style="color: #795e26;">call_elasticsearch_index</span>():
-    <span style="color: #008000;"># pretend random transient failure</span>
-    <span style="color: #0000ff;">if</span> random.random() &lt; <span style="color: #098658;">0.4</span>:
-        <span style="color: #0000ff;">raise</span> TransientError(<span style="color: #a31515;">"ES 503"</span>)
-    <span style="color: #0000ff;">return</span> <span style="color: #0000ff;">True</span>
+<h2>5) Idempotency means one logical effect, not merely one HTTP response</h2>
 
-<span style="color: #0000ff;">def</span> <span style="color: #795e26;">call_embedding_service</span>():
-    <span style="color: #0000ff;">if</span> random.random() &lt; <span style="color: #098658;">0.4</span>:
-        <span style="color: #0000ff;">raise</span> TransientError(<span style="color: #a31515;">"Embedding timeout"</span>)
-    <span style="color: #0000ff;">return</span> <span style="color: #0000ff;">True</span>
+<p>An idempotency record should normally retain:</p>
 
-<span style="color: #0000ff;">def</span> <span style="color: #795e26;">ingest_job</span>(job_id: str):
-    JOBS[job_id][<span style="color: #a31515;">"status"</span>] = <span style="color: #a31515;">"running"</span>
+<ul>
+  <li>tenant or principal scope;</li>
+  <li>operation name and idempotency key;</li>
+  <li>a hash of the normalized request payload;</li>
+  <li>the created resource or job ID;</li>
+  <li>the original status code and response body;</li>
+  <li>creation time, expiry policy, and processing state.</li>
+</ul>
 
-    <span style="color: #008000;"># retry flaky steps</span>
-    retry(call_elasticsearch_index, attempts=<span style="color: #098658;">3</span>)
-    retry(call_embedding_service, attempts=<span style="color: #098658;">3</span>)
+<p>If the same key arrives with a different payload hash, reject it with a
+conflict rather than silently returning an unrelated response. Keep the
+retention period at least as long as the maximum client retry window.</p>
 
-    JOBS[job_id][<span style="color: #a31515;">"status"</span>] = <span style="color: #a31515;">"done"</span></code></pre>
+<div class="tr-note">
+  <strong>Delivery semantics</strong>
+  Most practical queues are <em>at least once</em>: a worker may receive the
+  same message more than once. “Exactly once” business behavior is therefore
+  built from idempotent consumers, unique constraints, conditional writes, and
+  deduplication, not from assuming the queue will never redeliver.
+</div>
 
-    <hr>
+<h2>6) Retry only failures that can plausibly succeed later</h2>
 
-    <div class="part-header">Part C — Multi-tenant isolation (what to remember)</div>
+<p>Retries help transient faults such as timeouts, connection resets, rate
+limits, and temporary service unavailability. They make permanent faults worse
+by adding latency and load.</p>
 
-    <p>Notice we stored tenant/user on the job:</p>
+<table>
+  <thead><tr><th>Failure</th><th>Retry?</th><th>Typical handling</th></tr></thead>
+  <tbody>
+    <tr><td>Timeout, connection reset, HTTP 502/503/504</td><td>Usually</td><td>Bounded exponential backoff with jitter.</td></tr>
+    <tr><td>HTTP 429</td><td>Usually</td><td>Respect <code>Retry-After</code>; apply rate limiting.</td></tr>
+    <tr><td>HTTP 401</td><td>Only after credential refresh</td><td>Refresh once; repeated 401 is permanent for this attempt.</td></tr>
+    <tr><td>HTTP 403</td><td>No</td><td>Fix authorization or policy.</td></tr>
+    <tr><td>HTTP 400/422 or schema validation error</td><td>No</td><td>Correct the request or quarantine the message.</td></tr>
+    <tr><td>Not found</td><td>Context dependent</td><td>Retry only when eventual consistency is expected and bounded.</td></tr>
+  </tbody>
+</table>
 
-    <pre><code>JOBS[job_id] = {<span style="color: #a31515;">"tenant_id"</span>: ident.tenant_id, <span style="color: #a31515;">"user_id"</span>: ident.user_id, ...}</code></pre>
+<h3>A small retry helper with exponential backoff and jitter</h3>
 
-    <div class="highlight-box">
-        <strong>The rule:</strong> Every job and every downstream action must carry the tenant scope. Even in background work, you never run a job "without tenant context".
-    </div>
+<pre><code class="language-python">from collections.abc import Callable
+from random import uniform
+from time import sleep
+from typing import TypeVar
 
-    <hr>
+T = TypeVar("T")
 
-    <div class="summary-box">
-        <h3>📚 Summary (what you learned)</h3>
-        <ul>
-            <li><code>BackgroundTasks</code> let you respond fast and do best-effort work after the response.</li>
-            <li>Retries belong inside your outbound calls (ES/LLM/etc.), not by re-running unsafe POSTs.</li>
-            <li><code>Idempotency-Key</code> makes POST safe to retry from the client.</li>
-            <li>Tenant/user identity should be attached to jobs and used everywhere.</li>
-        </ul>
-        <p style="margin-bottom: 0;"><em>Next step:</em> Add a <code>GET /jobs/{job_id}</code> endpoint that only lets the same <code>tenant_id</code> read the job status (multi-tenant-safe job polling).</p>
-    </div>
+class TransientError(Exception):
+    pass
 
-  <script src="../assets/js/nav.js?v=20260522-book-cleanup"></script>
+def retry_transient(
+    operation: Callable[[], T],
+    *,
+    attempts: int = 4,
+    base_delay: float = 0.25,
+    max_delay: float = 4.0,
+) -> T:
+    last_error: TransientError | None = None
+
+    for attempt in range(attempts):
+        try:
+            return operation()
+        except TransientError as exc:
+            last_error = exc
+            if attempt == attempts - 1:
+                break
+
+            cap = min(max_delay, base_delay * (2 ** attempt))
+            sleep(uniform(0, cap))  # full jitter prevents synchronized retries
+
+    assert last_error is not None
+    raise last_error</code></pre>
+
+<p>A production HTTP client library or queue normally provides retry hooks.
+Use those rather than maintaining a general retry framework yourself, but keep
+the same policy questions explicit: which exceptions, how many attempts, what
+deadline, whether the operation is idempotent, and how <code>Retry-After</code>
+is handled.</p>
+
+<h2>7) Retry steps, not an opaque whole workflow</h2>
+
+<p>The original ingestion example called two flaky dependencies. Keep those
+steps independently observable and idempotent:</p>
+
+<pre><code class="language-python">def call_search_index(job: dict) -> None:
+    # Use a deterministic document ID so a retry overwrites/upserts,
+    # rather than creating duplicate indexed documents.
+    ...
+
+def call_embedding_service(job: dict) -> list[list[float]]:
+    # A pure request is safe to repeat; cache by content hash when useful.
+    ...
+
+def run_ingestion(job_id: str) -> None:
+    job = load_job(job_id)
+    mark_running(job_id)
+
+    try:
+        vectors = retry_transient(lambda: call_embedding_service(job))
+        retry_transient(lambda: call_search_index({**job, "vectors": vectors}))
+        mark_succeeded(job_id)
+    except TransientError as exc:
+        mark_failed(job_id, code="retries_exhausted", detail=str(exc))
+        raise</code></pre>
+
+<p>Checkpointing matters for expensive workflows. If extraction succeeded but
+indexing failed, a retry should resume at indexing when possible rather than
+repeat the upload and extraction. Store step state and immutable input
+references so a worker can reconstruct the attempt.</p>
+
+<h2>8) Durable production pattern: transaction, queue, worker</h2>
+
+<p>The central reliability problem is a dual write: what if the API commits the
+job row but crashes before publishing to the queue, or publishes to the queue
+but fails before committing the job row?</p>
+
+<p>The <strong>transactional outbox</strong> pattern solves this when the job
+database and broker cannot share one transaction:</p>
+
+<ol>
+  <li>In one database transaction, insert the job, idempotency record, and an outbox event.</li>
+  <li>Commit once.</li>
+  <li>A relay publishes unsent outbox rows to the queue.</li>
+  <li>After publish succeeds, mark the outbox row sent.</li>
+  <li>The worker consumes idempotently because relay or broker delivery can repeat.</li>
+</ol>
+
+<pre><code class="language-text">API transaction
+  ├─ jobs(job_id, tenant_id, status="queued", ...)
+  ├─ idempotency(tenant_id, key, request_hash, job_id, ...)
+  └─ outbox(event_id, type="ingest.requested", payload, sent_at=NULL)
+
+Outbox relay → durable queue → worker → status/artifacts</code></pre>
+
+<p>Some managed task queues let the API create the task directly with a
+deterministic task name and provide adequate deduplication for your use case.
+Document the chosen guarantee rather than assuming every queue behaves the
+same.</p>
+
+<h2>9) Failure, cancellation, and dead-letter handling</h2>
+
+<p>A job state machine should make terminal and non-terminal states explicit.
+A practical minimum is <code>queued</code>, <code>running</code>,
+<code>succeeded</code>, <code>failed</code>, and <code>canceled</code>. Add
+<code>retry_scheduled</code> or step-level states only when operators need
+them.</p>
+
+<ul>
+  <li>After retries are exhausted, move or route the message to a dead-letter queue and mark the job failed with a stable error code.</li>
+  <li>Make cancellation cooperative: set <code>cancel_requested</code> and let workers stop between safe steps.</li>
+  <li>Do not expose internal stack traces to clients; preserve them in restricted logs.</li>
+  <li>Define whether operators can replay a failed job and whether replay creates a new attempt or a new job.</li>
+  <li>Use a lease or visibility timeout so abandoned work can be redelivered after a worker crash.</li>
+</ul>
+
+<h2>10) Observability and operational controls</h2>
+
+<p>Every log, metric, and trace should carry <code>job_id</code>,
+<code>tenant_id</code>, attempt number, step name, and correlation or trace ID.
+Useful metrics include queue age, processing duration, retry count, success
+rate, dead-letter volume, and jobs stuck in a non-terminal state.</p>
+
+<div class="summary-box">
+  <h3>What to remember</h3>
+  <ul>
+    <li><code>BackgroundTasks</code> is for short best-effort callbacks, not durable ingestion.</li>
+    <li>Return <code>202 Accepted</code> and a job resource when work continues after the request.</li>
+    <li>Make the idempotency check and job creation atomic and tenant-scoped.</li>
+    <li>Assume at-least-once delivery and make workers and side effects idempotent.</li>
+    <li>Retry transient failures with bounded backoff and jitter; do not retry validation or authorization failures.</li>
+    <li>Persist tenant and user context on the job and re-authorize every status or artifact read.</li>
+    <li>Use an outbox or equivalent mechanism when database state and queue publication must agree.</li>
+  </ul>
+</div>
+
+<p class="footer-note">The next chapter begins the authentication sequence. It
+explains how the request identity persisted on a job is established through
+SSO, OAuth 2.0, and OpenID Connect.</p>
+
+<script src="../assets/js/nav.js?v=20260730-currency-final"></script>
 </body>
 </html>

@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
   <title>Part II — Backend, Platform &amp; Security</title>
-  <link rel="stylesheet" href="../assets/css/book.css?v=20260517-figures-code2" />
+  <link rel="stylesheet" href="../assets/css/book.css?v=20260730-currency-final" />
 </head>
 <body>
 
@@ -29,7 +29,7 @@ keeps the codebase shippable.</p>
 <div class="tr-note">
   <strong>Prerequisites</strong>
   Comfortable with Python 3, basic HTTP, and the command line. No prior
-  FastAPI knowledge required. The auth chapters (6–15) are theory + code
+  FastAPI knowledge required. The auth chapters (7–16) are theory + code
   and stand on their own; you do not need to read Part I first.
 </div>
 
@@ -39,17 +39,17 @@ keeps the codebase shippable.</p>
   <li><a href="02-http-methods.html">HTTP methods</a></li>
   <li><a href="03-fastapi-request-mapping.html">FastAPI request mapping</a></li>
   <li><a href="04-pydantic-data-models.html">Pydantic data models: classes, dataclasses, validation, settings, APIs, and LLM outputs</a></li>
-  <li><a href="04-concurrency-user-isolation.html">Concurrency &amp; user isolation</a></li>
+  <li><a href="04-concurrency-user-isolation.html">Concurrency, backpressure, and per-request isolation</a></li>
   <li><a href="05-background-tasks-and-retries.html">Background tasks &amp; retries</a></li>
   <li><a href="06-sso-oauth2-oidc-primer.html">SSO / OAuth2 / OIDC primer</a></li>
   <li><a href="07-oidc-oauth2-pkce-fastapi.html">OIDC + OAuth2 + PKCE in FastAPI</a></li>
-  <li><a href="08-registering-new-users.html">Registering new users</a></li>
+  <li><a href="08-registering-new-users.html">First login and user provisioning</a></li>
   <li><a href="09-authentication-deep-dive.html">Authentication deep dive</a></li>
   <li><a href="15-modern-auth-additions.html">Modern auth additions: Passkeys, DPoP, mTLS, token exchange</a></li>
   <li><a href="10-enduser-vs-workload-identity.html">End‑user vs workload identity</a></li>
   <li><a href="12-tenant-iam-ad-groups.html">Tenant isolation, IAM &amp; AD groups</a></li>
   <li><a href="11-gcp-workload-identity.html">GCP workload identity</a></li>
-  <li><a href="13-external-service-integration.html">External service integration</a></li>
+  <li><a href="13-external-service-integration.html">Cross-cloud service integration</a></li>
   <li><a href="14-github-governance.html">GitHub governance &amp; CI</a></li>
 </ol>
 
@@ -94,11 +94,11 @@ keeps the codebase shippable.</p>
     <tr>
       <td>External integration and governance</td>
       <td><a href="13-external-service-integration.html">Ch. 15</a> and <a href="14-github-governance.html">Ch. 16</a></td>
-      <td>Ch. 15 owns service-to-service integration patterns; Ch. 16 owns repository and CI enforcement.</td>
+      <td>Ch. 15 owns cross-cloud credentials, federation, HTTP reliability, and data-governance boundaries; Ch. 16 owns repository and CI enforcement.</td>
     </tr>
   </tbody>
 </table>
 
-<script src="../assets/js/nav.js?v=20260522-book-cleanup"></script>
+<script src="../assets/js/nav.js?v=20260730-currency-final"></script>
 </body>
 </html>

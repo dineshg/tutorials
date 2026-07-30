@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
   <title>Pydantic Data Models: From Python Classes to API Contracts</title>
-  <link rel="stylesheet" href="../assets/css/book.css?v=20260517-figures-code2" />
+  <link rel="stylesheet" href="../assets/css/book.css?v=20260730-currency-final" />
 </head>
 <body>
 
@@ -25,7 +25,311 @@ settings, and enforce structured LLM outputs.</p>
   converted into explicit Python objects before business logic touches it.
 </div>
 
-<h2>1) Why Pydantic Exists</h2>
+<h2>1) Start with Python Objects: Class Variables, Instance Variables, and <code>__init__</code></h2>
+
+<p>Before Pydantic makes sense, the reader needs a clear mental model of a
+normal Python object. A class is the blueprint. An instance is one concrete
+object built from that blueprint. Variables can live in either place, and that
+difference matters when you model API data.</p>
+
+<pre><code class="language-python">class User:
+    species = "human"          # class variable: shared by the class
+
+    def __init__(self, user_id: int, name: str):
+        self.user_id = user_id # instance variable: belongs to this object
+        self.name = name       # instance variable: belongs to this object
+
+alice = User(1, "Alice")
+bob = User(2, "Bob")
+
+print(alice.name)     # Alice
+print(bob.name)       # Bob
+print(User.species)   # human</code></pre>
+
+<p><code>__init__</code> is the initializer that runs after Python creates a
+new object. It is where ordinary classes usually copy constructor arguments
+onto <code>self</code>. In the example above, <code>alice.name</code> and
+<code>bob.name</code> are different because each instance has its own
+<code>name</code> attribute.</p>
+
+<div class="tr-note">
+  <strong>Precise wording:</strong> <code>__init__</code> creates or assigns
+  instance variables on <code>self</code>. A class variable belongs to the
+  class object itself and is shared by instances unless an instance overrides
+  that attribute with its own value.
+</div>
+
+<h3>Why class variables can surprise you</h3>
+
+<p>Class variables are useful for constants, shared configuration, registries,
+or metadata. They are dangerous when you accidentally use them for per-object
+state, especially with mutable values such as lists or dictionaries.</p>
+
+<pre><code class="language-python">class BadCart:
+    items: list[str] = []  # shared class-level list, not per-cart state
+
+cart_a = BadCart()
+cart_b = BadCart()
+
+cart_a.items.append("keyboard")
+print(cart_b.items)
+# ["keyboard"]  # cart_b sees cart_a's item because the list is shared</code></pre>
+
+<p>The correct plain-class version creates the mutable list inside
+<code>__init__</code>, so every instance gets its own list.</p>
+
+<pre><code class="language-python">class Cart:
+    def __init__(self):
+        self.items: list[str] = []
+
+cart_a = Cart()
+cart_b = Cart()
+
+cart_a.items.append("keyboard")
+print(cart_b.items)
+# []</code></pre>
+
+<h3>What <code>@classmethod</code> is actually for</h3>
+
+<p>A class method receives the class as <code>cls</code> instead of receiving
+one instance as <code>self</code>. It does not make class variables belong to
+an instance. It is most often used for alternate constructors, factories, and
+logic that should respect subclasses.</p>
+
+<pre><code class="language-python">class User:
+    default_active = True
+
+    def __init__(self, user_id: int, name: str, active: bool):
+        self.user_id = user_id
+        self.name = name
+        self.active = active
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "User":
+        active = data.get("active", cls.default_active)
+        if isinstance(active, str):
+            active = active.lower()
+            if active in {"true", "1", "yes"}:
+                active = True
+            elif active in {"false", "0", "no"}:
+                active = False
+            else:
+                raise ValueError("active must be true or false")
+
+        return cls(
+            user_id=int(data["user_id"]),
+            name=str(data["name"]),
+            active=active,
+        )
+
+user = User.from_dict({"user_id": "123", "name": "Alice"})
+print(user.active)
+# True</code></pre>
+
+<p>This example is already moving toward structured data modeling. We are manually doing
+conversion, defaults, and object construction inside <code>from_dict</code>.
+That works for tiny examples, but it becomes repetitive and error-prone when
+payloads are nested, fields are optional, constraints matter, error messages
+must be precise, and OpenAPI schema needs to be generated.</p>
+
+<h2>2) The Data Problem Before Pydantic</h2>
+
+<h3>JSON has fewer types than Python</h3>
+
+<p>JSON is the common language of HTTP APIs, browser clients, queues, config
+files, and many LLM tool calls. It has only a small set of data types:</p>
+
+<table>
+  <thead>
+    <tr><th>JSON type</th><th>Example</th><th>Python usually wants</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>string</td><td><code>"Alice"</code></td><td><code>str</code>, sometimes <code>datetime</code>, <code>EmailStr</code>, <code>UUID</code>, <code>Enum</code></td></tr>
+    <tr><td>number</td><td><code>30</code>, <code>19.99</code></td><td><code>int</code>, <code>float</code>, <code>Decimal</code></td></tr>
+    <tr><td>boolean</td><td><code>true</code>, <code>false</code></td><td><code>bool</code></td></tr>
+    <tr><td>null</td><td><code>null</code></td><td><code>None</code>, only if the field is nullable</td></tr>
+    <tr><td>array</td><td><code>["Python", "FastAPI"]</code></td><td><code>list[str]</code>, <code>tuple</code>, <code>set</code></td></tr>
+    <tr><td>object</td><td><code>{"city": "Sydney"}</code></td><td>nested model, typed dict, dictionary</td></tr>
+  </tbody>
+</table>
+
+<p>That mismatch explains why validation belongs at the API boundary. JSON does
+not know what a Python <code>datetime</code>, <code>UUID</code>, enum, or domain
+object is. Your code has to decide what to accept, what to convert, what to
+reject, and what error to return.</p>
+
+<h3>Plain Python classes hold data but do not validate input</h3>
+
+<pre><code class="language-python">class User:
+    def __init__(self, id: int, name: str, active: bool = True):
+        self.id = id
+        self.name = name
+        self.active = active
+
+user = User(id="123", name=42, active="yes")
+print(user.id, user.name, user.active)
+# "123" 42 "yes"   # type hints did not validate anything at runtime</code></pre>
+
+<p>Python type hints help editors, static type checkers, and humans. They do
+not automatically validate runtime values. Without extra code, the constructor
+accepts whatever the caller passes.</p>
+
+<h3>Manual validation quickly becomes repetitive</h3>
+
+<p>You can write validation yourself inside <code>__init__</code> or a
+<code>@classmethod</code> factory, but every model then needs its own parsing,
+conversion, defaults, error messages, and nested-object handling.</p>
+
+<pre><code class="language-python">class User:
+    def __init__(self, id: int, name: str, active: bool = True):
+        if not isinstance(id, int):
+            raise TypeError("id must be an integer")
+        if not isinstance(name, str):
+            raise TypeError("name must be a string")
+        if not isinstance(active, bool):
+            raise TypeError("active must be a boolean")
+
+        self.id = id
+        self.name = name
+        self.active = active
+
+    @classmethod
+    def from_json_dict(cls, data: dict) -> "User":
+        active = data.get("active", True)
+        if isinstance(active, str):
+            active = active.lower()
+            if active in {"true", "1", "yes"}:
+                active = True
+            elif active in {"false", "0", "no"}:
+                active = False
+            else:
+                raise ValueError("active must be true or false")
+
+        return cls(
+            id=int(data["id"]),
+            name=str(data["name"]),
+            active=active,
+        )</code></pre>
+
+<p>This is the bridge to Pydantic: the industry-standard version should keep
+the readable class shape, but make validation, conversion, error reporting,
+schema generation, and nested parsing consistent instead of hand-written in
+every constructor.</p>
+
+<h2>3) Dataclasses: The First Improvement</h2>
+
+<p>Python dataclasses are the natural next step after a hand-written
+<code>__init__</code>. They let you describe the data fields once, then Python
+generates the repetitive object methods for you.</p>
+
+<pre><code class="language-python">from dataclasses import dataclass, field
+
+@dataclass
+class User:
+    id: int
+    name: str
+    roles: list[str] = field(default_factory=list)
+
+user = User(id="123", name=42)
+print(user)
+# User(id='123', name=42, roles=[])</code></pre>
+
+<p>The annotation syntax looks similar to a Pydantic model, but at this stage
+it is still just Python dataclass machinery. The type hints define the fields
+used to generate methods; they do not automatically validate runtime values.</p>
+
+<table>
+  <thead>
+    <tr><th>Generated method</th><th>What the dataclass gives you</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>__init__</code></td><td>Creates an initializer with parameters for the declared fields.</td></tr>
+    <tr><td><code>__repr__</code></td><td>Returns a readable string representation such as <code>User(id=...)</code>.</td></tr>
+    <tr><td><code>__eq__</code></td><td>Compares two instances by field values.</td></tr>
+    <tr><td><code>__hash__</code></td><td>Generated only when the class is immutable/frozen enough to be hashable.</td></tr>
+    <tr><td><code>__post_init__</code></td><td>Optional hook that runs after <code>__init__</code> for extra setup or manual validation.</td></tr>
+  </tbody>
+</table>
+
+<h3>Class variables in dataclasses: use <code>ClassVar</code></h3>
+
+<p>If a value belongs to the class and should not be treated as an instance
+field, annotate it with <code>ClassVar</code>. This is how you keep constants
+or shared metadata out of the generated <code>__init__</code>.</p>
+
+<pre><code class="language-python">from dataclasses import dataclass
+from typing import ClassVar
+
+@dataclass
+class User:
+    species: ClassVar[str] = "Homo sapiens"  # not part of __init__
+    name: str
+    age: int
+
+user = User(name="Alice", age=30)
+print(user.species)
+# Homo sapiens</code></pre>
+
+<h3>Mutable defaults: use <code>default_factory</code></h3>
+
+<p>The same shared-mutable-value problem exists in dataclass-style modeling.
+If each instance should get its own list, dictionary, or set, create it with a
+factory.</p>
+
+<pre><code class="language-python">from dataclasses import dataclass, field
+
+@dataclass
+class Team:
+    members: list[str] = field(default_factory=list)
+
+team_a = Team()
+team_b = Team()
+
+team_a.members.append("Alice")
+print(team_a.members)  # ["Alice"]
+print(team_b.members)  # []</code></pre>
+
+<p>This is the same idea as avoiding mutable default arguments in functions:</p>
+
+<pre><code class="language-python">def add_name(name: str, names: list[str] = []):  # avoid this
+    names.append(name)
+    return names</code></pre>
+
+<p>The list is created once when the function is defined, not once per call.
+Dataclasses force you toward <code>default_factory</code> because per-instance
+state should be created per instance.</p>
+
+<h3>Dataclasses still do not validate input types</h3>
+
+<p>Dataclasses solve boilerplate, representation, equality, and mutable default
+setup, but they still do not validate types by default. <code>id="123"</code>
+and <code>name=42</code> are accepted because dataclasses are data containers,
+not runtime validators.</p>
+
+<p>You can add manual checks in <code>__post_init__</code>, but then you are
+back to writing custom validation logic for every class.</p>
+
+<pre><code class="language-python">from dataclasses import dataclass
+
+@dataclass
+class User:
+    id: int
+    name: str
+
+    def __post_init__(self):
+        if not isinstance(self.id, int):
+            raise TypeError("id must be an integer")
+        if not isinstance(self.name, str):
+            raise TypeError("name must be a string")</code></pre>
+
+<div class="tr-warning">
+  <strong>Industry distinction:</strong> use a dataclass when data is already
+  trusted and you want a lightweight internal container. Use Pydantic when data
+  crosses a boundary: HTTP request, queue event, file, environment variable,
+  third-party API response, database document, or LLM output.
+</div>
+
+<h2>4) Why Pydantic Exists</h2>
 
 <p>Most backend bugs at API boundaries are not caused by complicated algorithms.
 They are caused by ordinary shape mismatches:</p>
@@ -84,103 +388,17 @@ serialization, and integration hooks used by frameworks such as FastAPI.</p>
   </svg>
 </div>
 
-<h2>2) The Data Problem Before Pydantic</h2>
-
-<h3>JSON has fewer types than Python</h3>
-
-<p>JSON is the common language of HTTP APIs, browser clients, queues, config
-files, and many LLM tool calls. It has only a small set of data types:</p>
-
-<table>
-  <thead>
-    <tr><th>JSON type</th><th>Example</th><th>Python usually wants</th></tr>
-  </thead>
-  <tbody>
-    <tr><td>string</td><td><code>"Alice"</code></td><td><code>str</code>, sometimes <code>datetime</code>, <code>EmailStr</code>, <code>UUID</code>, <code>Enum</code></td></tr>
-    <tr><td>number</td><td><code>30</code>, <code>19.99</code></td><td><code>int</code>, <code>float</code>, <code>Decimal</code></td></tr>
-    <tr><td>boolean</td><td><code>true</code>, <code>false</code></td><td><code>bool</code></td></tr>
-    <tr><td>null</td><td><code>null</code></td><td><code>None</code>, only if the field is nullable</td></tr>
-    <tr><td>array</td><td><code>["Python", "FastAPI"]</code></td><td><code>list[str]</code>, <code>tuple</code>, <code>set</code></td></tr>
-    <tr><td>object</td><td><code>{"city": "Sydney"}</code></td><td>nested model, typed dict, dictionary</td></tr>
-  </tbody>
-</table>
-
-<p>That mismatch explains why validation belongs at the API boundary. JSON does
-not know what a Python <code>datetime</code>, <code>UUID</code>, enum, or domain
-object is. Your code has to decide what to accept, what to convert, what to
-reject, and what error to return.</p>
-
-<h3>Plain Python classes hold data but do not validate input</h3>
-
-<pre><code class="language-python">class User:
-    def __init__(self, id: int, name: str, active: bool = True):
-        self.id = id
-        self.name = name
-        self.active = active
-
-user = User(id="123", name=42, active="yes")
-print(user.id, user.name, user.active)
-# "123" 42 "yes"   # type hints did not validate anything at runtime</code></pre>
-
-<p>Python type hints help editors, static type checkers, and humans. They do
-not automatically validate runtime values. Without extra code, the constructor
-accepts whatever the caller passes.</p>
-
-<h3>Class variables are not instance fields</h3>
-
-<p>A common beginner mistake is trying to define a data shape with class
-attributes:</p>
-
-<pre><code class="language-python">class BadUser:
-    id: int
-    name: str
-    roles: list[str] = []
-
-a = BadUser()
-b = BadUser()
-
-a.roles.append("admin")
-print(b.roles)
-# ["admin"]  # the list is shared because it is a class-level object</code></pre>
-
-<p>An instance variable belongs to one object. A class variable belongs to the
-class and is shared unless an instance shadows it. For data containers, you
-usually want instance fields.</p>
-
-<h2>3) Dataclasses: The First Improvement</h2>
-
-<p>Python dataclasses reduce boilerplate. They generate <code>__init__</code>,
-<code>__repr__</code>, equality methods, and field handling from annotations.</p>
-
-<pre><code class="language-python">from dataclasses import dataclass, field
-
-@dataclass
-class User:
-    id: int
-    name: str
-    roles: list[str] = field(default_factory=list)
-
-user = User(id="123", name=42)
-print(user)
-# User(id='123', name=42, roles=[])</code></pre>
-
-<p>Dataclasses solve the constructor and mutable-default problems, but they
-still do not validate types by default. <code>id="123"</code> and
-<code>name=42</code> are accepted because dataclasses are data containers, not
-runtime validators.</p>
-
-<div class="tr-warning">
-  <strong>Industry distinction:</strong> use a dataclass when data is already
-  trusted and you want a lightweight internal container. Use Pydantic when data
-  crosses a boundary: HTTP request, queue event, file, environment variable,
-  third-party API response, database document, or LLM output.
-</div>
-
-<h2>4) Pydantic Models: Dataclass Ergonomics + Runtime Validation</h2>
+<h2>5) Pydantic Models: Dataclass Ergonomics + Runtime Validation</h2>
 
 <p>A Pydantic model is a class that inherits from <code>BaseModel</code>. It
 uses annotations like a dataclass, generates a constructor like a dataclass,
 but also validates and converts data at runtime.</p>
+
+<p>In Pydantic language, the class is usually called a <strong>model</strong>.
+Inheritance is what gives the class its extra behavior: <code>BaseModel</code>
+reads the annotations, builds model fields, creates validation logic, and adds
+methods for deserialization, serialization, error reporting, and schema
+generation.</p>
 
 <pre><code class="language-python">from pydantic import BaseModel
 
@@ -207,7 +425,60 @@ print(user)
 parameters, forms, environment variables, and CSV values often arrive as
 strings. If you want no conversion, use strict mode, covered below.</p>
 
-<h2>5) Validation Errors Are Part of the Contract</h2>
+<h3>Three common ways to create or deserialize a model</h3>
+
+<p>The deck uses an important flow here: once the model exists, there are
+three practical ways data enters it.</p>
+
+<pre><code class="language-python">from pydantic import BaseModel
+
+class User(BaseModel):
+    name: str
+    age: int
+
+# 1) Constructor: common when values are already in Python code
+u1 = User(name="Alice Smith", age=30)
+
+# 2) model_validate: validate a Python dict/object, common after JSON parsing
+payload = {"name": "Bob Jones", "age": "25"}
+u2 = User.model_validate(payload)
+
+# 3) model_validate_json: validate raw JSON text directly
+json_str = '{"name": "Carol Lee", "age": 27}'
+u3 = User.model_validate_json(json_str)</code></pre>
+
+<p>All three paths produce a <code>User</code> instance. The difference is
+where the raw data starts: already-keyword arguments, a Python dictionary, or a
+JSON string.</p>
+
+<h3>Why Pydantic fields are written in the class body</h3>
+
+<p>This is the part that can feel strange if you just learned ordinary class
+variables. In a normal class, <code>roles = []</code> in the class body is a
+shared class variable. In a Pydantic <code>BaseModel</code>, annotated fields
+in the class body are treated as model-field declarations. Pydantic reads those
+annotations when the class is created and builds its own validation and
+construction logic.</p>
+
+<pre><code class="language-python">class User(BaseModel):
+    id: int                 # model field declaration
+    name: str               # model field declaration
+    roles: list[str] = []   # Pydantic copies this safely per instance
+
+alice = User(id=1, name="Alice")
+bob = User(id=2, name="Bob")
+
+alice.roles.append("admin")
+print(bob.roles)
+# []</code></pre>
+
+<p>So the syntax looks class-level, but the meaning is not the same as an
+ordinary mutable class variable. Pydantic uses the class definition as a schema
+for constructing validated instances. If you want the explicit style that also
+works in dataclasses, use <code>Field(default_factory=list)</code> for mutable
+defaults.</p>
+
+<h2>6) Validation Errors Are Part of the Contract</h2>
 
 <p>Good validation is not just "reject bad data." It should tell the caller
 exactly what failed, where it failed, and why.</p>
@@ -236,7 +507,7 @@ response for request-body validation failures.</p>
   }
 ]</code></pre>
 
-<h2>6) Required, Optional, Nullable, and Defaults</h2>
+<h2>7) Required, Optional, Nullable, and Defaults</h2>
 
 <p>This is one of the most important Pydantic topics because Python developers
 often mix up "optional" and "nullable."</p>
@@ -268,7 +539,7 @@ class Customer(BaseModel):
   If <code>None</code> is not valid, use a real default or make the field required.
 </div>
 
-<h2>7) Field Constraints with <code>Field</code></h2>
+<h2>8) Field Constraints with <code>Field</code></h2>
 
 <p>Type annotations describe the broad shape. <code>Field</code> describes
 constraints, aliases, examples, and metadata for JSON schema/OpenAPI.</p>
@@ -290,10 +561,11 @@ print(product.price)
 minimum length, maximum length, numeric range, regex/pattern, decimal precision,
 default factories, examples, and descriptions.</p>
 
-<h2>8) Coercion Mode vs Strict Mode</h2>
+<h2>9) Coercion Mode vs Strict Mode</h2>
 
 <p>Pydantic's default behavior is intentionally practical: it tries to convert
-compatible values. Your notes call this "lax" mode. That is the normal API
+compatible values. This is commonly called <strong>lax mode</strong> or
+coercive validation. That is the normal API
 mode because external data often arrives as strings.</p>
 
 <pre><code class="language-python">from pydantic import BaseModel
@@ -305,6 +577,26 @@ class SearchParams(BaseModel):
 params = SearchParams(top_k="10", include_archived="false")
 print(params)
 # top_k=10 include_archived=False</code></pre>
+
+<p>A product payload shows the same idea across several JSON-compatible
+types:</p>
+
+<pre><code class="language-python">from pydantic import BaseModel
+
+class Product(BaseModel):
+    name: str
+    price: float
+    in_stock: bool
+
+product = Product.model_validate({
+    "name": "Keyboard",
+    "price": "19.99",   # str -&gt; float
+    "in_stock": "true", # str -&gt; bool
+})</code></pre>
+
+<p>Lax mode does not mean "anything becomes anything." Pydantic v2 is more
+careful than older examples: for example, an integer is not automatically
+accepted as a string field unless you explicitly configure that behavior.</p>
 
 <p>For money movement, security policy, compliance checks, or any place where
 conversion could hide a bug, use strict validation.</p>
@@ -332,7 +624,7 @@ class Payment(BaseModel):
     amount_cents: int = Field(strict=True, gt=0)
     currency: str</code></pre>
 
-<h2>9) Aliases: JSON <code>camelCase</code> and Python <code>snake_case</code></h2>
+<h2>10) Aliases: JSON <code>camelCase</code> and Python <code>snake_case</code></h2>
 
 <p>External APIs often use <code>camelCase</code>. Python code should use
 <code>snake_case</code>. Pydantic aliases let you support both without leaking
@@ -380,7 +672,37 @@ class Account(ApiModel):
 account = Account.model_validate({"accountId": "a_1", "billingEmail": "ops@example.com"})
 print(account.model_dump(by_alias=True))</code></pre>
 
-<h2>10) Nested Models</h2>
+<p>Pydantic also provides common alias helpers. If your whole API uses
+camelCase, prefer a shared base model instead of repeating
+<code>Field(alias=...)</code> everywhere.</p>
+
+<pre><code class="language-python">from pydantic import BaseModel, ConfigDict
+from pydantic.alias_generators import to_camel
+
+class ApiModel(BaseModel):
+    model_config = ConfigDict(
+        alias_generator=to_camel,
+        validate_by_name=True,
+        validate_by_alias=True,
+    )
+
+class User(ApiModel):
+    first_name: str
+
+user = User.model_validate({"firstName": "Alice"})
+print(user.model_dump(by_alias=True))
+# {'firstName': 'Alice'}
+print(user.model_dump())
+# {'first_name': 'Alice'}</code></pre>
+
+<div class="tr-note">
+  <strong>Older examples:</strong> you may see <code>populate_by_name=True</code>
+  in Pydantic v2 material. For current v2 code, prefer the more explicit
+  pair <code>validate_by_name=True</code> and
+  <code>validate_by_alias=True</code>.
+</div>
+
+<h2>11) Nested Models</h2>
 
 <p>Real JSON payloads are rarely flat. A model can contain other models, lists
 of models, dictionaries of models, enums, and constrained fields.</p>
@@ -418,7 +740,7 @@ print(org.billing_address.city)
 as <code>billing_address.city</code> or <code>admins.1</code>. That makes
 validation errors actionable for both frontend engineers and API clients.</p>
 
-<h2>11) Validators: Field-Level and Model-Level Rules</h2>
+<h2>12) Validators: Field-Level and Model-Level Rules</h2>
 
 <p>Use built-in types and <code>Field</code> constraints first. Add validators
 when the rule is domain-specific or depends on multiple fields.</p>
@@ -468,10 +790,21 @@ class DateRange(BaseModel):
   <code>model_validate()</code>, and <code>model_validate_json()</code>.
 </div>
 
-<h2>12) Model Configuration</h2>
+<div class="tr-update">
+  <strong>FastAPI compatibility:</strong> current FastAPI development is on
+  Pydantic v2. FastAPI 0.128.0 removed support for importing models through
+  <code>pydantic.v1</code>. Treat v1 syntax as migration material, not a pattern
+  for new endpoints, and test framework/Pydantic upgrades together because
+  request validation and generated OpenAPI are part of the API contract.
+</div>
+
+<h2>13) Model Configuration: Class-Level Behavior for Fields</h2>
 
 <p>Configuration controls model-wide behavior. In Pydantic v2, use
-<code>model_config = ConfigDict(...)</code>.</p>
+<code>model_config = ConfigDict(...)</code>. This is where you set behavior
+for the model as a whole. Use <code>Field(...)</code> when the rule belongs to
+one field; use <code>model_config</code> when the rule belongs to all fields or
+the model contract.</p>
 
 <pre><code class="language-python">from pydantic import BaseModel, ConfigDict, Field
 
@@ -499,13 +832,97 @@ print(payload.tenant_id)
     <tr><td><code>extra="ignore"</code></td><td>Ignore unknown fields. Useful when consuming third-party APIs that add fields over time.</td></tr>
     <tr><td><code>extra="allow"</code></td><td>Keep unknown fields. Useful for flexible metadata, but avoid it for core contracts.</td></tr>
     <tr><td><code>strict=True</code></td><td>Disable broad coercion. Good when conversion could hide defects.</td></tr>
+    <tr><td><code>validate_default=True</code></td><td>Validate default values too, instead of trusting them silently.</td></tr>
     <tr><td><code>validate_assignment=True</code></td><td>Validate when fields are changed after model creation.</td></tr>
     <tr><td><code>frozen=True</code></td><td>Make models immutable after creation. Useful for config and value objects.</td></tr>
     <tr><td><code>str_strip_whitespace=True</code></td><td>Normalize incoming strings at the boundary.</td></tr>
   </tbody>
 </table>
 
-<h2>13) Deserialization and Serialization</h2>
+<h3>Extra fields: the default is usually ignore, but sensitive APIs should forbid</h3>
+
+<p>By default, Pydantic v2 ignores unknown fields. That is useful when consuming
+external APIs that may add fields over time. For your own security-sensitive
+request contracts, prefer <code>extra="forbid"</code> so a misspelled or
+unexpected field becomes a validation error.</p>
+
+<pre><code class="language-python">from pydantic import BaseModel, ConfigDict, ValidationError
+
+class Model(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    field1: int
+
+try:
+    Model(field1=10, field2=20)
+except ValidationError as exc:
+    print(exc.errors()[0]["type"])
+    # extra_forbidden</code></pre>
+
+<h3>Validate defaults when defaults can be wrong</h3>
+
+<p>Defaults are usually trusted. If a default itself might violate the declared
+type or constraints, set <code>validate_default=True</code>.</p>
+
+<pre><code class="language-python">from pydantic import BaseModel, ConfigDict, ValidationError
+
+class Model(BaseModel):
+    model_config = ConfigDict(validate_default=True)
+    field1: int | None = None
+
+# Valid because the type explicitly allows None.
+Model()
+
+class BadDefault(BaseModel):
+    model_config = ConfigDict(validate_default=True)
+    field1: int = None
+
+try:
+    BadDefault()
+except ValidationError as exc:
+    print(exc.errors()[0]["msg"])
+    # Input should be a valid integer</code></pre>
+
+<h3>Validate assignment when objects are modified after creation</h3>
+
+<p>Without assignment validation, Pydantic validates during construction but
+does not automatically check every later attribute assignment. Enable
+<code>validate_assignment=True</code> when models remain mutable but must stay
+valid.</p>
+
+<pre><code class="language-python">from pydantic import BaseModel, ConfigDict, ValidationError
+
+class Model(BaseModel):
+    model_config = ConfigDict(validate_assignment=True)
+    field: int
+
+m = Model(field=1)
+
+try:
+    m.field = "hello"
+except ValidationError as exc:
+    print(exc.errors()[0]["msg"])</code></pre>
+
+<h3>Use frozen models when mutation should be blocked</h3>
+
+<p><code>frozen=True</code> makes the model immutable after construction.
+This is useful for configuration objects, value objects, and contracts where
+later mutation would make reasoning harder.</p>
+
+<pre><code class="language-python">from pydantic import BaseModel, ConfigDict, ValidationError
+
+class Model(BaseModel):
+    model_config = ConfigDict(frozen=True)
+    field: int
+
+m = Model(field=10)
+
+try:
+    m.field = 20
+except ValidationError as exc:
+    print(exc.errors()[0]["msg"])
+    # Instance is frozen</code></pre>
+
+<h2>14) Deserialization and Serialization</h2>
 
 <p>Deserialization means turning external data into Python objects.
 Serialization means turning Python objects back into dictionaries or JSON.</p>
@@ -539,7 +956,7 @@ as <code>datetime</code> and <code>Decimal</code>. Use
 <code>mode="json"</code> or <code>model_dump_json()</code> when preparing data
 for JSON responses, logs, queues, or cache entries.</p>
 
-<h2>14) JSON Schema and OpenAPI</h2>
+<h2>15) JSON Schema and OpenAPI</h2>
 
 <p>Pydantic can produce JSON Schema from your model. FastAPI uses that schema
 to generate OpenAPI documentation and request/response examples.</p>
@@ -556,7 +973,7 @@ print(CreateTicket.model_json_schema())</code></pre>
 body: the Pydantic model is both runtime validation and machine-readable API
 contract.</p>
 
-<h2>15) TypeAdapter: Validate a Type Without Creating a Model</h2>
+<h2>16) TypeAdapter: Validate a Type Without Creating a Model</h2>
 
 <p>Sometimes you do not need a named model. You just need to validate
 <code>list[int]</code>, <code>dict[str, Decimal]</code>, or
@@ -582,7 +999,7 @@ print(items)
 batches, third-party responses, and LLM output arrays without inventing a
 wrapper model.</p>
 
-<h2>16) Settings Management with <code>pydantic-settings</code></h2>
+<h2>17) Settings Management with <code>pydantic-settings</code></h2>
 
 <p>In Pydantic v2, settings moved to the separate
 <code>pydantic-settings</code> package. Use it to read environment variables,
@@ -619,7 +1036,7 @@ configuration belongs in the environment, not hard-coded in source files.</p>
   on non-sensitive fields.
 </div>
 
-<h2>17) FastAPI Integration: Request and Response Contracts</h2>
+<h2>18) FastAPI Integration: Request and Response Contracts</h2>
 
 <p>FastAPI uses Pydantic models in two directions:</p>
 
@@ -658,7 +1075,7 @@ data leaks by shaping the returned object. If your internal object has
 <code>cost_price</code>, <code>supplier_token</code>, or other private fields,
 they are not included unless the response model declares them.</p>
 
-<h2>18) External API and Queue Message Validation</h2>
+<h2>19) External API and Queue Message Validation</h2>
 
 <p>Pydantic is not only for incoming HTTP requests. Use it whenever your system
 receives data it did not create.</p>
@@ -681,7 +1098,7 @@ def handle_message(raw_json: str) -> None:
 <p>This pattern is useful for Pub/Sub messages, Kafka events, webhook payloads,
 cron job inputs, uploaded JSON files, and service-to-service responses.</p>
 
-<h2>19) LLM Output Validation</h2>
+<h2>20) LLM Output Validation</h2>
 
 <p>Pydantic gained renewed importance with LLM systems because model outputs
 are probabilistic. Even when you ask for JSON, you still need to validate the
@@ -717,7 +1134,7 @@ checks structure and local constraints. You still need business-rule validation,
 authorization checks, rate limits, audit logs, and human review for high-risk
 actions.</p>
 
-<h2>20) Pydantic Dataclasses</h2>
+<h2>21) Pydantic Dataclasses</h2>
 
 <p>Pydantic can also validate dataclasses. This is useful when you prefer
 dataclass style but want Pydantic validation on construction.</p>
@@ -743,7 +1160,7 @@ except ValidationError as exc:
 settings, and OpenAPI integration, <code>BaseModel</code> is still the usual
 choice.</p>
 
-<h2>21) Practical Design Patterns</h2>
+<h2>22) Practical Design Patterns</h2>
 
 <h3>Separate input, domain, and output models</h3>
 
@@ -791,7 +1208,7 @@ class CreateTicket(BaseModel):
 def create_ticket(payload: CreateTicket) -> dict:
     return {"title": payload.title, "priority": payload.priority}</code></pre>
 
-<h2>22) Common Pitfalls</h2>
+<h2>23) Common Pitfalls</h2>
 
 <table>
   <thead>
@@ -808,7 +1225,7 @@ def create_ticket(payload: CreateTicket) -> dict:
   </tbody>
 </table>
 
-<h2>23) End-to-End Example: API Payload, Alias, Validation, and Response</h2>
+<h2>24) End-to-End Example: API Payload, Alias, Validation, and Response</h2>
 
 <p>This example combines the pieces: JSON aliases, strict API shape, field
 constraints, model-level validation, and response shaping.</p>
@@ -859,7 +1276,7 @@ def create_purchase(req: PurchaseRequest):
 external JSON can still use <code>tenantId</code>, <code>userId</code>,
 <code>qty</code>, and <code>unitPrice</code>.</p>
 
-<h2>24) Decision Guide</h2>
+<h2>25) Decision Guide</h2>
 
 <table>
   <thead>
@@ -877,7 +1294,7 @@ external JSON can still use <code>tenantId</code>, <code>userId</code>,
   </tbody>
 </table>
 
-<h2>25) What to Remember</h2>
+<h2>26) What to Remember</h2>
 
 <ul>
   <li>Plain classes and dataclasses organize data but do not validate runtime input by default.</li>
@@ -889,6 +1306,14 @@ external JSON can still use <code>tenantId</code>, <code>userId</code>,
   <li>Pydantic is also useful beyond FastAPI: settings, webhooks, queues, external APIs, files, and LLM output validation.</li>
 </ul>
 
-<script src="../assets/js/nav.js?v=20260522-book-cleanup"></script>
+<h2>Official references</h2>
+<ul>
+  <li><a href="https://docs.pydantic.dev/latest/">Pydantic documentation</a></li>
+  <li><a href="https://docs.pydantic.dev/latest/migration/">Pydantic v2 migration guide</a></li>
+  <li><a href="https://fastapi.tiangolo.com/how-to/migrate-from-pydantic-v1-to-pydantic-v2/">FastAPI: migrate from Pydantic v1 to v2</a></li>
+  <li><a href="https://fastapi.tiangolo.com/tutorial/body/">FastAPI request body models</a></li>
+</ul>
+
+<script src="../assets/js/nav.js?v=20260730-currency-final"></script>
 </body>
 </html>

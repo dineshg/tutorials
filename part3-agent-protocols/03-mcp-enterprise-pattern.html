@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MCP with Authentication - Salesforce Integration Tutorial</title><link rel="stylesheet" href="../assets/css/book.css?v=20260517-figures-code2">
+    <title>MCP Enterprise Pattern: Authentication and Salesforce Integration</title><link rel="stylesheet" href="../assets/css/book.css?v=20260730-currency-final">
 </head>
 <body>
     <div class="container">
@@ -11,6 +11,16 @@
         <p style="font-size: 1.1em; color: #555; margin-bottom: 30px;">
             <strong>With Authentication and MCP Primitives: Tools / Resources / Prompts</strong>
         </p>
+
+        <div class="tr-update">
+            <strong>Current implementation boundary</strong>
+            The architecture and authorization boundaries are protocol-version
+            independent. For MCP <code>2026-07-28</code>, deploy the HTTP
+            server statelessly and use client/server releases that explicitly
+            support that version. Some high-level <code>fastmcp</code> APIs
+            shown here can also target the 2025 protocol family; do not assume
+            a library class name proves wire-level compatibility.
+        </div>
 
         <div class="auth-boundaries">
             <h3>Three Separate Auth Boundaries in Your Bank-Style Setup</h3>
@@ -78,11 +88,15 @@ from fastmcp.exceptions import ToolError
 from fastmcp.server.dependencies import get_http_headers
 from fastmcp.server.middleware import Middleware, MiddlewareContext
 
-mcp = FastMCP("DocQA-Salesforce-MCP", json_response=True)
+mcp = FastMCP(
+    "DocQA-Salesforce-MCP",
+    stateless_http=True,
+    json_response=True,
+)
 
 # -----------------------------------------------------------------------------
 # 1) SERVICE-TO-SERVICE AUTH (FastAPI -> MCP)
-#    MCP server requires: Authorization: Bearer <MCP_SERVICE_TOKEN>
+#    MCP server requires: Authorization: Bearer &lt;MCP_SERVICE_TOKEN&gt;
 # -----------------------------------------------------------------------------
 MCP_SERVICE_TOKEN = os.environ["MCP_SERVICE_TOKEN"]
 
@@ -111,7 +125,7 @@ SF_LOGIN_URL   = os.environ.get("SF_LOGIN_URL", "https://login.salesforce.com").
 SF_CLIENT_ID   = os.environ["SF_CLIENT_ID"]           # Connected App consumer key
 SF_USERNAME    = os.environ["SF_USERNAME"]            # Integration user username
 SF_PRIVATE_KEY = os.environ["SF_PRIVATE_KEY_PEM"]     # PEM private key
-SF_API_VERSION = os.environ.get("SF_API_VERSION", "v60.0")
+SF_API_VERSION = os.environ.get("SF_API_VERSION", "v67.0")  # Summer '26; configure and test explicitly
 
 _token_cache: TTLCache[str, Dict[str, Any]] = TTLCache(maxsize=1, ttl=14 * 60)  # ~14 min cache
 
@@ -174,7 +188,7 @@ def salesforce_safe_query_prompt() -> str:
 
 # -----------------------------------------------------------------------------
 # 5) TOOL: execute SOQL (after validation) via Salesforce Query REST endpoint
-#    /services/data/vXX.X/query?q=<soql>
+#    /services/data/vXX.X/query?q=&lt;soql&gt;
 # -----------------------------------------------------------------------------
 def _validate_soql_bank_safe(soql: str) -> None:
     s = soql.strip()
@@ -328,9 +342,11 @@ async def admin_salesforce_query(req: SoqlReq, ident=Depends(get_identity)):
             <div class="warning-box">
                 <h4>Next Level Security:</h4>
                 <p>
-                    If you want to further tighten the "bank-safe" part, the client should never send 
-                    arbitrary SOQL. Instead, send only <strong>parameters</strong> (like email) while 
-                    the MCP server constructs a <strong>fixed allowlisted query</strong> internally.
+                    To tighten the bank-safe boundary, the client must never
+                    send arbitrary SOQL. It sends only validated
+                    <strong>parameters</strong>, such as an email address,
+                    while the MCP server constructs a
+                    <strong>fixed allowlisted query</strong> internally.
                 </p>
             </div>
         </div>
@@ -348,7 +364,7 @@ async def admin_salesforce_query(req: SoqlReq, ident=Depends(get_identity)):
                     <li><code class="inline-code">SF_USERNAME</code> - Integration user username</li>
                     <li><code class="inline-code">SF_PRIVATE_KEY_PEM</code> - PEM private key for JWT signing</li>
                     <li><code class="inline-code">SF_LOGIN_URL</code> - (Optional) Default: https://login.salesforce.com</li>
-                    <li><code class="inline-code">SF_API_VERSION</code> - (Optional) Default: v60.0</li>
+                    <li><code class="inline-code">SF_API_VERSION</code> - (Optional) Example default: v67.0 (Summer '26); pin a version supported by your org and regression-test upgrades</li>
                 </ul>
             </div>
 
@@ -382,11 +398,15 @@ async def admin_salesforce_query(req: SoqlReq, ident=Depends(get_identity)):
                 <p><strong>Result:</strong> A secure, auditable system where each layer has its own authentication 
                 boundary and the MCP server acts as a controlled gateway to sensitive operations.</p>
             </div>
+
+            <p><strong>Official references:</strong>
+                <a href="https://modelcontextprotocol.io/specification/2026-07-28">MCP 2026-07-28 specification</a> ·
+                <a href="https://developer.salesforce.com/blogs/2026/06/the-salesforce-developers-guide-to-the-summer-26-release">Salesforce Summer '26 / API 67.0</a> ·
+                <a href="https://developer.salesforce.com/docs/platform/connect-rest-api/guide/intro_api_eol.html">Salesforce API end-of-life policy</a>
+            </p>
         </div>
     </div>
 
-    <script>
-</script>
-  <script src="../assets/js/nav.js?v=20260522-book-cleanup"></script>
+  <script src="../assets/js/nav.js?v=20260730-currency-final"></script>
 </body>
 </html>

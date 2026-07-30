@@ -3,29 +3,256 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SSO, OAuth2, and OIDC Explained</title>
-<link rel="stylesheet" href="../assets/css/book.css?v=20260517-figures-code2">
+    <title>SSO, OAuth 2.0, and OpenID Connect: The Identity Primer</title>
+<link rel="stylesheet" href="../assets/css/book.css?v=20260730-currency-final">
 </head>
 <body>
 
-    <h1>SSO, OAuth2, and OIDC Explained</h1>
+    <h1>SSO, OAuth 2.0, and OpenID Connect: The Identity Primer</h1>
 
-    <ul>
-        <li><strong>SSO is the experience:</strong> one login lets you access multiple apps.</li>
-        <li><strong>OAuth2 is the permission system:</strong> it gives a client an access token that says “this app is allowed to call this API with these scopes.” It doesn’t, by itself, standardize “who is the user.”</li>
-        <li><strong>OIDC is SSO-style login for modern apps, built on OAuth2:</strong> it keeps OAuth2’s token flow, but adds a standard “identity layer” so the client can reliably learn who logged in (via an ID token + standard claims like <code>sub</code>, <code>email</code>).</li>
-    </ul>
+    <p class="lead">Authentication terminology feels confusing because several
+    layers happen during one click on “Sign in.” This chapter separates the
+    user experience, delegation protocol, identity protocol, browser session,
+    and API authorization before the next chapter implements the complete
+    flow in React and FastAPI.</p>
 
-    <h2>Analogy</h2>
-    
-    <div class="analogy-box">
-        <p>Imagine a company building with a receptionist.</p>
-        <ul>
-            <li><strong>OAuth2</strong> is like getting a visitor pass that grants access to certain rooms (“you may enter the API room”). It’s about authorization (access rights).</li>
-            <li><strong>OIDC</strong> is that same visitor pass plus a verified badge with your name/photo issued by HR. Now different departments can trust the badge for “who you are” and you get SSO-like login across apps.</li>
-        </ul>
+    <div class="tr-note">
+      <strong>The three-sentence model</strong>
+      <ul>
+        <li><strong>SSO is the experience:</strong> authenticate once with a trusted identity provider and use more than one application without entering credentials again.</li>
+        <li><strong>OAuth 2.0 is delegated authorization:</strong> a client obtains an access token that lets it call a resource server within an approved scope.</li>
+        <li><strong>OpenID Connect (OIDC) adds authentication:</strong> it standardizes how a client learns which user authenticated, principally through an ID token with identity claims.</li>
+      </ul>
     </div>
 
-  <script src="../assets/js/nav.js?v=20260522-book-cleanup"></script>
+    <h2>1) Start with the problem: applications should not collect every password</h2>
+
+    <p>Suppose your company has ten internal applications. Without federation,
+    every application could create its own username and password database. That
+    produces ten password stores, ten account-recovery processes, and ten
+    opportunities to implement authentication badly.</p>
+
+    <p>A better design delegates authentication to an
+    <strong>identity provider (IdP)</strong>, such as Microsoft Entra ID,
+    Google Identity, Okta, or an internal standards-compliant provider. The
+    application redirects the user to the IdP. The IdP handles credentials,
+    passkeys, MFA, risk checks, and account policy, then returns a
+    cryptographically verifiable result to the application.</p>
+
+    <div class="figure-card">
+      <h3>Visual: one sign-in, separate trust boundaries</h3>
+      <svg class="viz" viewBox="0 0 980 260" role="img" aria-label="User, application, identity provider, and API trust boundaries">
+        <defs>
+          <marker id="identity-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+            <path d="M0 0 L10 5 L0 10 z" class="accentFill" />
+          </marker>
+          <marker id="identity-arrow-purple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+            <path d="M0 0 L10 5 L0 10 z" class="accent2Fill" />
+          </marker>
+        </defs>
+        <rect x="24" y="72" width="170" height="112" rx="14" class="box2" />
+        <text x="109" y="112" text-anchor="middle" class="title">User</text>
+        <text x="109" y="140" text-anchor="middle" class="muted">browser</text>
+
+        <rect x="260" y="72" width="190" height="112" rx="14" class="box" />
+        <text x="355" y="112" text-anchor="middle" class="title">Client app</text>
+        <text x="355" y="140" text-anchor="middle" class="muted">React or BFF</text>
+
+        <rect x="516" y="28" width="210" height="112" rx="14" class="box2" />
+        <text x="621" y="68" text-anchor="middle" class="title">Identity provider</text>
+        <text x="621" y="96" text-anchor="middle" class="muted">login + consent</text>
+
+        <rect x="786" y="118" width="170" height="112" rx="14" class="box" />
+        <text x="871" y="158" text-anchor="middle" class="title">Resource API</text>
+        <text x="871" y="186" text-anchor="middle" class="muted">FastAPI</text>
+
+        <line x1="194" y1="128" x2="260" y2="128" class="accent" stroke-width="2" marker-end="url(#identity-arrow)" />
+        <path d="M450 100 C480 60 490 60 516 78" class="accent2" stroke-width="2" marker-end="url(#identity-arrow-purple)" />
+        <path d="M726 94 C770 104 790 122 810 142" class="accent" stroke-width="2" marker-end="url(#identity-arrow)" />
+        <text x="482" y="48" text-anchor="middle" class="muted">OIDC request</text>
+        <text x="768" y="82" text-anchor="middle" class="muted">access token</text>
+      </svg>
+      <p class="muted">The IdP authenticates the user. The API still makes its
+      own authorization decision for each request.</p>
+    </div>
+
+    <h2>2) SSO is an outcome, not a token format</h2>
+
+    <p><strong>Single sign-on</strong> means the user can move between trusted
+    applications without repeatedly entering credentials. It is an experience
+    created by a shared IdP session and federation protocols. SSO is not itself
+    an API protocol and does not tell your FastAPI endpoint which records the
+    caller may access.</p>
+
+    <p>When the user signs in to App A, the IdP may create its own secure
+    browser session. Later, App B redirects the same browser to the IdP. The
+    IdP recognizes its session, may skip the credential prompt, and completes a
+    new authorization flow for App B. Each application still receives tokens
+    intended for that application; one universal token should not be replayed
+    everywhere.</p>
+
+    <h2>3) OAuth 2.0 delegates access to an API</h2>
+
+    <p>OAuth separates four roles. Keeping these roles distinct prevents most
+    terminology mistakes:</p>
+
+    <table>
+      <thead>
+        <tr><th>OAuth role</th><th>In this book's example</th><th>Responsibility</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Resource owner</td><td>The signed-in user</td><td>Owns or is authorized to act on protected data.</td></tr>
+        <tr><td>Client</td><td>React app or backend-for-frontend</td><td>Requests delegated access; it is not the API being protected.</td></tr>
+        <tr><td>Authorization server</td><td>The IdP</td><td>Authenticates, obtains consent/policy approval, and issues tokens.</td></tr>
+        <tr><td>Resource server</td><td>FastAPI</td><td>Validates an access token and authorizes the requested operation.</td></tr>
+      </tbody>
+    </table>
+
+    <p>The client asks for scopes such as <code>documents:read</code>. The
+    authorization server may issue an <strong>access token</strong>. The client
+    sends that token to the API using
+    <code>Authorization: Bearer &lt;access-token&gt;</code>. The API validates
+    the token's signature or introspection result, issuer, audience, expiry,
+    and relevant authorization claims before serving data.</p>
+
+    <div class="tr-warn">
+      <strong>OAuth alone is not a login protocol.</strong>
+      An access token is addressed to a resource server and represents delegated
+      API access. Treating arbitrary access-token contents as a portable user
+      profile couples the client to one provider and can create token-substitution
+      vulnerabilities.
+    </div>
+
+    <h2>4) OIDC adds a standard authentication result</h2>
+
+    <p>OpenID Connect is an identity layer on top of OAuth 2.0. The client
+    requests the <code>openid</code> scope. After the user authenticates, the
+    client receives an <strong>ID token</strong> intended for the client. The ID
+    token says who authenticated, which issuer authenticated them, which client
+    it was issued to, and when that authentication result expires.</p>
+
+    <pre><code class="language-json">{
+  "iss": "https://idp.example.com",
+  "sub": "00u123stable-subject",
+  "aud": "web-client-id",
+  "exp": 1785400000,
+  "iat": 1785396400,
+  "nonce": "request-bound-random-value",
+  "email": "alice@example.com"
+}</code></pre>
+
+    <p>The durable external identity key is normally the pair
+    <code>(iss, sub)</code>. Email addresses can change, be recycled, or be
+    absent. Store the issuer and subject when mapping the external identity to
+    your internal <code>user_id</code>.</p>
+
+    <h2>5) Keep ID tokens, access tokens, refresh tokens, and sessions separate</h2>
+
+    <table>
+      <thead>
+        <tr><th>Credential</th><th>Intended recipient</th><th>Primary purpose</th><th>Where it should go</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>ID token</td><td>The client</td><td>Authentication result and identity claims.</td><td>Client sign-in processing; not as the general API credential.</td></tr>
+        <tr><td>Access token</td><td>The API named by its audience/resource</td><td>Authorize API calls within scopes and policy.</td><td><code>Authorization: Bearer ...</code> to that resource server.</td></tr>
+        <tr><td>Refresh token</td><td>The authorized client</td><td>Obtain new access tokens without another full sign-in.</td><td>Prefer a confidential backend or other protected storage; rotate and revoke.</td></tr>
+        <tr><td>Application session cookie</td><td>Your web application/BFF</td><td>Maintain the app's local browser session.</td><td><code>Secure</code>, <code>HttpOnly</code>, appropriately scoped cookie.</td></tr>
+      </tbody>
+    </table>
+
+    <p>A backend-for-frontend (BFF) can keep OAuth tokens server-side and give
+    the browser only a hardened session cookie. A pure SPA can use Authorization
+    Code with PKCE, but must account for browser token-theft risk and should
+    avoid persistent storage when the architecture allows it.</p>
+
+    <h2>6) Why Authorization Code with PKCE is the default teaching flow</h2>
+
+    <p>The browser does not receive tokens directly from the authorization
+    endpoint. It receives a short-lived, single-use authorization
+    <strong>code</strong>. The client then exchanges that code at the token
+    endpoint. PKCE binds the code to a secret value created for that particular
+    authorization attempt:</p>
+
+    <ol>
+      <li>The client generates a random <code>code_verifier</code>.</li>
+      <li>It sends a derived <code>code_challenge</code> with the authorization request.</li>
+      <li>The IdP authenticates the user and redirects back with a code.</li>
+      <li>The client sends the original verifier when exchanging the code.</li>
+      <li>The authorization server checks that the verifier matches the earlier challenge before issuing tokens.</li>
+    </ol>
+
+    <p>PKCE limits the usefulness of a stolen authorization code. It does not
+    replace redirect-URI validation, <code>state</code> for request correlation
+    and CSRF defense, OIDC <code>nonce</code> validation, TLS, or secure token
+    storage.</p>
+
+    <h2>7) Authentication is not application authorization</h2>
+
+    <p>After token validation, your application still decides what the caller
+    may do. A valid login does not automatically grant access to every tenant,
+    document, or administrative operation.</p>
+
+    <div class="analogy-box">
+      <p>Imagine a company building with a receptionist.</p>
+      <ul>
+        <li><strong>OAuth 2.0</strong> is a visitor pass that grants access to specific rooms: it is delegated authorization.</li>
+        <li><strong>OIDC</strong> adds a verified identity badge: the client can establish who signed in.</li>
+        <li><strong>Your application policy</strong> is the door controller for each room: it checks tenant membership, role, ownership, and operation.</li>
+      </ul>
+    </div>
+
+    <p>Scopes express what an access token permits at an API boundary. Roles and
+    groups are organizational inputs. Tenant membership and resource ownership
+    are application data. Your authorization layer may combine all of them, but
+    they are not interchangeable.</p>
+
+    <h2>8) Common mistakes and the correct mental model</h2>
+
+    <table>
+      <thead><tr><th>Mistake</th><th>Correction</th></tr></thead>
+      <tbody>
+        <tr><td>“OAuth logs the user in.”</td><td>OAuth delegates API access; OIDC standardizes authentication on top of it.</td></tr>
+        <tr><td>“SSO means one token works for every app.”</td><td>SSO normally reuses the IdP session while issuing audience-specific results to each client/resource.</td></tr>
+        <tr><td>“The API should accept the ID token.”</td><td>The API normally accepts an access token whose audience/resource identifies that API.</td></tr>
+        <tr><td>“Email is the user ID.”</td><td>Use the issuer and subject as the external stable key; treat email as a mutable attribute.</td></tr>
+        <tr><td>“A valid token means the request is authorized.”</td><td>Token validation authenticates the credential; application policy still authorizes the operation and resource.</td></tr>
+        <tr><td>“JWT validation means decoding the payload.”</td><td>Decoding is not trust. Verify signature, issuer, audience, expiry, and required claims.</td></tr>
+      </tbody>
+    </table>
+
+    <h2>9) The flow you will implement next</h2>
+
+    <pre><code class="language-text">Browser          Client app          Identity provider          FastAPI
+   |                  |                       |                     |
+   | click sign in    |                       |                     |
+   |----------------->| authorize + PKCE      |                     |
+   |                  |---------------------->|                     |
+   |          authenticate / consent          |                     |
+   |<---------------------------------------->|                     |
+   |                  | code + state          |                     |
+   |                  |<----------------------|                     |
+   |                  | code + verifier       |                     |
+   |                  |---------------------->|                     |
+   |                  | ID token + access token                     |
+   |                  |<----------------------|                     |
+   |                  |        Authorization: Bearer access_token   |
+   |                  |-------------------------------------------->|
+   |                  |        validate token + authorize resource  |</code></pre>
+
+    <div class="tr-tip">
+      <strong>Standards note</strong>
+      OAuth 2.1 is a consolidation of modern OAuth practice, but it remains an
+      Internet-Draft rather than a replacement RFC at the time of this edition.
+      Production designs should follow the OAuth 2.0 Security Best Current
+      Practice, use Authorization Code with PKCE, and avoid the implicit and
+      resource-owner-password grants.
+    </div>
+
+    <p class="footer-note">Continue to
+    <a href="07-oidc-oauth2-pkce-fastapi.html">OIDC + OAuth2 + PKCE in
+    FastAPI</a>, where this vocabulary becomes a concrete message sequence,
+    token-validation dependency, and stable user/tenant mapping.</p>
+
+  <script src="../assets/js/nav.js?v=20260730-currency-final"></script>
 </body>
 </html>

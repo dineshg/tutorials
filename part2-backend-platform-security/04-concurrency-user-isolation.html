@@ -3,16 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FastAPI Concurrency & User Isolation</title>
-<link rel="stylesheet" href="../assets/css/book.css?v=20260517-figures-code2">
+    <title>FastAPI Concurrency and Per-Request User Isolation</title>
+<link rel="stylesheet" href="../assets/css/book.css?v=20260730-currency-final">
 </head>
 <body>
     <div class="container">
-        <h1>FastAPI Concurrency & User Isolation</h1>
-        <p style="text-align: center; color: #666;">How FastAPI handles 1000s of users + how it keeps requests separate</p>
+        <h1>FastAPI Concurrency and Per-Request User Isolation</h1>
+        <p class="lead">How one service keeps many in-flight requests efficient without mixing user or tenant state.</p>
+
+        <div class="tr-note">
+            <strong>Where this fits</strong>
+            The preceding chapter established typed request boundaries with
+            Pydantic. This chapter follows several validated requests while
+            they execute at the same time. The next chapter moves slow work
+            into durable background jobs without losing the same identity and
+            tenant context.
+        </div>
+
+        <figure class="figure-card">
+            <svg viewBox="0 0 980 360" role="img" aria-labelledby="concurrency-title concurrency-desc">
+                <title id="concurrency-title">Concurrent requests sharing an event loop while retaining separate state</title>
+                <desc id="concurrency-desc">Alice and Bob have independent request contexts. When one request awaits I/O, the event loop advances the other. Both calls reach tenant-scoped repositories.</desc>
+                <defs>
+                    <marker id="concurrency-arrow-blue" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 Z" fill="#1769e0"></path>
+                    </marker>
+                    <marker id="concurrency-arrow-green" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 Z" fill="#14875a"></path>
+                    </marker>
+                </defs>
+                <rect x="30" y="35" width="170" height="100" rx="12" fill="#e8f2ff" stroke="#1769e0" stroke-width="2"></rect>
+                <text x="115" y="72" text-anchor="middle" font-size="17" font-weight="700" fill="#162033">Alice request</text>
+                <text x="115" y="101" text-anchor="middle" font-size="14" fill="#4f6078">tenant-acme</text>
+
+                <rect x="30" y="225" width="170" height="100" rx="12" fill="#e9fbf2" stroke="#14875a" stroke-width="2"></rect>
+                <text x="115" y="262" text-anchor="middle" font-size="17" font-weight="700" fill="#162033">Bob request</text>
+                <text x="115" y="291" text-anchor="middle" font-size="14" fill="#4f6078">tenant-north</text>
+
+                <rect x="305" y="105" width="235" height="150" rx="14" fill="#f1ecff" stroke="#7548d8" stroke-width="2"></rect>
+                <text x="422" y="145" text-anchor="middle" font-size="18" font-weight="700" fill="#162033">Uvicorn event loop</text>
+                <text x="422" y="178" text-anchor="middle" font-size="14" fill="#4f6078">run A until await</text>
+                <text x="422" y="205" text-anchor="middle" font-size="14" fill="#4f6078">run B while A waits</text>
+                <text x="422" y="232" text-anchor="middle" font-size="14" fill="#4f6078">resume A when ready</text>
+
+                <rect x="665" y="35" width="280" height="100" rx="12" fill="#e8f2ff" stroke="#1769e0" stroke-width="2"></rect>
+                <text x="805" y="72" text-anchor="middle" font-size="17" font-weight="700" fill="#162033">Scoped repository call</text>
+                <text x="805" y="101" text-anchor="middle" font-size="14" fill="#4f6078">WHERE tenant_id = tenant-acme</text>
+
+                <rect x="665" y="225" width="280" height="100" rx="12" fill="#e9fbf2" stroke="#14875a" stroke-width="2"></rect>
+                <text x="805" y="262" text-anchor="middle" font-size="17" font-weight="700" fill="#162033">Scoped repository call</text>
+                <text x="805" y="291" text-anchor="middle" font-size="14" fill="#4f6078">WHERE tenant_id = tenant-north</text>
+
+                <path d="M200 85 C250 85 260 135 305 150" fill="none" stroke="#1769e0" stroke-width="3" marker-end="url(#concurrency-arrow-blue)"></path>
+                <path d="M200 275 C250 275 260 225 305 210" fill="none" stroke="#14875a" stroke-width="3" marker-end="url(#concurrency-arrow-green)"></path>
+                <path d="M540 150 C590 135 610 85 665 85" fill="none" stroke="#1769e0" stroke-width="3" marker-end="url(#concurrency-arrow-blue)"></path>
+                <path d="M540 210 C590 225 610 275 665 275" fill="none" stroke="#14875a" stroke-width="3" marker-end="url(#concurrency-arrow-green)"></path>
+            </svg>
+            <figcaption>
+                Concurrency interleaves execution; it does not merge local
+                variables. Isolation fails only when application code stores
+                request-specific data in shared state or omits tenant filters.
+            </figcaption>
+        </figure>
 
         <h2>1. What happens when 1000 users hit your API</h2>
-        <p>When thousands of users call your FastAPI endpoint simultaneously, Uvicorn (the ASGI server) accepts the connections and creates a separate <strong>“in-flight request task”</strong> for each one.</p>
+        <p>When thousands of users call your FastAPI endpoint simultaneously, Uvicorn (the ASGI server) accepts the connections. Within each worker process, the ASGI application handles each active request in its own in-flight task and request scope.</p>
         <p>For every single request, FastAPI:</p>
         <ul>
             <li>Matches the method + path (e.g., <code>POST /query</code>) to the correct function.</li>
@@ -22,20 +77,36 @@
         <div class="highlight-box">
             <strong>Key Concept:</strong> Each user request triggers an independent function call.
         </div>
+        <p>
+            Function arguments and local variables belong to that invocation.
+            They are safe to interleave because Request A does not reuse
+            Request B's Python stack frame. This is request isolation, not
+            authorization: your code must still verify the caller and scope
+            every data operation.
+        </p>
 
         <h2>2. Why async lets one server handle lots of traffic</h2>
         <p>Most API operations are <strong>I/O-bound</strong>: waiting for database queries, Elasticsearch results, or external APIs (like Azure OpenAI).</p>
         <p>If your endpoint is defined with <code>async def</code> and uses <code>await</code> for I/O, the event loop can pause a waiting request (Request A) and process others (Request B, C) in the meantime. This allows a single process to handle thousands of concurrent connections efficiently.</p>
 
-<pre>@app.post("/query")
-async def query(...):
+<pre><code class="language-python">@app.post("/query")
+async def query():
     chunks = await es_search(...)       # waiting -> event loop runs other requests
     answer = await call_openai(...)     # waiting -> event loop runs other requests
-    return {"answer": answer}</pre>
+    return {"answer": answer}</code></pre>
 
         <div class="warning-box">
             <strong>Important:</strong> If you use blocking code (like <code>time.sleep()</code> or a synchronous HTTP client) inside <code>async def</code>, you freeze the event loop and kill concurrency.
         </div>
+        <p>
+            <code>async def</code> helps only when the libraries underneath it
+            are asynchronous and the function reaches an <code>await</code>.
+            A synchronous FastAPI endpoint is normally run in a thread pool,
+            which is useful for blocking libraries but has finite capacity.
+            CPU-heavy inference, image processing, and large dataframe work
+            should use a separate process, worker service, or batch platform
+            rather than occupying the API event loop.
+        </p>
 
         <h2>3. Concurrency vs. Parallelism</h2>
         <p>It is important to distinguish between these two scaling mechanisms:</p>
@@ -59,6 +130,13 @@ async def query(...):
                 </ul>
             </div>
         </div>
+        <p>
+            Production systems usually combine both mechanisms: asynchronous
+            I/O inside each worker, several workers or container replicas for
+            CPU capacity and resilience, and a load balancer in front. Worker
+            count is not a substitute for sizing database and HTTP connection
+            pools; every replica can multiply downstream connections.
+        </p>
 
         <h2>4. How FastAPI keeps users separate (Per-Request Identity)</h2>
         <p>FastAPI does not “assign a user to a thread.” Instead, every HTTP request is isolated. User identity is derived from the request itself (usually via a JWT in the <code>Authorization</code> header), and your code uses this identity to scope data access.</p>
@@ -66,35 +144,47 @@ async def query(...):
         <h3>Concrete Example</h3>
         <p>Two users hit the same endpoint at the same time, but get different results.</p>
 
-<pre>from fastapi import FastAPI, Depends, Header, HTTPException
+<pre><code class="language-python">from typing import Annotated
+
+from fastapi import Depends, FastAPI, Header, HTTPException, status
 from pydantic import BaseModel
 
 app = FastAPI()
+
+class QueryReq(BaseModel):
+    question: str
 
 class Identity(BaseModel):
     tenant_id: str
     user_id: str
 
 # Dependency to extract identity from a verified bearer token
-def get_identity(authorization: str | None = Header(None)) -> Identity:
+def get_identity(
+    authorization: Annotated[str | None, Header()] = None,
+) -> Identity:
     if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Missing bearer token")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing bearer token",
+        )
 
     token = authorization.removeprefix("Bearer ").strip()
 
-    # Production: verify JWT signature + iss/aud/exp, then map claims to tenant/user.
-    # This chapter focuses on request isolation, so imagine this returns verified claims.
+    # Verify signature, issuer, audience, expiry, and required claims.
     claims = verify_and_decode_jwt(token)
     return Identity(tenant_id=claims["tenant_id"], user_id=claims["sub"])
 
 @app.post("/query")
-async def query(req: QueryReq, ident: Identity = Depends(get_identity)):
-    # ident differs per request based on the token
-    return {
-        "tenant_id": ident.tenant_id,
-        "user_id": ident.user_id,
-        "question": req.question,
-    }</pre>
+async def query(
+    req: QueryReq,
+    ident: Annotated[Identity, Depends(get_identity)],
+):
+    # The repository requires tenant_id; callers cannot "forget" the filter.
+    chunks = await search_repository.search(
+        tenant_id=ident.tenant_id,
+        question=req.question,
+    )
+    return {"user_id": ident.user_id, "chunks": chunks}</code></pre>
 
         <div class="comparison-grid">
             <div class="concept-box">
@@ -116,7 +206,8 @@ async def query(req: QueryReq, ident: Identity = Depends(get_identity)):
         <div class="warning-box">
             <strong>Never use global variables for per-user state.</strong> Globals are shared across all requests in a process.
             <br><br>
-            <code>CURRENT_USER = None  # ❌ UNSAFE: shared across users</code>
+            <br><br>
+            <code>CURRENT_USER = None  # unsafe: shared across requests in this process</code>
         </div>
         <p>Instead, keep per-user/per-request data in:</p>
         <ul>
@@ -124,7 +215,73 @@ async def query(req: QueryReq, ident: Identity = Depends(get_identity)):
             <li>Dependencies (<code>Depends(get_identity)</code>)</li>
             <li><code>request.state</code> (middleware context)</li>
         </ul>
+
+        <p>
+            Module-level objects are not automatically wrong. Immutable
+            configuration, database pool objects, HTTP clients, and model
+            clients are normally shared. The unsafe pattern is putting
+            mutable request data such as <code>current_user</code>,
+            <code>tenant_id</code>, or a partially built response in them.
+        </p>
+
+        <h2>6. Tenant isolation must survive every boundary</h2>
+        <p>
+            A verified identity is only the starting point. Carry the derived
+            tenant and user identifiers through every call that can read,
+            cache, enqueue, or store data.
+        </p>
+        <table>
+            <thead>
+                <tr><th>Boundary</th><th>Isolation rule</th><th>Typical backstop</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Repository / SQL</td><td>Require <code>tenant_id</code> in the method signature and query predicate.</td><td>Row-level security and composite constraints.</td></tr>
+                <tr><td>Search index</td><td>Add a non-optional tenant filter to every query.</td><td>Separate index/namespace for higher-risk tenants.</td></tr>
+                <tr><td>Cache</td><td>Include tenant and authorization-relevant version data in the key.</td><td>Short TTL and explicit invalidation.</td></tr>
+                <tr><td>Object storage</td><td>Derive the allowed prefix from trusted request context, never from an unchecked body field.</td><td>Separate buckets or policy conditions where appropriate.</td></tr>
+                <tr><td>Background job</td><td>Persist tenant, initiating user, authorization snapshot/version, and job ID.</td><td>Worker-side re-authorization for sensitive effects.</td></tr>
+            </tbody>
+        </table>
+
+        <h2>7. Backpressure is part of concurrency design</h2>
+        <p>
+            Accepting more concurrent requests than downstream systems can
+            serve creates a queue inside your application. Latency rises,
+            retries multiply the load, and eventually everything times out.
+            Bound concurrency deliberately:
+        </p>
+        <ul>
+            <li>Set connection-pool limits for databases and outbound HTTP clients.</li>
+            <li>Use explicit connect, read, write, and pool-acquisition timeouts.</li>
+            <li>Use a semaphore or worker queue around scarce downstream capacity.</li>
+            <li>Return <code>429 Too Many Requests</code> for caller-specific rate limits and <code>503 Service Unavailable</code> when shared capacity is temporarily exhausted.</li>
+            <li>Retry only transient failures, with exponential backoff and jitter; Chapter 6 develops that policy.</li>
+        </ul>
+
+        <h2>8. Cancellation, disconnects, and observability</h2>
+        <p>
+            A client can disconnect while work is still running. Cooperative
+            asynchronous libraries can receive cancellation, but an external
+            side effect may already have happened. Use idempotency keys for
+            effects, keep request deadlines shorter than infrastructure
+            deadlines, and move work that must finish after disconnect into a
+            durable job.
+        </p>
+        <p>
+            Logs and traces should include a request ID, tenant ID, subject or
+            internal user ID, route, downstream dependency, and latency. Do
+            not log bearer tokens, raw secrets, or unnecessary personal data.
+            A load test is incomplete unless it also checks cross-tenant
+            leakage and downstream pool saturation.
+        </p>
+
+        <div class="tr-tip">
+            <strong>Operational test</strong>
+            Run Alice and Bob requests concurrently, deliberately delay one
+            downstream call, and assert that each response, cache key, SQL
+            query, trace, and queued message retains the correct tenant.
+        </div>
     </div>
-  <script src="../assets/js/nav.js?v=20260522-book-cleanup"></script>
+  <script src="../assets/js/nav.js?v=20260730-currency-final"></script>
 </body>
 </html>

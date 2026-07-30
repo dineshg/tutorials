@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JavaScript & TypeScript Tutorial for Beginners</title>
-<link rel="stylesheet" href="../assets/css/book.css?v=20260517-figures-code2">
+    <title>JavaScript and TypeScript Foundations</title>
+<link rel="stylesheet" href="../assets/css/book.css?v=20260730-currency-final">
 </head>
 <body>
     <div class="container">
-        <h1>JavaScript & TypeScript Tutorial for Beginners</h1>
+        <h1>JavaScript and TypeScript Foundations</h1>
         
         <div class="intro">
             <p><strong>Welcome!</strong> This tutorial starts from absolute first principles: what JavaScript is, what Node.js is, and why we can run code "outside the browser". You'll learn JavaScript in a way that prepares you to write clean, component-style code, then transition smoothly into TypeScript.</p>
@@ -724,7 +724,7 @@ const user: User = {
 };
 
 // TypeScript ensures all properties exist
-console.log(user.name);  // ✅
+console.log(user.name);  // valid
 console.log(user.age);   // ❌ ERROR: Property 'age' doesn't exist</code></pre>
 
         <h4>Optional Properties</h4>
@@ -736,7 +736,7 @@ console.log(user.age);   // ❌ ERROR: Property 'age' doesn't exist</code></pre>
 
 // This is valid (maxTokens is optional)
 const settings: Settings = {
-  model: "gpt-4",
+  model: "configured-model-id",
   temperature: 0.7
 };</code></pre>
 
@@ -750,7 +750,7 @@ const settings: Settings = {
   return a + b;
 }
 
-const result = add(5, 7);    // ✅
+const result = add(5, 7);    // valid
 const bad = add("5", "7");   // ❌ ERROR: Argument type 'string' not assignable</code></pre>
 
         <h4>Arrow Functions</h4>
@@ -845,12 +845,12 @@ example();</code></pre>
         <div class="key-concept">
             <p><strong>This Pattern Teaches:</strong></p>
             <ul>
-                <li>✅ <strong>Clean inputs</strong> - Well-defined type for what goes in</li>
-                <li>✅ <strong>Validation</strong> - Check inputs before processing</li>
-                <li>✅ <strong>Predictable output</strong> - Well-defined type for what comes out</li>
-                <li>✅ <strong>Async-ready</strong> - Can handle asynchronous operations</li>
-                <li>✅ <strong>Error handling</strong> - Fails gracefully with clear messages</li>
-                <li>✅ <strong>Exportable</strong> - Can be imported and reused in other files</li>
+                <li><strong>Clean inputs</strong> - Well-defined type for what goes in</li>
+                <li><strong>Validation</strong> - Check inputs before processing</li>
+                <li><strong>Predictable output</strong> - Well-defined type for what comes out</li>
+                <li><strong>Async-ready</strong> - Can handle asynchronous operations</li>
+                <li><strong>Error handling</strong> - Fails gracefully with clear messages</li>
+                <li><strong>Exportable</strong> - Can be imported and reused in other files</li>
             </ul>
         </div>
 
@@ -871,7 +871,7 @@ function handleStatus(status: Status) {
   }
 }
 
-handleStatus("success");   // ✅
+handleStatus("success");   // valid
 handleStatus("loading");   // ❌ ERROR: Not a valid Status</code></pre>
 
         <h4>Interfaces (Alternative to Type)</h4>
@@ -920,7 +920,7 @@ const userResponse: ApiResponse&lt;User&gt; = {
         <h2>Practice Path for Mastery</h2>
 
         <div class="practice-box">
-            <h3>🎯 Beginner to Component Developer Roadmap</h3>
+            <h3>Beginner-to-Component-Developer Roadmap</h3>
             <p>Complete these exercises in order to master component-style programming:</p>
             
             <ol>
@@ -1060,6 +1060,6 @@ main();</code></pre>
             <strong>Remember:</strong> The best way to learn is by building. Start small, make mistakes, and gradually increase complexity. Every expert programmer started exactly where you are now!
         </div>
     </div>
-  <script src="../assets/js/nav.js?v=20260522-book-cleanup"></script>
+  <script src="../assets/js/nav.js?v=20260730-currency-final"></script>
 </body>
 </html>

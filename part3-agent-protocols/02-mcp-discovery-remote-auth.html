@@ -3,16 +3,16 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>MCP Servers Tutorial: components, remote access, OpenAI analogy, and authentication</title>
-<link rel="stylesheet" href="../assets/css/book.css?v=20260517-figures-code2">
+  <title>MCP Discovery, Remote Transport, and Authentication</title>
+<link rel="stylesheet" href="../assets/css/book.css?v=20260730-currency-final">
 </head>
 
 <body>
 <header>
   <div class="wrap">
-    <h1>MCP Servers — a complete tutorial</h1>
+    <h1>MCP Discovery, Remote Transport, and Authentication</h1>
     <p class="muted">
-      This single page covers: MCP basics (resources, prompts, tools), server+client code,
+      This chapter connects MCP basics (resources, prompts, tools) to server/client code,
       how remote MCP servers are used by LLMs (OpenAI-style analogy),
       and how authentication fits in (self-hosted Identity Provider, Bearer tokens, PKCE, introspection vs JWKS).
     </p>
@@ -22,8 +22,19 @@
       This is the primary MCP technical chapter. <a href="01-mcp-fundamentals.html">Chapter 1</a>
       is the beginner local example, <a href="03-mcp-enterprise-pattern.html">Chapter 3</a>
       is the enterprise application, and <a href="04-mcp-2025-update.html">Chapter 4</a>
-      is the 2025 protocol update. For OAuth/OIDC/JWT theory, use
+      explains the protocol's 2025-to-2026 evolution. For OAuth/OIDC/JWT theory, use
       <a href="../part2-backend-platform-security/09-authentication-deep-dive.html">Part II Chapter 10</a>.
+    </div>
+
+    <div class="tr-update">
+      <strong>Current protocol versus compatibility SDKs</strong>
+      The normative protocol in this chapter is MCP
+      <code>2026-07-28</code>. It uses stateless, self-contained requests,
+      optional up-front <code>server/discover</code>, and per-request
+      <code>_meta</code>. The explicit <code>ClientSession.initialize()</code>
+      example later in the chapter is retained and labelled as the older
+      2025-compatible Python SDK shape because deployed clients and adapters
+      may still negotiate that version.
     </div>
 
     <div class="toc">
@@ -41,7 +52,7 @@
         <li><a href="#auth-get-token">10) How the client gets tokens (PKCE, client credentials, token exchange)</a></li>
         <li><a href="#auth-validate">11) How the server validates tokens (introspection vs JWKS)</a></li>
         <li><a href="#best-practices">12) Practical best practices (tool allow-list, least privilege, CORS)</a></li>
-        <li><a href="#troubleshooting">13) Beginner troubleshooting checklist</a></li>
+        <li><a href="#troubleshooting">12) Best practices and troubleshooting</a></li>
       </ul>
     </div>
   </div>
@@ -187,8 +198,8 @@
       <strong>Typical host flow (high-level):</strong>
       <ol>
         <li>Connect to MCP server transport (stdio, local HTTP, remote HTTP)</li>
-        <li>Initialize</li>
-        <li>List tools (names + input schema)</li>
+        <li>Discover/select the protocol version, or let a compatible SDK negotiate it</li>
+        <li>List tools (names + input and optional output schema)</li>
         <li>List prompts (names + args)</li>
         <li>List resources (URIs + metadata)</li>
       </ol>
@@ -223,10 +234,16 @@
       </p>
     </div>
 
-    <h3>3.2 What “initialize” means</h3>
+    <h3>3.2 Version discovery: current protocol and historical handshake</h3>
     <p>
-      <code class="inline">initialize()</code> is the moment the host and server agree on protocol expectations.
-      After initialization, the host can safely call listing endpoints and tools.
+      In the 2025 protocol family, <code class="inline">initialize()</code>
+      was the handshake where client and server negotiated version and
+      capabilities before normal calls. MCP <code>2026-07-28</code> removed
+      that handshake and protocol-level sessions. A current server implements
+      <code class="inline">server/discover</code>; each ordinary request then
+      carries its selected protocol version, client capabilities, and client
+      identity in <code class="inline">params._meta</code>. The request must be
+      processable without remembering a previous connection.
     </p>
 
     <h3>3.3 Tool schemas: why structured inputs matter</h3>
@@ -262,7 +279,11 @@
 <span class="kw">from</span> <span class="typ">mcp.server.fastmcp</span> <span class="kw">import</span> <span class="typ">FastMCP</span>
 
 <span class="com"># Create the MCP server</span>
-mcp <span class="op">=</span> <span class="typ">FastMCP</span>(<span class="str">"MiniShop MCP"</span>, stateless_http<span class="op">=</span><span class="kw">True</span>)
+mcp <span class="op">=</span> <span class="typ">FastMCP</span>(
+    <span class="str">"MiniShop MCP"</span>,
+    stateless_http<span class="op">=</span><span class="kw">True</span>,
+    json_response<span class="op">=</span><span class="kw">True</span>,
+)
 
 <span class="com"># In-memory demo data</span>
 CATALOG <span class="op">=</span> {
@@ -371,6 +392,16 @@ app <span class="op">=</span> mcp.<span class="fn">streamable_http_app</span>()
       You can adapt the same pattern for stdio or other supported transports.
     </p>
 
+    <div class="callout warn">
+      <strong>Compatibility example:</strong> the code below is the
+      stateful-looking Python SDK interface used with the 2025 protocol family.
+      Its <code>initialize()</code> call is not part of the
+      <code>2026-07-28</code> wire protocol. Do not infer that a current server
+      may keep hidden per-client state. Use an SDK release that explicitly
+      supports the protocol version selected by your server; do not delete
+      this example if you maintain older deployments.
+    </div>
+
     <pre class="code"><code><span class="com"># client.py</span>
 <span class="kw">import</span> <span class="typ">asyncio</span>
 <span class="kw">from</span> <span class="typ">mcp.client.session</span> <span class="kw">import</span> <span class="typ">ClientSession</span>
@@ -436,6 +467,17 @@ python client.py</code></pre>
       <strong>Connection to what we discussed earlier:</strong><br/>
       This is the MCP equivalent of “passing dictionaries” in LangChain: tool calls are structured dict inputs,
       and tool results become structured outputs that the host can feed back to the LLM.
+    </div>
+
+    <div class="tr-update">
+      <strong>The same client flow on MCP 2026-07-28</strong>
+      The host may call <code>server/discover</code>, selects a mutually
+      supported version, and sends <code>tools/list</code>,
+      <code>resources/list</code>, <code>prompts/list</code>, and later calls
+      as independent requests. Each request repeats protocol and capability
+      metadata. Application continuity uses explicit server-minted handles in
+      tool arguments, not <code>Mcp-Session-Id</code> or connection affinity.
+      See Chapter 4 for complete JSON-RPC and Streamable HTTP shapes.
     </div>
   </section>
 
@@ -667,6 +709,7 @@ request.state.scope <span class="op">=</span> data.<span class="fn">get</span>(<
   </section>
 
   <section id="best-practices">
+    <span id="troubleshooting" class="tr-anchor-target" aria-hidden="true"></span>
     <h2>12) Best practices & troubleshooting</h2>
 
     <h3>12.1 Always separate “tool selection” from “tool execution”</h3>
@@ -720,7 +763,16 @@ request.state.scope <span class="op">=</span> data.<span class="fn">get</span>(<
     </div>
   </section>
 
+  <section>
+    <h2>Official references</h2>
+    <ul>
+      <li><a href="https://modelcontextprotocol.io/specification/2026-07-28">MCP <code>2026-07-28</code> specification</a></li>
+      <li><a href="https://modelcontextprotocol.io/specification/2026-07-28/changelog">Key changes from the 2025 protocol family</a></li>
+      <li><a href="https://modelcontextprotocol.io/specification/2026-07-28/server/discover"><code>server/discover</code> reference</a></li>
+    </ul>
+  </section>
+
 </main>
-  <script src="../assets/js/nav.js?v=20260522-book-cleanup"></script>
+  <script src="../assets/js/nav.js?v=20260730-currency-final"></script>
 </body>
 </html>

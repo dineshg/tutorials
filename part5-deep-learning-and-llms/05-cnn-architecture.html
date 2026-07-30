@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>CNNs Tutorial — Part 2: Multi-Channel Convs, Feature Maps, Pooling, Strides, Global Pooling, CNN Architecture</title>
+  <title>CNNs — Part 2: Feature Maps, Pooling, and Architecture</title>
 
   <!-- Light theme + high-contrast code blocks (same style as before) --><!-- MathJax for equations -->
   <script>
@@ -15,7 +15,7 @@
       options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
     };
   </script>
-  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-mml-chtml.js"></script>
 
   <!-- Copy buttons -->
   <script>
@@ -38,7 +38,7 @@
       });
     });
   </script>
-  <link rel="stylesheet" href="../assets/css/book.css?v=20260517-figures-code2">
+  <link rel="stylesheet" href="../assets/css/book.css?v=20260730-currency-final">
 </head>
 
 <body>
@@ -114,8 +114,8 @@
       <figure>
         <img alt="RGB channels split (conceptual)" src="../assets/images/external/Rgb_channels_separate-66f58fb11f-fallback.svg">
         <figcaption>
-          RGB channels separated (Wikimedia Commons):
-          <a href="https://commons.wikimedia.org/wiki/File:Rgb_channels_separate.png" target="_blank" rel="noopener">Rgb_channels_separate.png</a>
+          Local book diagram of separated RGB channels. Technical reference:
+          <a href="https://docs.opencv.org/4.x/de/d25/imgproc_color_conversions.html" target="_blank" rel="noopener">OpenCV color conversions</a>.
         </figcaption>
       </figure>
 
@@ -154,8 +154,8 @@
       <figure>
         <img alt="Feature map visualization from a CNN layer (conceptual)" src="../assets/images/external/Typical_cnn-46df08c8b8-fallback.svg">
         <figcaption>
-          CNN concept diagram showing stacks of feature maps (Wikimedia Commons):
-          <a href="https://commons.wikimedia.org/wikipedia/commons/6/63/Typical_cnn.png" target="_blank" rel="noopener">Typical_cnn.png</a>
+          Local book diagram showing stacks of CNN feature maps. Historical reference:
+          <a href="https://doi.org/10.1109/5.726791" target="_blank" rel="noopener">LeCun et al., 1998</a>.
         </figcaption>
       </figure>
     </section>
@@ -201,8 +201,8 @@
       <figure>
         <img alt="Convolution arithmetic illustration showing shapes" src="../assets/images/external/Convolution_arithmetic_padding_strides-939a950445-fallback.svg">
         <figcaption>
-          Convolution arithmetic (padding/stride) (Wikimedia Commons):
-          <a href="https://commons.wikimedia.org/wiki/File:Convolution_arithmetic_padding_strides.png" target="_blank" rel="noopener">Convolution_arithmetic_padding_strides.png</a>
+          Local book diagram of convolution arithmetic. Technical reference:
+          <a href="https://arxiv.org/abs/1603.07285" target="_blank" rel="noopener">Dumoulin and Visin</a>.
         </figcaption>
       </figure>
     </section>
@@ -331,8 +331,8 @@ print(y.shape)  # (8, 16, 32, 32)</code></pre>
       <figure>
         <img alt="LeNet-5 architecture diagram (classic CNN archetype)" src="../assets/images/external/LeNet5-46fbf8dc74-fallback.svg">
         <figcaption>
-          LeNet-5 style architecture diagram (Wikimedia Commons):
-          <a href="https://commons.wikimedia.org/wiki/File:LeNet5.png" target="_blank" rel="noopener">LeNet5.png</a>
+          Local book diagram of the LeNet-5 pattern. Primary reference:
+          <a href="https://doi.org/10.1109/5.726791" target="_blank" rel="noopener">LeCun et al., 1998</a>.
         </figcaption>
       </figure>
 
@@ -496,8 +496,8 @@ print("avg:\n", avgpool(x)[0,0])</code></pre>
       <figure>
         <img alt="Convolution with stride illustration" src="../assets/images/external/Conv_arithmetic_strides-4314c5336a-fallback.svg">
         <figcaption>
-          Convolution arithmetic showing stride behavior (Wikimedia Commons):
-          <a href="https://commons.wikimedia.org/wiki/File:Conv_arithmetic_strides.png" target="_blank" rel="noopener">Conv_arithmetic_strides.png</a>
+          Local book diagram of strided convolution. Technical reference:
+          <a href="https://arxiv.org/abs/1603.07285" target="_blank" rel="noopener">Dumoulin and Visin</a>.
         </figcaption>
       </figure>
 
@@ -565,8 +565,8 @@ print("stride=2:", y_b.shape)   # (1, 16, 16, 16)</code></pre>
       <figure>
         <img alt="Global average pooling diagram (conceptual; same idea applies to global max pooling)" src="../assets/images/external/GlobalAveragePooling-ea08b562e2-fallback.svg">
         <figcaption>
-          Global pooling concept (shown as global average pooling; global max is analogous) (Wikimedia Commons):
-          <a href="https://commons.wikimedia.org/wiki/File:GlobalAveragePooling.png" target="_blank" rel="noopener">GlobalAveragePooling.png</a>
+          Local book diagram of global pooling. Primary reference for global average pooling:
+          <a href="https://arxiv.org/abs/1312.4400" target="_blank" rel="noopener">Lin, Chen, and Yan, <em>Network in Network</em></a>.
         </figcaption>
       </figure>
 
@@ -672,24 +672,24 @@ class SimpleCNN(nn.Module):
     <section id="credits">
       <h2>Local visuals and source credits</h2>
       <ul class="small">
-        <li>RGB channels separated: <a href="https://commons.wikimedia.org/wiki/File:Rgb_channels_separate.png" target="_blank" rel="noopener">Wikimedia Commons</a></li>
-        <li>CNN feature map stack diagram: <a href="https://commons.wikimedia.org/wiki/File:Typical_cnn.png" target="_blank" rel="noopener">Wikimedia Commons</a></li>
-        <li>Convolution arithmetic (padding/stride): <a href="https://commons.wikimedia.org/wiki/File:Convolution_arithmetic_padding_strides.png" target="_blank" rel="noopener">Wikimedia Commons</a></li>
+        <li>RGB channels diagram: local book asset; concept reference: <a href="https://docs.opencv.org/4.x/de/d25/imgproc_color_conversions.html" target="_blank" rel="noopener">OpenCV color conversions</a></li>
+        <li>CNN feature-map stack: local book asset; historical reference: <a href="https://doi.org/10.1109/5.726791" target="_blank" rel="noopener">LeCun et al., 1998</a></li>
+        <li>Convolution arithmetic (padding/stride): local book asset; concept reference: <a href="https://arxiv.org/abs/1603.07285" target="_blank" rel="noopener">Dumoulin and Visin</a></li>
         <li>Local receptive fields / conv layer concept: <a href="https://commons.wikimedia.org/wiki/File:Conv_layer.png" target="_blank" rel="noopener">Wikimedia Commons</a></li>
-        <li>LeNet-5 architecture diagram: <a href="https://commons.wikimedia.org/wiki/File:LeNet5.png" target="_blank" rel="noopener">Wikimedia Commons</a></li>
+        <li>LeNet-5 pattern: local book asset; primary reference: <a href="https://doi.org/10.1109/5.726791" target="_blank" rel="noopener">LeCun et al., 1998</a></li>
         <li>Max pooling visualization: <a href="https://commons.wikimedia.org/wiki/File:Max_pooling.png" target="_blank" rel="noopener">Wikimedia Commons</a></li>
-        <li>Stride arithmetic illustration: <a href="https://commons.wikimedia.org/wiki/File:Conv_arithmetic_strides.png" target="_blank" rel="noopener">Wikimedia Commons</a></li>
-        <li>Global pooling diagram (average; max is analogous): <a href="https://commons.wikimedia.org/wiki/File:GlobalAveragePooling.png" target="_blank" rel="noopener">Wikimedia Commons</a></li>
+        <li>Stride arithmetic: local book asset; concept reference: <a href="https://arxiv.org/abs/1603.07285" target="_blank" rel="noopener">Dumoulin and Visin</a></li>
+        <li>Global pooling: local book asset; primary reference: <a href="https://arxiv.org/abs/1312.4400" target="_blank" rel="noopener">Network in Network</a></li>
       </ul>
 
       <div class="hr"></div>
       <p class="muted small">
         This HTML is self-contained in structure: equations render via MathJax CDN, code blocks are readable with copy buttons,
-        and all displayed visuals are local assets, with Wikimedia source credits retained where applicable.
+        and all displayed visuals are local assets, with source attribution or primary concept references retained where applicable.
       </p>
     </section>
 
   </div>
-  <script src="../assets/js/nav.js?v=20260522-book-cleanup"></script>
+  <script src="../assets/js/nav.js?v=20260730-currency-final"></script>
 </body>
 </html>

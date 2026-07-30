@@ -7,9 +7,9 @@
 <title>Bagging & Boosting (AdaBoost + XGBoost) — Trees, Impurities, and How Splits Work</title>
 
 <!-- KaTeX (math rendering) -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.18.1/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.18.1/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.18.1/dist/contrib/auto-render.min.js"></script>
 <script>
   window.addEventListener("DOMContentLoaded", () => {
     if (typeof renderMathInElement !== "function") return;
@@ -25,7 +25,7 @@
     });
   });
 </script>
-<link rel="stylesheet" href="../assets/css/book.css?v=20260517-figures-code2">
+<link rel="stylesheet" href="../assets/css/book.css?v=20260730-currency-final">
 </head>
 
 <body>
@@ -108,23 +108,23 @@
           <text x="34" y="70" font-size="13" fill="#0b2a4a">Trees trained independently (can run in parallel)</text>
 
           <!-- bagging trees -->
-          <g transform="translate(40,88)">
-            <rect x="0" y="0" width="70" height="58" rx="12" fill="rgba(255,255,255,0.75)" stroke="rgba(15,23,42,0.15)"/>
-            <text x="13" y="34" font-size="13" font-weight="800" fill="#0b2a4a">Tree 1</text>
+          <g transform="translate(35,88)">
+            <rect x="0" y="0" width="60" height="58" rx="12" fill="rgba(255,255,255,0.75)" stroke="rgba(15,23,42,0.15)"/>
+            <text x="10" y="34" font-size="12" font-weight="800" fill="#0b2a4a">Tree 1</text>
 
-            <rect x="95" y="0" width="70" height="58" rx="12" fill="rgba(255,255,255,0.75)" stroke="rgba(15,23,42,0.15)"/>
-            <text x="108" y="34" font-size="13" font-weight="800" fill="#0b2a4a">Tree 2</text>
+            <rect x="72" y="0" width="60" height="58" rx="12" fill="rgba(255,255,255,0.75)" stroke="rgba(15,23,42,0.15)"/>
+            <text x="82" y="34" font-size="12" font-weight="800" fill="#0b2a4a">Tree 2</text>
 
-            <rect x="190" y="0" width="70" height="58" rx="12" fill="rgba(255,255,255,0.75)" stroke="rgba(15,23,42,0.15)"/>
-            <text x="203" y="34" font-size="13" font-weight="800" fill="#0b2a4a">Tree 3</text>
+            <rect x="144" y="0" width="60" height="58" rx="12" fill="rgba(255,255,255,0.75)" stroke="rgba(15,23,42,0.15)"/>
+            <text x="154" y="34" font-size="12" font-weight="800" fill="#0b2a4a">Tree 3</text>
 
-            <rect x="285" y="0" width="70" height="58" rx="12" fill="rgba(255,255,255,0.75)" stroke="rgba(15,23,42,0.15)"/>
-            <text x="298" y="34" font-size="13" font-weight="800" fill="#0b2a4a">Tree 4</text>
+            <rect x="216" y="0" width="60" height="58" rx="12" fill="rgba(255,255,255,0.75)" stroke="rgba(15,23,42,0.15)"/>
+            <text x="226" y="34" font-size="12" font-weight="800" fill="#0b2a4a">Tree 4</text>
 
-            <text x="370" y="34" font-size="22" font-weight="900" fill="#0b2a4a">→</text>
-            <rect x="405" y="-2" width="90" height="62" rx="14" fill="rgba(255,255,255,0.82)" stroke="rgba(15,23,42,0.18)"/>
-            <text x="419" y="26" font-size="13" font-weight="900" fill="#0b2a4a">Average /</text>
-            <text x="419" y="44" font-size="13" font-weight="900" fill="#0b2a4a">Vote</text>
+            <text x="286" y="34" font-size="22" font-weight="900" fill="#0b2a4a">→</text>
+            <rect x="314" y="-2" width="105" height="62" rx="14" fill="rgba(255,255,255,0.82)" stroke="rgba(15,23,42,0.18)"/>
+            <text x="328" y="26" font-size="12" font-weight="900" fill="#0b2a4a">Average /</text>
+            <text x="328" y="44" font-size="12" font-weight="900" fill="#0b2a4a">Vote</text>
           </g>
 
           <rect x="510" y="16" width="455" height="178" rx="16" fill="url(#g2)" stroke="rgba(15,23,42,0.14)"/>
@@ -132,25 +132,25 @@
           <text x="529" y="70" font-size="13" fill="#0b2a4a">Trees trained sequentially (each corrects previous errors)</text>
 
           <!-- boosting chain -->
-          <g transform="translate(535,92)">
-            <rect x="0" y="0" width="90" height="55" rx="12" fill="rgba(255,255,255,0.75)" stroke="rgba(15,23,42,0.15)"/>
-            <text x="16" y="33" font-size="13" font-weight="800" fill="#0b2a4a">Tree 1</text>
+          <g transform="translate(525,92)">
+            <rect x="0" y="0" width="68" height="55" rx="12" fill="rgba(255,255,255,0.75)" stroke="rgba(15,23,42,0.15)"/>
+            <text x="12" y="33" font-size="12" font-weight="800" fill="#0b2a4a">Tree 1</text>
 
-            <text x="100" y="35" font-size="22" font-weight="900" fill="#0b2a4a">→</text>
+            <text x="72" y="35" font-size="20" font-weight="900" fill="#0b2a4a">→</text>
 
-            <rect x="125" y="0" width="90" height="55" rx="12" fill="rgba(255,255,255,0.75)" stroke="rgba(15,23,42,0.15)"/>
-            <text x="141" y="33" font-size="13" font-weight="800" fill="#0b2a4a">Tree 2</text>
+            <rect x="92" y="0" width="68" height="55" rx="12" fill="rgba(255,255,255,0.75)" stroke="rgba(15,23,42,0.15)"/>
+            <text x="104" y="33" font-size="12" font-weight="800" fill="#0b2a4a">Tree 2</text>
 
-            <text x="225" y="35" font-size="22" font-weight="900" fill="#0b2a4a">→</text>
+            <text x="164" y="35" font-size="20" font-weight="900" fill="#0b2a4a">→</text>
 
-            <rect x="250" y="0" width="90" height="55" rx="12" fill="rgba(255,255,255,0.75)" stroke="rgba(15,23,42,0.15)"/>
-            <text x="266" y="33" font-size="13" font-weight="800" fill="#0b2a4a">Tree 3</text>
+            <rect x="184" y="0" width="68" height="55" rx="12" fill="rgba(255,255,255,0.75)" stroke="rgba(15,23,42,0.15)"/>
+            <text x="196" y="33" font-size="12" font-weight="800" fill="#0b2a4a">Tree 3</text>
 
-            <text x="350" y="35" font-size="22" font-weight="900" fill="#0b2a4a">→</text>
+            <text x="256" y="35" font-size="20" font-weight="900" fill="#0b2a4a">→</text>
 
-            <rect x="375" y="0" width="105" height="55" rx="12" fill="rgba(255,255,255,0.82)" stroke="rgba(15,23,42,0.18)"/>
-            <text x="386" y="24" font-size="13" font-weight="900" fill="#0b2a4a">Add weighted</text>
-            <text x="386" y="42" font-size="13" font-weight="900" fill="#0b2a4a">contributions</text>
+            <rect x="280" y="0" width="150" height="55" rx="12" fill="rgba(255,255,255,0.82)" stroke="rgba(15,23,42,0.18)"/>
+            <text x="293" y="24" font-size="12" font-weight="900" fill="#0b2a4a">Add weighted</text>
+            <text x="293" y="42" font-size="12" font-weight="900" fill="#0b2a4a">contributions</text>
           </g>
         </svg>
       </div>
@@ -770,9 +770,10 @@ Final prediction:
     </section>
 
     <footer>
-      Built as a single self-contained HTML page (light theme). Copy into a file and open in your browser.
+      This chapter closes the classical tabular-model path and prepares the
+      transition to learned representations in Part V.
     </footer>
   </div>
-  <script src="../assets/js/nav.js?v=20260522-book-cleanup"></script>
+  <script src="../assets/js/nav.js?v=20260730-currency-final"></script>
 </body>
 </html>

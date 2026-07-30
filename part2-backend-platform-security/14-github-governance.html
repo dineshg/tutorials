@@ -3,14 +3,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>GitHub Admin Tutorial: Rulesets, Workflows, Actions, Runners, and Enforcement</title>
-<link rel="stylesheet" href="../assets/css/book.css?v=20260517-figures-code2">
+  <title>GitHub Governance: Rulesets, Workflows, Runners, and Enforcement</title>
+<link rel="stylesheet" href="../assets/css/book.css?v=20260730-currency-final">
 </head>
 
 <body>
 <header>
   <div class="wrap">
-    <h1>GitHub Admin Tutorial: Rulesets, Actions Workflows, Runners, and Enforcement</h1>
+    <h1>GitHub Governance: Rulesets, Actions Workflows, Runners, and Enforcement</h1>
     <p class="sub">
       A practical admin guide explaining <strong>what runs</strong>, <strong>who runs it</strong>, <strong>where it runs</strong>,
       and <strong>how GitHub blocks merges/pushes</strong> when policy is not satisfied.
@@ -153,13 +153,19 @@
     <div class="box">
       <h3>“How is that container/tool found?” (your earlier question)</h3>
       <p>
-        In a workflow, a line such as <code>uses: aquasecurity/trivy-action@v0.24.0</code> is an explicit pointer to an Action repository and version.
+        In a workflow, a line such as
+        <code>uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25</code>
+        is an explicit pointer to an Action repository and immutable commit.
         GitHub fetches that action and runs it. If the action is Docker-based, its own <code>action.yml</code> defines the container image.
         If it is composite-based, it runs commands directly on the runner (often installing Trivy and executing it).
       </p>
       <p class="tiny">
-        As an admin, you care about pinning versions (avoid floating refs like <code>@master</code>), pinning to full commit SHAs for high-control repositories,
-        and restricting which actions are allowed via org/enterprise policies.
+        Keep a version comment such as <code># v0.36.0</code> beside the SHA so
+        update tools and reviewers retain context. GitHub can enforce
+        full-length SHA pins at repository or organization level. Use
+        Dependabot or another reviewed update process to advance those SHAs,
+        and restrict which actions are allowed through organization or
+        enterprise policy.
       </p>
     </div>
   </section>
@@ -299,10 +305,10 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
 
       - name: Trivy filesystem scan (fail on HIGH/CRITICAL)
-        uses: aquasecurity/trivy-action@v0.24.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25  # v0.36.0
         with:
           scan-type: fs
           scan-ref: .
@@ -310,6 +316,20 @@ jobs:
           ignore-unfixed: true
           format: table
           exit-code: 1</code></pre>
+
+    <div class="box bad">
+      <h3>Why the SHA pin is a security control, not cosmetic</h3>
+      <p>
+        Aqua's March 2026 advisory records a temporary compromise in which
+        many historical <code>trivy-action</code> tags were force-pushed to
+        malicious commits. Versions before <code>0.35.0</code> are listed as
+        affected; the older <code>v0.24.0</code> example previously shown in
+        this chapter must not be restored. A full commit SHA cannot move when
+        a tag moves. If the affected action ran during the advisory's exposure
+        window, follow the vendor's incident-response guidance and rotate any
+        credentials available to that job.
+      </p>
+    </div>
 
     <div class="box ok">
       <h3>What check appears in the PR?</h3>
@@ -438,6 +458,8 @@ release/*</code></pre>
         <li><strong>Block direct pushes</strong> to protected branches.</li>
         <li><strong>Branch naming restriction</strong> (limit branch creation/update patterns).</li>
         <li><strong>Secret push protection</strong> enabled org/enterprise-wide.</li>
+        <li><strong>Full-length action SHA policy</strong> enabled, with automated update PRs and review.</li>
+        <li><strong><code>CODEOWNERS</code> review</strong> required for <code>.github/workflows/</code> and governance files.</li>
       </ul>
     </div>
 
@@ -446,6 +468,38 @@ release/*</code></pre>
       <p>
         If you can use required workflows, centralize the baseline scanning workflow so every repo gets the same scanning behavior and check naming.
         This reduces drift and makes rulesets more stable.
+      </p>
+    </div>
+
+    <div class="box ok">
+      <h3>Cloud deployments: OIDC instead of stored cloud keys</h3>
+      <p>
+        Give the job <code>id-token: write</code>, exchange GitHub's
+        short-lived OIDC token with the cloud provider, and constrain the
+        provider trust policy by <code>aud</code> and <code>sub</code>. Do not
+        trust every workflow in an organization. Where appropriate, also bind
+        the reusable workflow through <code>job_workflow_ref</code>, repository
+        ID, environment, or custom repository-property claims.
+      </p>
+      <p>
+        Repositories created after July 15, 2026 use GitHub's immutable
+        default <code>sub</code> format containing owner and repository IDs;
+        older repositories keep the name-based format until opted in. Migrate
+        the cloud trust policy before opting in so deployments do not fail.
+      </p>
+    </div>
+
+    <div class="box">
+      <h3>Build provenance: artifact attestations</h3>
+      <p>
+        For release binaries and images, generate a GitHub artifact
+        attestation after the build and verify it at promotion or deployment.
+        The workflow needs <code>id-token: write</code>,
+        <code>attestations: write</code>, and least-privilege access to the
+        artifact or package. <code>artifact-metadata: write</code> is
+        additionally required when publishing storage records to the linked
+        artifacts page. An attestation proves where and how an artifact was
+        built; it does not replace tests, vulnerability scanning, or review.
       </p>
     </div>
   </section>
@@ -501,7 +555,7 @@ jobs:
     name: job1
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
       - run: echo "hello"</code></pre>
 
     <h3>12.2 Standardized Aqua/Trivy scan workflow (recommended naming)</h3>
@@ -520,8 +574,8 @@ jobs:
     name: scan
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: aquasecurity/trivy-action@v0.24.0
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25  # v0.36.0
         with:
           scan-type: fs
           scan-ref: .
@@ -540,16 +594,31 @@ jobs:
         <li>Rulesets enforce policy by requiring those checks and restricting push/merge behavior.</li>
       </ul>
     </div>
+
+    <h3>12.4 Supply-chain verification checklist</h3>
+    <ul>
+      <li>Resolve the release tag from the action's official repository and verify that the SHA belongs to that repository, not a fork.</li>
+      <li>Review automated SHA-update PRs and the action's release/security notes before merging.</li>
+      <li>Keep the default <code>GITHUB_TOKEN</code> permissions read-only and elevate only the job permissions that are required.</li>
+      <li>Never check out untrusted pull-request code in a privileged <code>pull_request_target</code> job.</li>
+      <li>Record and verify artifact attestations for promoted release artifacts.</li>
+    </ul>
   </section>
 
 </main>
 
 <footer>
   <div class="wrap">
-    <p><strong>Done.</strong> This document focuses strictly on GitHub admin concepts: rulesets, workflows/actions, runners, and enforcement behavior.</p>
-    <p class="tiny">If you want, tell me your exact org structure (enterprise → orgs → repos) and the branch patterns you use, and I’ll tailor the “enterprise baseline” section into a concrete rollout plan.</p>
+    <p><strong>Scope.</strong> This chapter focuses on GitHub administration: rulesets, workflows/actions, runners, and enforcement behavior.</p>
+    <p class="tiny">Convert the enterprise baseline into a rollout matrix keyed by enterprise, organization, repository class, and branch pattern, with owners and exception-expiry dates.</p>
+    <p class="tiny"><strong>Official references:</strong>
+      <a href="https://docs.github.com/en/actions/reference/security/secure-use">Secure use of GitHub Actions</a> ·
+      <a href="https://docs.github.com/en/actions/reference/security/oidc">GitHub Actions OIDC claims</a> ·
+      <a href="https://docs.github.com/en/actions/concepts/security/artifact-attestations">Artifact attestations</a> ·
+      <a href="https://github.com/aquasecurity/trivy/security/advisories/GHSA-69fq-xp46-6x23">Trivy 2026 security advisory</a>
+    </p>
   </div>
 </footer>
-  <script src="../assets/js/nav.js?v=20260522-book-cleanup"></script>
+  <script src="../assets/js/nav.js?v=20260730-currency-final"></script>
 </body>
 </html>

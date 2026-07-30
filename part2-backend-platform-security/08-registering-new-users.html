@@ -3,17 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registering a New User with Google OIDC and FastAPI</title>
-<link rel="stylesheet" href="../assets/css/book.css?v=20260517-figures-code2">
+    <title>First Login and User Provisioning with OIDC and FastAPI</title>
+<link rel="stylesheet" href="../assets/css/book.css?v=20260730-currency-final">
 </head>
 <body>
 
-    <h1>Registering a New User</h1>
-    <p class="note">Assume the organisation's Google Workspace policy already allows this user to authenticate with Google.</p>
+    <h1>First Login and User Provisioning</h1>
+    <p class="lead">Authentication proves an external identity; provisioning creates the application account, tenant membership, and starting authorization state.</p>
+
+    <div class="tr-note">
+        <strong>Where this fits</strong>
+        The preceding chapters established OIDC Authorization Code with PKCE
+        and API token validation. This chapter begins after a token has been
+        validated. It explains just-in-time provisioning without confusing an
+        identity-provider account, an application user, and a tenant
+        membership.
+    </div>
+
+    <p class="note">Assume the organisation's Google Workspace policy already allows this person to authenticate. That permission does not by itself grant access to this application or any tenant data.</p>
+
+    <figure class="figure-card">
+        <svg viewBox="0 0 1000 330" role="img" aria-labelledby="provision-title provision-desc">
+            <title id="provision-title">First-login authentication and provisioning state machine</title>
+            <desc id="provision-desc">The browser authenticates with the identity provider, the API validates a token, then an atomic bootstrap either returns an existing user or creates an allowed tenant membership.</desc>
+            <defs>
+                <marker id="provision-arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 Z" fill="#1769e0"></path>
+                </marker>
+            </defs>
+            <rect x="25" y="70" width="170" height="90" rx="12" fill="#e8f2ff" stroke="#1769e0" stroke-width="2"></rect>
+            <text x="110" y="106" text-anchor="middle" font-size="17" font-weight="700" fill="#162033">Browser</text>
+            <text x="110" y="134" text-anchor="middle" font-size="14" fill="#4f6078">Auth Code + PKCE</text>
+
+            <rect x="270" y="70" width="190" height="90" rx="12" fill="#f1ecff" stroke="#7548d8" stroke-width="2"></rect>
+            <text x="365" y="106" text-anchor="middle" font-size="17" font-weight="700" fill="#162033">Identity provider</text>
+            <text x="365" y="134" text-anchor="middle" font-size="14" fill="#4f6078">authenticate identity</text>
+
+            <rect x="535" y="70" width="190" height="90" rx="12" fill="#fff6df" stroke="#bf8700" stroke-width="2"></rect>
+            <text x="630" y="106" text-anchor="middle" font-size="17" font-weight="700" fill="#162033">FastAPI boundary</text>
+            <text x="630" y="134" text-anchor="middle" font-size="14" fill="#4f6078">verify iss, aud, exp, sub</text>
+
+            <rect x="800" y="35" width="175" height="90" rx="12" fill="#e9fbf2" stroke="#14875a" stroke-width="2"></rect>
+            <text x="887" y="71" text-anchor="middle" font-size="17" font-weight="700" fill="#162033">Existing user</text>
+            <text x="887" y="99" text-anchor="middle" font-size="14" fill="#4f6078">refresh last login</text>
+
+            <rect x="800" y="195" width="175" height="100" rx="12" fill="#fcebea" stroke="#cf222e" stroke-width="2"></rect>
+            <text x="887" y="229" text-anchor="middle" font-size="17" font-weight="700" fill="#162033">New identity</text>
+            <text x="887" y="256" text-anchor="middle" font-size="14" fill="#4f6078">policy + atomic upsert</text>
+            <text x="887" y="278" text-anchor="middle" font-size="14" fill="#4f6078">or deny</text>
+
+            <line x1="195" y1="115" x2="270" y2="115" stroke="#1769e0" stroke-width="3" marker-end="url(#provision-arrow)"></line>
+            <line x1="460" y1="115" x2="535" y2="115" stroke="#1769e0" stroke-width="3" marker-end="url(#provision-arrow)"></line>
+            <path d="M725 105 C755 90 765 80 800 80" fill="none" stroke="#14875a" stroke-width="3" marker-end="url(#provision-arrow)"></path>
+            <path d="M725 130 C760 155 770 225 800 240" fill="none" stroke="#cf222e" stroke-width="3" marker-end="url(#provision-arrow)"></path>
+            <text x="752" y="76" font-size="13" fill="#14875a">found</text>
+            <text x="748" y="201" font-size="13" fill="#cf222e">not found</text>
+        </svg>
+        <figcaption>
+            Identity verification precedes provisioning. The create-or-return
+            step must be atomic because two browser requests can arrive for
+            the same first login.
+        </figcaption>
+    </figure>
 
     <hr>
 
-    <h2>New User Sign-In Flow (React + Google OIDC + FastAPI)</h2>
+    <h2>1. New User Sign-In Flow (React + Google OIDC + FastAPI)</h2>
 
     <div class="highlight-box">
         <strong>Key idea:</strong> The login page doesn't "register" the user with Google—Google already knows them. Your app "registers" the user by provisioning a record in your database the first time your backend sees a valid identity.
@@ -24,14 +79,15 @@
             <p>React starts OIDC Authorization Code + PKCE by redirecting the browser to Google's authorization endpoint.</p>
             <p><em>Outcome: user authenticates with Google (SSO).</em></p>
         </li>
-        <li><strong>React receives tokens</strong>
-            <p>React exchanges the authorization code for tokens and gets an access token (this is what becomes the Bearer token for your API). React stores the token (commonly in memory) and uses it for API calls.</p>
+        <li><strong>The registered client completes the code exchange</strong>
+            <p>In a browser-only public-client design, React can exchange the authorization code using its PKCE verifier and keep tokens in memory. In a backend-for-frontend design, the backend completes the exchange and gives the browser an HTTP-only session cookie.</p>
+            <p>The credential sent to your API must be an <strong>access token issued for that API's audience</strong>. An OIDC ID token describes the login result for its client; it is not a general-purpose API bearer token. A Google-only application may instead validate the login at its backend and mint an application session.</p>
         </li>
         <li><strong>React calls a bootstrap endpoint on your API</strong>
             <p>Right after login, the frontend calls something like:</p>
             <ul>
-                <li><code>GET /me</code> (common), or</li>
-                <li><code>POST /auth/bootstrap</code></li>
+                <li><code>POST /auth/bootstrap</code> for an operation that may create or update application records, then</li>
+                <li><code>GET /me</code> for later read-only profile retrieval.</li>
             </ul>
             <p>with:</p>
             <pre><code>Authorization: Bearer &lt;access_token&gt;</code></pre>
@@ -41,7 +97,7 @@
             <p>Backend verifies the token (signature + issuer/audience/expiry), then reads claims like:</p>
             <ul>
                 <li><code>sub</code> → stable user identifier at this IdP</li>
-                <li><code>email</code> → commonly used for tenant mapping (e.g., domain) or allowlists</li>
+                <li><code>email</code> and <code>email_verified</code> → optional policy inputs, never the stable primary key</li>
             </ul>
         </li>
         <li><strong>Backend checks if the user already exists in your DB</strong>
@@ -60,13 +116,13 @@
 
     <hr>
 
-    <h2>Example FastAPI Endpoint for User Provisioning</h2>
+    <h2>2. Example FastAPI Endpoint for User Provisioning</h2>
     <p>This endpoint is the bootstrap call that validates the Bearer token, looks up the user, creates the DB row if missing, and returns user details.</p>
     <p class="callout warn">The code below is a teaching scaffold. The industry-standard version verifies the token against JWKS/OIDC discovery, stores users in a real database with a unique constraint on <code>(issuer, subject)</code>, performs the create-or-return logic in a transaction/upsert, and records audit fields such as <code>created_at</code> and <code>last_login_at</code>.</p>
-    <pre><code><span style="color: #0000ff;">from</span> fastapi <span style="color: #0000ff;">import</span> FastAPI, Depends, HTTPException
+    <pre><code class="language-python"><span style="color: #0000ff;">from</span> fastapi <span style="color: #0000ff;">import</span> FastAPI, Depends, HTTPException
 <span style="color: #0000ff;">from</span> fastapi.security <span style="color: #0000ff;">import</span> HTTPAuthorizationCredentials, HTTPBearer
 <span style="color: #0000ff;">from</span> pydantic <span style="color: #0000ff;">import</span> BaseModel
-<span style="color: #0000ff;">from</span> datetime <span style="color: #0000ff;">import</span> datetime
+<span style="color: #0000ff;">from</span> datetime <span style="color: #0000ff;">import</span> datetime, timezone
 
 app = FastAPI()
 bearer = HTTPBearer(auto_error=<span style="color: #0000ff;">True</span>)
@@ -94,6 +150,7 @@ USERS_BY_ISS_SUB: dict[tuple[str, str], dict] = {}  <span style="color: #008000;
             <span style="color: #a31515;">"iss"</span>: <span style="color: #a31515;">"https://accounts.google.com"</span>,
             <span style="color: #a31515;">"sub"</span>: <span style="color: #a31515;">"user-A-sub"</span>,
             <span style="color: #a31515;">"email"</span>: <span style="color: #a31515;">"alice@acme.com"</span>,
+            <span style="color: #a31515;">"email_verified"</span>: <span style="color: #0000ff;">True</span>,
         }
     <span style="color: #0000ff;">raise</span> HTTPException(status_code=<span style="color: #098658;">401</span>, detail=<span style="color: #a31515;">"Invalid/expired token"</span>)
 
@@ -117,6 +174,8 @@ USERS_BY_ISS_SUB: dict[tuple[str, str], dict] = {}  <span style="color: #008000;
     issuer = claims[<span style="color: #a31515;">"iss"</span>]
     sub = claims[<span style="color: #a31515;">"sub"</span>]
     email = claims.get(<span style="color: #a31515;">"email"</span>, <span style="color: #a31515;">""</span>)
+    <span style="color: #0000ff;">if not</span> claims.get(<span style="color: #a31515;">"email_verified"</span>, <span style="color: #0000ff;">False</span>):
+        <span style="color: #0000ff;">raise</span> HTTPException(status_code=<span style="color: #098658;">403</span>, detail=<span style="color: #a31515;">"Verified email required"</span>)
 
     <span style="color: #008000;"># 3) Look up user by stable key (issuer, sub)</span>
     key = (issuer, sub)
@@ -140,7 +199,7 @@ USERS_BY_ISS_SUB: dict[tuple[str, str], dict] = {}  <span style="color: #008000;
         <span style="color: #a31515;">"issuer"</span>: issuer,
         <span style="color: #a31515;">"sub"</span>: sub,
         <span style="color: #a31515;">"email"</span>: email,
-        <span style="color: #a31515;">"created_at"</span>: datetime.utcnow().isoformat(),
+        <span style="color: #a31515;">"created_at"</span>: datetime.now(timezone.utc).isoformat(),
     }
     USERS_BY_ISS_SUB[key] = user_row
 
@@ -188,13 +247,82 @@ USERS_BY_ISS_SUB: dict[tuple[str, str], dict] = {}  <span style="color: #008000;
 
     <hr>
 
-    <h2>Where "Registration" Actually Lives</h2>
+    <h2>3. Where "Registration" Actually Lives</h2>
     <ul>
         <li>Google authenticates the user.</li>
         <li>Your backend decides whether the identity is allowed and attaches it to a tenant.</li>
         <li><strong>"Registration" = your DB provisioning, not creating credentials.</strong></li>
     </ul>
 
-  <script src="../assets/js/nav.js?v=20260522-book-cleanup"></script>
+    <h2>4. Choose a Provisioning Policy Explicitly</h2>
+    <table>
+        <thead>
+            <tr><th>Policy</th><th>How a new identity becomes a user</th><th>Use when</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>Invite only</td><td>A pending invitation already binds an email or subject to a tenant and initial role.</td><td>Controlled B2B and regulated applications.</td></tr>
+            <tr><td>Just in time (JIT)</td><td>A verified identity that satisfies policy is created during first login.</td><td>Managed workforce domains with clear admission rules.</td></tr>
+            <tr><td>SCIM / directory sync</td><td>An identity-management system creates, updates, and disables users before login.</td><td>Enterprise lifecycle automation and rapid deprovisioning.</td></tr>
+            <tr><td>Self-service tenant creation</td><td>The first allowed user creates a tenant and becomes its initial administrator.</td><td>SaaS onboarding with abuse controls and verification.</td></tr>
+        </tbody>
+    </table>
+
+    <p>
+        Domain mapping such as <code>@acme.com → tenant-acme</code> is a
+        teaching example, not a universal policy. Use it only with a verified
+        email, an owned-domain registry, and an explicit business rule.
+        Invitations or directory-managed membership are safer when the same
+        domain can contain people who must not share application data.
+    </p>
+
+    <h2>5. Make First Login Race-Safe</h2>
+    <p>
+        Browsers retry, users double-click, and multiple tabs can call
+        bootstrap simultaneously. An in-memory check followed by an insert is
+        not sufficient in production. Put a unique constraint on
+        <code>(issuer, subject)</code> and perform an upsert or transaction:
+    </p>
+
+    <pre><code class="language-sql">INSERT INTO app_user (issuer, subject, email, status, created_at)
+VALUES (:issuer, :subject, :email, 'active', CURRENT_TIMESTAMP)
+ON CONFLICT (issuer, subject)
+DO UPDATE SET
+    email = EXCLUDED.email,
+    last_login_at = CURRENT_TIMESTAMP
+RETURNING user_id, status;</code></pre>
+
+    <p>
+        Tenant membership should have its own unique key, such as
+        <code>(tenant_id, user_id)</code>. Keeping identity and membership
+        separate supports users who legitimately belong to more than one
+        tenant and avoids treating tenant data as an attribute permanently
+        embedded in the identity-provider account.
+    </p>
+
+    <h2>6. Sign-In Is Ongoing Reconciliation</h2>
+    <p>
+        The second login is not simply "do nothing." Update safe profile
+        metadata such as display name, verified email, and
+        <code>last_login_at</code>; evaluate whether the application user or
+        membership is suspended; and apply current authorization policy.
+        Never silently reactivate a locally disabled user merely because the
+        identity provider authenticated them.
+    </p>
+    <ul>
+        <li>Use <code>(iss, sub)</code> as the external identity key; email addresses can change or be reassigned.</li>
+        <li>Model user status and membership status separately: invited, active, suspended, or removed.</li>
+        <li>Decide whether group and role changes are read on every login, synchronized by SCIM, or maintained locally.</li>
+        <li>Record provisioning, membership changes, denial reasons, and the policy version in an audit trail.</li>
+        <li>Define deprovisioning and session revocation; login is only one part of the account lifecycle.</li>
+    </ul>
+
+    <div class="tr-tip">
+        <strong>Correct mental model</strong>
+        The identity provider owns credentials and authentication. Your
+        application owns admission, the internal user record, tenant
+        memberships, roles, and data authorization.
+    </div>
+
+  <script src="../assets/js/nav.js?v=20260730-currency-final"></script>
 </body>
 </html>

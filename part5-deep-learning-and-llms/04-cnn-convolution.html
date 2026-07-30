@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>CNNs Tutorial — Part 1: Convolution (Mechanics, Padding, Correlation View, Dot-Product View)</title>
+  <title>CNNs — Part 1: Convolution Mechanics and Intuition</title>
 
   <!-- Light theme + high-contrast code blocks --><!-- MathJax for equations -->
   <script>
@@ -15,7 +15,7 @@
       options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
     };
   </script>
-  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-mml-chtml.js"></script>
 
   <!-- Copy buttons -->
   <script>
@@ -38,7 +38,7 @@
       });
     });
   </script>
-  <link rel="stylesheet" href="../assets/css/book.css?v=20260517-figures-code2">
+  <link rel="stylesheet" href="../assets/css/book.css?v=20260730-currency-final">
 </head>
 
 <body>
@@ -108,16 +108,16 @@
       <figure>
         <img alt="Gaussian blur demonstration" src="../assets/images/external/Gaussian_blur_effect-27224edd27-fallback.svg">
         <figcaption>
-          Blur as a convolution effect (Wikimedia Commons):
-          <a href="https://commons.wikimedia.org/wiki/File:Gaussian_blur_effect.png" target="_blank" rel="noopener">Gaussian_blur_effect.png</a>
+          Local book diagram of blur as a convolution effect. Technical reference:
+          <a href="https://docs.opencv.org/4.x/d4/d13/tutorial_py_filtering.html" target="_blank" rel="noopener">OpenCV image filtering</a>.
         </figcaption>
       </figure>
 
       <figure>
         <img alt="Sobel operator result on an image (edge detection)" src="../assets/images/external/Sobel_operator_result_on_gray_image-9dc935e09c-fallback.svg">
         <figcaption>
-          Edge detection via convolution-like filtering (Sobel) (Wikimedia Commons):
-          <a href="https://commons.wikimedia.org/wiki/File:Sobel_operator_result_on_gray_image.png" target="_blank" rel="noopener">Sobel_operator_result_on_gray_image.png</a>
+          Local book diagram of Sobel edge filtering. Technical reference:
+          <a href="https://docs.opencv.org/4.x/d2/d2c/tutorial_sobel_derivatives.html" target="_blank" rel="noopener">OpenCV Sobel derivatives</a>.
         </figcaption>
       </figure>
 
@@ -253,10 +253,10 @@
       <figure>
         <img alt="Convolution padding illustration" src="../assets/images/external/Convolution_arithmetic_padding_strides-939a950445-fallback.svg">
         <figcaption>
-          Padding/stride output arithmetic illustration (Wikimedia Commons):
-          <a href="https://commons.wikimedia.org/wiki/File:Convolution_arithmetic_padding_strides.png" target="_blank" rel="noopener">
-            Convolution_arithmetic_padding_strides.png
-          </a>
+          Local book diagram of padding and stride arithmetic. Technical reference:
+          <a href="https://arxiv.org/abs/1603.07285" target="_blank" rel="noopener">
+            Dumoulin and Visin, <em>A guide to convolution arithmetic for deep learning</em>
+          </a>.
         </figcaption>
       </figure>
 
@@ -370,8 +370,8 @@ print(corr2d_valid(A, W))</code></pre>
       <figure>
         <img alt="Cross-correlation illustration" src="../assets/images/external/Cross-correlation_animation-2697dc7269-fallback.svg">
         <figcaption>
-          Cross-correlation sliding visualization (Wikimedia Commons):
-          <a href="https://commons.wikimedia.org/wiki/File:Cross-correlation_animation.gif" target="_blank" rel="noopener">Cross-correlation_animation.gif</a>
+          Local book visualization of cross-correlation. API reference:
+          <a href="https://docs.pytorch.org/docs/stable/generated/torch.nn.Conv2d.html" target="_blank" rel="noopener">PyTorch <code>Conv2d</code></a>.
         </figcaption>
       </figure>
 
@@ -519,8 +519,8 @@ print("b=", b)</code></pre>
       <figure>
         <img alt="Conv layer with multiple channels illustration" src="../assets/images/external/Typical_cnn-46df08c8b8-fallback.svg">
         <figcaption>
-          CNN concept diagram (Wikimedia Commons):
-          <a href="https://commons.wikimedia.org/wiki/File:Typical_cnn.png" target="_blank" rel="noopener">Typical_cnn.png</a>
+          Local book diagram of a multi-channel CNN. Historical reference:
+          <a href="https://doi.org/10.1109/5.726791" target="_blank" rel="noopener">LeCun et al., 1998</a>.
         </figcaption>
       </figure>
 
@@ -577,13 +577,13 @@ print(y_padded[0,0])</code></pre>
     <section id="credits">
       <h2>Local visuals and source credits</h2>
       <ul class="small">
-        <li>Gaussian blur effect: <a href="https://commons.wikimedia.org/wiki/File:Gaussian_blur_effect.png" target="_blank" rel="noopener">Gaussian_blur_effect.png</a></li>
-        <li>Sobel edge result: <a href="https://commons.wikimedia.org/wiki/File:Sobel_operator_result_on_gray_image.png" target="_blank" rel="noopener">Sobel_operator_result_on_gray_image.png</a></li>
+        <li>Gaussian blur diagram: local book asset; concept reference: <a href="https://docs.opencv.org/4.x/d4/d13/tutorial_py_filtering.html" target="_blank" rel="noopener">OpenCV image filtering</a></li>
+        <li>Sobel edge diagram: local book asset; concept reference: <a href="https://docs.opencv.org/4.x/d2/d2c/tutorial_sobel_derivatives.html" target="_blank" rel="noopener">OpenCV Sobel derivatives</a></li>
         <li>2D convolution animation: <a href="https://commons.wikimedia.org/wiki/File:2D_Convolution_Animation.gif" target="_blank" rel="noopener">2D_Convolution_Animation.gif</a></li>
-        <li>Padding/stride arithmetic: <a href="https://commons.wikimedia.org/wiki/File:Convolution_arithmetic_padding_strides.png" target="_blank" rel="noopener">Convolution_arithmetic_padding_strides.png</a></li>
-        <li>Cross-correlation animation: <a href="https://commons.wikimedia.org/wiki/File:Cross-correlation_animation.gif" target="_blank" rel="noopener">Cross-correlation_animation.gif</a></li>
+        <li>Padding/stride arithmetic: local book asset; concept reference: <a href="https://arxiv.org/abs/1603.07285" target="_blank" rel="noopener">Dumoulin and Visin</a></li>
+        <li>Cross-correlation diagram: local book asset; API reference: <a href="https://docs.pytorch.org/docs/stable/generated/torch.nn.Conv2d.html" target="_blank" rel="noopener">PyTorch <code>Conv2d</code></a></li>
         <li>Dot product geometry: <a href="https://commons.wikimedia.org/wiki/File:Dot_Product.svg" target="_blank" rel="noopener">Dot_Product.svg</a></li>
-        <li>CNN diagram: <a href="https://commons.wikimedia.org/wiki/File:Typical_cnn.png" target="_blank" rel="noopener">Typical_cnn.png</a></li>
+        <li>CNN diagram: local book asset; historical reference: <a href="https://doi.org/10.1109/5.726791" target="_blank" rel="noopener">LeCun et al., 1998</a></li>
       </ul>
 
       <div class="hr"></div>
@@ -594,6 +594,6 @@ print(y_padded[0,0])</code></pre>
     </section>
 
   </div>
-  <script src="../assets/js/nav.js?v=20260522-book-cleanup"></script>
+  <script src="../assets/js/nav.js?v=20260730-currency-final"></script>
 </body>
 </html>

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Architecture Reference Design</title>
-<link rel="stylesheet" href="../assets/css/book.css?v=20260517-figures-code2">
+<link rel="stylesheet" href="../assets/css/book.css?v=20260730-currency-final">
 </head>
 <body>
     <div class="container">
@@ -171,10 +171,15 @@ WHERE tenant_id = :tenant_id AND doc_id = :doc_id;</pre>
             “Users authenticate via OIDC. The React app obtains an access token (JWT) and calls the FastAPI API. The backend verifies the JWT and extracts tenant_id/user_id, then enforces multi-tenancy by scoping every DB and vector-search query to that tenant. For defense-in-depth we enable Postgres Row Level Security so cross-tenant access is blocked even if a query is missing filters. Because each request is stateless and carries identity, it scales naturally to many concurrent users.”
         </div>
         
-        <p style="margin-top: 30px; color: #666; font-size: 0.9em;">
-            If you want, I can extend this toy example to include the RAG step (Elastic retrieval + prompt building + Azure OpenAI call) and show exactly where tenant filters must be applied so you never leak context across users.
-        </p>
+        <div class="tr-note">
+            <strong>Architecture extension</strong>
+            The next vertical slice adds Elastic retrieval, prompt assembly,
+            and the Azure OpenAI call. Apply the tenant and corpus filter
+            inside retrieval, re-check authorization before fetching source
+            documents, and preserve the same identity in citations and audit
+            events so context cannot cross users.
+        </div>
     </div>
-  <script src="../assets/js/nav.js?v=20260522-book-cleanup"></script>
+  <script src="../assets/js/nav.js?v=20260730-currency-final"></script>
 </body>
 </html>

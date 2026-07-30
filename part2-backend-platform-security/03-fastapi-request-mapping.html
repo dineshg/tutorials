@@ -3,41 +3,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FastAPI HTTP Function Mapping</title>
-<link rel="stylesheet" href="../assets/css/book.css?v=20260517-figures-code2">
+    <title>From an HTTP Message to FastAPI Function Arguments</title>
+<link rel="stylesheet" href="../assets/css/book.css?v=20260730-currency-final">
 </head>
 <body>
     <div class="container">
-        <h1>Mini tutorial: One concrete HTTP message → what FastAPI receives</h1>
-        <p class="subtitle">(req, top_k, authorization)</p>
+        <h1>From an HTTP Message to FastAPI Function Arguments</h1>
+        <p class="lead">The HTTP chapter separated method, URL, headers, and
+        body. This chapter follows one request through FastAPI and shows exactly
+        how each part becomes a typed Python value. The Pydantic chapter then
+        explains the body model in depth.</p>
 
-        <h2>1) The FastAPI endpoint</h2>
-<pre>from fastapi import FastAPI, Header
-from pydantic import BaseModel
+        <h2>1) The endpoint declares the contract</h2>
+<pre><code class="language-python">from typing import Annotated
+
+from fastapi import FastAPI, Header, Query
+from pydantic import BaseModel, Field
 
 app = FastAPI()
 
 class QueryReq(BaseModel):
-    question: str
+    question: str = Field(min_length=1, max_length=2_000)
 
-@app.post("/query")
-def query(req: QueryReq, top_k: int = 5, authorization: str | None = Header(None)):
-    return {
-        "q": req.question,
-        "top_k": top_k,
-        "auth_header": authorization,
-    }</pre>
+class QueryResponse(BaseModel):
+    collection_id: str
+    q: str
+    top_k: int
+    auth_header: str | None
+
+@app.post(
+    "/collections/{collection_id}/query",
+    response_model=QueryResponse,
+)
+def query(
+    collection_id: str,
+    req: QueryReq,
+    top_k: Annotated[int, Query(ge=1, le=50)] = 5,
+    authorization: Annotated[str | None, Header()] = None,
+) -> QueryResponse:
+    return QueryResponse(
+        collection_id=collection_id,
+        q=req.question,
+        top_k=top_k,
+        auth_header=authorization,
+    )</code></pre>
+
+        <p>The route decorator and function signature together form the
+        boundary contract. FastAPI inspects the signature once when the
+        application starts and builds validation plus OpenAPI metadata from it.</p>
 
         <hr>
 
         <h2>2) A real HTTP request message (what the client sends)</h2>
-<pre>POST /query?top_k=10 HTTP/1.1
+<pre><code class="language-http">POST /collections/policies/query?top_k=10 HTTP/1.1
 Host: api.example.com
 Authorization: Bearer abc.def.ghi
 Content-Type: application/json
 Accept: application/json
 
-{ "question": "What does my policy say about refunds?" }</pre>
+{"question": "What does my policy say about refunds?"}</code></pre>
+
+        <p>There are five separate inputs here: method, path template, path
+        parameter, query parameter, header, and JSON body. FastAPI does not
+        merge them into one undifferentiated dictionary.</p>
+
+        <div class="figure-card">
+          <h3>Visual: one request, several typed sources</h3>
+          <svg class="viz" viewBox="0 0 980 300" role="img" aria-label="HTTP request parts mapped to FastAPI arguments">
+            <defs>
+              <marker id="mapping-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+                <path d="M0 0 L10 5 L0 10 z" class="accentFill" />
+              </marker>
+            </defs>
+            <rect x="28" y="42" width="310" height="216" rx="14" class="box2" />
+            <text x="183" y="78" text-anchor="middle" class="title">HTTP message</text>
+            <text x="64" y="116" class="label">route</text>
+            <text x="166" y="116" class="muted">POST /collections/policies/query</text>
+            <text x="64" y="150" class="label">query</text>
+            <text x="166" y="150" class="muted">top_k=10</text>
+            <text x="64" y="184" class="label">header</text>
+            <text x="166" y="184" class="muted">Authorization: Bearer ...</text>
+            <text x="64" y="218" class="label">body</text>
+            <text x="166" y="218" class="muted">{"question": "..."}</text>
+
+            <rect x="426" y="42" width="190" height="216" rx="14" class="box" />
+            <text x="521" y="78" text-anchor="middle" class="title">FastAPI</text>
+            <text x="521" y="118" text-anchor="middle" class="muted">route match</text>
+            <text x="521" y="150" text-anchor="middle" class="muted">extract</text>
+            <text x="521" y="182" text-anchor="middle" class="muted">convert</text>
+            <text x="521" y="214" text-anchor="middle" class="muted">validate</text>
+
+            <rect x="704" y="42" width="248" height="216" rx="14" class="box2" />
+            <text x="828" y="78" text-anchor="middle" class="title">Python arguments</text>
+            <text x="732" y="116" class="muted">collection_id = "policies"</text>
+            <text x="732" y="150" class="muted">top_k = 10</text>
+            <text x="732" y="184" class="muted">authorization = "Bearer ..."</text>
+            <text x="732" y="218" class="muted">req = QueryReq(...)</text>
+
+            <line x1="338" y1="150" x2="426" y2="150" class="accent" stroke-width="2" marker-end="url(#mapping-arrow)" />
+            <line x1="616" y1="150" x2="704" y2="150" class="accent" stroke-width="2" marker-end="url(#mapping-arrow)" />
+          </svg>
+        </div>
 
         <hr>
 
@@ -49,22 +115,37 @@ Accept: application/json
                 <li><strong>Method</strong> = POST</li>
                 <li><strong>Path</strong> = <code>/query</code></li>
             </ul>
-            <p>So FastAPI matches: <code>@app.post("/query")</code> → it will call <code>query(...)</code>.</p>
+            <p>So FastAPI matches
+            <code>@app.post("/collections/{collection_id}/query")</code> and
+            selects <code>query(...)</code>. A <code>GET</code> request to the
+            same path would not match this route.</p>
         </div>
 
         <div class="step-card">
-            <h3>B) Query string becomes <code>top_k</code></h3>
-            <p>From the first line: <code>/query?top_k=10</code></p>
+            <h3>B) The path segment becomes <code>collection_id</code></h3>
+            <p>The route template names one dynamic segment:
+            <code>{collection_id}</code>. The actual URL supplies
+            <code>policies</code>, so FastAPI sets:</p>
+            <div class="result-box">collection_id = "policies"</div>
+            <p>If the annotation were <code>collection_id: UUID</code> or
+            <code>collection_id: int</code>, FastAPI would validate and convert
+            the segment before calling the function.</p>
+        </div>
+
+        <div class="step-card">
+            <h3>C) Query string becomes <code>top_k</code></h3>
+            <p>From the first line: <code>?top_k=10</code></p>
             <ul>
                 <li>FastAPI finds <code>top_k="10"</code> in the query string</li>
                 <li>Converts <code>"10"</code> → <code>10</code> because you typed it as <code>int</code></li>
+                <li>Checks <code>ge=1</code> and <code>le=50</code></li>
                 <li>If it wasn’t provided, it would use the default <code>5</code></li>
             </ul>
             <div class="result-box">Result: top_k = 10</div>
         </div>
 
         <div class="step-card">
-            <h3>C) Header becomes <code>authorization</code></h3>
+            <h3>D) Header becomes <code>authorization</code></h3>
             <p>From the headers: <code>Authorization: Bearer abc.def.ghi</code></p>
             <p>Because you wrote: <code>authorization: str | None = Header(None)</code></p>
             <p>FastAPI reads the Authorization header and sets:</p>
@@ -73,7 +154,7 @@ Accept: application/json
         </div>
 
         <div class="step-card">
-            <h3>D) JSON body becomes <code>req</code></h3>
+            <h3>E) JSON body becomes <code>req</code></h3>
             <p>From the body:</p>
             <pre>{ "question": "What does my policy say about refunds?" }</pre>
             <p>Because <code>req</code> is a Pydantic model (<code>QueryReq</code>), FastAPI:</p>
@@ -94,16 +175,100 @@ Accept: application/json
         <hr>
 
         <h2>4) What FastAPI effectively calls (conceptually)</h2>
-<pre>query(
+<pre><code class="language-python">query(
+    collection_id="policies",
     req=QueryReq(question="What does my policy say about refunds?"),
     top_k=10,
     authorization="Bearer abc.def.ghi",
-)</pre>
+)</code></pre>
 
-        <p style="background-color: #fff3cd; padding: 15px; border-radius: 4px; border: 1px solid #ffeeba; color: #856404;">
+        <p>This is a mental model, not literal generated source code. FastAPI
+        also resolves dependencies, handles async/sync execution, and builds an
+        HTTP response around the return value.</p>
+
+        <div class="tr-note">
             <strong>Summary:</strong> That’s the whole mapping: query params → normal args, headers → <code>Header(...)</code> args, JSON body → Pydantic model arg (<code>req</code>), and the method+path choose the endpoint.
-        </p>
+        </div>
+
+        <h2>5) How FastAPI decides where a parameter comes from</h2>
+
+        <table>
+          <thead><tr><th>Declaration</th><th>Source</th><th>Example</th></tr></thead>
+          <tbody>
+            <tr><td>Name appears in the route template</td><td>Path</td><td><code>collection_id: str</code></td></tr>
+            <tr><td>Simple scalar with no path match</td><td>Query by default</td><td><code>top_k: int = 5</code></td></tr>
+            <tr><td><code>Header(...)</code></td><td>Header</td><td><code>authorization</code></td></tr>
+            <tr><td><code>Cookie(...)</code></td><td>Cookie</td><td>Application session cookie</td></tr>
+            <tr><td><code>Body(...)</code> or Pydantic model</td><td>Request body</td><td><code>req: QueryReq</code></td></tr>
+            <tr><td><code>Depends(...)</code></td><td>Dependency graph</td><td>Verified identity, database session, service</td></tr>
+            <tr><td><code>Form(...)</code> / <code>File(...)</code></td><td>Form or multipart body</td><td>Login form or uploaded file</td></tr>
+          </tbody>
+        </table>
+
+        <p>Use explicit helpers when ambiguity would make the contract harder
+        to read. In production, authentication normally becomes a security
+        dependency rather than a raw optional string:</p>
+
+<pre><code class="language-python">from fastapi import Depends
+
+def query(
+    collection_id: str,
+    req: QueryReq,
+    identity: Identity = Depends(get_verified_identity),
+    top_k: Annotated[int, Query(ge=1, le=50)] = 5,
+) -> QueryResponse:
+    ...</code></pre>
+
+        <h2>6) Invalid input stops before business logic</h2>
+
+        <p>If <code>top_k=abc</code>, if <code>top_k=1000</code>, or if the JSON
+        body omits <code>question</code>, FastAPI does not call
+        <code>query()</code>. Validation produces a structured
+        <code>422 Unprocessable Content</code> response that identifies the
+        source and field path.</p>
+
+<pre><code class="language-json">{
+  "detail": [
+    {
+      "type": "less_than_equal",
+      "loc": ["query", "top_k"],
+      "msg": "Input should be less than or equal to 50",
+      "input": "1000"
+    }
+  ]
+}</code></pre>
+
+        <p>Malformed JSON is also a client-input error. Authentication failures
+        should be <code>401</code>; authenticated callers without permission
+        should receive <code>403</code>; a hidden or absent resource is commonly
+        <code>404</code>. Do not turn all client errors into <code>500</code>.</p>
+
+        <h2>7) The return value travels back through a response contract</h2>
+
+        <p><code>response_model=QueryResponse</code> validates and serializes
+        the returned data. It also filters undeclared fields, which helps
+        prevent internal values from leaking into the API response. FastAPI
+        uses the request and response models to generate OpenAPI documentation.</p>
+
+<pre><code class="language-http">HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "collection_id": "policies",
+  "q": "What does my policy say about refunds?",
+  "top_k": 10,
+  "auth_header": "Bearer abc.def.ghi"
+}</code></pre>
+
+        <div class="tr-tip">
+          <strong>Next conceptual step</strong>
+          This chapter treated <code>QueryReq</code> as a black box that
+          validates a body. The next chapter opens that box, beginning with
+          ordinary Python classes and dataclasses before deriving Pydantic
+          models, constraints, aliases, serialization, settings, and API
+          contracts.
+        </div>
     </div>
-  <script src="../assets/js/nav.js?v=20260522-book-cleanup"></script>
+  <script src="../assets/js/nav.js?v=20260730-currency-final"></script>
 </body>
 </html>

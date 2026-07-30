@@ -3,14 +3,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Authentication Tutorial: API keys, Bearer tokens, OAuth/OIDC (PKCE), JWT vs opaque, MCP & SQL Server</title>
-<link rel="stylesheet" href="../assets/css/book.css?v=20260517-figures-code2">
+  <title>Authentication: API Keys, Bearer Tokens, OAuth/OIDC, JWTs, and Opaque Tokens</title>
+<link rel="stylesheet" href="../assets/css/book.css?v=20260730-currency-final">
 </head>
 
 <body>
 <header>
   <div class="wrap">
-    <h1>Authentication Tutorial</h1>
+    <h1>Authentication: Tokens, OAuth, and API Security</h1>
     <p class="muted">
       A practical, end-to-end guide to: API keys, Bearer tokens, OAuth/OIDC (PKCE), JWT vs opaque tokens (introspection),
       Google (Gmail) login verification with JWKS, and how this ties into MCP servers and SQL Server access.
@@ -276,9 +276,12 @@ POST /introspect   -> returns {"active": true, "sub": "demo", "scope": "sql:read
     </div>
 
     <div class="callout ok">
-      <strong>Modern direction:</strong> OAuth 2.1 requires PKCE for authorization code flow clients.
+      <strong>Modern direction:</strong> The active OAuth 2.1 Internet-Draft
+      requires PKCE for authorization-code clients. It is a draft, not a
+      published RFC; use RFC 9700 as the finalized OAuth 2.0 security
+      best-current-practice baseline.
     </div>
-    <div class="ref">The OAuth community’s <a href="https://oauth.net/2.1/">OAuth 2.1 summary</a> explains the direction of the consolidated draft.</div>
+    <div class="ref">See the <a href="https://datatracker.ietf.org/doc/draft-ietf-oauth-v2-1/">active OAuth 2.1 Internet-Draft</a> and <a href="https://datatracker.ietf.org/doc/html/rfc9700">RFC 9700: OAuth 2.0 Security Best Current Practice</a>.</div>
   </section>
 
   <section id="authorize-post">
@@ -405,10 +408,11 @@ TrustServerCertificate=no;
     <div class="card">
       <strong>OAuth/OIDC hygiene</strong>
       <ul>
-        <li>Use PKCE for public clients; OAuth 2.1 direction makes it required for code flow. (RFC 7636)</li>
-        <li>Use exact redirect URI matching and avoid legacy implicit flows (OAuth 2.1 direction).</li>
+        <li>Use PKCE for authorization-code clients. (RFC 7636; RFC 9700)</li>
+        <li>Use exact redirect URI matching and avoid the implicit grant. (RFC 9700)</li>
+        <li>Do not use the resource-owner password credentials grant; prefer browser-based authorization or workload credentials appropriate to the caller.</li>
       </ul>
-      <div class="ref">See <a href="https://datatracker.ietf.org/doc/html/rfc7636">RFC 7636</a> for PKCE and the OAuth 2.1 draft direction for current authorization-code-flow hygiene.</div>
+      <div class="ref">See <a href="https://datatracker.ietf.org/doc/html/rfc7636">RFC 7636</a> for PKCE, <a href="https://datatracker.ietf.org/doc/html/rfc9700">RFC 9700</a> for the finalized security BCP, and the OAuth 2.1 draft for consolidation work still in progress.</div>
     </div>
 
     <div class="card">
@@ -435,15 +439,18 @@ TrustServerCertificate=no;
       </div>
     </div>
 
-    <p class="muted">
-      If you want, tell me which exact scenario you want to implement end-to-end:
-      (A) opaque + introspection, (B) JWT + JWKS, or (C) Google OIDC + JWT verification,
-      and whether the caller is (1) a browser, (2) a mobile app, or (3) a backend service.
-      I can then tailor the code sample and the recommended flow precisely.
-    </p>
+    <div class="tr-note">
+      <strong>Implementation decision</strong>
+      Choose the validation path from both token format and caller type:
+      opaque tokens require introspection; JWT access tokens use issuer
+      metadata and JWKS; Google OIDC identifies the user but the API must still
+      receive an access token intended for its audience. Browser and mobile
+      public clients use Authorization Code with PKCE, while backend services
+      use an approved workload flow or token exchange.
+    </div>
   </section>
 
 </main>
-  <script src="../assets/js/nav.js?v=20260522-book-cleanup"></script>
+  <script src="../assets/js/nav.js?v=20260730-currency-final"></script>
 </body>
 </html>

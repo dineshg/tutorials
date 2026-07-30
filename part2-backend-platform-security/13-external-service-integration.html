@@ -3,20 +3,87 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Connecting an External Service</title>
-<link rel="stylesheet" href="../assets/css/book.css?v=20260517-figures-code2">
+    <title>Calling External Services Across Cloud Trust Boundaries</title>
+<link rel="stylesheet" href="../assets/css/book.css?v=20260730-currency-final">
 </head>
 <body>
 
-    <h1>Connecting an External Service</h1>
+    <h1>Calling External Services Across Cloud Trust Boundaries</h1>
 
-    <p>To call an external service like an Azure OpenAI (GPT) endpoint from your backend, you use the same “workload identity” idea, but the target is not GCP—so you need some credential that Azure accepts, and you must store and use it safely.</p>
+    <p class="lead">A GCP workload calling Azure OpenAI needs an Azure-accepted credential, a bounded network client, and a clear data-governance contract.</p>
 
-    <p>There are two industrial patterns (pick one):</p>
+    <div class="tr-note">
+        <strong>Where this fits</strong>
+        Chapter 12 separated end-user identity, application authorization,
+        and workload identity. This chapter follows the workload across a
+        cloud boundary. The end user's bearer token still authorizes the
+        application request, but the backend uses its own credential to call
+        Azure.
+    </div>
+
+    <figure class="figure-card">
+        <svg viewBox="0 0 1040 390" role="img" aria-labelledby="cross-cloud-title cross-cloud-desc">
+            <title id="cross-cloud-title">Two supported authentication paths from GCP to Azure OpenAI</title>
+            <desc id="cross-cloud-desc">A GKE workload can read an API key from Secret Manager or exchange a Google-issued workload token with Microsoft Entra. Either credential is then used to call Azure OpenAI.</desc>
+            <defs>
+                <marker id="cross-arrow-blue" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 Z" fill="#1769e0"></path>
+                </marker>
+                <marker id="cross-arrow-green" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 Z" fill="#14875a"></path>
+                </marker>
+            </defs>
+
+            <rect x="35" y="135" width="190" height="110" rx="14" fill="#e8f2ff" stroke="#1769e0" stroke-width="2"></rect>
+            <text x="130" y="176" text-anchor="middle" font-size="18" font-weight="700" fill="#162033">GKE backend</text>
+            <text x="130" y="207" text-anchor="middle" font-size="14" fill="#4f6078">Google workload identity</text>
+
+            <rect x="335" y="35" width="240" height="105" rx="14" fill="#fff6df" stroke="#bf8700" stroke-width="2"></rect>
+            <text x="455" y="75" text-anchor="middle" font-size="17" font-weight="700" fill="#162033">GCP Secret Manager</text>
+            <text x="455" y="106" text-anchor="middle" font-size="14" fill="#4f6078">versioned Azure API key</text>
+
+            <rect x="335" y="250" width="240" height="105" rx="14" fill="#f1ecff" stroke="#7548d8" stroke-width="2"></rect>
+            <text x="455" y="290" text-anchor="middle" font-size="17" font-weight="700" fill="#162033">Microsoft Entra ID</text>
+            <text x="455" y="321" text-anchor="middle" font-size="14" fill="#4f6078">federated token exchange</text>
+
+            <rect x="730" y="135" width="270" height="110" rx="14" fill="#e9fbf2" stroke="#14875a" stroke-width="2"></rect>
+            <text x="865" y="176" text-anchor="middle" font-size="18" font-weight="700" fill="#162033">Azure OpenAI</text>
+            <text x="865" y="207" text-anchor="middle" font-size="14" fill="#4f6078">API key or Entra bearer token</text>
+
+            <path d="M225 165 C270 125 285 88 335 88" fill="none" stroke="#1769e0" stroke-width="3" marker-end="url(#cross-arrow-blue)"></path>
+            <path d="M575 88 C650 88 655 160 730 170" fill="none" stroke="#1769e0" stroke-width="3" marker-end="url(#cross-arrow-blue)"></path>
+            <path d="M225 215 C270 260 285 302 335 302" fill="none" stroke="#7548d8" stroke-width="3" marker-end="url(#cross-arrow-blue)"></path>
+            <path d="M575 302 C650 302 655 220 730 210" fill="none" stroke="#14875a" stroke-width="3" marker-end="url(#cross-arrow-green)"></path>
+
+            <text x="270" y="114" font-size="13" fill="#1769e0">read secret</text>
+            <text x="604" y="117" font-size="13" fill="#1769e0">api-key</text>
+            <text x="246" y="286" font-size="13" fill="#7548d8">external assertion</text>
+            <text x="610" y="278" font-size="13" fill="#14875a">short-lived token</text>
+        </svg>
+        <figcaption>
+            The two paths solve the same authentication problem with different
+            operational tradeoffs. Neither sends the end user's token to
+            Azure as the backend credential.
+        </figcaption>
+    </figure>
+
+    <p>There are two production patterns. Choose from policy and operational requirements rather than assuming that the most complex option is always best.</p>
+
+    <table>
+        <thead>
+            <tr><th>Question</th><th>API key in Secret Manager</th><th>Entra workload federation</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>Long-lived Azure credential</td><td>Yes; rotate and version it.</td><td>No; exchange a trusted external assertion for a short-lived token.</td></tr>
+            <tr><td>Initial setup</td><td>Lower.</td><td>Higher: app registration, federated credential, RBAC, and token exchange.</td></tr>
+            <tr><td>Runtime dependencies</td><td>GCP IAM + Secret Manager + Azure endpoint.</td><td>Google token issuer + Entra token endpoint + Azure endpoint.</td></tr>
+            <tr><td>Best fit</td><td>Smaller systems with mature secret rotation.</td><td>Higher-assurance systems that prohibit static cross-cloud credentials.</td></tr>
+        </tbody>
+    </table>
 
     <div class="section-divider"></div>
 
-    <h2>Option A (simpler): API key stored in GCP Secret Manager</h2>
+    <h2>1. Option A: API Key Stored in GCP Secret Manager</h2>
 
     <h3>Flow</h3>
     <ol>
@@ -48,51 +115,137 @@
         <li>IAM: give <code>backend-sa@...</code> role <code>roles/secretmanager.secretAccessor</code> on that secret.</li>
     </ul>
 
-    <h4>3) In code: read secret + call Azure</h4>
+    <h4>3) In code: load once, reuse the HTTP client, and call Azure</h4>
 
-    <pre><code><span class="keyword">import</span> os
-<span class="keyword">import</span> httpx
-<span class="keyword">from</span> google.cloud <span class="keyword">import</span> secretmanager
+    <pre><code class="language-python">import os
+from contextlib import asynccontextmanager
 
-<span class="keyword">def</span> <span class="function">read_secret</span>(secret_id: <span class="keyword">str</span>) -> <span class="keyword">str</span>:
+import httpx
+from fastapi import FastAPI, Request
+from google.cloud import secretmanager
+
+
+def read_secret(secret_id: str, version: str) -> str:
     client = secretmanager.SecretManagerServiceClient()
-    name = <span class="string">f"projects/{os.environ['GCP_PROJECT']}/secrets/{secret_id}/versions/latest"</span>
-    resp = client.access_secret_version(request={<span class="string">"name"</span>: name})
-    <span class="keyword">return</span> resp.payload.data.decode(<span class="string">"utf-8"</span>)
+    name = (
+        f"projects/{os.environ['GCP_PROJECT']}/secrets/"
+        f"{secret_id}/versions/{version}"
+    )
+    response = client.access_secret_version(request={"name": name})
+    return response.payload.data.decode("utf-8")
 
-<span class="keyword">async def</span> <span class="function">call_azure_openai</span>(prompt: <span class="keyword">str</span>) -> <span class="keyword">dict</span>:
-    api_key = read_secret(<span class="string">"azure-openai-api-key"</span>)
 
-    endpoint = os.environ[<span class="string">"AZURE_OPENAI_ENDPOINT"</span>]  <span class="comment"># e.g. https://xxx.openai.azure.com</span>
-    deployment = os.environ[<span class="string">"AZURE_OPENAI_DEPLOYMENT"</span>]
-    api_version = os.environ[<span class="string">"AZURE_OPENAI_API_VERSION"</span>]  <span class="comment"># set to a supported Azure OpenAI API version</span>
-
-    url = <span class="string">f"{endpoint}/openai/deployments/{deployment}/chat/completions?api-version={api_version}"</span>
-
-    <span class="keyword">async with</span> httpx.AsyncClient(timeout=<span class="number">30</span>) <span class="keyword">as</span> client:
-        r = <span class="keyword">await</span> client.post(
-            url,
-            headers={<span class="string">"api-key"</span>: api_key, <span class="string">"Content-Type"</span>: <span class="string">"application/json"</span>},
-            json={
-                <span class="string">"messages"</span>: [{<span class="string">"role"</span>: <span class="string">"user"</span>, <span class="string">"content"</span>: prompt}],
-                <span class="string">"temperature"</span>: <span class="number">0.2</span>,
-            },
+class AzureOpenAIClient:
+    def __init__(self, *, api_key: str, endpoint: str, deployment: str):
+        self._deployment = deployment
+        self._http = httpx.AsyncClient(
+            base_url=endpoint.rstrip("/"),
+            headers={"api-key": api_key},
+            timeout=httpx.Timeout(connect=5.0, read=60.0, write=15.0, pool=5.0),
+            limits=httpx.Limits(max_connections=100, max_keepalive_connections=20),
         )
-        r.raise_for_status()
-        <span class="keyword">return</span> r.json()</code></pre>
 
-    <p class="callout warn">Do not ship with a fake API-version placeholder. Azure OpenAI API versions are explicit service contracts; set <code>AZURE_OPENAI_API_VERSION</code> from the Azure documentation for the feature and deployment you are using.</p>
+    async def create_response(self, prompt: str) -> dict:
+        response = await self._http.post(
+            "/openai/v1/responses",
+            json={"model": self._deployment, "input": prompt},
+        )
+        response.raise_for_status()
+        return response.json()
+
+    async def close(self) -> None:
+        await self._http.aclose()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Secret access is synchronous, but startup completes before requests run.
+    # Pin a deployed version so rollback is deterministic.
+    api_key = read_secret(
+        "azure-openai-api-key",
+        os.environ["AZURE_OPENAI_KEY_VERSION"],
+    )
+    app.state.azure_openai = AzureOpenAIClient(
+        api_key=api_key,
+        endpoint=os.environ["AZURE_OPENAI_ENDPOINT"],
+        deployment=os.environ["AZURE_OPENAI_DEPLOYMENT"],
+    )
+    yield
+    await app.state.azure_openai.close()
+
+
+app = FastAPI(lifespan=lifespan)
+
+
+@app.post("/generate")
+async def generate(request: Request, prompt: str) -> dict:
+    return await request.app.state.azure_openai.create_response(prompt)</code></pre>
+
+    <p class="callout warn">
+        Microsoft Foundry exposes several API surfaces. The example uses the
+        current OpenAI-compatible <code>/openai/v1/responses</code> shape.
+        Older
+        deployment-scoped routes use an explicit <code>api-version</code>
+        query parameter. Treat endpoint paths, supported models, and API
+        versions as deployed configuration checked against the current Azure
+        documentation.
+    </p>
+
+    <p>
+        Reading Secret Manager on every model call adds latency and another
+        failure point. Load a pinned version at startup, inject a mounted
+        secret through your platform, or use a controlled refresh mechanism.
+        Rotate by creating a new secret version, deploying the new version
+        reference, verifying it, and then disabling the old version.
+    </p>
 
     <div class="section-divider"></div>
 
-    <h2>Option B (more “enterprise”): Azure Entra workload identity federation (no long-lived keys)</h2>
+    <h2>2. Option B: Microsoft Entra Workload Identity Federation</h2>
 
     <h3>Flow</h3>
     <ol>
-        <li>Your backend still runs on GKE with a GCP service account.</li>
-        <li>Instead of storing an API key, the backend obtains a short-lived Azure token from Entra ID using federation.</li>
-        <li>It calls Azure OpenAI using that token.</li>
+        <li>Your backend runs as a specific Kubernetes/Google service account through Workload Identity Federation for GKE.</li>
+        <li>The workload obtains a Google-signed OIDC assertion with the audience expected by the Entra federated credential.</li>
+        <li>Microsoft Entra validates the assertion's issuer, subject, audience, and signature against the configured trust.</li>
+        <li>The workload exchanges that assertion for a short-lived Entra access token scoped to Azure AI.</li>
+        <li>It calls Azure OpenAI with <code>Authorization: Bearer &lt;access_token&gt;</code>.</li>
     </ol>
+
+    <h3>What must be configured</h3>
+    <ol>
+        <li>Create an Entra app registration (or supported managed identity) and its service principal.</li>
+        <li>Add a federated identity credential whose <code>issuer</code>, <code>subject</code>, and <code>audience</code> exactly match the Google assertion. Microsoft's Google Cloud example uses issuer <code>https://accounts.google.com</code>, the Google service account's unique ID as subject, and <code>api://AzureADTokenExchange</code> as audience.</li>
+        <li>Assign only the Azure role required for inference, commonly <code>Cognitive Services OpenAI User</code>, at the narrowest useful scope.</li>
+        <li>Configure the workload with the Entra tenant ID, application client ID, Azure scope, endpoint, and model deployment; none of these values is a secret.</li>
+    </ol>
+
+    <pre><code class="language-python"># Protocol-level outline. Production code should use a supported credential
+# library or a well-tested exchange component rather than duplicating OAuth.
+external_assertion = obtain_google_oidc_assertion(
+    audience="api://AzureADTokenExchange"
+)
+
+token_response = await http.post(
+    f"https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/token",
+    data={
+        "client_id": entra_client_id,
+        "grant_type": "client_credentials",
+        "scope": "https://cognitiveservices.azure.com/.default",
+        "client_assertion_type": (
+            "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
+        ),
+        "client_assertion": external_assertion,
+    },
+)
+token_response.raise_for_status()
+azure_access_token = token_response.json()["access_token"]
+
+result = await http.post(
+    f"{azure_endpoint}/openai/v1/responses",
+    headers={"Authorization": f"Bearer {azure_access_token}"},
+    json={"model": deployment, "input": prompt},
+)</code></pre>
 
     <h3>Why choose this</h3>
     <ul>
@@ -109,7 +262,7 @@
 
     <div class="section-divider"></div>
 
-    <h2>How this relates to “service accounts”</h2>
+    <h2>3. How This Relates to Service Accounts</h2>
 
     <p><strong>Important:</strong></p>
     <ul>
@@ -125,14 +278,48 @@
 
     <div class="section-divider"></div>
 
-    <h2>Best practice summary</h2>
+    <h2>4. Reliability Rules Shared by Both Options</h2>
     <ul>
-        <li>If you want the fastest correct setup: <strong>Option A (Secret Manager + API key)</strong></li>
-        <li>If you want “industrial enterprise” with least secrets: <strong>Option B (Entra federation)</strong></li>
+        <li><strong>Reuse clients and connections:</strong> create one bounded HTTP client per process, not one client per request.</li>
+        <li><strong>Set phase-specific timeouts:</strong> connect, pool acquisition, write, and read can fail for different reasons.</li>
+        <li><strong>Retry selectively:</strong> retry connection failures, selected <code>429</code> responses, and selected <code>5xx</code> responses with server guidance, exponential backoff, jitter, and a strict attempt budget. Do not retry ordinary <code>400</code>/<code>401</code>/<code>403</code> errors unchanged.</li>
+        <li><strong>Bound concurrency:</strong> use connection limits, rate limits, and admission control so Azure throttling does not become an internal retry storm.</li>
+        <li><strong>Preserve deadlines:</strong> an outbound timeout must fit inside the remaining inbound request deadline.</li>
+        <li><strong>Make effects idempotent:</strong> model inference is normally read-like, but tool calls or downstream writes triggered from a response need explicit idempotency controls.</li>
     </ul>
 
-    <p>If you tell me which one you want (A or B), I’ll write the concrete step-by-step “who trusts who” chain for that option and the exact headers your backend sends to Azure OpenAI.</p>
+    <h2>5. Data Governance and Observability</h2>
+    <p>
+        Authentication answers whether the workload may call Azure. It does
+        not decide whether the prompt may contain a customer's data. Before
+        crossing the boundary, classify the payload and enforce residency,
+        retention, encryption, private networking/egress, content logging,
+        and contractual requirements.
+    </p>
+    <ul>
+        <li>Send only the fields required for the model task; redact secrets and unnecessary personal data.</li>
+        <li>Log request IDs, tenant IDs, deployment names, token counts, latency, status class, retry count, and policy decisions, but never credentials or full sensitive prompts by default.</li>
+        <li>Separate caller authorization from provider credentials in traces so audit records show both the initiating user and executing workload.</li>
+        <li>Alert on authentication failures, sustained throttling, latency percentiles, model/deployment drift, and unusual per-tenant usage.</li>
+    </ul>
 
-  <script src="../assets/js/nav.js?v=20260522-book-cleanup"></script>
+    <h2>6. Decision Summary</h2>
+    <div class="tr-tip">
+        <strong>Choose the simplest option that satisfies policy</strong>
+        Use a versioned Secret Manager API key when your organization accepts
+        managed static credentials and can rotate them reliably. Use Entra
+        federation when eliminating long-lived cross-cloud secrets justifies
+        the extra trust configuration and token-exchange dependency.
+    </div>
+
+    <h2>Official References</h2>
+    <ul>
+        <li><a href="https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation-create-trust">Microsoft Entra: create trust with an external identity provider</a></li>
+        <li><a href="https://learn.microsoft.com/en-us/rest/api/microsoft-foundry/azureopenai/responses">Microsoft Foundry Models: Responses REST reference</a></li>
+        <li><a href="https://learn.microsoft.com/en-gb/azure/foundry/openai/how-to/responses">Microsoft Foundry: use the Responses API</a></li>
+        <li><a href="https://docs.cloud.google.com/secret-manager/docs/best-practices">Google Cloud Secret Manager best practices</a></li>
+    </ul>
+
+  <script src="../assets/js/nav.js?v=20260730-currency-final"></script>
 </body>
 </html>

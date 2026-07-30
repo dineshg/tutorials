@@ -1,0 +1,452 @@
+%==========================================================
+% Chapter: Linear Classification in PyTorch (Student-Friendly)
+% NOTE: This is LaTeX-only, with colors and improved formatting.
+%==========================================================
+
+\chapter{Linear Classification in PyTorch: From Geometry to Code (with Logistic Regression)}
+
+\begin{center}
+{\Large \color{blue!70!black}\textbf{Goal:}} \; Build and understand a binary classifier in PyTorch, \\
+from the decision boundary equation to training, evaluation, and saving the model.
+\end{center}
+
+\vspace{0.5em}
+
+%---------------------------
+% Recommended packages (place in preamble)
+%---------------------------
+% \usepackage{amsmath, amssymb, mathtools}
+% \usepackage{xcolor}
+% \usepackage{hyperref}
+% \usepackage{tcolorbox}
+% \usepackage{listings}
+% \usepackage{graphicx}
+% \usepackage{enumitem}
+% \usepackage{microtype}
+
+%---------------------------
+% Listings settings (place in preamble)
+%---------------------------
+% \lstset{
+%   basicstyle=\ttfamily\small,
+%   keywordstyle=\color{blue!70!black}\bfseries,
+%   commentstyle=\color{green!50!black},
+%   stringstyle=\color{orange!70!black},
+%   showstringspaces=false,
+%   frame=single,
+%   rulecolor=\color{black!20},
+%   breaklines=true,
+%   columns=fullflexible
+% }
+
+%---------------------------
+% Color boxes (place in preamble)
+%---------------------------
+% \tcbset{
+%   colframe=blue!50!black,
+%   colback=blue!2,
+%   arc=2mm,
+%   boxrule=0.6pt
+% }
+
+\section{The Big Picture: What Your ML Script Is Really Doing}
+
+Most machine learning scripts follow this pattern:
+
+\begin{tcolorbox}[title=\textbf{\color{blue!70!black}Standard workflow (high-level)}]
+\begin{enumerate}[leftmargin=*]
+  \item Load data: features $X$ and labels $y$
+  \item Create a model
+  \item Train the model (fit)
+  \item Make predictions
+  \item Evaluate performance
+\end{enumerate}
+\end{tcolorbox}
+
+In scikit-learn, this is hidden inside functions like \texttt{fit}, \texttt{predict}, and \texttt{score}.
+In PyTorch, we write the training loop ourselves, which is the best way to actually understand learning.
+
+\section{Binary Classification: Accuracy, Error, and What We Care About}
+
+\subsection{Targets and predictions}
+Binary classification means:
+\[
+y \in \{0,1\}.
+\]
+Examples:
+\begin{itemize}
+  \item spam (1) vs not spam (0)
+  \item malignant (1) vs benign (0)
+\end{itemize}
+
+\subsection{Accuracy}
+\[
+\text{Accuracy} = \frac{\#\text{correct}}{\#\text{total}}
+= \frac{1}{N}\sum_{i=1}^{N}\mathbb{1}[\hat{y}_i = y_i].
+\]
+
+\subsection{Classification error}
+\[
+\text{Error} = 1 - \text{Accuracy}.
+\]
+
+\begin{tcolorbox}[colframe=green!50!black,colback=green!3,title=\textbf{\color{green!40!black}Student check: train vs test accuracy}]
+\textbf{Train accuracy} measures performance on data the model has already seen. \\
+\textbf{Test accuracy} measures performance on data the model has \textit{not} seen. \\
+\textbf{\color{red!70!black}{Test accuracy is what you should trust more.}}
+\end{tcolorbox}
+
+\section{Geometry First: The Decision Boundary}
+
+\subsection{A line / hyperplane}
+In 2D, a separating line can be written as:
+\[
+w_1x_1 + w_2x_2 + b = 0.
+\]
+In $D$ dimensions, we use vectors:
+\[
+x \in \mathbb{R}^D,\quad w \in \mathbb{R}^D,
+\]
+and the compact form:
+\[
+\underbrace{a}_{\text{\color{blue!70!black}{activation / logit}}} = w^\top x + b.
+\]
+
+\begin{tcolorbox}[colframe=blue!50!black,colback=blue!2,title=\textbf{\color{blue!70!black}Interpretation}]
+\begin{itemize}[leftmargin=*]
+  \item $w$ controls \textbf{how strongly} each feature affects the decision.
+  \item $b$ shifts the boundary left/right (or more generally: shifts the hyperplane).
+  \item The value $a = w^\top x + b$ tells you \textbf{which side} of the boundary $x$ lies on.
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{Prediction from geometry (sign rule)}
+If $a$ is positive, you are on one side; if negative, you are on the other:
+\[
+\hat{y} =
+\begin{cases}
+1 & \text{if } a>0,\\
+0 & \text{otherwise}.
+\end{cases}
+\]
+
+\section{From Hard Decisions to Probabilities: The Sigmoid}
+
+The hard step rule is not smooth, and deep learning likes smooth functions.
+So we map $a$ to a probability using the \textbf{sigmoid}:
+
+\[
+\sigma(a)=\frac{1}{1+e^{-a}},
+\qquad
+p(y=1\mid x)=\sigma(w^\top x+b).
+\]
+
+\subsection{Thresholding probabilities}
+A common rule:
+\[
+\hat{y} =
+\begin{cases}
+1 & \text{if } p\ge 0.5,\\
+0 & \text{otherwise}.
+\end{cases}
+\]
+
+\begin{tcolorbox}[colframe=purple!60!black,colback=purple!3,title=\textbf{\color{purple!70!black}Key equivalence (very important!)}]
+\[
+\sigma(a)\ge 0.5 \;\Longleftrightarrow\; a\ge 0.
+\]
+So you can classify using either probabilities \textbf{or} logits (activations).
+\end{tcolorbox}
+
+\section{Training: Why Loss Functions Change for Classification}
+
+\subsection{Why not mean squared error?}
+Regression predicts real numbers, so MSE makes sense:
+\[
+\text{MSE}=\frac{1}{N}\sum_{i=1}^{N}(y_i-\hat{y}_i)^2.
+\]
+Classification predicts probabilities; the standard loss is cross entropy.
+
+\subsection{Binary cross entropy (BCE)}
+For $y_i\in\{0,1\}$ and predicted probability $p_i$:
+\[
+\mathcal{L}_{\text{BCE}}(y,p)=
+-\frac{1}{N}\sum_{i=1}^{N}\left[y_i\log(p_i)+(1-y_i)\log(1-p_i)\right].
+\]
+
+\section{The PyTorch Training Loop: What \texttt{fit} Is Hiding}
+
+Gradient-based training repeats the same core steps each epoch:
+
+\begin{tcolorbox}[colframe=orange!70!black,colback=orange!4,title=\textbf{\color{orange!80!black}One epoch = one parameter update cycle}]
+\begin{enumerate}[leftmargin=*]
+  \item Zero old gradients
+  \item Forward pass: compute outputs
+  \item Compute loss
+  \item Backward pass: compute gradients
+  \item Update parameters
+\end{enumerate}
+\end{tcolorbox}
+
+Mathematically, gradient descent updates:
+\[
+w \leftarrow w - \eta\nabla_w\mathcal{L},
+\qquad
+b \leftarrow b - \eta\nabla_b\mathcal{L},
+\]
+where $\eta$ is the learning rate.
+
+\section{Tutorial: Breast Cancer Classification (End-to-End)}
+
+\subsection{Step 1: Load, split, and standardize}
+\begin{tcolorbox}[colframe=black!40,colback=black!2,title=\textbf{Why standardization matters}]
+If one feature ranges near $10^6$ and another near $10^{-3}$, gradient-based training becomes unstable and slow.
+Standardization makes features comparable.
+\end{tcolorbox}
+
+\begin{lstlisting}[language=Python,caption={Load data, train/test split, and standardize (scikit-learn)}]
+import numpy as np
+import torch
+import torch.nn as nn
+
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+
+# Load dataset
+data = load_breast_cancer()
+X = data.data          # shape: (N, D)
+y = data.target        # shape: (N,)
+
+# Split
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.33, random_state=123
+)
+
+# Standardize using train statistics only
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test  = scaler.transform(X_test)
+\end{lstlisting}
+
+\subsection{Step 2: Convert to PyTorch tensors (watch shapes!)}
+PyTorch often expects targets shaped as $(N,1)$ for binary losses.
+
+\begin{lstlisting}[language=Python,caption={Convert numpy arrays to torch tensors (float32) and reshape targets}]
+X_train_t = torch.from_numpy(X_train).float()
+X_test_t  = torch.from_numpy(X_test).float()
+
+y_train_t = torch.from_numpy(y_train).float().view(-1, 1)  # (N,1)
+y_test_t  = torch.from_numpy(y_test).float().view(-1, 1)   # (N,1)
+
+D = X_train.shape[1]
+\end{lstlisting}
+
+\section{Two Correct Implementations (Choose One)}
+
+\subsection{Option A: Linear + Sigmoid + BCELoss (simple, but less stable)}
+
+\begin{tcolorbox}[colframe=red!60!black,colback=red!3,title=\textbf{\color{red!70!black}Note}]
+This is correct, but can be numerically unstable due to exponentials and logs.
+Option B is usually preferred in practice.
+\end{tcolorbox}
+
+\begin{lstlisting}[language=Python,caption={Model A: sigmoid inside the model + BCELoss}]
+model = nn.Sequential(
+    nn.Linear(D, 1),
+    nn.Sigmoid()
+)
+
+criterion = nn.BCELoss()
+optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+\end{lstlisting}
+
+\subsubsection{Training loop (same structure always)}
+\begin{lstlisting}[language=Python,caption={Training loop with train/test loss tracking (Model A)}]
+n_epochs = 200
+train_losses, test_losses = [], []
+
+for epoch in range(n_epochs):
+    # ---- TRAIN ----
+    optimizer.zero_grad()
+    p_train = model(X_train_t)                    # probabilities (0,1)
+    loss_train = criterion(p_train, y_train_t)
+    loss_train.backward()
+    optimizer.step()
+
+    # ---- TEST LOSS ----
+    with torch.no_grad():
+        p_test = model(X_test_t)
+        loss_test = criterion(p_test, y_test_t)
+
+    train_losses.append(loss_train.item())
+    test_losses.append(loss_test.item())
+
+print("Final train loss:", train_losses[-1])
+print("Final test  loss:", test_losses[-1])
+\end{lstlisting}
+
+\subsubsection{Accuracy}
+\begin{lstlisting}[language=Python,caption={Accuracy from probabilities}]
+def accuracy_from_prob(p, y_true):
+    # p: (N,1) probabilities
+    y_pred = (p >= 0.5).float()
+    return (y_pred.eq(y_true)).float().mean().item()
+
+with torch.no_grad():
+    p_train = model(X_train_t)
+    p_test  = model(X_test_t)
+
+print("Train accuracy:", accuracy_from_prob(p_train, y_train_t))
+print("Test accuracy: ", accuracy_from_prob(p_test,  y_test_t))
+\end{lstlisting}
+
+\subsection{Option B (Recommended): Linear logits + BCEWithLogitsLoss (stable)}
+
+\begin{tcolorbox}[colframe=green!60!black,colback=green!3,title=\textbf{\color{green!50!black}Recommended in practice}]
+Use logits directly and let the loss handle the sigmoid internally in a numerically stable way.
+\end{tcolorbox}
+
+\begin{lstlisting}[language=Python,caption={Model B: logits output + BCEWithLogitsLoss}]
+model = nn.Linear(D, 1)                # outputs logits (any real number)
+criterion = nn.BCEWithLogitsLoss()     # stable sigmoid + BCE
+optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+\end{lstlisting}
+
+\subsubsection{Training loop (identical skeleton)}
+\begin{lstlisting}[language=Python,caption={Training loop with logits (Model B)}]
+n_epochs = 200
+train_losses, test_losses = [], []
+
+for epoch in range(n_epochs):
+    optimizer.zero_grad()
+    logits_train = model(X_train_t)                 # logits
+    loss_train = criterion(logits_train, y_train_t)
+    loss_train.backward()
+    optimizer.step()
+
+    with torch.no_grad():
+        logits_test = model(X_test_t)
+        loss_test = criterion(logits_test, y_test_t)
+
+    train_losses.append(loss_train.item())
+    test_losses.append(loss_test.item())
+
+print("Final train loss:", train_losses[-1])
+print("Final test  loss:", test_losses[-1])
+\end{lstlisting}
+
+\subsubsection{Accuracy from logits (no sigmoid needed)}
+Because $\sigma(a)\ge 0.5 \Leftrightarrow a\ge 0$, we classify by sign:
+\[
+\hat{y} = \mathbb{1}[a\ge 0].
+\]
+
+\begin{lstlisting}[language=Python,caption={Accuracy from logits}]
+def accuracy_from_logits(logits, y_true):
+    y_pred = (logits >= 0).float()     # sign rule
+    return (y_pred.eq(y_true)).float().mean().item()
+
+with torch.no_grad():
+    logits_train = model(X_train_t)
+    logits_test  = model(X_test_t)
+
+print("Train accuracy:", accuracy_from_logits(logits_train, y_train_t))
+print("Test accuracy: ", accuracy_from_logits(logits_test,  y_test_t))
+\end{lstlisting}
+
+\section{Saving and Loading the Model}
+
+\subsection{What is a \texttt{state\_dict}?}
+\texttt{state\_dict} is an ordered dictionary of parameters (weights, biases, etc.).
+For a linear layer, it contains:
+\[
+W \in \mathbb{R}^{1\times D},\qquad b \in \mathbb{R}.
+\]
+
+\subsection{Save}
+\begin{lstlisting}[language=Python,caption={Save learned parameters}]
+torch.save(model.state_dict(), "mymodel.pt")
+\end{lstlisting}
+
+\subsection{Load (recreate architecture first)}
+\begin{lstlisting}[language=Python,caption={Load parameters into a new model with same architecture}]
+model2 = nn.Linear(D, 1)
+model2.load_state_dict(torch.load("mymodel.pt"))
+model2.eval()
+\end{lstlisting}
+
+\subsection{Verify loaded model}
+\begin{lstlisting}[language=Python,caption={Check test accuracy of loaded model}]
+with torch.no_grad():
+    logits_test_2 = model2(X_test_t)
+
+print("Reloaded model test accuracy:",
+      accuracy_from_logits(logits_test_2, y_test_t))
+\end{lstlisting}
+
+\section{Train vs Validation vs Test (Student-Friendly Explanation)}
+
+\begin{tcolorbox}[colframe=blue!60!black,colback=blue!3,title=\textbf{\color{blue!70!black}Why splitting matters}]
+A model can look great on training data but fail on new data. \\
+We split data to estimate real-world performance and to avoid overfitting.
+\end{tcolorbox}
+
+\subsection{Two-way split}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Train set}: used to learn parameters $(w,b)$.
+  \item \textbf{Test set}: used to estimate performance on unseen data.
+\end{itemize}
+
+\subsection{Three-way split}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Train}: learn parameters.
+  \item \textbf{Validation}: tune hyperparameters (learning rate, epochs, architecture).
+  \item \textbf{Test}: final unbiased evaluation (use once at the end).
+\end{itemize}
+
+\subsection{Parameters vs hyperparameters}
+\begin{tcolorbox}[colframe=purple!60!black,colback=purple!3,title=\textbf{\color{purple!70!black}Important distinction}]
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Parameters} (learned): $w, b$
+  \item \textbf{Hyperparameters} (chosen by you): learning rate $\eta$, optimizer, number of epochs, model size
+\end{itemize}
+Validation helps you choose hyperparameters.
+\end{tcolorbox}
+
+\section{Exercises (to make it stick)}
+
+\subsection*{\color{blue!70!black}Exercise 1: Track accuracy per epoch}
+During training, compute train and test accuracy each epoch and store them in arrays. Plot:
+\[
+\text{loss vs epoch}, \qquad \text{accuracy vs epoch}.
+\]
+
+\subsection*{\color{blue!70!black}Exercise 2: Confirm two prediction rules match}
+Verify these produce the same predictions:
+\[
+\hat{y}=\mathbb{1}[a\ge 0]
+\quad \text{and} \quad
+\hat{y}=\mathbb{1}[\sigma(a)\ge 0.5].
+\]
+
+\subsection*{\color{blue!70!black}Exercise 3: Learning rate experimentation}
+Try $\eta \in \{10^{-1}, 10^{-2}, 10^{-3}, 10^{-4}\}$ and observe:
+\begin{itemize}[leftmargin=*]
+  \item too high $\Rightarrow$ loss explodes / diverges
+  \item too low $\Rightarrow$ training is very slow
+  \item just right $\Rightarrow$ smooth decreasing loss
+\end{itemize}
+
+\section{Chapter Summary (One Page)}
+\begin{tcolorbox}[colframe=black!50,colback=black!3,title=\textbf{\color{black}You should now understand...}]
+\begin{itemize}[leftmargin=*]
+  \item Linear classification uses $a=w^\top x+b$ and separates classes by the sign of $a$.
+  \item Logistic regression converts $a$ to probability with $\sigma(a)=\frac{1}{1+e^{-a}}$.
+  \item Classification uses BCE-style losses; \texttt{BCEWithLogitsLoss} is numerically stable.
+  \item The PyTorch training loop is: zero grad $\to$ forward $\to$ loss $\to$ backward $\to$ step.
+  \item Accuracy is computed by comparing predicted labels with true labels.
+  \item Models are saved with \texttt{state\_dict} and loaded by recreating architecture + loading weights.
+  \item Train/validation/test splits support generalization and hyperparameter tuning.
+\end{itemize}
+\end{tcolorbox}

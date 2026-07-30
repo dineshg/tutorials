@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MCP Tutorial with a Simple "Database" Example</title><link rel="stylesheet" href="../assets/css/book.css?v=20260517-figures-code2">
+    <title>MCP Fundamentals with a Simple Database Example</title><link rel="stylesheet" href="../assets/css/book.css?v=20260730-currency-final">
 </head>
 <body>
     <div class="container">
-        <h1>MCP Tutorial with a Simple "Database" Example</h1>
+        <h1>MCP Fundamentals with a Simple Database Example</h1>
 
         <div class="tr-note">
             <strong>Where this fits</strong>
@@ -16,6 +16,20 @@
             discovery, remote servers, authentication, token validation, and
             best practices lives in
             <a href="02-mcp-discovery-remote-auth.html">Chapter 2</a>.
+        </div>
+
+        <div class="tr-update">
+            <strong>Protocol version boundary</strong>
+            Tools, resources, prompts, schemas, host policy, and the decorator
+            examples remain the durable concepts. The current MCP
+            <code>2026-07-28</code> wire protocol is stateless: each request
+            carries version/capability metadata and the server implements
+            <code>server/discover</code>; there is no mandatory
+            <code>initialize</code> handshake or protocol session. High-level
+            adapters may hide those messages or still expose a 2025
+            compatibility API. Pin mutually compatible client, adapter, and
+            server releases, and use <a href="04-mcp-2025-update.html">Chapter
+            4</a> for the exact current wire model.
         </div>
 
         <div class="section">
@@ -257,7 +271,7 @@ from mcp.server.fastmcp.prompts import base
 
 # This creates an MCP server instance.
 # "json_response=True" means tool outputs can be structured JSON.
-mcp = FastMCP("DBMCP", json_response=True)
+mcp = FastMCP("DBMCP", stateless_http=True, json_response=True)
 
 
 # ============================================================
@@ -360,8 +374,10 @@ if __name__ == "__main__":
                 <div class="code-header">mcp_client_langchain.py</div>
                 <pre><code class="language-python"># pip install langchain langchain-openai langchain-mcp-adapters mcp
 # export OPENAI_API_KEY="..."
+# export OPENAI_MODEL="a currently supported tool-capable model"
 
 import asyncio
+import os
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage
 
@@ -393,7 +409,7 @@ async def main():
     tools = await mcp_client.get_tools()
 
     # Create a tool-capable LLM and bind these tools so it can request tool calls.
-    llm = ChatOpenAI(model="gpt-4.1-mini", temperature=0).bind_tools(tools)
+    llm = ChatOpenAI(model=os.environ["OPENAI_MODEL"], temperature=0).bind_tools(tools)
 
     question = "Confirm my name and what plan I'm on."
 
@@ -505,7 +521,7 @@ if __name__ == "__main__":
 
 from mcp.server.fastmcp import FastMCP
 
-mcp = FastMCP("Bank-DB-MCP", json_response=True)
+mcp = FastMCP("Bank-DB-MCP", stateless_http=True, json_response=True)
 
 # -------------------------
 # RESOURCES (read-only)
@@ -797,13 +813,21 @@ if __name__ == "__main__":
             </ol>
 
             <div class="highlight-box" style="margin-top: 30px;">
-                <p><strong>Next Steps:</strong> If you paste your real MCP server's tool/resource/prompt names (from list_*), I can align the code to match them exactly.</p>
+                <p><strong>Integration exercise:</strong> Run the relevant
+                <code>list_*</code> operations against a real MCP server,
+                replace the example tool/resource/prompt names with the
+                discovered contracts, and add one test for each capability
+                before enabling it for a model.</p>
             </div>
+
+            <p><strong>Official references:</strong>
+                <a href="https://modelcontextprotocol.io/specification/2026-07-28">MCP 2026-07-28 specification</a> ·
+                <a href="https://modelcontextprotocol.io/specification/2026-07-28/changelog">MCP key changes</a> ·
+                <a href="https://docs.langchain.com/oss/python/langchain/mcp">LangChain MCP adapters</a>
+            </p>
         </div>
     </div>
 
-    <script>
-</script>
-  <script src="../assets/js/nav.js?v=20260522-book-cleanup"></script>
+  <script src="../assets/js/nav.js?v=20260730-currency-final"></script>
 </body>
 </html>

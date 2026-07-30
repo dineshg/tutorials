@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>LangChain → LangGraph → Flowise: A practical tutorial (dicts, nodes, state)</title>
-<link rel="stylesheet" href="../assets/css/book.css?v=20260517-figures-code2">
+  <title>LangChain to LangGraph to Flowise: Dictionaries, Nodes, and State</title>
+<link rel="stylesheet" href="../assets/css/book.css?v=20260730-currency-final">
 </head>
 
 <body>
@@ -32,13 +32,24 @@
             <li><a href="#graph-example">Example: “purchase request” graph (inventory + approval)</a></li>
           </ul>
         </li>
-        <li><a href="#flowise">Flowise: LangChain concepts as a UI</a></li>
+        <li><a href="#flowise">Flowise: visual applications and Agentflow V2</a></li>
       </ul>
     </div>
   </div>
 </header>
 
 <main class="wrap">
+
+  <div class="tr-update">
+    <strong>Framework status</strong>
+    The runnable and <code>StateGraph</code> examples in this chapter remain
+    current. In LangChain v1, <code>langchain.agents.create_agent</code> is the
+    standard prebuilt agent API and replaces
+    <code>langgraph.prebuilt.create_react_agent</code>. Use raw
+    <code>StateGraph</code> when you need an explicit custom workflow. Flowise
+    Agentflow V2 is a native orchestration system with standalone nodes and
+    Flow State; it is not merely a visual skin over LangChain.
+  </div>
 
   <section id="bridge">
     <h2>Bridge from HTTP → “dict pipelines”</h2>
@@ -418,7 +429,7 @@ print(chain.invoke({"user_id": "u_123", "question": "What is my total spend last
 
       <div class="card">
         <strong>Visual: branching workflow</strong>
-        <svg class="viz" viewBox="0 0 980 260" role="img" aria-label="Purchase request graph visual">
+        <svg class="viz" viewBox="0 0 980 292" role="img" aria-label="Purchase request graph visual">
           <defs>
             <marker id="arrow4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
               <path d="M 0 0 L 10 5 L 0 10 z" class="accent2Fill" fill="#8250df" stroke="none" />
@@ -543,17 +554,48 @@ print(app.invoke({"sku": "SKU-APPLE", "qty": 1, "amount": 2500.0, "po_id": "PO-3
         <strong>Key difference vs LangChain chain:</strong><br/>
         LangChain pipelines are typically linear transforms; LangGraph makes the “workflow control” (branching/loops) explicit and stateful.
       </div>
+
+      <div class="tr-note">
+        <strong>Where the current prebuilt agent fits</strong>
+        If your workflow is the standard model → tool calls → model loop, use
+        <code>langchain.agents.create_agent</code>. It is implemented on
+        LangGraph and can add middleware for guardrails, dynamic prompts,
+        human approval, and state. Use the raw graph above when the business
+        process itself has named states, deterministic branches, or custom
+        persistence semantics.
+      </div>
+
+      <pre><code class="language-python">import os
+from langchain.agents import create_agent
+
+# inventory_check is an ordinary LangChain tool defined elsewhere.
+agent = create_agent(
+    model=os.environ["LANGCHAIN_MODEL"],
+    tools=[inventory_check],
+    system_prompt="Check inventory before promising availability.",
+)
+
+result = agent.invoke({
+    "messages": [
+        {"role": "user", "content": "Can we supply two SKU-APPLE units?"}
+    ]
+})</code></pre>
     </section>
   </section>
 
   <div class="hr"></div>
 
   <section id="flowise">
-    <h2>Flowise: LangChain concepts as a UI</h2>
+    <h2>Flowise: visual applications and Agentflow V2</h2>
 
     <p>
-      Flowise takes the same building blocks you used in LangChain (LLM, prompt, retriever, memory, tools, custom code)
-      and represents them as <strong>drag-and-drop nodes</strong>.
+      Flowise is an open-source visual platform for assistants, LLM
+      applications, and agent workflows. Its three main builder levels are
+      <strong>Assistant</strong> for the simplest configured agent,
+      <strong>Chatflow</strong> for single-agent/chatbot and RAG flows, and
+      <strong>Agentflow</strong> for single- or multi-agent orchestration. A
+      simple Chatflow can resemble the runnable pipeline above, but that
+      mapping is only the starting point.
     </p>
 
     <div class="grid">
@@ -612,41 +654,69 @@ print(app.invoke({"sku": "SKU-APPLE", "qty": 1, "amount": 2500.0, "po_id": "PO-3
         <text x="240" y="188" text-anchor="middle" class="muted" fill="#59636e">source controlled</text>
         <text x="740" y="188" text-anchor="middle" class="muted" fill="#59636e">fast prototyping</text>
       </svg>
-      <p class="muted">Same building blocks — Flowise just makes the wiring visual.</p>
+      <p class="muted">A simple Chatflow can map closely to a code pipeline; Agentflow V2 adds its own explicit orchestration model.</p>
     </div>
 
-    <h3>How Flowise maps to the “passing dictionaries” idea</h3>
+    <h3>How a simple Flowise flow maps to “passing dictionaries”</h3>
     <ul>
-      <li>Each UI node corresponds to a component (often a LangChain runnable under the hood).</li>
+      <li>Each node performs a configured operation such as prompting a model, retrieving documents, calling a tool, transforming data, or replying.</li>
       <li>Edges are “data flow”: output of one node becomes input to the next.</li>
       <li>Node settings in the UI become the parameters you’d pass in code (model name, temperature, prompt template, etc.).</li>
     </ul>
 
+    <h3>What Agentflow V2 adds</h3>
+    <ul>
+      <li><strong>Native standalone nodes:</strong> the execution graph is defined explicitly rather than delegated entirely to an external agent framework.</li>
+      <li><strong>Flow State:</strong> declare shared keys in the Start node, then let later nodes read or update those keys without threading every value through adjacent edges.</li>
+      <li><strong>Control flow:</strong> conditions, loops, routing, deterministic Tool nodes, LLM-driven Agent nodes, and reusable subflows.</li>
+      <li><strong>Human-in-the-loop:</strong> pause for approval or feedback, save a checkpoint, and resume the workflow instead of blocking a process in memory.</li>
+      <li><strong>Operations:</strong> streaming execution updates, tracing, API deployment, and workspace/security controls are part of the platform surface.</li>
+    </ul>
+
     <div class="callout">
       <strong>Practical workflow:</strong><br/>
-      Prototype in Flowise (fast), then replicate the same structure in LangChain/LangGraph code when you need version control, tests, and CI/CD.
+      Decide where the maintained source of truth lives. A team may keep a
+      Flowise Agentflow in versioned exported configuration, or implement the
+      workflow directly in LangGraph code. Rebuilding the same flow twice
+      creates drift. Whichever path you choose, add evaluation fixtures,
+      approval tests, secret management, access control, tracing, and a
+      promotion process before production.
     </div>
 
     <h3>Where LangGraph shows up in UI tools</h3>
     <p>
-      Flowise can represent more complex workflows too, but graph-style systems (branching, loops, “agent cycles”, state management)
-      are where LangGraph shines in code.
-      In UIs, you’ll often see those features as conditional nodes, routers, or “agent” templates.
+      LangGraph and Agentflow V2 solve overlapping orchestration problems at
+      different abstraction and governance boundaries. LangGraph keeps the
+      workflow in Python code with explicit state, reducers, checkpointers, and
+      tests. Agentflow V2 exposes branches, loops, agent/tool nodes, human
+      input, checkpoints, and Flow State in a visual platform. Choose based on
+      ownership, deployment controls, extensibility, and testability rather
+      than assuming one is only a prototype for the other.
     </p>
 
     <div class="card">
       <strong>Rule of thumb</strong>
       <ul>
-        <li><strong>LangChain</strong>: compose steps; treat it like a pipeline of transforms.</li>
-        <li><strong>LangGraph</strong>: when you need workflow logic + durable shared state.</li>
-        <li><strong>Flowise</strong>: visual builder that mirrors these components as draggable nodes.</li>
+        <li><strong>LangChain runnables:</strong> compose deterministic transforms and model calls.</li>
+        <li><strong>LangChain <code>create_agent</code>:</strong> use the supported prebuilt model/tool agent loop.</li>
+        <li><strong>LangGraph:</strong> use code-first graphs for custom workflow logic, persistence, and shared state.</li>
+        <li><strong>Flowise:</strong> use Assistant, Chatflow, or Agentflow V2 when a governed visual platform is the intended runtime and authoring surface.</li>
       </ul>
     </div>
+
+    <h3>Official references</h3>
+    <ul>
+      <li><a href="https://docs.langchain.com/oss/python/releases/langchain-v1">LangChain v1 changes and <code>create_agent</code></a></li>
+      <li><a href="https://docs.langchain.com/oss/python/migrate/langgraph-v1">LangGraph v1 migration guide</a></li>
+      <li><a href="https://docs.langchain.com/oss/python/langgraph/graph-api">LangGraph Graph API</a></li>
+      <li><a href="https://docs.flowiseai.com/">Flowise official documentation</a></li>
+      <li><a href="https://docs.flowiseai.com/using-flowise/agentflowv2">Flowise Agentflow V2</a></li>
+    </ul>
   </section>
 
   <div class="hr"></div>
   <section>
-    <h2>Next steps (if you want)</h2>
+    <h2>Extension path</h2>
     <div class="card">
       <ol>
         <li>Turn the LangChain mini SQL chain into a real HTTP endpoint (POST /ask) that accepts JSON dict input.</li>
@@ -659,7 +729,7 @@ print(app.invoke({"sku": "SKU-APPLE", "qty": 1, "amount": 2500.0, "po_id": "PO-3
 
 </main>
 
-<script>
+<script type="text/plain" data-retired-local-highlighter>
   // Lightweight, no-dependency syntax highlighting.
   // Goal: make code blocks colorful while keeping this HTML fully self-contained.
   (function () {
@@ -811,6 +881,6 @@ print(app.invoke({"sku": "SKU-APPLE", "qty": 1, "amount": 2500.0, "po_id": "PO-3
     });
   })();
 </script>
-  <script src="../assets/js/nav.js?v=20260522-book-cleanup"></script>
+  <script src="../assets/js/nav.js?v=20260730-currency-final"></script>
 </body>
 </html>

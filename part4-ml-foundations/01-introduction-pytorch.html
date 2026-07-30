@@ -3,8 +3,8 @@
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<title>Introduction • Deep Learning with PyTorch</title>
-<link rel="stylesheet" href="../assets/css/book.css?v=20260517-figures-code2">
+		<title>PyTorch Foundations: Tensors, Autograd, Modules, and Training</title>
+<link rel="stylesheet" href="../assets/css/book.css?v=20260730-currency-final">
 </head>
 
 	<body>
@@ -13,8 +13,8 @@
 				<div class="card__topbar" aria-hidden="true"></div>
 
 				<header>
-					<div class="kicker">Chapter 1 • Deep Learning with PyTorch</div>
-					<h1>Introduction</h1>
+					<div class="kicker">Part IV • Machine Learning Foundations</div>
+					<h1>PyTorch Foundations: Tensors, Autograd, Modules, and Training</h1>
 					<p class="subtitle">
 						A practical journey through modern deep learning with PyTorch—from first principles to
 						real applications.
@@ -55,9 +55,10 @@
 						<p>
 							Along the way, you’ll see how PyTorch’s automatic differentiation and rich set of
 							prebuilt layers let you focus on ideas and experiments instead of manually deriving and
-							coding gradients. Compared to earlier libraries like Theano and TensorFlow, PyTorch
-							emphasizes flexibility, clarity, and ease of debugging, making it a favorite for both
-							research and real-world applications.
+							coding gradients. PyTorch became popular partly because its eager, Python-first execution
+							model was easier to inspect than the static-graph-first workflows used by Theano and
+							early TensorFlow. Modern TensorFlow also supports eager execution; both frameworks remain
+							capable, while this book uses PyTorch for one consistent implementation path.
 						</p>
 					</section>
 
@@ -85,6 +86,207 @@
 						</ul>
 					</section>
 
+					<section class="section" aria-labelledby="tensor-model">
+						<h2 id="tensor-model">The four objects behind every PyTorch example</h2>
+						<p>
+							Later chapters introduce many architectures, but the training machinery
+							changes very little. Hold these four objects in your head:
+						</p>
+
+						<table>
+							<thead>
+								<tr><th>Object</th><th>Job</th><th>Typical PyTorch form</th></tr>
+							</thead>
+							<tbody>
+								<tr><td>Tensor</td><td>Stores numeric inputs, targets, parameters, and intermediate values.</td><td><code>torch.Tensor</code></td></tr>
+								<tr><td>Model</td><td>Maps an input tensor to an output tensor using learnable parameters.</td><td><code>nn.Module</code></td></tr>
+								<tr><td>Loss</td><td>Measures how wrong the model output is for the target.</td><td><code>nn.MSELoss</code>, <code>nn.CrossEntropyLoss</code></td></tr>
+								<tr><td>Optimizer</td><td>Updates parameters using their gradients.</td><td><code>torch.optim.SGD</code>, <code>AdamW</code></td></tr>
+							</tbody>
+						</table>
+
+						<div class="figure-card">
+							<h3>Visual: the reusable training loop</h3>
+							<svg class="viz" viewBox="0 0 980 260" role="img" aria-label="Tensor, model, loss, gradient, and optimizer training loop">
+								<defs>
+									<marker id="pytorch-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+										<path d="M0 0 L10 5 L0 10 z" class="accentFill" />
+									</marker>
+									<marker id="pytorch-arrow-purple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+										<path d="M0 0 L10 5 L0 10 z" class="accent2Fill" />
+									</marker>
+								</defs>
+								<rect x="24" y="74" width="150" height="90" rx="14" class="box2" />
+								<text x="99" y="110" text-anchor="middle" class="title">Input x</text>
+								<text x="99" y="138" text-anchor="middle" class="muted">tensor</text>
+
+								<rect x="230" y="74" width="180" height="90" rx="14" class="box" />
+								<text x="320" y="110" text-anchor="middle" class="title">Model</text>
+								<text x="320" y="138" text-anchor="middle" class="muted">prediction = f(x)</text>
+
+								<rect x="466" y="74" width="180" height="90" rx="14" class="box2" />
+								<text x="556" y="110" text-anchor="middle" class="title">Loss</text>
+								<text x="556" y="138" text-anchor="middle" class="muted">compare to y</text>
+
+								<rect x="702" y="74" width="244" height="90" rx="14" class="box" />
+								<text x="824" y="110" text-anchor="middle" class="title">Optimizer</text>
+								<text x="824" y="138" text-anchor="middle" class="muted">update parameters</text>
+
+								<line x1="174" y1="119" x2="230" y2="119" class="accent" stroke-width="2" marker-end="url(#pytorch-arrow)" />
+								<line x1="410" y1="119" x2="466" y2="119" class="accent" stroke-width="2" marker-end="url(#pytorch-arrow)" />
+								<line x1="646" y1="119" x2="702" y2="119" class="accent2" stroke-width="2" marker-end="url(#pytorch-arrow-purple)" />
+								<path d="M824 164 C804 224 392 230 320 164" class="accent2" stroke-width="2" marker-end="url(#pytorch-arrow-purple)" />
+								<text x="560" y="222" text-anchor="middle" class="muted">backward computes gradients; step changes parameters</text>
+							</svg>
+						</div>
+					</section>
+
+					<section class="section" aria-labelledby="tensors">
+						<h2 id="tensors">Tensors: arrays with shape, dtype, and device</h2>
+
+						<p>A tensor is a multidimensional numeric array. A scalar
+						has no axes, a vector has one, a matrix has two, and a batch
+						of color images often has four:
+						<code>[batch, channels, height, width]</code>.</p>
+
+<pre><code class="language-python">import torch
+
+scalar = torch.tensor(3.0)                       # shape: []
+vector = torch.tensor([1.0, 2.0, 3.0])          # shape: [3]
+matrix = torch.tensor([[1.0, 2.0], [3.0, 4.0]]) # shape: [2, 2]
+
+print(matrix.shape)  # torch.Size([2, 2])
+print(matrix.dtype)  # usually torch.float32 here
+print(matrix.device) # cpu, unless moved to an accelerator</code></pre>
+
+						<p>Shape describes axis lengths. <strong>Dtype</strong>
+						describes numeric representation, such as
+						<code>float32</code> or <code>int64</code>.
+						<strong>Device</strong> says where the storage and operation
+						live, such as CPU, CUDA GPU, or Apple MPS. Tensors used in
+						one operation must have compatible shapes, dtypes, and
+						devices.</p>
+
+<pre><code class="language-python">device = (
+    "cuda" if torch.cuda.is_available()
+    else "mps" if torch.backends.mps.is_available()
+    else "cpu"
+)
+
+x = torch.randn(32, 10, device=device)  # 32 examples, 10 features each</code></pre>
+					</section>
+
+					<section class="section" aria-labelledby="autograd">
+						<h2 id="autograd">Autograd: gradients from a recorded computation</h2>
+
+						<p>Training asks: “How should each parameter change to
+						reduce the loss?” PyTorch records operations involving
+						tensors that require gradients. Calling
+						<code>backward()</code> applies the chain rule backward
+						through that computation graph.</p>
+
+<pre><code class="language-python">w = torch.tensor(2.0, requires_grad=True)
+x = torch.tensor(3.0)
+y = w * x ** 2
+
+y.backward()
+print(w.grad)  # 9.0 because dy/dw = x^2</code></pre>
+
+						<p>The graph is a record of operations for this forward
+						pass, not a drawing you have to create manually. A new
+						graph is normally built on the next pass. Gradients
+						accumulate in <code>.grad</code>, which is why training
+						loops clear them before the next backward pass.</p>
+					</section>
+
+					<section class="section" aria-labelledby="modules">
+						<h2 id="modules">Modules and parameters: a model is a callable object</h2>
+
+						<p><code>nn.Module</code> is the base class for trainable
+						PyTorch components. It registers nested modules and
+						parameters so the optimizer, device movement, saving, and
+						training/evaluation modes work recursively.</p>
+
+<pre><code class="language-python">from torch import nn
+
+class LinearRegressor(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.linear = nn.Linear(in_features=1, out_features=1)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.linear(x)
+
+model = LinearRegressor()
+prediction = model(torch.tensor([[2.0]]))  # call model(...), not forward(...)</code></pre>
+
+						<p>The learnable weight and bias are
+						<code>nn.Parameter</code> objects. They are tensors with
+						gradient tracking that were registered because
+						<code>self.linear</code> is a child module.</p>
+					</section>
+
+					<section class="section" aria-labelledby="first-loop">
+						<h2 id="first-loop">The smallest complete training loop</h2>
+
+						<p>This example learns the relationship
+						<code>y = 2x + 1</code>. Later chapters change the data,
+						model, and loss, but keep this loop structure.</p>
+
+<pre><code class="language-python">import torch
+from torch import nn
+
+x = torch.tensor([[0.0], [1.0], [2.0], [3.0]])
+y = torch.tensor([[1.0], [3.0], [5.0], [7.0]])
+
+model = nn.Linear(1, 1)
+loss_fn = nn.MSELoss()
+optimizer = torch.optim.SGD(model.parameters(), lr=0.05)
+
+for step in range(500):
+    model.train()
+
+    prediction = model(x)           # 1) forward pass
+    loss = loss_fn(prediction, y)   # 2) measure error
+
+    optimizer.zero_grad()           # 3) clear old gradients
+    loss.backward()                 # 4) compute new gradients
+    optimizer.step()                # 5) update weight and bias
+
+model.eval()
+with torch.no_grad():
+    print(model(torch.tensor([[4.0]])))  # close to 9</code></pre>
+
+						<p><code>model.train()</code> and
+						<code>model.eval()</code> control layers whose behavior
+						differs by mode, such as dropout and batch normalization.
+						<code>torch.no_grad()</code> disables gradient recording
+						for this evaluation block, reducing memory and work. It
+						does not replace <code>eval()</code>; the two controls solve
+						different problems.</p>
+					</section>
+
+					<section class="section" aria-labelledby="debug-contract">
+						<h2 id="debug-contract">The first debugging contract: inspect shape, dtype, device, and range</h2>
+
+						<p>Before changing an architecture, print the boundary
+						facts. Many apparent “model problems” are tensor contract
+						problems:</p>
+
+<pre><code class="language-python">print("x:", x.shape, x.dtype, x.device)
+print("y:", y.shape, y.dtype, y.device)
+print("prediction:", prediction.shape)
+print("finite:", torch.isfinite(loss).item())</code></pre>
+
+						<ul>
+							<li>Regression predictions and targets usually need matching floating-point shapes.</li>
+							<li>Class indices for <code>CrossEntropyLoss</code> are normally <code>torch.long</code>.</li>
+							<li>Do not mix CPU inputs with a GPU model.</li>
+							<li>Do not silently broadcast incompatible target and prediction shapes.</li>
+							<li>Check for NaN or infinity before tuning hyperparameters.</li>
+						</ul>
+					</section>
+
 					<section class="section" aria-labelledby="how-to-use">
 						<h2 id="how-to-use">How we’ll work</h2>
 						<p>
@@ -95,9 +297,12 @@
 						</p>
 
 						<div class="callout" role="note">
-							<strong>Bottom line:</strong> If you want to learn how to use one of the world’s
-							fastest-growing deep learning libraries to build real, modern AI systems, this book is
-							for you.
+							<strong>Progression:</strong> The next chapter turns
+							tensors into geometry: rows become points, model
+							parameters define lines or separating boundaries, and
+							loss measures how poorly that geometry fits the data.
+							The regression chapter then implements the same loop
+							above one line at a time.
 						</div>
 					</section>
 				</main>
@@ -105,6 +310,6 @@
 				<div class="footer">Deep Learning with PyTorch • Chapter 1</div>
 			</article>
 		</div>
-	  <script src="../assets/js/nav.js?v=20260522-book-cleanup"></script>
+	  <script src="../assets/js/nav.js?v=20260730-currency-final"></script>
 </body>
 </html>

@@ -1,9 +1,9 @@
 /* ==========================================================================
    Enterprise AI, Agents & Applied ML — book navigation injector.
    Loaded at the END of <body> on every chapter page. It builds a fixed
-   header + collapsible left sidebar without modifying the chapter's own
-   inline content/styles. The page's existing content remains intact and
-   appears inside the .tr-main column.
+   header + collapsible left sidebar, then applies the shared editorial and
+   rendering conventions used throughout the book. Chapter content remains
+   intact inside the .tr-main column.
    ========================================================================== */
 (function () {
   // ---------- 1. Resolve where assets live (relative to this <script>) -----
@@ -54,13 +54,20 @@
     });
 
     document.querySelectorAll("pre code").forEach(function (block) {
-      // Skip blocks that already have manually-inserted colour tokens
+      // Older chapters contain hand-inserted token spans and inline colours.
+      // Convert those blocks back to source text before highlighting so one
+      // highlighter and one palette own every code sample in the book.
       var hasManualTokens = block.querySelector(
-        "span.keyword,span.string,span.comment,span.function,span.tok-kw,span.tok-str,span.tok-com,span.tok-fn,span.tok-num,span.tok-typ,span.kw,span.str,span.com,span.fn,span.typ"
+        "span.keyword,span.string,span.comment,span.function,span.tok-kw,span.tok-str,span.tok-com,span.tok-fn,span.tok-num,span.tok-typ,span.kw,span.str,span.com,span.fn,span.typ,span[class^='hljs-'],span[class*=' hljs-']"
       );
-      if (hasManualTokens) {
-        block.classList.add("hljs");
-      } else if (window.hljs) {
+      if (hasManualTokens || block.querySelector("span[style]")) {
+        var sourceText = block.textContent;
+        block.textContent = sourceText;
+        block.classList.remove("hl", "hljs");
+        block.removeAttribute("data-highlighted");
+      }
+
+      if (window.hljs) {
         try { window.hljs.highlightElement(block); } catch (e) { /* ignore */ }
       }
 
@@ -152,13 +159,13 @@
         ["05-background-tasks-and-retries.html",  "6. Background tasks & retries"],
         ["06-sso-oauth2-oidc-primer.html",        "7. SSO / OAuth2 / OIDC primer"],
         ["07-oidc-oauth2-pkce-fastapi.html",      "8. OIDC + OAuth2 + PKCE in FastAPI"],
-        ["08-registering-new-users.html",         "9. Registering new users"],
+        ["08-registering-new-users.html",         "9. First login & user provisioning"],
         ["09-authentication-deep-dive.html",      "10. Authentication deep dive"],
         ["15-modern-auth-additions.html",         "11. Modern auth additions (Passkeys, DPoP, mTLS)"],
         ["10-enduser-vs-workload-identity.html",  "12. End-user vs workload identity"],
         ["12-tenant-iam-ad-groups.html",          "13. Tenant isolation, IAM, AD groups"],
         ["11-gcp-workload-identity.html",         "14. GCP workload identity"],
-        ["13-external-service-integration.html",  "15. External service integration"],
+        ["13-external-service-integration.html",  "15. Cross-cloud service integration"],
         ["14-github-governance.html",             "16. GitHub governance & CI"]
       ]},
     { id: "part3", title: "Part III — Agent Protocols & Integration",
@@ -168,8 +175,8 @@
         ["01-mcp-fundamentals.html",            "1. MCP fundamentals"],
         ["02-mcp-discovery-remote-auth.html",   "2. MCP discovery, remote, auth"],
         ["03-mcp-enterprise-pattern.html",      "3. MCP enterprise pattern"],
-        ["04-mcp-2025-update.html",             "4. MCP 2025 update (Streamable HTTP, OAuth, elicitation)"],
-        ["05-a2a-protocol.html",                "5. A2A protocol"],
+        ["04-mcp-2025-update.html",             "4. MCP protocol evolution (2025–2026)"],
+        ["05-a2a-protocol.html",                "5. A2A protocol 1.0"],
         ["06-javascript-typescript-primer.html","6. JavaScript & TypeScript primer"],
         ["07-langchain-langgraph-flowise.html", "7. LangChain → LangGraph → Flowise"]
       ]},
@@ -177,7 +184,7 @@
       tag: "classical-ml", folder: "part4-ml-foundations",
       chapters: [
         ["index.html",                  "Part overview"],
-        ["01-introduction-pytorch.html","1. Introduction to PyTorch"],
+        ["01-introduction-pytorch.html","1. PyTorch foundations"],
         ["02-ml-as-geometry.html",      "2. ML as geometry"],
         ["03-linear-regression.html",   "3. Linear regression"],
         ["04-linear-classification.html","4. Linear classification"],
@@ -209,6 +216,125 @@
         ["02-classification-latex-print.html",          "B. Classification (LaTeX print)"]
       ]}
   ];
+
+  // Concise editorial purpose for every canonical chapter. The previous and
+  // next titles come from BOOK, which keeps the visible chapter bridge aligned
+  // with the sidebar and pager without duplicating the reading order.
+  var CHAPTER_PURPOSES = {
+    "part1-enterprise-ai-delivery/01-business-pain-to-ai-lead.html":
+      "Turn an unstructured business complaint into a bounded AI opportunity with clear ownership.",
+    "part1-enterprise-ai-delivery/02-intake-package.html":
+      "Define the evidence, constraints, stakeholders, and decisions required before solution design starts.",
+    "part1-enterprise-ai-delivery/03-ai-lead-response.html":
+      "Convert intake evidence into a reviewable proposal: scope, metrics, risks, controls, architecture, and asks.",
+    "part1-enterprise-ai-delivery/04-kickoff-meeting.html":
+      "Use the response document to secure decisions, expose assumptions, and establish accountable owners.",
+    "part1-enterprise-ai-delivery/05-seven-days-after-kickoff.html":
+      "Translate kickoff decisions into the first week of artifacts, experiments, gates, and team ownership.",
+    "part1-enterprise-ai-delivery/06-architecture-reference-design.html":
+      "Follow one request through the reference system, including identity, tenancy, storage, and asynchronous work.",
+    "part1-enterprise-ai-delivery/07-hld-service-selection.html":
+      "Choose services at HLD level, record tradeoffs, and separate reversible choices from enterprise constraints.",
+    "part1-enterprise-ai-delivery/08-after-hld-next-steps.html":
+      "Sequence approvals, detailed design, backlog preparation, and dependency work after the HLD is drafted.",
+    "part1-enterprise-ai-delivery/09-architecture-review.html":
+      "Run the formal review and turn comments into explicit approval conditions, owners, and evidence.",
+    "part1-enterprise-ai-delivery/10-hld-to-lld-sprint-plan.html":
+      "Decompose architecture into vertical slices, stories, acceptance criteria, and a buildable sprint plan.",
+    "part1-enterprise-ai-delivery/11-provisioning-services-scale.html":
+      "Make the design deployable through provisioning tickets, capacity assumptions, latency budgets, and scaling choices.",
+
+    "part2-backend-platform-security/01-fastapi-uvicorn-basics.html":
+      "Establish the Python web-server runtime and the smallest complete FastAPI request/response loop.",
+    "part2-backend-platform-security/02-http-methods.html":
+      "Separate resource identity from operation intent by learning the semantics and safety properties of HTTP methods.",
+    "part2-backend-platform-security/03-fastapi-request-mapping.html":
+      "Trace one raw HTTP message into typed path, query, header, and body parameters in FastAPI.",
+    "part2-backend-platform-security/04-pydantic-data-models.html":
+      "Build from ordinary classes and dataclasses to validated Pydantic boundary contracts.",
+    "part2-backend-platform-security/04-concurrency-user-isolation.html":
+      "Combine async execution, backpressure, and tenant-scoped data access without sharing request state.",
+    "part2-backend-platform-security/05-background-tasks-and-retries.html":
+      "Move slow work outside the request while preserving durability, idempotency, retry safety, and tenant context.",
+    "part2-backend-platform-security/06-sso-oauth2-oidc-primer.html":
+      "Separate the SSO experience, OAuth authorization, OIDC authentication, sessions, and API access tokens.",
+    "part2-backend-platform-security/07-oidc-oauth2-pkce-fastapi.html":
+      "Follow Authorization Code plus PKCE from the browser through token validation and stable backend identity.",
+    "part2-backend-platform-security/08-registering-new-users.html":
+      "Turn a verified external identity into a race-safe local user and governed tenant membership.",
+    "part2-backend-platform-security/09-authentication-deep-dive.html":
+      "Compare authentication mechanisms and validate JWT or opaque access tokens at the correct trust boundary.",
+    "part2-backend-platform-security/15-modern-auth-additions.html":
+      "Extend the core auth model with passkeys, sender-constrained tokens, mTLS, and token exchange.",
+    "part2-backend-platform-security/10-enduser-vs-workload-identity.html":
+      "Keep human identity, application authorization, cloud IAM, and workload credentials in distinct lanes.",
+    "part2-backend-platform-security/12-tenant-iam-ad-groups.html":
+      "Apply the identity lanes to tenant bootstrap, group gating, and data-isolation policy.",
+    "part2-backend-platform-security/11-gcp-workload-identity.html":
+      "Implement the identity and tenancy model with GCP projects, service accounts, storage, networking, and deployment.",
+    "part2-backend-platform-security/13-external-service-integration.html":
+      "Cross a cloud trust boundary with managed secrets or federated workload identity, then bound reliability and data risk.",
+    "part2-backend-platform-security/14-github-governance.html":
+      "Enforce engineering policy through rulesets, required checks, trusted runners, scanning, and auditable merges.",
+
+    "part3-agent-protocols/01-mcp-fundamentals.html":
+      "Learn MCP through the three server primitives: tools, resources, and prompts.",
+    "part3-agent-protocols/02-mcp-discovery-remote-auth.html":
+      "Connect MCP clients and servers across process and network boundaries with discovery and authorization.",
+    "part3-agent-protocols/03-mcp-enterprise-pattern.html":
+      "Apply MCP behind a FastAPI host while preserving downstream identity, policy, and audit boundaries.",
+    "part3-agent-protocols/04-mcp-2025-update.html":
+      "Understand how the 2025 protocol matured and why the 2026 stateless core changes deployment and extension design.",
+    "part3-agent-protocols/05-a2a-protocol.html":
+      "Move from agent-to-tool integration to interoperable agent-to-agent delegation, task lifecycle, and artifacts.",
+    "part3-agent-protocols/06-javascript-typescript-primer.html":
+      "Build the JavaScript and TypeScript foundation needed to read and implement the following orchestration examples.",
+    "part3-agent-protocols/07-langchain-langgraph-flowise.html":
+      "Progress from linear runnable transforms to stateful graphs and then to visual workflow composition.",
+
+    "part4-ml-foundations/01-introduction-pytorch.html":
+      "Establish tensors, autograd, modules, optimizers, and the training-loop vocabulary used by every later model.",
+    "part4-ml-foundations/02-ml-as-geometry.html":
+      "See examples as points and models as geometric functions that fit values or separate classes.",
+    "part4-ml-foundations/03-linear-regression.html":
+      "Implement the complete supervised-learning loop for a continuous target using a linear model and MSE.",
+    "part4-ml-foundations/04-linear-classification.html":
+      "Change the target, output interpretation, loss, and metrics to solve binary classification.",
+    "part4-ml-foundations/05-trees-bagging-boosting.html":
+      "Contrast differentiable linear models with split-based learners, then reduce variance or bias through ensembles.",
+
+    "part5-deep-learning-and-llms/01-ffn-concepts.html":
+      "Add hidden layers and nonlinear activations so a model can learn boundaries a single linear unit cannot.",
+    "part5-deep-learning-and-llms/02-ffn-training-debugging.html":
+      "Train feed-forward networks reliably with batches, devices, evaluation metrics, and debugging tools.",
+    "part5-deep-learning-and-llms/03-ffn-canonical-merged.html":
+      "Provide the FFN concept and training path as one optional publication-style reference chapter.",
+    "part5-deep-learning-and-llms/04-cnn-convolution.html":
+      "Replace flattening with local, shared filters that preserve image structure.",
+    "part5-deep-learning-and-llms/05-cnn-architecture.html":
+      "Stack channels, filters, activations, pooling, and downsampling into a complete visual hierarchy.",
+    "part5-deep-learning-and-llms/06-cnn-pytorch-implementation.html":
+      "Translate CNN shape arithmetic and architecture choices into reusable PyTorch modules.",
+    "part5-deep-learning-and-llms/07-cnn-dropout-train-eval.html":
+      "Explain stochastic regularization and why model behavior changes between training and evaluation.",
+    "part5-deep-learning-and-llms/08-forecasting-sequence-data.html":
+      "Turn ordered observations into leakage-safe windows, horizons, baselines, and backtests.",
+    "part5-deep-learning-and-llms/09-autoregressive-linear-model.html":
+      "Implement and evaluate the simplest learned sequence baseline before introducing recurrent memory.",
+    "part5-deep-learning-and-llms/10-recurrent-neural-networks.html":
+      "Replace a fixed lookback with recurrent state, then address memory failure with GRU and LSTM gates.",
+    "part5-deep-learning-and-llms/11-transformers-and-attention.html":
+      "Replace a single recurrent bottleneck with learned lookup over token states, leading to causal GPT generation.",
+    "part5-deep-learning-and-llms/12-llm-fine-tuning.html":
+      "Adapt a pretrained Transformer with SFT and parameter-efficient methods, then evaluate the result.",
+    "part5-deep-learning-and-llms/13-modern-llm-alignment-orpo-grpo.html":
+      "Compare preference and reward-based objectives after supervised adaptation and choose an alignment strategy.",
+
+    "part6-appendices/01-lead-ds-interview-talk-track.html":
+      "Synthesize delivery, platform, agent, and model concepts into a timed interview narrative.",
+    "part6-appendices/02-classification-latex-print.html":
+      "Provide a print-oriented source companion for the classification material."
+  };
 
   // ---------- 3. Detect current page from window.location ------------------
   var pathParts = window.location.pathname.split("/").filter(Boolean);
@@ -280,6 +406,9 @@
 
   existing.forEach(function (n) { content.appendChild(n); });
 
+  decorateChapterStructure(content, partInfo, currentFile);
+  normalizeEquationBlocks(content);
+  decorateTables(content);
   decorateImages(content);
 
   // Shared TeX rendering for chapters that contain math but do not ship their
@@ -336,6 +465,91 @@
   });
 
   // ---------- 8. Helpers ---------------------------------------------------
+  function decorateChapterStructure(root, part, file) {
+    if (!root) return;
+
+    var usedIds = {};
+    root.querySelectorAll("[id]").forEach(function (node) {
+      usedIds[node.id] = true;
+    });
+
+    var headings = Array.prototype.slice.call(root.querySelectorAll("h2"));
+    headings.forEach(function (heading) {
+      if (heading.id) return;
+      var base = slugify(heading.textContent) || "section";
+      var id = base;
+      var suffix = 2;
+      while (usedIds[id]) id = base + "-" + suffix++;
+      heading.id = id;
+      usedIds[id] = true;
+    });
+
+    if (!part || file === "index.html") return;
+
+    var index = -1;
+    part.chapters.forEach(function (chapter, i) {
+      if (chapter[0] === file) index = i;
+    });
+    if (index < 0) return;
+
+    var key = part.folder + "/" + file;
+    var current = part.chapters[index];
+    var previous = index > 1 ? part.chapters[index - 1] : null;
+    var next = index < part.chapters.length - 1 ? part.chapters[index + 1] : null;
+    var purpose = CHAPTER_PURPOSES[key];
+    var h1 = root.querySelector("h1");
+
+    if (h1 && purpose) {
+      var bridge = document.createElement("aside");
+      bridge.className = "tr-chapter-flow";
+      bridge.setAttribute("aria-label", "Chapter progression");
+
+      var previousHtml = previous
+        ? '<a href="' + assetBase + part.folder + "/" + previous[0] + '">' +
+            escapeHtml(previous[1]) + "</a>"
+        : "The part overview and prerequisites";
+      var nextHtml = next
+        ? '<a href="' + assetBase + part.folder + "/" + next[0] + '">' +
+            escapeHtml(next[1]) + "</a>"
+        : "The end of this part";
+
+      bridge.innerHTML =
+        '<div><span class="tr-flow-label">Builds on</span><span class="tr-flow-value">' +
+          previousHtml + "</span></div>" +
+        '<div><span class="tr-flow-label">Chapter focus</span><span class="tr-flow-value">' +
+          escapeHtml(purpose) + "</span></div>" +
+        '<div><span class="tr-flow-label">Leads to</span><span class="tr-flow-value">' +
+          nextHtml + "</span></div>";
+
+      var hero = h1.closest(".hero, .part-header");
+      (hero || h1).insertAdjacentElement("afterend", bridge);
+    }
+
+    var hasLocalToc = root.querySelector(".toc, .quicknav, .toc-links, .tr-auto-toc");
+    if (!hasLocalToc && headings.length >= 4) {
+      var toc = document.createElement("details");
+      toc.className = "tr-auto-toc";
+      var list = headings.map(function (heading) {
+        return '<li><a href="#' + escapeHtml(heading.id) + '">' +
+          escapeHtml(heading.textContent.trim()) + "</a></li>";
+      }).join("");
+      toc.innerHTML = "<summary>Chapter contents</summary><ol>" + list + "</ol>";
+
+      var bridgeNode = root.querySelector(".tr-chapter-flow");
+      if (bridgeNode) bridgeNode.insertAdjacentElement("afterend", toc);
+      else if (h1) h1.insertAdjacentElement("afterend", toc);
+    }
+  }
+
+  function slugify(text) {
+    return String(text || "")
+      .toLowerCase()
+      .replace(/&/g, " and ")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 80);
+  }
+
   function renderGlobalMathIfNeeded(root) {
     if (!root) return;
 
@@ -345,7 +559,7 @@
     if (pageAlreadyOwnsMath) return;
 
     var text = collectRenderableText(root);
-    var hasTeX = /(\$\$?\\|\\\(|\\\[)/.test(text);
+    var hasTeX = /(\\\(|\\\[|\$\$|(^|[\s(])\$[^$\n]{1,240}\$)/m.test(text);
     if (!hasTeX) return;
 
     normalizeBackslashesInsideMath(root);
@@ -372,10 +586,43 @@
     }
 
     var script = document.createElement("script");
-    script.src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js";
+    script.src = "https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-chtml.js";
     script.async = true;
     script.onload = typeset;
     document.head.appendChild(script);
+  }
+
+  function normalizeEquationBlocks(root) {
+    if (!root) return;
+
+    root.querySelectorAll("pre").forEach(function (pre) {
+      var text = (pre.textContent || "").trim();
+      if (!text) return;
+
+      var className = (pre.className + " " +
+        (pre.querySelector("code") ? pre.querySelector("code").className : "")).toLowerCase();
+      var declaredMath = /\blanguage-(tex|latex|math)\b/.test(className);
+      var delimitedDisplay =
+        (text.startsWith("$$") && text.endsWith("$$")) ||
+        (text.startsWith("\\[") && text.endsWith("\\]"));
+      var delimitedInlineBlock =
+        !text.startsWith("$$") && text.startsWith("$") && text.endsWith("$");
+      var containsTeX = /\\(?:begin|beta|cdot|dfrac|exp|frac|lambda|left|log|mathbb|mathcal|mathbf|mathrm|mid|operatorname|prod|quad|right|sigma|sqrt|sum|text|theta)\b|[_^]\{/.test(text);
+
+      if (!declaredMath && !(containsTeX && (delimitedDisplay || delimitedInlineBlock))) return;
+
+      var expression = text;
+      if (delimitedInlineBlock) {
+        expression = "\\[" + text.slice(1, -1).trim() + "\\]";
+      } else if (!delimitedDisplay) {
+        expression = "\\[" + text + "\\]";
+      }
+
+      var math = document.createElement("div");
+      math.className = "math tr-math-display";
+      math.textContent = expression;
+      pre.replaceWith(math);
+    });
   }
 
   function decorateImages(root) {
@@ -393,6 +640,26 @@
       figure.className = "tr-auto-figure";
       parent.insertBefore(figure, img);
       figure.appendChild(img);
+
+      var alt = (img.getAttribute("alt") || "").trim();
+      if (alt && !/^(image|figure|diagram|photo)$/i.test(alt)) {
+        var caption = document.createElement("figcaption");
+        caption.textContent = alt;
+        figure.appendChild(caption);
+      }
+    });
+  }
+
+  function decorateTables(root) {
+    if (!root) return;
+    root.querySelectorAll("table").forEach(function (table) {
+      if (table.closest(".tr-table-scroll")) return;
+      var parent = table.parentNode;
+      if (!parent) return;
+      var wrapper = document.createElement("div");
+      wrapper.className = "tr-table-scroll";
+      parent.insertBefore(wrapper, table);
+      wrapper.appendChild(table);
     });
   }
 

@@ -7,8 +7,8 @@
   <script>
     window.MathJax = { tex: { inlineMath: [['\\(','\\)'], ['$', '$']] } };
   </script>
-  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
-  <link rel="stylesheet" href="../assets/css/book.css?v=20260517-figures-code2" />
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-chtml.js"></script>
+  <link rel="stylesheet" href="../assets/css/book.css?v=20260730-currency-final" />
 </head>
 <body>
 <div class="ch">
@@ -90,11 +90,11 @@
     <text x="88" y="151" class="label" text-anchor="middle">my</text>
     <text x="178" y="151" class="label" text-anchor="middle">name</text>
     <text x="268" y="151" class="label" text-anchor="middle">...</text>
-    <path d="M306 146 L372 146" stroke="#0969da" stroke-width="2.4" marker-end="url(#attn-arrow-blue)"></path>
+    <path fill="none" d="M306 146 L372 146" stroke="#0969da" stroke-width="2.4" marker-end="url(#attn-arrow-blue)"></path>
     <rect x="378" y="110" width="126" height="72" rx="12" fill="#f5f0ff" stroke="#8250df"></rect>
     <text x="441" y="140" class="label" text-anchor="middle">one final</text>
     <text x="441" y="162" class="label" text-anchor="middle">hidden vector</text>
-    <path d="M504 146 L580 146" stroke="#8250df" stroke-width="2.4" marker-end="url(#attn-arrow-purple)"></path>
+    <path fill="none" d="M504 146 L580 146" stroke="#8250df" stroke-width="2.4" marker-end="url(#attn-arrow-purple)"></path>
     <rect x="586" y="125" width="98" height="42" rx="8" fill="#f3f8f1" stroke="#1a7f37"></rect>
     <text x="635" y="151" class="label" text-anchor="middle">decoder</text>
 
@@ -109,9 +109,9 @@
     <text x="358" y="294" class="label" text-anchor="middle">h4</text>
     <rect x="586" y="268" width="98" height="42" rx="8" fill="#f3f8f1" stroke="#1a7f37"></rect>
     <text x="635" y="294" class="label" text-anchor="middle">decoder</text>
-    <path d="M590 268 C510 218 360 232 91 268" stroke="#8250df" stroke-width="2.2" marker-end="url(#attn-arrow-purple)"></path>
-    <path d="M599 268 C520 235 410 245 180 268" stroke="#8250df" stroke-width="2.2" marker-end="url(#attn-arrow-purple)"></path>
-    <path d="M622 267 C565 245 500 252 358 268" stroke="#8250df" stroke-width="2.2" marker-end="url(#attn-arrow-purple)"></path>
+    <path fill="none" d="M590 268 C510 218 360 232 91 268" stroke="#8250df" stroke-width="2.2" marker-end="url(#attn-arrow-purple)"></path>
+    <path fill="none" d="M599 268 C520 235 410 245 180 268" stroke="#8250df" stroke-width="2.2" marker-end="url(#attn-arrow-purple)"></path>
+    <path fill="none" d="M622 267 C565 245 500 252 358 268" stroke="#8250df" stroke-width="2.2" marker-end="url(#attn-arrow-purple)"></path>
     <text x="535" y="236" class="muted" text-anchor="middle">decoder query looks back at all encoder states</text>
   </svg>
   <figcaption>
@@ -225,9 +225,9 @@
       <text x="36" y="158" class="label" text-anchor="middle">src 1</text>
       <text x="130" y="158" class="label" text-anchor="middle">src 2</text>
       <text x="224" y="158" class="label" text-anchor="middle">src 3</text>
-      <path d="M130 80 L36 130" stroke="#8250df" stroke-width="2"></path>
-      <path d="M130 80 L130 130" stroke="#8250df" stroke-width="2"></path>
-      <path d="M130 80 L224 130" stroke="#8250df" stroke-width="2"></path>
+      <path fill="none" d="M130 80 L36 130" stroke="#8250df" stroke-width="2"></path>
+      <path fill="none" d="M130 80 L130 130" stroke="#8250df" stroke-width="2"></path>
+      <path fill="none" d="M130 80 L224 130" stroke="#8250df" stroke-width="2"></path>
     </g>
 
     <g transform="translate(365,105)">
@@ -361,8 +361,8 @@
     <text x="795" y="138" class="label" text-anchor="middle">next-token distribution</text>
     <text x="795" y="160" class="muted" text-anchor="middle">Dinesh, ., ...</text>
 
-    <path d="M270 144 L355 144" stroke="#0969da" stroke-width="2.4" marker-end="url(#gpt-loop-arrow)"></path>
-    <path d="M600 144 L690 144" stroke="#0969da" stroke-width="2.4" marker-end="url(#gpt-loop-arrow)"></path>
+    <path fill="none" d="M270 144 L355 144" stroke="#0969da" stroke-width="2.4" marker-end="url(#gpt-loop-arrow)"></path>
+    <path fill="none" d="M600 144 L690 144" stroke="#0969da" stroke-width="2.4" marker-end="url(#gpt-loop-arrow)"></path>
     <path d="M795 178 C795 282 170 282 170 180" stroke="#8250df" stroke-width="2.6" fill="none" marker-end="url(#gpt-loop-arrow)"></path>
     <text x="485" y="306" class="label" text-anchor="middle">sample / choose token, append to prefix, repeat until stop token or length limit</text>
   </svg>
@@ -464,7 +464,7 @@ $\mathrm{Attention}(Q,K,V) = \mathrm{softmax}\!\left(\dfrac{QK^{\top}}{\sqrt{d_k
     <rect x="850" y="136" width="94" height="58" rx="12" fill="#f3f8f1" stroke="#1a7f37"></rect>
     <text x="897" y="160" class="label" text-anchor="middle">weighted</text>
     <text x="897" y="181" class="label" text-anchor="middle">values</text>
-    <path d="M162 160 L246 160 M394 165 L468 165 M618 165 L680 165 M804 165 L850 165" stroke="#0969da" stroke-width="2.4" marker-end="url(#scaled-attn-arrow)"></path>
+    <path fill="none" d="M162 160 L246 160 M394 165 L468 165 M618 165 L680 165 M804 165 L850 165" stroke="#0969da" stroke-width="2.4" marker-end="url(#scaled-attn-arrow)"></path>
     <path d="M162 227 C196 227 202 177 246 174" stroke="#1a7f37" stroke-width="2.1" fill="none" marker-end="url(#scaled-attn-arrow)"></path>
     <text x="520" y="248" class="muted" text-anchor="middle">causal masks set future scores to -infinity before softmax</text>
   </svg>
@@ -547,9 +547,9 @@ $\mathrm{MHA}(X) = \big[\mathrm{head}_1; \dots; \mathrm{head}_h\big] W^{O},
     <text x="870" y="162" class="label" text-anchor="middle">project</text>
     <text x="870" y="185" class="muted" text-anchor="middle">W^O</text>
 
-    <path d="M200 169 L302 116 M200 169 L302 188 M200 169 L302 260" stroke="#0969da" stroke-width="2.1" marker-end="url(#mha-flow-arrow)"></path>
-    <path d="M478 116 L590 152 M478 188 L590 168 M478 260 L590 186" stroke="#8250df" stroke-width="2.1" marker-end="url(#mha-flow-arrow)"></path>
-    <path d="M720 168 L812 168" stroke="#0969da" stroke-width="2.5" marker-end="url(#mha-flow-arrow)"></path>
+    <path fill="none" d="M200 169 L302 116 M200 169 L302 188 M200 169 L302 260" stroke="#0969da" stroke-width="2.1" marker-end="url(#mha-flow-arrow)"></path>
+    <path fill="none" d="M478 116 L590 152 M478 188 L590 168 M478 260 L590 186" stroke="#8250df" stroke-width="2.1" marker-end="url(#mha-flow-arrow)"></path>
+    <path fill="none" d="M720 168 L812 168" stroke="#0969da" stroke-width="2.5" marker-end="url(#mha-flow-arrow)"></path>
     <text x="498" y="284" class="muted" text-anchor="middle">The labels are mental models: heads are not hand-assigned, but specialization often emerges.</text>
   </svg>
   <figcaption>
@@ -775,8 +775,8 @@ and you have a GPT‑style language model.</p>
       <text x="52" y="68" class="label" text-anchor="middle">encoder</text>
       <text x="200" y="68" class="label" text-anchor="middle">decoder</text>
       <text x="126" y="153" class="label" text-anchor="middle">cross-attention</text>
-      <path d="M104 63 L148 63" stroke="#0969da" stroke-width="2.2" marker-end="url(#family-flow-arrow)"></path>
-      <path d="M52 92 L96 126 M200 92 L156 126" stroke="#1a7f37" stroke-width="2.2" marker-end="url(#family-flow-arrow)"></path>
+      <path fill="none" d="M104 63 L148 63" stroke="#0969da" stroke-width="2.2" marker-end="url(#family-flow-arrow)"></path>
+      <path fill="none" d="M52 92 L96 126 M200 92 L156 126" stroke="#1a7f37" stroke-width="2.2" marker-end="url(#family-flow-arrow)"></path>
     </g>
   </svg>
   <figcaption>
@@ -827,7 +827,7 @@ Instead you cache the per‑layer $K$ and $V$ tensors:</p>
     <text x="876" y="148" class="label" text-anchor="middle">next token</text>
     <text x="876" y="170" class="muted" text-anchor="middle">append</text>
 
-    <path d="M212 153 L292 153 M524 153 L612 153 M758 153 L820 153" stroke="#0969da" stroke-width="2.4" marker-end="url(#kv-cache-arrow)"></path>
+    <path fill="none" d="M212 153 L292 153 M524 153 L612 153 M758 153 L820 153" stroke="#0969da" stroke-width="2.4" marker-end="url(#kv-cache-arrow)"></path>
     <path d="M876 182 C876 246 346 246 346 184" stroke="#8250df" stroke-width="2.5" fill="none" marker-end="url(#kv-cache-arrow)"></path>
     <text x="496" y="264" class="muted" text-anchor="middle">The next step queries all cached K,V, but only computes projections for the new token.</text>
   </svg>
@@ -897,6 +897,6 @@ while next_token != EOS_ID:
 </div>
 
 </div>
-<script src="../assets/js/nav.js?v=20260522-book-cleanup"></script>
+<script src="../assets/js/nav.js?v=20260730-currency-final"></script>
 </body>
 </html>
