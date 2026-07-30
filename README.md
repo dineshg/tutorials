@@ -42,9 +42,15 @@ production builds.
 
 ## GitHub Pages
 
-The workflow at `.github/workflows/pages.yml` installs dependencies with
-`npm ci`, builds the Docusaurus site, and publishes `build/` to GitHub Pages
-after every push to `main`.
+GitHub Pages serves the pre-built site from the root of the `gh-pages` branch.
+After committing source changes to `main`, publish a new production build with:
+
+```bash
+npm run deploy
+```
+
+This uses Docusaurus's GitHub Pages deployment command and the repository
+settings in `docusaurus.config.js`. The command requires GitHub push access.
 
 ## Structure
 

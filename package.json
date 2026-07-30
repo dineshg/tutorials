@@ -9,6 +9,7 @@
     "prebuild": "npm run generate:book",
     "build": "docusaurus build",
     "validate": "node scripts/validate-docusaurus.mjs",
+    "deploy": "docusaurus deploy",
     "serve": "docusaurus serve",
     "clear": "docusaurus clear"
   },
